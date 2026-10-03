@@ -3856,6 +3856,7 @@ restaurantSearchOrigin:S.restaurantSearchOrigin ? {...S.restaurantSearchOrigin} 
 const FAMILY_SESSION_KEY = 'dinliminate.family.v1';
 let familyPollTimer = 0;
 let familyPollBusy = false;
+let familySetupViewOpen = false;
 
 function familySessionRead(){
   try{ const raw=localStorage.getItem(FAMILY_SESSION_KEY); if(!raw)return null; const d=JSON.parse(raw); return d&&typeof d.token==='string'&&d.token?d:null; }catch{return null;}
@@ -3870,11 +3871,12 @@ async function familyApi(action,payload={}){
   return data;
 }
 function familyShowEntry(){
+  familySetupViewOpen=false;
   $('familyEntry')?.classList.remove('hidden'); $('familyCreateForm')?.classList.add('hidden'); $('familyJoinForm')?.classList.add('hidden'); $('familyLobby')?.classList.add('hidden');
   familySetStatus('familyCreateStatus',''); familySetStatus('familyJoinStatus','');
 }
-function familyShowCreate(){ $('familyEntry')?.classList.add('hidden'); $('familyCreateForm')?.classList.remove('hidden'); $('familyJoinForm')?.classList.add('hidden'); $('familyLobby')?.classList.add('hidden'); setTimeout(()=>$('familyCreateName')?.focus(),40); }
-function familyShowJoin(){ $('familyEntry')?.classList.add('hidden'); $('familyCreateForm')?.classList.add('hidden'); $('familyJoinForm')?.classList.remove('hidden'); $('familyLobby')?.classList.add('hidden'); setTimeout(()=>$('familyJoinCode')?.focus(),40); }
+function familyShowCreate(){ familySetupViewOpen=false; $('familyEntry')?.classList.add('hidden'); $('familyCreateForm')?.classList.remove('hidden'); $('familyJoinForm')?.classList.add('hidden'); $('familyLobby')?.classList.add('hidden'); setTimeout(()=>$('familyCreateName')?.focus(),40); }
+function familyShowJoin(){ familySetupViewOpen=false; $('familyEntry')?.classList.add('hidden'); $('familyCreateForm')?.classList.add('hidden'); $('familyJoinForm')?.classList.remove('hidden'); $('familyLobby')?.classList.add('hidden'); setTimeout(()=>$('familyJoinCode')?.focus(),40); }
 function familyDisplayMemberList(members,me){
   const box=$('familyMemberList'); if(!box)return; box.innerHTML='';
   (Array.isArray(members)?members:[]).forEach(m=>{
@@ -3901,8 +3903,9 @@ function familyRenderState(data){
   const session=familySessionRead();
   const dismissedCompleted=!!completed&&session?.dismissedWinnerRoundId===completed.id;
   const showWinner=!!completed&&!dismissedCompleted&&(!activeRound||activeRound.status==='complete');
-  $('familyLobby')?.classList.toggle('hidden',!!stageSwipe||showWinner);
-  $('familySetup')?.classList.add('hidden');
+  const showSetup=familySetupViewOpen && me.role==='host' && !activeRound && !stageSwipe && !showWinner;
+  $('familyLobby')?.classList.toggle('hidden',!!stageSwipe||showWinner||showSetup);
+  $('familySetup')?.classList.toggle('hidden',!showSetup);
   $('familySwipe')?.classList.toggle('hidden',!stageSwipe);
   $('familyWinner')?.classList.toggle('hidden',!showWinner);
   $('familyLobbyTitle').textContent=setupReady?'Dinner setup is ready.':stageSwipe?'Dinner is being decided.':activeRound?'A dinner decision is underway.':'Ready when everyone’s here.';
@@ -3910,6 +3913,7 @@ function familyRenderState(data){
   $('familySetupOpen')?.classList.toggle('hidden',me.role!=='host'||!!activeRound);
   $('familyStartDecision')?.classList.toggle('hidden',me.role!=='host'||!setupReady);
   const note=$('familyCodeNote'); if(note)note.textContent=me.role==='host'?'Share the code. You can regenerate it any time.':'You’re in. The host will set up dinner.';
+  if(showSetup){ familySetupRender(); familySetStatus('familySetupStatus','Host setup is open. Changes stay local until you lock the choices.'); return; }
   if(stageSwipe){ familyBeginSwipe(data); return; }
   if(showWinner){ familyRenderWinner(showWinner?completed:null); return; }
   if(activeRound&&!included){ familySetStatus('familyLobbyStatus','This dinner decision already started. You’ll join the next one.'); }
@@ -3952,12 +3956,14 @@ async function familyRotateCode(){
   catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}finally{if(b)b.disabled=false;}
 }
 async function familyOpen(){
+  familySetupViewOpen=false;
   show('family'); const session=familySessionRead();
   if(!session?.token){familyShowEntry();stopFamilyLobbyPolling();return;}
   $('familyEntry')?.classList.add('hidden');$('familyCreateForm')?.classList.add('hidden');$('familyJoinForm')?.classList.add('hidden');$('familyLobby')?.classList.remove('hidden');
   familyRenderState({family:session.family,me:session.member,members:[],activeRound:null}); await familyRefreshState(); startFamilyLobbyPolling();
 }
 async function familyLeave(){
+  familySetupViewOpen=false;
   const session=familySessionRead();
   const active=!!session?.family?.activeRoundId;
   const message=active?'A Family dinner decision is active. Your saved picks stay on the server, but leaving removes you from this decision. Leave Family Mode?':'Leave this Family on this device?';
@@ -3972,6 +3978,7 @@ async function familyLeave(){
   show('family');
 }
 async function familyBackFromMode(){
+  familySetupViewOpen=false;
   const session=familySessionRead();
   const active=!!session?.family?.activeRoundId;
   if(active && !await appConfirm('Leave the decision?', 'Your saved choices stay with this Family, and you can return later. The current decision will keep moving without you.', 'Leave decision'))return;
@@ -4061,6 +4068,7 @@ function familySetupOpen(){
   if(!session?.member||session.member.role!=='host')return;
   const family=session.family;
   if(family?.activeRoundId){ familySetStatus('familyLobbyStatus','Finish the current dinner decision before starting another.','error'); return; }
+  familySetupViewOpen=true;
   $('familyLobby')?.classList.add('hidden'); $('familySetup')?.classList.remove('hidden');
   familySetupType='meal'; familySetupExcluded=new Set(); familySetupMealTimes=new Set();
   document.querySelectorAll('[data-family-type]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.familyType==='meal'));
@@ -4068,7 +4076,7 @@ function familySetupOpen(){
   familySetupRender();
   setTimeout(()=>time?.focus(),40);
 }
-function familySetupClose(){ $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); familyRefreshState(); }
+function familySetupClose(){ familySetupViewOpen=false; $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); familyRefreshState(); }
 function familyDinnerTargetIso(value){
   const parts=String(value||'').split(':').map(Number);
   if(parts.length!==2||!Number.isFinite(parts[0])||!Number.isFinite(parts[1]))return null;
@@ -4105,6 +4113,7 @@ async function familyLockSetup(){
   familySetStatus('familySetupStatus','Freezing this dinner setup…','busy');
   try{
     const data=await familyApi('create-round',{token:session.token,decisionType:familySetupType,snapshot:familyBuildSnapshot(),dinnerTargetAt});
+    familySetupViewOpen=false;
     familySessionWrite({...session,family:{...(session.family||{}),activeRoundId:data.id}});
     $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden');
     familySetStatus('familyLobbyStatus','Choices locked. Everyone stays on their own phone; swiping comes next.');
