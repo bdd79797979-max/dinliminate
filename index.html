@@ -112,7 +112,8 @@
       <div class="family-code-panel">
         <span>JOIN CODE</span>
         <strong id="familyJoinCodeDisplay">—</strong>
-        <small>Share this code with your family.</small>
+        <button id="familyCopyCode" class="family-link-button" type="button">Share code</button>
+        <small>Everyone joins with this code.</small>
       </div>
       <div class="family-members-panel">
         <div class="family-panel-title"><b>Family</b><span id="familyMemberCount">0 here</span></div>
@@ -140,8 +141,13 @@
   </div>
 
   <div class="family-time-card">
-    <div><span>DINNER BY</span><b>Keep us on time.</b><small>Dinliminate divides the decision time automatically.</small></div>
-    <input id="familyDinnerTime" type="time" aria-label="Dinner by time">
+    <div><span>DECISION TIME</span><b>Keep it moving.</b><small>Dinliminate handles the rounds automatically.</small></div>
+    <select id="familyDecisionDuration" aria-label="Family decision time">
+      <option value="15">15 minutes</option>
+      <option value="30" selected>30 minutes</option>
+      <option value="45">45 minutes</option>
+      <option value="60">60 minutes</option>
+    </select>
   </div>
 
   <div class="family-choice-header"><div><span>CHOICES</span><b id="familySetupCount">0 choices</b></div><button id="familySetupAll" class="family-link-button" type="button">Keep all</button></div>
