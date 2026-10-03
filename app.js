@@ -3911,13 +3911,18 @@ function familyRenderState(data){
   $('familyLobbyTitle').textContent=setupReady?'Dinner setup is ready.':stageSwipe?'Dinner is being decided.':activeRound?'A dinner decision is underway.':'Ready when everyone’s here.';
   $('familyRotateCode')?.classList.toggle('hidden',me.role!=='host');
   $('familySetupOpen')?.classList.toggle('hidden',me.role!=='host'||!!activeRound);
-  $('familyStartDecision')?.classList.toggle('hidden',me.role!=='host'||!setupReady);
+  const familyReadyToStart=setupReady&&Number(family.memberCount||0)>=2;
+  $('familyStartDecision')?.classList.toggle('hidden',me.role!=='host'||!familyReadyToStart);
   const note=$('familyCodeNote'); if(note)note.textContent=me.role==='host'?'Share the code. You can regenerate it any time.':'You’re in. The host will set up dinner.';
   if(showSetup){ familySetupRender(); familySetStatus('familySetupStatus','Host setup is open. Changes stay local until you lock the choices.'); return; }
   if(stageSwipe){ familyBeginSwipe(data); return; }
   if(showWinner){ familyRenderWinner(showWinner?completed:null); return; }
   if(activeRound&&!included){ familySetStatus('familyLobbyStatus','This dinner decision already started. You’ll join the next one.'); }
-  else if(setupReady){ familySetStatus('familyLobbyStatus',me.role==='host'?'Setup is locked. Start deciding when everyone is ready.':'The host has dinner ready. Waiting for the start.'); }
+  else if(setupReady){
+    familySetStatus('familyLobbyStatus',me.role==='host'
+      ? (Number(family.memberCount||0)>=2?'Everyone is here. Start deciding when you’re ready.':'Waiting for at least one more family member to join.')
+      : 'The host has dinner ready. Waiting for the start.');
+  }
   else if(activeRound){ familySetStatus('familyLobbyStatus','A decision is underway. We’ll keep your Family together for the next one.'); }
   else familySetStatus('familyLobbyStatus',me.role==='host'?'You’re the host. Bring everyone in, then set up dinner.':'You’re in. Waiting for the host.');
 }
