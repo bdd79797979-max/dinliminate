@@ -4177,7 +4177,7 @@ async function familyLockSetup(){
     familySetStatus('familyLobbyStatus','Dinner is ready. Everyone decides on their own phone.');
     await familyRefreshState();
   }catch(err){ familySetStatus('familySetupStatus',err.message||'Could not lock the dinner setup.','error'); }
-  finally{ if(button){button.disabled=false;button.textContent='Lock choices';} }
+  finally{ if(button){button.disabled=false;button.textContent='Ready to start';} }
 }
 $('familySetupOpen')?.addEventListener('click',familySetupOpen);
 $('familySetupBack')?.addEventListener('click',familySetupClose);
