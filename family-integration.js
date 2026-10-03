@@ -484,7 +484,7 @@ function showWinner(round) {
   context.textContent='Decided together.';
   context.classList.remove('hidden');
   setWinnerImage(item,currentType);
-  $('restart').textContent='Decide Again';
+  $('restart').textContent=state?.me?.role==='host'?'Decide Again':'Back to Dinner';
   if(changed){familyHistory(item,currentType,id);familyCelebration();}
 }
 
@@ -561,7 +561,7 @@ async function decideAgain() {
   removeContext();showScreen('family');
   lastWinnerId='';
   await refresh();
-  setTimeout(() => $('familySetupOpen')?.click(), 80);
+  if(state?.me?.role==='host')window.dispatchEvent(new CustomEvent('dinliminate-family-decide-again'));
 }
 
 async function dismissWinnerAndReturn() {

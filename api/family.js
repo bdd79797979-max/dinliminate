@@ -55,8 +55,12 @@ module.exports = async function handler(req, res) {
       'HOST_REQUIRED','ROUND_ACTIVE','NO_ROUND','ROUND_ALREADY_STARTED','ROUND_STATE_CHANGED',
       'INVALID_SNAPSHOT','INVALID_DATE','INVALID_ITEM','INVALID_CHOICE','INVALID_STAGE',
       'INVALID_DECISION_TYPE','ROUND_ACCESS','ROUND_STAGE','STAGE_EXPIRED','MEMBER_NOT_FOUND',
-      'CODE_UNAVAILABLE','FAMILY_EXPIRED','UNAUTHORIZED'
+      'CODE_UNAVAILABLE','FAMILY_EXPIRED','UNAUTHORIZED','FAMILY_DATABASE_SCHEMA_MISSING'
     ]);
+    if(err&&(err.code==='42P01'||/relation "family_/i.test(String(err.message||'')))){
+      console.error('[family-schema]',err);
+      return send(res,503,{ok:false,code:'FAMILY_DATABASE_SCHEMA_MISSING',message:'Dinner Together is not connected to its Family database yet. The Family tables need to be installed on the database used by this deployment.'});
+    }
     const code = known.has(err && err.code) ? err.code : 'FAMILY_SERVER_ERROR';
     if (code === 'FAMILY_SERVER_ERROR') console.error('[family]', err);
     return send(res, Number(err && err.status) >= 500 ? 500 : Number(err && err.status) || 400, {

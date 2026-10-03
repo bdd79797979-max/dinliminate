@@ -3919,8 +3919,7 @@ function familyRenderState(data){
   $('familyStartDecision')?.classList.toggle('hidden',me.role!=='host'||!familyReadyToStart);
   const note=$('familyCodeNote'); if(note)note.textContent=me.role==='host'?'Share the code. You can regenerate it any time.':'You’re in. The host will set up dinner.';
   if(showSetup){ familySetupRender(); familySetStatus('familySetupStatus','Host setup is open. Changes stay local until you lock the choices.'); return; }
-  if(stageSwipe){ familyBeginSwipe(data); return; }
-  if(showWinner){ familyRenderWinner(showWinner?completed:null); return; }
+  if(stageSwipe || showWinner){ $('familySwipe')?.classList.add('hidden'); $('familyWinner')?.classList.add('hidden'); return; }
   if(activeRound&&!included){ familySetStatus('familyLobbyStatus','This dinner decision already started. You’ll join the next one.'); }
   else if(setupReady){
     familySetStatus('familyLobbyStatus',me.role==='host'
@@ -4125,7 +4124,7 @@ function familySetupOpen(){
   const duration=$('familyDecisionDuration'); if(duration&&!duration.value)duration.value=familyDefaultDecisionDuration();
   familySetupRender();
 }
-function familySetupClose(){ familySetupViewOpen=false; familyReturnToSetup=false; $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); familyRefreshState(); }
+async function familySetupClose(){ familySetupViewOpen=false; familyReturnToSetup=false; $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); await familyRefreshState(); }
 function familyDinnerTargetIso(value){
   const minutes=Math.max(15,Math.min(60,Number(value)||30));
   return new Date(Date.now()+minutes*60*1000).toISOString();
@@ -4180,6 +4179,7 @@ async function familyLockSetup(){
   finally{ if(button){button.disabled=false;button.textContent='Ready to start';} }
 }
 $('familySetupOpen')?.addEventListener('click',familySetupOpen);
+window.addEventListener('dinliminate-family-decide-again',()=>{if(S.screen==='family')familySetupOpen();});
 $('familySetupBack')?.addEventListener('click',familySetupClose);
 $('familyTypeMeal')?.addEventListener('click',()=>familySetupChooseType('meal'));
 $('familyTypeRestaurant')?.addEventListener('click',()=>familySetupChooseType('restaurant'));
