@@ -687,4 +687,4 @@ async function transferHost(sessionToken, targetMemberId) {
   await event(sql,family.family_id,family.active_round_id,me.member_id,'host_transferred',{toMemberId:target.member_id});
   return {ok:true,hostMemberId:target.member_id};
 }
-module.exports = {createFamily,joinFamily,getFamilyState,createRound,startRound,submitVote,markStageSubmitted,rotateCode,endRound,transferHost,leaveFamily};
+module.exports = {createFamily,joinFamily,getFamilyState,createRound,startRound,submitVote,markStageSubmitted,rotateCode,endRound,transferHost,leaveFamily,leaveRound};
