@@ -14,7 +14,7 @@
 <title>Dinliminate — Meal Decisions Simplified</title>
 
 <link rel="preload" as="image" fetchpriority="high" href="./home-background.jpg?v=840">
-<link rel="stylesheet" href="./styles.css?v=843">
+<link rel="stylesheet" href="./styles.css?v=844">
 </head>
 <body>
 <main class="app">
@@ -68,26 +68,26 @@
 
   <div class="family-page" id="familyPage">
     <div class="family-hero">
-      <span class="family-kicker">FAMILY MODE</span>
-      <h1>Dinner together.<br>Decided together.</h1>
-      <p>No accounts. No passwords. Just create or join and start deciding.</p>
+      <span class="family-kicker">DINNER MODE</span>
+      <h1>Decide together.<br>Enjoy together.</h1>
+      <p>Decide dinner together—each on your own phone.</p>
     </div>
 
     <div class="family-entry" id="familyEntry">
       <button class="family-entry-card" id="familyCreateChoice" type="button">
         <span class="family-entry-icon" aria-hidden="true">＋</span>
-        <span><b>Create</b><small>Start a Family dinner decision</small></span>
+        <span><b>Create a Family</b><small>Start dinner and invite everyone.</small></span>
         <span class="family-entry-chevron" aria-hidden="true">›</span>
       </button>
       <button class="family-entry-card" id="familyJoinChoice" type="button">
         <span class="family-entry-icon family-code-icon" aria-hidden="true">⌁</span>
-        <span><b>Join</b><small>Use a Family code from the host</small></span>
+        <span><b>Join a Family</b><small>Enter the dinner code from your host.</small></span>
         <span class="family-entry-chevron" aria-hidden="true">›</span>
       </button>
     </div>
 
     <div class="family-form hidden" id="familyCreateForm">
-      <div class="family-form-head"><button class="family-form-back" id="familyCreateBack" type="button">‹</button><div><span>CREATE</span><b>Who’s deciding?</b></div></div>
+      <div class="family-form-head"><button class="family-form-back" id="familyCreateBack" type="button">‹</button><div><span>CREATE A FAMILY</span><b>What’s your name?</b></div></div>
       <label for="familyCreateName">Your name</label>
       <input id="familyCreateName" autocomplete="name" maxlength="40" placeholder="Enter your name">
       <button class="family-primary" id="familyCreateSubmit" type="button">Create</button>
@@ -95,7 +95,7 @@
     </div>
 
     <div class="family-form hidden" id="familyJoinForm">
-      <div class="family-form-head"><button class="family-form-back" id="familyJoinBack" type="button">‹</button><div><span>JOIN</span><b>Enter the Family code.</b></div></div>
+      <div class="family-form-head"><button class="family-form-back" id="familyJoinBack" type="button">‹</button><div><span>JOIN A FAMILY</span><b>Enter the dinner code.</b></div></div>
       <label for="familyJoinCode">Family code</label>
       <input id="familyJoinCode" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" maxlength="11" placeholder="K7P · 4Q2">
       <label for="familyJoinName">Your name</label>
@@ -110,25 +110,24 @@
         <button class="family-link-button" id="familyLeave" type="button">Leave</button>
       </div>
       <div class="family-code-panel">
-        <span>JOIN CODE</span>
+        <span>DINNER CODE</span>
         <strong id="familyJoinCodeDisplay">—</strong>
         <button id="familyCopyCode" class="family-link-button" type="button">Share code</button>
-        <small>Everyone joins with this code.</small>
+        <small>Share this code with everyone joining dinner.</small>
       </div>
       <div class="family-members-panel">
-        <div class="family-panel-title"><b>Family</b><span id="familyMemberCount">0 here</span></div>
+        <div class="family-panel-title"><b>AT THE TABLE</b><span id="familyMemberCount">0 here</span></div>
         <div id="familyMemberList" class="family-member-list"></div>
       </div>
-      <p class="family-lobby-status" id="familyLobbyStatus" role="status" aria-live="polite"></p><div class="family-lobby-pulse" id="familyLobbyPulse"><span></span><b>Live family lobby</b></div><button id="familySetupOpen" class="family-primary family-host-only hidden" type="button">Set up dinner</button><button id="familyStartDecision" class="family-primary family-host-only hidden" type="button">Start deciding</button>
+      <p class="family-lobby-status" id="familyLobbyStatus" role="status" aria-live="polite"></p><div class="family-lobby-pulse hidden" id="familyLobbyPulse" aria-hidden="true"><span></span><b>Live</b></div><button id="familySetupOpen" class="family-primary family-host-only hidden" type="button">Set up dinner</button><button id="familyStartDecision" class="family-primary family-host-only hidden" type="button">Ready to start</button>
     </div>
   
 <div class="family-setup hidden" id="familySetup">
-  <div class="family-setup-head"><button class="family-form-back" id="familySetupBack" type="button">‹</button><div><span>SET UP DINNER</span><b>Make the first cut.</b></div></div>
-  <div class="family-setup-intro">Only the host sees this setup. Everyone else joins after the choices are locked.</div>
+  <div class="family-setup-head"><button class="family-form-back" id="familySetupBack" type="button">‹</button><div><span>SET UP DINNER</span><b>Choose what’s on the table.</b></div></div>
 
   <div class="family-type-toggle" role="group" aria-label="Decision type">
-    <button type="button" class="family-type-option is-active" id="familyTypeMeal" data-family-type="meal"><b>Meals</b><small>Choose from your meal ideas</small></button>
-    <button type="button" class="family-type-option" id="familyTypeRestaurant" data-family-type="restaurant"><b>Restaurants</b><small>Use the exact loaded restaurant results</small></button>
+    <button type="button" class="family-type-option is-active" id="familyTypeMeal" data-family-type="meal"><b>Meals</b><small>Choose from your meals.</small></button>
+    <button type="button" class="family-type-option" id="familyTypeRestaurant" data-family-type="restaurant"><b>Restaurants</b><small>Choose from nearby results.</small></button>
   </div>
 
   <div class="family-meal-time-controls" id="familyMealTimeControls" aria-label="Meal Time for Family Mode">
@@ -141,7 +140,7 @@
   </div>
 
   <div class="family-time-card">
-    <div><span>DECISION TIME</span><b>Keep it moving.</b><small>Dinliminate handles the rounds automatically.</small></div>
+    <div><span>DECISION TIME</span><b>Let Dinliminate handle the rest.</b></div>
     <select id="familyDecisionDuration" aria-label="Family decision time">
       <option value="15">15 minutes</option>
       <option value="30" selected>30 minutes</option>
@@ -151,16 +150,16 @@
   </div>
 
   <div class="family-choice-header"><div><span>CHOICES</span><b id="familySetupCount">0 choices</b></div><button id="familySetupAll" class="family-link-button" type="button">Keep all</button></div>
-  <div class="family-choice-note" id="familySetupNote">Tap a choice to cut it before the Family starts.</div>
+  <div class="family-choice-note" id="familySetupNote">Tap anything you don’t want.</div>
   <div class="family-setup-list" id="familySetupList"></div>
 
-  <button id="familyLockSetup" class="family-primary" type="button">Lock choices</button>
+  <button id="familyLockSetup" class="family-primary" type="button">Ready to start</button>
   <p id="familySetupStatus" class="family-form-status" role="status" aria-live="polite"></p>
 </div>
 
 <div class="family-swipe hidden" id="familySwipe">
   <div class="family-swipe-head"><div><span id="familySwipeStageKicker">FIRST PICKS</span><h2 id="familySwipeTitle">Make your picks.</h2></div><div class="family-swipe-head-meta"><span id="familySwipeProgress">0 / 0</span><small id="familySwipeDeadline"></small></div></div>
-  <p class="family-swipe-note" id="familySwipeNote">Cut what you don’t want. Maybe means you’d be happy with it. Choose means you really want it.</p>
+  <p class="family-swipe-note" id="familySwipeNote">← CUT · SWIPE · MAYBE →</p>
   <div class="family-swipe-stage">
     <div class="family-swipe-card" id="familySwipeCard">
       <img id="familySwipeImg" alt="">
@@ -174,7 +173,7 @@
     <button class="family-round-action family-round-choose" id="familySwipeChoose" type="button" aria-label="Choose">✓<small>Choose</small></button>
   </div>
   <div class="family-waiting hidden" id="familySwipeWaiting">
-    <span>YOUR PICKS ARE IN</span><b>Waiting for the Family.</b><small id="familyWaitingText">Your choices are saved. We’ll move everyone forward together.</small>
+    <span>YOUR PICKS ARE IN</span><b>Waiting for everyone at the table…</b><small id="familyWaitingText">Your choices are saved. We’ll move everyone forward together.</small>
   </div>
 </div>
 <div class="family-winner hidden" id="familyWinner">
@@ -301,7 +300,7 @@
 
 <script src="./data/foods.js"></script>
 <script src="./data/restaurant-taxonomy.js"></script>
-<script src="./app.js?v=843"></script>
+<script src="./app.js?v=844"></script>
 </main>
 </body>
 </html>
