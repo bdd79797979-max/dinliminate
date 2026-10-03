@@ -3808,7 +3808,7 @@ window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefres
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
 bindHomeImageFallbacks();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=841').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=844').catch(() => {}));
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindPersistentHomeBackground();
 load();
@@ -3859,6 +3859,8 @@ let familyPollBusy = false;
 let familySetupViewOpen = false;
 let familyReturnToSetup = false;
 const FAMILY_MEMBER_STALE_MS = 15 * 60 * 1000;
+const FAMILY_SWIPE_LESSON_KEY = 'dinliminate.family.swipeLesson.v1';
+let familyStageSeen = 0;
 
 function familySessionRead(){
   try{ const raw=localStorage.getItem(FAMILY_SESSION_KEY); if(!raw)return null; const d=JSON.parse(raw); return d&&typeof d.token==='string'&&d.token?d:null; }catch{return null;}
@@ -3910,7 +3912,7 @@ function familyRenderState(data){
   $('familySetup')?.classList.toggle('hidden',!showSetup);
   $('familySwipe')?.classList.toggle('hidden',!stageSwipe);
   $('familyWinner')?.classList.toggle('hidden',!showWinner);
-  $('familyLobbyTitle').textContent=setupReady?'Dinner setup is ready.':stageSwipe?'Dinner is being decided.':activeRound?'A dinner decision is underway.':'Ready when everyone’s here.';
+  $('familyLobbyTitle').textContent=setupReady?'Dinner is ready to start.':stageSwipe?'Dinner is being decided.':activeRound?'A dinner decision is underway.':'Ready when everyone’s here.';
   $('familyRotateCode')?.classList.toggle('hidden',me.role!=='host');
   $('familySetupOpen')?.classList.toggle('hidden',me.role!=='host'||!!activeRound);
   const familyReadyToStart=setupReady&&Number(family.memberCount||0)>=2;
@@ -3922,8 +3924,8 @@ function familyRenderState(data){
   if(activeRound&&!included){ familySetStatus('familyLobbyStatus','This dinner decision already started. You’ll join the next one.'); }
   else if(setupReady){
     familySetStatus('familyLobbyStatus',me.role==='host'
-      ? (Number(family.memberCount||0)>=2?'Everyone is here. Start deciding when you’re ready.':'Waiting for at least one more family member to join.')
-      : 'The host has dinner ready. Waiting for the start.');
+      ? (Number(family.memberCount||0)>=2?'Everyone is here. You’re ready to start.':'Waiting for at least one more person to join.')
+      : 'You’re in. Waiting for the host to start.');
   }
   else if(activeRound){ familySetStatus('familyLobbyStatus','A decision is underway. We’ll keep your Family together for the next one.'); }
   else familySetStatus('familyLobbyStatus',me.role==='host'?'You’re the host. Bring everyone in, then set up dinner.':'You’re in. Waiting for the host.');
@@ -4069,8 +4071,11 @@ function familySetupRender(){
   if(!list)return;
   const items=familySetupItems();
   const included=items.filter(item=>!familySetupExcluded.has(String(item.id))).length;
-  if(count)count.textContent=included+' choices'+(familySetupExcluded.size?' · '+familySetupExcluded.size+' cut':'');
-  if(note)note.textContent=familySetupType==='restaurant'&&!S.restaurantPool.length?'Load restaurant results first, then return here.':'Tap a choice to cut it before the Family starts.';
+  if(count){
+    count.textContent=included+' choices'+(familySetupExcluded.size?' · '+familySetupExcluded.size+' cut':'');
+    count.dataset.ready=included>=2?'true':'false';
+  }
+  if(note)note.textContent=familySetupType==='restaurant'&&!S.restaurantPool.length?'Find restaurants first, then return here.':included<2?'Keep at least 2 choices.':'Tap anything you don’t want.';
   list.innerHTML='';
   items.forEach(item=>{
     const id=String(item.id),cut=familySetupExcluded.has(id);
@@ -4158,16 +4163,18 @@ async function familyLockSetup(){
   const session=familySessionRead(); if(!session?.token)return;
   const items=familySetupItems();
   if(!items.length){familySetStatus('familySetupStatus',familySetupType==='restaurant'?'Open Find a restaurant and load results first.':'There are no meal choices to use.','error');return;}
+  const includedCount=items.filter(item=>!familySetupExcluded.has(String(item.id))).length;
+  if(includedCount<2){familySetStatus('familySetupStatus','Keep at least 2 choices for Dinner.','error');return;}
   const dinnerTargetAt=familyDinnerTargetIso($('familyDecisionDuration')?.value);
-  if(!dinnerTargetAt){familySetStatus('familySetupStatus','Choose a dinner time.','error');return;}
+  if(!dinnerTargetAt){familySetStatus('familySetupStatus','Choose a decision time.','error');return;}
   const button=$('familyLockSetup'); if(button){button.disabled=true;button.textContent='Locking…';}
-  familySetStatus('familySetupStatus','Freezing this dinner setup…','busy');
+  familySetStatus('familySetupStatus','Saving your dinner choices…','busy');
   try{
     const data=await familyApi('create-round',{token:session.token,decisionType:familySetupType,snapshot:familyBuildSnapshot(),dinnerTargetAt});
     familySetupViewOpen=false;
     familySessionWrite({...session,family:{...(session.family||{}),activeRoundId:data.id}});
     $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden');
-    familySetStatus('familyLobbyStatus','Choices locked. Everyone stays on their own phone; swiping comes next.');
+    familySetStatus('familyLobbyStatus','Dinner is ready. Everyone decides on their own phone.');
     await familyRefreshState();
   }catch(err){ familySetStatus('familySetupStatus',err.message||'Could not lock the dinner setup.','error'); }
   finally{ if(button){button.disabled=false;button.textContent='Lock choices';} }
@@ -4252,6 +4259,9 @@ function familySwipeRender(){
   if(!data||!round)return;
   familyDeadlineStart(round);
   const stage=Number(round.currentStage)||1;
+  if(familyStageSeen!==stage){
+    familyStageSeen=stage;
+  }
   const excluded=new Set(Array.isArray(round.snapshot?.hostExcluded)?round.snapshot.hostExcluded.map(String):[]);
   let sourcePool;
   if(stage===2&&Array.isArray(round.snapshot?.finalists)) sourcePool=(Array.isArray(round.snapshot?.pool)?round.snapshot.pool:[]).filter(item=>round.snapshot.finalists.map(String).includes(String(item.id)));
@@ -4261,13 +4271,20 @@ function familySwipeRender(){
   const voteStage=stage===1?'initial':stage===2?'finalist':'tiebreak';
   const voted=(data.myVotes||[]).filter(v=>v.stage===voteStage).length;
   $('familySwipeProgress').textContent=Math.min(voted,total)+' / '+total;
+  const lessonSeen=(()=>{try{return localStorage.getItem(FAMILY_SWIPE_LESSON_KEY)==='1';}catch{return false;}})();
+  $('familySwipeNote')?.classList.toggle('hidden',lessonSeen);
   if(!items.length){
     familySwipeCurrent=null; familyDeadlineStart({stageDeadlineAt:null});
     $('familySwipeCard')?.classList.add('hidden');$('familySwipeWaiting')?.classList.remove('hidden');
     $('familySwipeCut')?.setAttribute('disabled','disabled');$('familySwipeMaybe')?.setAttribute('disabled','disabled');$('familySwipeChoose')?.setAttribute('disabled','disabled');
     $('familySwipeStageKicker').textContent=stage===1?'FIRST PICKS':stage===2?'FAMILY FINALISTS':'ONE LAST DECISION';
     $('familySwipeTitle').textContent=stage===1?'Your picks are in.':stage===2?'Final picks are in.':'One last pick.';
-    $('familyWaitingText').textContent=stage===1?'Your choices are saved. We’ll move everyone forward together.':stage===2?'Your finalist choices are saved. We’ll make the final decision together.':'Your last choice is saved. We’ll settle the tie.';
+    const members=Array.isArray(data.roundMembers)?data.roundMembers.filter(m=>m.included):[];
+    const submittedKey=stage===1?'submittedStage1':stage===2?'submittedStage2':'submittedTiebreak';
+    const finished=members.filter(m=>m[submittedKey]).length;
+    $('familyWaitingText').textContent=members.length
+      ? finished+' of '+members.length+' finished. We’ll move everyone forward together.'
+      : (stage===1?'Your choices are saved. We’ll move everyone forward together.':stage===2?'Your finalist choices are saved. We’ll make the final decision together.':'Your last choice is saved. We’ll settle the tie.');
     const submissionKey=round.id+':'+voteStage;
     if(familySwipeSubmittedRoundId!==submissionKey){
       familySwipeSubmittedRoundId=submissionKey;
@@ -4295,6 +4312,8 @@ async function familySwipeChoose(choiceValue){
   if(!token){familySwipeBusy=false;return;}
   try{
     const data=await familyApi('vote',{token,roundId,stage:voteStage,itemId,choice:choiceValue});
+    try{localStorage.setItem(FAMILY_SWIPE_LESSON_KEY,'1');}catch{}
+    $('familySwipeNote')?.classList.add('hidden');
     const currentVotes=Array.isArray(familySwipeData.myVotes)?familySwipeData.myVotes.slice():[];
     currentVotes.push({stage:voteStage,itemId,choice:choiceValue});
     const nextRound=data?.round||round;
