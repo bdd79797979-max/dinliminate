@@ -4332,7 +4332,7 @@ $('familyStartDecision')?.addEventListener('click',async()=>{
   const button=$('familyStartDecision');if(button){button.disabled=true;button.textContent='Starting…';}
   try{await familyApi('start-round',{token:session.token});await familyRefreshState();}
   catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not start the dinner decision.','error');}
-  finally{if(button){button.disabled=false;button.textContent='Start deciding';}}
+  finally{if(button){button.disabled=false;button.textContent='Ready to start';}}
 });
 const FAMILY_SAVED_ROUNDS_KEY='dinliminate.family.savedRounds.v1';
 function familySavedRoundsRead(){
