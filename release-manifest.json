@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 843,
-  "sourceBranch": "cp843-family-mode-hardening",
+  "build": 844,
+  "sourceBranch": "cp844-family-mode-polish",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminates1",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP843",
+  "checkpoint": "CP844",
   "deploymentTrigger": "CP843-family-mode-hardening-2026-10-03"
 }
