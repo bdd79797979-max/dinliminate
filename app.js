@@ -3881,6 +3881,11 @@ function familyEnsureNormalBar(type){
  bar.innerHTML='<div style="display:grid;gap:2px;min-width:0"><span id="'+ids.k+'" style="font-size:8px;letter-spacing:.15em;color:#c6a46a;font-weight:850">DINNER TOGETHER</span><b id="'+ids.t+'" style="font-size:13px;line-height:1.1">Prepare dinner together.</b><small id="'+ids.s+'" style="font-size:9px;line-height:1.35;color:#777;max-width:330px">Use the normal '+(type==='meal'?'Meal':'Restaurant')+' screen, then start the shared dinner.</small></div><div style="display:flex;align-items:center;gap:7px;flex:0 0 auto"><label id="'+ids.time+'Wrap" style="display:grid;gap:3px;color:#8a847c;font-size:7px;letter-spacing:.12em;font-weight:850">DINNER BY<input id="'+ids.time+'" type="time" aria-label="Dinner by time" style="height:34px;min-width:92px;border:1px solid #3a342b;border-radius:10px;background:#151413;color:#eee;padding:0 7px;font-size:10px;font-weight:800"></label><button id="'+ids.btn+'" type="button" style="min-height:36px;padding:0 11px;border:1px solid #9b8050;border-radius:11px;background:#c6a46a;color:#111;font-size:9px;font-weight:900;white-space:nowrap">Start Family Dinner</button></div>';
  const anchor=type==='meal'?root.querySelector('.quick-section'):root.querySelector('.location-strip');
  root.insertBefore(bar,anchor||root.firstChild);
+ const startButton=$(type==='meal'?'foodFamilyNormalStart':'restaurantFamilyNormalStart');
+ if(startButton && startButton.dataset.familyBound!=='1'){
+  startButton.dataset.familyBound='1';
+  startButton.addEventListener('click',()=>familyStartRoundFromNormal(type));
+ }
  return bar;
 }
 
