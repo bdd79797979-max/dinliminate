@@ -3654,7 +3654,7 @@ const foodMenu = $('foodMenu'); if (foodMenu) {foodMenu.setAttribute('aria-expan
 const restaurantMenu = $('restaurantMenu'); if (restaurantMenu) {restaurantMenu.setAttribute('aria-expanded','false');restaurantMenu.onclick = openDrawer;}
 const winnerMenu = $('winnerMenu'); if (winnerMenu) {winnerMenu.setAttribute('aria-expanded','false');winnerMenu.onclick = openDrawer;}
 const foodBackTop = $('foodBackTop'); if (foodBackTop) foodBackTop.onclick = home;
-const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaurantBackTop.onclick = home;
+const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaurantBackTop.onclick = () => familyReturnToSetup ? familyReturnFromRestaurantSetup() : home();
 $('drawerClose').onclick = closeDrawer;
 $('drawerBg').onclick = closeDrawer;
 $('manage').onclick = () => { closeDrawer(); window.setTimeout(()=>manageFoodsView(),190); };
@@ -3975,6 +3975,7 @@ async function familyRotateCode(){
 }
 async function familyOpen(){
   familySetupViewOpen=false;
+  familyReturnToSetup=false;
   show('family'); const session=familySessionRead();
   if(!session?.token){familyShowEntry();stopFamilyLobbyPolling();return;}
   $('familyEntry')?.classList.add('hidden');$('familyCreateForm')?.classList.add('hidden');$('familyJoinForm')?.classList.add('hidden');$('familyLobby')?.classList.remove('hidden');
