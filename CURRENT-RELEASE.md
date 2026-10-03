@@ -1,3 +1,27 @@
+# CURRENT RELEASE — BUILD 842 / CP842
+
+Date: 2026-10-03
+
+Current candidate branch: `cp842-family-mode-audit`
+Recovery baseline: CP841 / `cp841-all-maybe-right`
+Hosted test target: `dinliminate-git-cp842-family-mode-audit-brian-f169.vercel.app`
+Status: candidate — Family Mode audit and setup repair
+
+## CP842 Family Mode audit
+- Fixed the Family Mode host setup screen being hidden by the 4-second lobby state poll.
+- Host setup now remains open while the host edits meals/restaurants and chooses the dinner cutoff time.
+- Setup state remains local until the host locks the choices, then the shared server round begins.
+- Preserved the CP841 app and Family Mode server/database architecture.
+- Family database schema is now applied to the configured Neon database and Family creation is working on the live deployment.
+- Live browser verification confirms the setup screen remains visible for 8+ seconds with 116 meal choices and no browser errors.
+
+## CP842 remaining certification
+- Complete two-device Family join/start/swipe/winner certification.
+- Confirm restaurant Family setup uses the current loaded restaurant pool and all expected contact/photo fields.
+- Final physical iPhone Safari/PWA certification.
+
+---
+
 # CURRENT RELEASE — BUILD 709 / CP709
 
 Date: 2026-10-02
