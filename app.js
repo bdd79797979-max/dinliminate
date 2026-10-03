@@ -3647,7 +3647,7 @@ const openDrawer=()=>{
  drawer?.classList.remove('hidden');
  bg?.classList.remove('hidden');
  requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
- ['#menu','#foodMenu','#restaurantMenu','#winnerMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+ ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
 };
 const appMenu = $('menu'); if (appMenu) {appMenu.setAttribute('aria-expanded','false');appMenu.onclick = openDrawer;}
 const foodMenu = $('foodMenu'); if (foodMenu) {foodMenu.setAttribute('aria-expanded','false');foodMenu.onclick = openDrawer;}
@@ -3944,7 +3944,18 @@ async function familyJoin(){
 }
 async function familyCopyCode(){
   const codeText=$('familyJoinCodeDisplay')?.textContent?.trim()||''; if(!codeText||codeText==='—')return;
-  try{await navigator.clipboard.writeText(codeText);familySetStatus('familyLobbyStatus','Family code copied. Share it with everyone.');}catch{familySetStatus('familyLobbyStatus','Code: '+codeText);}
+  try{await navigator.clipboard.writeText(codeText);familySetStatus('familyLobbyStatus','Family code copied. Share it with everyone.');}
+  catch{familySetStatus('familyLobbyStatus','Code: '+codeText);}
+}
+async function familyShareCode(){
+  const codeText=$('familyJoinCodeDisplay')?.textContent?.trim()||''; if(!codeText||codeText==='—')return;
+  const shareData={title:'Dinliminate — Dinner Together',text:'Join our Dinliminate dinner decision. Family code: '+codeText};
+  if(typeof navigator.share==='function'){
+    try{await navigator.share(shareData);return;}
+    catch(err){if(err?.name==='AbortError')return;}
+  }
+  try{await navigator.clipboard.writeText(shareData.text);familySetStatus('familyLobbyStatus','Invite copied. Share it with everyone.');}
+  catch{familySetStatus('familyLobbyStatus',shareData.text);}
 }
 async function familyRotateCode(){
   const session=familySessionRead();if(!session?.token)return;const b=$('familyRotateCode');if(b)b.disabled=true;
@@ -3971,12 +3982,10 @@ async function familyLeave(){
   familyShowEntry();
   show('family');
 }
-async function familyBackFromMode(){
-  const session=familySessionRead();
-  const active=!!session?.family?.activeRoundId;
-  if(active && !await appConfirm('Leave the decision?', 'Your saved choices stay with this Family, and you can return later. The current decision will keep moving without you.', 'Leave decision'))return;
+function familyBackFromMode(){
+  // Back is navigation only. Never clear Family state or remove the member.
   stopFamilyLobbyPolling();
-  show('home');
+  home();
 }
 
 $('familyMode')?.addEventListener('click',()=>{closeDrawer();window.setTimeout(familyOpen,190);});
@@ -3990,6 +3999,7 @@ $('familyCreateSubmit')?.addEventListener('click',familyCreate);
 $('familyJoinSubmit')?.addEventListener('click',familyJoin);
 $('familyLeave')?.addEventListener('click',familyLeave);
 $('familyCopyCode')?.addEventListener('click',familyCopyCode);
+$('familyShareCode')?.addEventListener('click',familyShareCode);
 $('familyRotateCode')?.addEventListener('click',familyRotateCode);
 $('familyCreateName')?.addEventListener('keydown',e=>{if(e.key==='Enter')familyCreate();});
 $('familyJoinName')?.addEventListener('keydown',e=>{if(e.key==='Enter')familyJoin();});
@@ -4195,7 +4205,15 @@ function familySwipeRender(){
     $('familySwipeCut')?.setAttribute('disabled','disabled');$('familySwipeMaybe')?.setAttribute('disabled','disabled');$('familySwipeChoose')?.setAttribute('disabled','disabled');
     $('familySwipeStageKicker').textContent=stage===1?'FIRST PICKS':stage===2?'FAMILY FINALISTS':'ONE LAST DECISION';
     $('familySwipeTitle').textContent=stage===1?'Your picks are in.':stage===2?'Final picks are in.':'One last pick.';
-    $('familyWaitingText').textContent=stage===1?'Your choices are saved. We’ll move everyone forward together.':stage===2?'Your finalist choices are saved. We’ll make the final decision together.':'Your last choice is saved. We’ll settle the tie.';
+    const roundMembers=Array.isArray(data.roundMembers)?data.roundMembers.filter(r=>r.included):[];
+    const submittedKey=stage===1?'submittedStage1':stage===2?'submittedStage2':'submittedTiebreak';
+    const meId=String(data.me?.id||'');
+    let submittedCount=roundMembers.filter(r=>r[submittedKey]).length;
+    if(meId&&roundMembers.some(r=>String(r.memberId)===meId)&&!roundMembers.some(r=>String(r.memberId)===meId&&r[submittedKey])) submittedCount++;
+    const waitingCount=Math.max(0,roundMembers.length-submittedCount);
+    $('familyWaitingText').textContent=waitingCount>0
+      ?'Waiting for '+waitingCount+' family member'+(waitingCount===1?'':'s')+'…'
+      :'Everyone is in. We’ll move the Family forward together.';
     const submissionKey=round.id+':'+voteStage;
     if(familySwipeSubmittedRoundId!==submissionKey){
       familySwipeSubmittedRoundId=submissionKey;
