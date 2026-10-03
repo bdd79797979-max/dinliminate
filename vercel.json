@@ -1,0 +1,56 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(self), camera=(), microphone=()"
+        },
+        {
+          "key": "Cross-Origin-Resource-Policy",
+          "value": "cross-origin"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'; object-src 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/api/release",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/restaurants.js": {
+      "maxDuration": 30
+    },
+    "api/restaurant-search.js": {
+      "maxDuration": 30
+    },
+    "api/release.js": {
+      "maxDuration": 10
+    },
+    "api/image.js": {
+      "maxDuration": 10
+    },
+    "api/restaurant-photo.js": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -1,0 +1,17 @@
+const fs=require('fs'),assert=require('assert/strict');
+const foodsText=fs.readFileSync('data/foods.js','utf8');
+const appText=fs.readFileSync('app.js','utf8');
+const json=JSON.parse(foodsText.slice(foodsText.indexOf('[')).trim().replace(/;\s*$/,''));
+assert.equal(json.length,116,'Food image audit expects 116 built-in foods');
+const urls=json.map(x=>String(x.image||'').trim());
+assert.equal(urls.every(x=>/^https:\/\//i.test(x)),true,'Every built-in food image must use HTTPS');
+const hosts=[...new Set(urls.map(u=>new URL(u).hostname))].sort();
+const quickHosts=[...new Set((appText.match(/https:\/\/images\.(?:pexels|unsplash)\.com[^'"]+/g)||[]).map(u=>new URL(u).hostname))].sort();
+const approved=['images.pexels.com','images.unsplash.com'];
+const reviewRequired=hosts.filter(h=>!approved.includes(h));
+const inventory={generatedAt:new Date().toISOString(),builtInFoods:json.length,hosts,approvedHosts:approved,reviewRequired,policy:'Pexels/Unsplash are approved application image CDNs; all other third-party hosts remain explicitly listed for rights/usage review before public launch.'};
+fs.mkdirSync('qa-artifacts',{recursive:true});
+fs.writeFileSync('qa-artifacts/image-source-inventory.json',JSON.stringify(inventory,null,2));
+assert.equal(quickHosts.some(h=>h==='images.pexels.com'),true,'Quick Cut imagery should include approved Pexels sources');
+assert.equal(urls.some(x=>x.includes('http://')),false,'HTTP food image URLs are not allowed');
+console.log(JSON.stringify(inventory));

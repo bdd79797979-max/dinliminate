@@ -1,0 +1,49 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/restaurant-search"
+  to = "/.netlify/functions/restaurant-search"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/image"
+  to = "/.netlify/functions/image"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/restaurant-photo"
+  to = "/.netlify/functions/restaurant-photo"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/release"
+  to = "/.netlify/functions/release"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/api/restaurant-search"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/api/release"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"

@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "Dinliminate",
+  "short_name": "Dinliminate",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090909",
+  "theme_color": "#090909",
+  "description": "Dinner decisions without the endless scrolling.",
+  "icons": [
+    {
+      "src": "./icon-512.png?v=546",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./apple-touch-icon.png?v=546",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg?v=546",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,4309 @@
+/* CP693 verification marker — no runtime behavior change. */
+
+(() => {
+'use strict';
+const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.DINLIMINATE_FOODS : [];
+const DEFAULT_FOOD_IMAGE = 'https://images.pexels.com/photos/16365767/pexels-photo-16365767.jpeg?auto=compress&cs=tinysrgb&w=1800';
+const $ = (id) => document.getElementById(id);
+const KEY = 'dinliminate.clean.cp1';
+const HISTORY_KEY = 'dinliminate.clean.history';
+const APP_VERSION = '1.0';
+let APP_BUILD = '837';
+fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
+const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
+const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
+if(!RESTAURANT_TAXONOMY) throw new Error('Restaurant taxonomy failed to load.');
+const FOOD_QUICK = ['American','Southern','Mexican','Italian','Asian','Pasta','Soup/Stew','Healthy','Seafood','Potato'];
+const foodQuickLabels=()=>[...FOOD_QUICK,'Other',...(S.customQuickCuts||[]).map(x=>String(x?.name||'').trim()).filter(Boolean)];
+const REST_QUICK = [...RESTAURANT_TAXONOMY.tags];
+const QUICK_IMAGES = {
+Southern:'https://images.pexels.com/photos/2397401/pexels-photo-2397401.jpeg?auto=compress&cs=tinysrgb&w=700', // Meatloaf & Mashed Potatoes
+Pasta:'https://images.pexels.com/photos/6287520/pexels-photo-6287520.jpeg?auto=compress&cs=tinysrgb&w=700', // Spaghetti
+Asian:'https://images.pexels.com/photos/32845321/pexels-photo-32845321.jpeg?auto=compress&cs=tinysrgb&w=700', // Fried Rice
+Mexican:'https://images.pexels.com/photos/12317911/pexels-photo-12317911.jpeg?auto=compress&cs=tinysrgb&w=700', // Tacos / Mexican Stir Fry family
+'Soup/Stew':'https://images.pexels.com/photos/15305397/pexels-photo-15305397.jpeg?auto=compress&cs=tinysrgb&w=700', // Soup & Sandwich
+Healthy:'https://images.pexels.com/photos/11906476/pexels-photo-11906476.jpeg?auto=compress&cs=tinysrgb&w=700', // Salad Bowl
+Breakfast:'https://images.pexels.com/photos/5852231/pexels-photo-5852231.jpeg?auto=compress&cs=tinysrgb&w=700', // Eggs & Toast
+American:'https://images.pexels.com/photos/12034622/pexels-photo-12034622.jpeg?auto=compress&cs=tinysrgb&w=700', // Burger
+Snack:'https://images.pexels.com/photos/6422042/pexels-photo-6422042.jpeg?auto=compress&cs=tinysrgb&w=700', // Popcorn
+Italian:'https://images.pexels.com/photos/7813574/pexels-photo-7813574.jpeg?auto=compress&cs=tinysrgb&w=700', // Pizza
+Seafood:'https://images.pexels.com/photos/3763847/pexels-photo-3763847.jpeg?auto=compress&cs=tinysrgb&w=700', // Grilled salmon
+Potato:'https://images.pexels.com/photos/273825/pexels-photo-273825.jpeg?auto=compress&cs=tinysrgb&w=700' // Roasted potatoes
+};
+const REST_QUICK_IMAGES = {
+'Fast Food':'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=85',
+Burgers:'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=85',
+Pizza:'https://images.unsplash.com/photo-1579684947550-22e945225d9a?auto=format&fit=crop&w=900&q=85',
+Mexican:'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=85',
+American:'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=85',
+Italian:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=85',
+Asian:'https://images.pexels.com/photos/32845321/pexels-photo-32845321.jpeg?auto=compress&cs=tinysrgb&w=900',
+BBQ:'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=85',
+Seafood:'https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=900&q=85',
+Breakfast:'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=900&q=85'
+};
+const S = {
+screen:'home',
+hidden:new Set(),
+deleted:new Set(),
+hiddenRestaurants:{},
+cutCats:new Set(),
+foodCuts:new Set(),
+maybe:new Set(),
+maybeDeck:false,
+foodMaybeRound:false,
+custom:[],
+customQuickCuts:[],
+deletedCustomMeals:[],
+pool:[],
+index:0,
+foodActions:[],
+restaurantPool:[],
+restaurantIndex:0,
+restaurantCuts:new Set(),
+restaurantActions:[],
+restaurantMaybeRound:false,
+restaurantQuery:'',
+location:null,
+locationSource:'none',
+restaurantSearchLatencyMs:0,
+saved:false,
+storageWarning:false,
+restaurantSearchDegraded:false,
+locationFreshAt:null,
+winnerItem:null,
+winnerType:'food',
+hungryWheelChoice:null,
+hungryWheelSpinning:false,
+hungryWheelRotation:0,
+hungryWheelDisplayItems:null,
+hungryWheelLandedId:null,
+hungryWheelSpinPhase:'idle',
+hungryWheelVelocity:0,
+hungryWheelFrame:null,
+hungryWheelLastFrame:0,
+
+hungryWheelDragging:false,
+hungryWheelDragAngle:0,
+hungryWheelDragRotation:0,
+hungryWheelDragLastTime:0,
+hungryWheelDragVelocity:0,
+hungryRestaurantChoice:null,
+hungryRestaurantPendingChoice:null,
+hungryWheelSpinToken:0,
+schemaVersion:4,
+notes:{},
+restaurantSearchOrigin:null,
+restaurantSearchKey:'',
+quickCutsCollapsed:{food:true,restaurant:true},
+mealTimeCutsCollapsed:true,
+mealTimeFilters:new Set(['Breakfast','Lunch / Dinner','Snacks / Desserts'])
+};
+const IMAGE_PROXY_HOSTS=new Set(['images.pexels.com','images.unsplash.com','commons.wikimedia.org','upload.wikimedia.org','static.wixstatic.com','static.spotapps.co','www.goodnes.com','hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','www.southernliving.com','southernbite.com','snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com','slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com','kookycrunch.com','cdn.apartmenttherapy.info','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.africanbites.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','www.sugardale.com','myhomemaderecipe.com','www.finedininglovers.com']);
+function imageProxyUrl(raw){
+ const src=String(raw||'');
+ if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
+ try{const u=new URL(src);if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;return '/api/image?url='+encodeURIComponent(u.href);}catch{return src;}
+}
+const HOME_DOOR_IMAGE='./home-background.jpg?v=840';
+const HOME_DOOR_PROXY=HOME_DOOR_IMAGE;
+function bindPersistentHomeBackground(){
+ const img=$('homeBackgroundImage');
+ if(!img||img.dataset.bound)return;
+ img.dataset.bound='true';
+ img.src=HOME_DOOR_PROXY;
+ img.dataset.fallback=HOME_DOOR_IMAGE;
+ img.referrerPolicy='no-referrer';
+ img.loading='eager';
+ img.fetchPriority='high';
+ img.decoding='async';
+ img.addEventListener('error',()=>{
+   const fallback=img.dataset.fallback||HOME_DOOR_IMAGE;
+   if(img.src!==fallback){img.src=fallback;}
+ });
+}
+function foodPhoto(item){
+if(!item)return HUNGRY_IMAGE;
+const src=String(item.image||'');
+if(src && !src.startsWith('idb:'))return imageProxyUrl(src);
+const groups=Array.isArray(item.quickCuts)&&item.quickCuts.length?item.quickCuts:[item.category];
+for(const label of groups){if(QUICK_IMAGES[label])return QUICK_IMAGES[label];}
+return QUICK_IMAGES.American;
+}
+function customQuickCutByName(label){
+ const key=normKey(label);
+ return (S.customQuickCuts||[]).find(x=>normKey(x?.name)===key)||null;
+}
+function customQuickCutImage(label){
+ const item=customQuickCutByName(label),src=String(item?.image||'');
+ if(src&&!src.startsWith('idb:'))return imageProxyUrl(src);
+ return imageProxyUrl(QUICK_IMAGES.American);
+}
+function foodQuickImage(label){return QUICK_IMAGES[label]?imageProxyUrl(QUICK_IMAGES[label]):customQuickCutImage(label);}
+function foodPhotoFallback(item){
+const groups=Array.isArray(item?.quickCuts)&&item.quickCuts.length?item.quickCuts:[item?.category];
+for(const label of groups){if(QUICK_IMAGES[label])return imageProxyUrl(QUICK_IMAGES[label]);if(customQuickCutByName(label)?.image)return customQuickCutImage(label);}
+return imageProxyUrl(QUICK_IMAGES.American);
+}
+const KNOWN_RESTAURANT_WEBSITES={
+  "mcdonald's":'https://www.mcdonalds.com',"taco bell":'https://www.tacobell.com',"wendy's":'https://www.wendys.com',"the thirsty goat":'https://www.thirstygoatsango.com',"sweet p's":'https://sweetpssouthernstyle.com',"sweet p's southern style":'https://sweetpssouthernstyle.com',"gray smoke barbecue":'https://graysmokebarbecue.com/',"gray smoke":'https://graysmokebarbecue.com/',"gray's smoke":'https://graysmokebarbecue.com/',"cap's neighborhood bar & grill":'https://capssangogrill.com/',"caps neighborhood bar & grill":'https://capssangogrill.com/',"caps neighborhood bar and grill":'https://capssangogrill.com/',"cap’s neighborhood bar & grill":'https://capssangogrill.com/',"burger king":'https://www.bk.com',"kfc":'https://www.kfc.com',"chick fil a":'https://www.chick-fil-a.com',"popeyes":'https://www.popeyes.com',"subway":'https://www.subway.com',"sonic":'https://www.sonicdrivein.com',"arby's":'https://www.arbys.com',"whataburger":'https://whataburger.com',"five guys":'https://www.fiveguys.com',"culver's":'https://www.culvers.com',"raising cane's":'https://www.raisingcanes.com',"wingstop":'https://www.wingstop.com',"bojangles":'https://www.bojangles.com',"cook out":'https://www.cookout.com',"dairy queen":'https://www.dairyqueen.com',"zaxby's":'https://www.zaxbys.com',"church's chicken":'https://www.churchs.com',"captain d's":'https://www.captainds.com',"long john silver's":'https://www.ljsilvers.com',"jimmy john's":'https://www.jimmyjohns.com',"jersey mike's":'https://www.jerseymikes.com',"firehouse subs":'https://www.firehousesubs.com',"little caesars":'https://littlecaesars.com',"domino's":'https://www.dominos.com',"papa john's":'https://www.papajohns.com',"pizza hut":'https://www.pizzahut.com',"marco's pizza":'https://www.marcos.com',"krystal":'https://www.krystal.com',"steak 'n shake":'https://www.steaknshake.com',"white castle":'https://www.whitecastle.com',"freddy's":'https://www.freddys.com',"panda express":'https://www.pandaexpress.com',"jack in the box":'https://www.jackinthebox.com',"hardee's":'https://www.hardees.com',"del taco":'https://www.deltaco.com',"checkers":'https://www.checkers.com',"rally's":'https://www.rallys.com',"chipotle":'https://www.chipotle.com',"applebee's":'https://www.applebees.com',"chili's":'https://www.chilis.com',"olive garden":'https://www.olivegarden.com',"waffle house":'https://www.wafflehouse.com'
+};
+function knownRestaurantWebsite(row){
+ const name=normKey(row?.name),brand=normKey(row?.brand);
+ for(const [key,url] of Object.entries(KNOWN_RESTAURANT_WEBSITES)){
+  const k=normKey(key);
+  if(name===k||name.includes(k)||brand===k||brand.includes(k))return url;
+ }
+ return '';
+}
+const restaurantWebsiteInflight=new Map();
+const restaurantWebsiteCache=new Map();
+const RESTAURANT_WEBSITE_CACHE_KEY='dinliminate.restaurant.websites.v1';
+const RESTAURANT_WEBSITE_CACHE_TTL=14*24*60*60*1000;
+function restaurantWebsiteRowKey(row){
+ return normKey([row?.name,row?.address,row?.brand].filter(Boolean).join('|'));
+}
+function loadRestaurantWebsiteStore(){
+ try{
+  const raw=JSON.parse(localStorage.getItem(RESTAURANT_WEBSITE_CACHE_KEY)||'{}');
+  const now=Date.now();
+  for(const [key,value] of Object.entries(raw||{})){
+   if(value&&now-Number(value.t||0)<RESTAURANT_WEBSITE_CACHE_TTL&&(typeof value.url==='string'||typeof value.officialPage==='string')){
+    restaurantWebsiteCache.set(key,value);
+   }
+  }
+ }catch{}
+}
+function saveRestaurantWebsiteStore(){
+ try{
+  const out={},now=Date.now();
+  for(const [key,value] of restaurantWebsiteCache){
+   if(value&&now-Number(value.t||0)<RESTAURANT_WEBSITE_CACHE_TTL)out[key]=value;
+  }
+  localStorage.setItem(RESTAURANT_WEBSITE_CACHE_KEY,JSON.stringify(out));
+ }catch{}
+}
+loadRestaurantWebsiteStore();
+function cachedRestaurantWebsiteEntry(row){
+ const key=restaurantWebsiteRowKey(row),value=restaurantWebsiteCache.get(key);
+ return value||null;
+}
+function cachedRestaurantWebsite(row){
+ return cachedRestaurantWebsiteEntry(row)?.url||'';
+}
+function cachedRestaurantOfficialPage(row){
+ return cachedRestaurantWebsiteEntry(row)?.officialPage||'';
+}
+function storeRestaurantWebsitePresence(row,presence){
+ const key=restaurantWebsiteRowKey(row);
+ if(!key||!presence)return;
+ const url=safeExternalUrl(presence.website||'');
+ const officialPage=safeExternalUrl(presence.officialPage||'')||String(presence.officialPage||'');
+ if(!url&&!officialPage)return;
+ restaurantWebsiteCache.set(key,{url,officialPage,t:Date.now(),source:String(presence.source||'')});
+ saveRestaurantWebsiteStore();
+}
+function storeRestaurantWebsite(row,url,source=''){
+ storeRestaurantWebsitePresence(row,{website:url,source});
+}
+function restaurantWebsiteDirect(row){
+ const direct=safeExternalUrl(row?.website);
+ if(direct)return direct;
+ const known=knownRestaurantWebsite(row);
+ if(known)return known;
+ return cachedRestaurantWebsite(row);
+}
+function restaurantOfficialPageDirect(row){
+ const page=cachedRestaurantOfficialPage(row);
+ if(!page)return '';
+ try{
+  const u=new URL(page);
+  const h=u.hostname.toLowerCase().replace(/^www\./,'');
+  return ['facebook.com','instagram.com'].some(x=>h===x||h.endsWith('.'+x))?page:'';
+ }catch{return ''}
+}
+function restaurantWebsitePresentation(row){
+ const website=restaurantWebsiteDirect(row);
+ if(website)return{url:website,kind:'website',source:'website'};
+ const page=restaurantOfficialPageDirect(row);
+ if(page)return{url:page,kind:'official-page',source:'official-page'};
+ const q=[row?.name,row?.address].filter(Boolean).join(' ').trim();
+ return{url:'https://www.google.com/search?q='+encodeURIComponent((q||'restaurant')+' restaurant website'),kind:'search',source:'search'};
+}
+function restaurantWebsiteUrl(row){
+ return restaurantWebsitePresentation(row).url;
+}
+async function hydrateRestaurantWebsite(row,scope){
+ if(!row)return;
+ const key=restaurantWebsiteRowKey(row);
+ if(!key)return;
+ const apply=(presence)=>{
+  const data=presence||{};
+  const website=safeExternalUrl(data.website||'');
+  const page=safeExternalUrl(data.officialPage||'')||String(data.officialPage||'');
+  const chosen=website?{url:website,kind:'website'}:(page?{url:page,kind:'official-page'}:{url:restaurantWebsitePresentation(row).url,kind:'search'});
+  document.querySelectorAll((scope||'')+' [data-restaurant-website-key]').forEach(link=>{
+   if(link.dataset.restaurantWebsiteKey!==key)return;
+   link.href=chosen.url;
+   link.target='_blank';
+   link.rel='noopener noreferrer';
+   const label=chosen.kind==='website'?'Website':(chosen.kind==='official-page'?'Official Page':'Search Website');
+   link.title=label;
+   link.dataset.restaurantWebsiteSource=String(data.source||chosen.kind);
+   link.setAttribute('aria-label',chosen.kind==='website'?'Open '+String(row.name||'restaurant')+' website':chosen.kind==='official-page'?'Open the official Facebook or Instagram page for '+String(row.name||'restaurant'):'Search '+String(row.name||'restaurant')+' website');
+  });
+ };
+ const direct=restaurantWebsiteDirect(row);
+ if(direct){
+  storeRestaurantWebsite(row,direct,'direct');
+  apply({website:direct,source:'direct'});
+  return direct;
+ }
+ const cached=cachedRestaurantWebsite(row);
+ if(cached){
+  row.website=cached;
+  apply({website:cached,source:'cached'});
+  return cached;
+ }
+ const cachedPage=restaurantOfficialPageDirect(row);
+ if(cachedPage){
+  apply({officialPage:cachedPage,source:'cached-official-page'});
+  return cachedPage;
+ }
+ let pending=restaurantWebsiteInflight.get(key);
+ if(!pending){
+  const params=new URLSearchParams({
+   mode:'website',
+   name:String(row.name||''),
+   address:String(row.address||''),
+   brand:String(row.brand||''),
+   website:String(row.website||''),
+   phone:String(row.phone||row.nationalPhoneNumber||row['contact:phone']||'')
+  });
+  pending=(async()=>{
+   const response=await fetch('/api/restaurants?'+params.toString(),{cache:'no-store'});
+   if(!response.ok)throw new Error('Website resolver unavailable');
+   const data=await response.json();
+   const website=safeExternalUrl(data?.website);
+   const officialPage=safeExternalUrl(data?.officialPage);
+   if(website||officialPage){
+    row.website=website||row.website||'';
+    storeRestaurantWebsitePresence(row,{website,officialPage,source:String(data?.source||'official-search')});
+   }
+   return{website,officialPage,source:String(data?.source||'official-search')};
+  })().finally(()=>restaurantWebsiteInflight.delete(key));
+  restaurantWebsiteInflight.set(key,pending);
+ }
+ try{
+  const presence=await pending;
+  apply(presence);
+  return presence.website||presence.officialPage||'';
+ }catch{
+  apply({});
+  return '';
+ }
+}
+
+function restaurantPhoneSearchUrl(row){
+ const q=[row?.name,row?.address].filter(Boolean).join(' ').trim();
+ return 'https://www.google.com/search?q='+encodeURIComponent((q||'restaurant')+' phone number');
+}
+function restaurantDirectionsUrl(row){
+const lat=Number(row?.lat),lon=Number(row?.lon);
+const destination=Number.isFinite(lat)&&Number.isFinite(lon)?lat+','+lon:(row?.address||row?.name||'restaurant');
+return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
+}
+const FINAL_FOOD_IMAGE='./fallback-food.svg';
+const FINAL_RESTAURANT_IMAGE='./fallback-restaurant.svg';
+function bindImageFallbackAttrs(selector){
+ document.querySelectorAll(selector).forEach(img=>{
+  img.referrerPolicy='no-referrer';img.loading='eager';
+  const final=img.dataset.finalFallback||FINAL_FOOD_IMAGE;
+  img.addEventListener('error',()=>{
+   const fallback=img.dataset.fallback||'',current=img.currentSrc||img.src;
+   if(fallback&&current!==fallback){img.src=fallback;return;}
+   if(final&&current!==final){img.dataset.imageFallback='true';img.src=final;return;}
+   img.dataset.imageFallback='true';
+  });
+ });
+}
+function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAGE){
+ document.querySelectorAll(selector).forEach(img=>{
+  img.referrerPolicy='no-referrer';img.loading='eager';img.dataset.fallback=img.dataset.fallback||fallback;
+  const final=img.dataset.finalFallback||finalFallback;
+  img.addEventListener('error',()=>{
+   const fb=img.dataset.fallback||'',current=img.currentSrc||img.src;
+   if(fb&&current!==fb){img.src=fb;return;}
+   if(final&&current!==final){img.dataset.imageFallback='true';img.src=final;return;}
+   img.dataset.imageFallback='true';
+  });
+ });
+}
+function bindHomeImageFallbacks(){
+ document.querySelectorAll('.home-photo-img').forEach(img=>{
+  const final=img.dataset.finalFallback||FINAL_FOOD_IMAGE;
+  img.referrerPolicy='no-referrer';img.loading='eager';
+  img.onerror=function(){const current=this.currentSrc||this.src;if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};
+ });
+}
+const restaurantPhotoInflight=new Map();
+const restaurantPhotoCache=new Map();
+const restaurantPhotoMissCache=new Map();
+const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v2';
+const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
+const RESTAURANT_PHOTO_PREFETCH_COUNT=2;
+let restaurantPhotoStoragePromise=null;
+function restaurantPhotoCacheRequest(row){
+ const identity=normKey([row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
+ let hash=2166136261;
+ for(let i=0;i<identity.length;i++){hash^=identity.charCodeAt(i);hash=Math.imul(hash,16777619);}
+ return new Request('/__dinliminate_restaurant_photo_cache__/'+(hash>>>0).toString(36));
+}
+async function openRestaurantPhotoCache(){
+ if(!('caches' in window))return null;
+ if(restaurantPhotoStoragePromise)return restaurantPhotoStoragePromise;
+ restaurantPhotoStoragePromise=caches.open(RESTAURANT_PHOTO_CACHE_NAME).catch(()=>null);
+ return restaurantPhotoStoragePromise;
+}
+function restaurantPhotoDataFromCachedResponse(response){
+ if(!response)return null;
+ const cachedAt=Number(response.headers.get('X-Dinliminate-Cached-At')||0);
+ if(cachedAt && Date.now()-cachedAt>RESTAURANT_PHOTO_CACHE_MAX_AGE)return null;
+ return response.blob().then(blob=>{
+  if(!blob.type.startsWith('image/'))return null;
+  return {
+   url:URL.createObjectURL(blob),
+   attributions:decodePhotoAttributions(response.headers.get('X-Restaurant-Photo-Attributions')),
+   source:String(response.headers.get('X-Restaurant-Photo-Source')||'').trim()
+  };
+ }).catch(()=>null);
+}
+async function getPersistentRestaurantPhoto(row){
+ try{
+  const cache=await openRestaurantPhotoCache();
+  if(!cache)return null;
+  const request=restaurantPhotoCacheRequest(row);
+  const cached=await cache.match(request);
+  if(!cached)return null;
+  const data=await restaurantPhotoDataFromCachedResponse(cached);
+  if(data)return data;
+  await cache.delete(request);
+ }catch{}
+ return null;
+}
+async function putPersistentRestaurantPhoto(row,blob,attributions,source){
+ try{
+  const cache=await openRestaurantPhotoCache();
+  if(!cache)return;
+  const request=restaurantPhotoCacheRequest(row);
+  const headers=new Headers({'Content-Type':blob.type||'image/jpeg','X-Dinliminate-Cached-At':String(Date.now()),'X-Restaurant-Photo-Source':String(source||'')});
+  if(attributions?.length){
+   const raw=JSON.stringify(attributions);
+   const bytes=new TextEncoder().encode(raw); let binary=''; for(const byte of bytes)binary+=String.fromCharCode(byte); let encoded=btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+   headers.set('X-Restaurant-Photo-Attributions',encoded);
+  }
+  await cache.put(request,new Response(blob,{status:200,headers}));
+ }catch{}
+}
+const KNOWN_RESTAURANT_PHOTO_FALLBACKS=[
+ {names:["sweet p's southern style","sweet ps southern style"],url:"https://static.where-e.com/United_States/Tennessee/Sweet-Ps-Southern-Style_8c41d09a14d942d0ca25ab6076d3f05e.jpg"},
+ {names:["gray smoke barbecue","gray smoke","gray's smoke"],url:"https://du9m0k402rjmo.cloudfront.net/images/P_23585/90a3488a-0fdb-47fa-9c6d-e76837ebc263.jpg"},
+ {names:["cap's neighborhood bar & grill","caps neighborhood bar & grill","caps neighborhood bar and grill"],url:"https://clarksvillenow.sagacom.com/files/2024/05/CAPS-Neighborhood-Bar-Grill-7.jpg"},
+ {names:["Reggie's BBQ","Reggie's BBQ Clarksville"],url:"https://d1w7312wesee68.cloudfront.net/XqjMLj3K3JQ1LOypRViqpaLKzbu0dXfv_cQwp2AxpXk/ext%3Awebp/quality%3A85/plain/s3%3A//toast-sites-resources-prod/restaurantImages/263daf0a-e243-4425-8d8a-9b75cbf93056/82d46202-8e46-4a18-9858-9ca3d930ca93-19"},
+ {names:["Legends Smokehouse & Grill","Legends Smokehouse and Grill","Legends Smokehouse"],url:"https://5dee1204fff7f466a182.cdn6.editmysite.com/uploads/b/5dee1204fff7f466a182a4e6fe08b0edea7ec96d54c794955f8198991dae5da6/Untitled%20design%282%29_1713398838.png?optimize=medium&width=2400"},
+ {names:["Johnny's Big Burger","Johnnys Big Burger"],url:"https://thebigburger.com/__l5e/assets-v1/3211c7e6-0473-4028-b8d0-db085ca4a369/frontpage.jpg"},
+ {names:["Blackhorse Pub & Brewery","Blackhorse Pub and Brewery","Blackhorse"],url:"https://assets.site-static.com/userFiles/2147/image/Mark/Compress_Images_Special_Project/The%20Blackhorse%20Pub%20Brewery%2C%20TN.jpg"},
+ {names:["Pbody's","Pbodys"],url:"https://img.p.mapq.st/?q=75&url=https%3A%2F%2Fmedia-cdn.tripadvisor.com%2Fmedia%2Fphoto-o%2F07%2F11%2Fa6%2F80%2Fpbody-s.jpg&w=3840"},
+ {names:["The Catfish House","Catfish House"],url:"https://static.wixstatic.com/media/568437_1b8e1db53bfa4086b85fad232d3b91f4~mv2.jpg/v1/fill/w_960%2Ch_460%2Cal_c%2Cq_85%2Cenc_avif%2Cquality_auto/568437_1b8e1db53bfa4086b85fad232d3b91f4~mv2.jpg"},
+ {names:["Liberty Park Grill"],url:"https://photos.smugmug.com/USA/Tennessee/Clarksville/i-L9DVxSZ/0/92fe32e8/L/ClarksvilleTN-369-L.jpg"},
+ {names:["Cafe 931","Café 931"],url:"https://pub-ba1a74be17d7442a9f2541946eb9510e.r2.dev/shops/1f9865fb-9f52-490e-8c41-377ec5adab87/0.jpg"},
+ {names:["Yada on Franklin","Yada"],url:"https://static.spotapps.co/spots/cd/9f903fe2ff4bd0b72d4439b91d8d95/full"},
+ {names:["The Mailroom","Mailroom"],url:"https://images.squarespace-cdn.com/content/v1/6772c0e3152fba51d1e9cea1/1735573738359-OFYKQZMLW8GCX7TIKR0Q/Mailroom-Featured-Image-Header.jpg"},
+ {names:["Silke's Old World Breads","Silkes Old World Breads","Silke's"],url:"https://silkesoldworldbreads.com/cdn/shop/files/outside_whole_bldg_for_web.jpg?v=1631571846&width=3840"},
+ {names:["Casa D'Italia","Casa D’Italia","Casa D Italia","Casa D'Italia Ristorante"],url:"https://static.goto-where.com/70162-albums-1.jpg"}
+];
+function knownRestaurantPhotoFallback(row){
+ const normalized=normKey(row?.name);
+ if(!normalized)return '';
+ const hit=KNOWN_RESTAURANT_PHOTO_FALLBACKS.find(entry=>entry.names.some(n=>{
+  const key=normKey(n);
+  return normalized===key||normalized.includes(key)||key.includes(normalized);
+ }));
+ return hit?.url||'';
+}
+function restaurantFallbackImage(row){
+ const known=knownRestaurantPhotoFallback(row);
+ if(known)return known;
+ const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[]),...((typeof restaurantCuisineTags==='function')?restaurantCuisineTags(row):[])].filter(Boolean);
+ // Restaurant cards should use restaurant-category photography, not meal-category photography.
+ // These images are served through /api/image so the service worker can cache them for offline/repeat use.
+ const restaurantMap={...REST_QUICK_IMAGES};
+ for(const label of labels){
+  if(restaurantMap[label])return imageProxyUrl(restaurantMap[label]);
+  const normalized=String(label).trim().toLowerCase();
+  const found=Object.keys(restaurantMap).find(key=>key.toLowerCase()===normalized);
+  if(found)return imageProxyUrl(restaurantMap[found]);
+ }
+ return imageProxyUrl(REST_QUICK_IMAGES.American);
+}
+function decodePhotoAttributions(raw){
+ const value=String(raw||'').trim();if(!value)return[];
+ try{
+  let b64=value.replace(/-/g,'+').replace(/_/g,'/');while(b64.length%4)b64+='=';
+  const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const data=JSON.parse(new TextDecoder().decode(bytes));
+  return Array.isArray(data)?data.filter(x=>x&&x.displayName&&x.uri).slice(0,5):[]
+ }catch{return[]}
+}
+function setRestaurantPhotoCredit(card,attributions){
+ const credit=card?.querySelector('.restaurant-photo-credit');if(!credit)return;
+ const safe=(attributions||[]).map(x=>({name:String(x.displayName||''),uri:safeExternalUrl(x.uri)})).filter(x=>x.name&&x.uri).slice(0,3);
+ if(!safe.length){credit.textContent='';credit.classList.remove('is-visible');return;}
+ credit.innerHTML='Photo by '+safe.map(x=>'<a href="'+esc(x.uri)+'" target="_blank" rel="noopener noreferrer">'+esc(x.name)+'</a>').join(', ');
+ credit.classList.add('is-visible');
+}
+async function loadRestaurantPhoto(row){
+ if(!row)return null;
+ const rowKey=String(row.id||row.canonicalId||'').trim();
+ if(!rowKey)return null;
+ const cacheHit=restaurantPhotoCache.get(rowKey);
+ if(cacheHit?.url)return cacheHit;
+ const missAt=Number(restaurantPhotoMissCache.get(rowKey)||0);
+ if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
+ let pending=restaurantPhotoInflight.get(rowKey);
+ if(!pending){
+  const params=new URLSearchParams();
+  if(row.name)params.set('name',String(row.name));
+  if(row.address)params.set('address',String(row.address));
+  const website=safeExternalUrl(row.website);
+  if(website)params.set('website',website);
+  const officialWebsite=website||safeExternalUrl(knownRestaurantWebsite(row));
+  if(officialWebsite)params.set('officialWebsite',officialWebsite);
+  const source=String(row.source||'');
+  const osmPhoto=safeExternalUrl(row.photo);
+  if(source.startsWith('OpenStreetMap')&&osmPhoto){
+   params.set('osmExact','1');
+   params.set('osmImage',osmPhoto);
+  }
+  if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
+  if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
+  params.set('resolver','710');
+  const requestUrl='/api/restaurant-photo?'+params.toString();
+  pending=(async()=>{
+   const stored=await getPersistentRestaurantPhoto(row);
+   if(stored)return stored;
+   const res=await fetch(requestUrl,{cache:'force-cache'});
+   if(!res.ok){
+    restaurantPhotoMissCache.set(rowKey,Date.now());
+    throw new Error('Restaurant photo unavailable');
+   }
+   const blob=await res.blob();
+   if(!blob.type.startsWith('image/')){
+    restaurantPhotoMissCache.set(rowKey,Date.now());
+    throw new Error('Restaurant photo response was not an image');
+   }
+   const attributions=decodePhotoAttributions(res.headers.get('X-Restaurant-Photo-Attributions'));
+   const sourceName=String(res.headers.get('X-Restaurant-Photo-Source')||'').trim();
+   await putPersistentRestaurantPhoto(row,blob,attributions,sourceName);
+   return {url:URL.createObjectURL(blob),attributions,source:sourceName};
+  })().then(data=>{
+   restaurantPhotoCache.set(rowKey,data);
+   restaurantPhotoMissCache.delete(rowKey);
+   if(data.source)row.photoSource=data.source;
+   return data;
+  }).finally(()=>restaurantPhotoInflight.delete(rowKey));
+  restaurantPhotoInflight.set(rowKey,pending);
+ }
+ try{return await pending;}catch{return null;}
+}
+async function hydrateRestaurantPhoto(row,scope){
+ if(!row)return;
+ const rowKey=String(row.id||row.canonicalId||'').trim();
+ if(!rowKey)return;
+ const imgs=[...document.querySelectorAll(scope+' img[data-restaurant-photo-key]')].filter(img=>img.dataset.restaurantPhotoKey===rowKey);
+ if(!imgs.length)return;
+ const data=await loadRestaurantPhoto(row);
+ if(!data?.url)return;
+ imgs.forEach(img=>{
+  if(!img.isConnected)return;
+  img.src=data.url;
+  img.dataset.restaurantPhotoLoaded='true';
+  setRestaurantPhotoCredit(img.closest('.card,.restaurant-detail-hero')||img.parentElement,data.attributions);
+ });
+}
+
+function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETCH_COUNT){
+ const pool=Array.isArray(rows)?rows:[];
+ if(navigator.onLine===false)return;
+ const targets=[];
+ for(let offset=1;offset<=count;offset++){
+  const row=pool[startIndex+offset];
+  if(row)targets.push(row);
+ }
+ if(!targets.length)return;
+ const run=()=>targets.forEach(row=>{loadRestaurantPhoto(row).catch(()=>{});});
+ if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(run,{timeout:1200});
+ else window.setTimeout(run,350);
+}
+
+function phoneHref(raw){
+ const digits=String(raw||'').replace(/[^+0-9]/g,'');
+ if(/^\+/.test(digits))return 'tel:'+digits;
+ if(/^1\d{10}$/.test(digits))return 'tel:+'+digits;
+ if(/^\d{10}$/.test(digits))return 'tel:+1'+digits;
+ return digits?'tel:'+digits:'';
+}
+function safeExternalUrl(raw){
+ try{
+  const u=new URL(String(raw||''),location.origin);
+  if(u.protocol!=='https:')return '';
+  const host=u.hostname.toLowerCase(),current=String(location.hostname||'').toLowerCase();
+  const appBrandHost=/(^|[.-])(?:dinliminate|diliminate)([.-]|$)/i.test(host);
+  if(host===current||appBrandHost)return '';
+  return u.href;
+ }catch{return '';}
+}
+const normKey=(v)=>String(v??'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const removeAllById = (id) => document.querySelectorAll('#'+id).forEach(el => el.remove());
+const removeFoodOverlays = () => ['manageFoodsModal','manageFoodsModalBg','foodEditorModal','foodEditorModalBg'].forEach(removeAllById);
+const uniq = (a) => [...new Map((a || []).filter(Boolean).map(x => [String(x.id || x.name), x])).values()];
+const allFoods = () => {
+ const defaults=getDefaultFoods();
+ const defaultIds=new Set(defaults.map(x=>String(x.id)));
+ const deletedIds=S.deleted||new Set();
+ const overrides=new Map((S.custom||[]).map(x=>[String(x.id),x]));
+ const merged=defaults.filter(item=>!deletedIds.has(String(item.id))).map(item=>{
+  const override=overrides.get(String(item.id));
+  if(!override)return item;
+  return Object.assign({},item,override,{builtInEdit:true,builtInId:String(item.id),quickCuts:Array.isArray(override.quickCuts)&&override.quickCuts.length?override.quickCuts:[override.category||item.category||'American'],mealTimes:mealTimesFor(override)});
+ });
+ const customOnly=S.custom.filter(x=>!defaultIds.has(String(x.id))&&!deletedIds.has(String(x.id))).map(x=>Object.assign({},x,{quickCuts:Array.isArray(x.quickCuts)&&x.quickCuts.length?x.quickCuts:[x.category||'American'],mealTimes:mealTimesFor(x)}));
+ return merged.concat(customOnly);
+};
+const STORAGE_VERSION = 5;
+const ITEM_NOTES_KEY = 'dinliminate.item.notes.v1';
+function loadItemNotes(){
+ try{
+  const raw=JSON.parse(localStorage.getItem(ITEM_NOTES_KEY)||'{}');
+  S.notes=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};
+ }catch{S.notes={};}
+}
+function saveItemNotes(){
+ try{
+  const clean={};
+  Object.entries(S.notes||{}).forEach(([key,value])=>{
+   const note=String(value??'').trim();
+   if(note)clean[key]=note.slice(0,1200);
+  });
+  S.notes=clean;
+  localStorage.setItem(ITEM_NOTES_KEY,JSON.stringify(clean));
+  return true;
+ }catch{return false;}
+}
+function itemNoteKey(item,type){
+ if(type==='restaurant'){
+  return 'restaurant:'+String(item?.canonicalId||restaurantCanonicalId(item)||item?.id||'unknown');
+ }
+ const directId=String(item?.sourceItemId||'').trim();
+ if(directId)return 'food:'+directId;
+ const found=allFoods().find(x=>normKey(x?.name)===normKey(item?.name));
+ return 'food:'+String(found?.id||item?.id||item?.name||'unknown');
+}
+function itemNote(item,type){return String((S.notes||{})[itemNoteKey(item,type)]||'').trim();}
+function setItemNote(item,type,note){
+ const key=itemNoteKey(item,type),value=String(note??'').trim();
+ if(value)S.notes[key]=value.slice(0,1200);else delete S.notes[key];
+ saveItemNotes();
+}
+const PHOTO_DB_NAME = 'dinliminate.photos';
+const PHOTO_STORE = 'images';
+let photoDbPromise = null;
+const storedPhotoIds = new Set();
+function openPhotoDB() {
+if (!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB unavailable'));
+if (photoDbPromise) return photoDbPromise;
+photoDbPromise = new Promise((resolve,reject) => {
+const req = indexedDB.open(PHOTO_DB_NAME,1);
+req.onupgradeneeded = () => {
+if (!req.result.objectStoreNames.contains(PHOTO_STORE)) req.result.createObjectStore(PHOTO_STORE);
+};
+req.onsuccess = () => resolve(req.result);
+req.onerror = () => reject(req.error || new Error('Could not open photo storage'));
+});
+return photoDbPromise;
+}
+async function putStoredPhoto(id,data) {
+try {
+const db=await openPhotoDB();
+await new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).put(data,id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('Could not save photo'));});
+storedPhotoIds.add(id); return true;
+} catch { return false; }
+}
+async function getStoredPhoto(id) {
+try {
+const db=await openPhotoDB();
+return await new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readonly');const req=tx.objectStore(PHOTO_STORE).get(id);req.onsuccess=()=>resolve(req.result||'');req.onerror=()=>reject(req.error||new Error('Could not read photo'));});
+} catch { return ''; }
+}
+async function deleteStoredPhoto(id) {
+try {
+const db=await openPhotoDB();
+await new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('Could not delete photo'));});
+} catch {}
+}
+async function hydrateCustomPhotos() {
+let changed=false;
+for (const item of S.custom) {
+if (String(item.image||'').startsWith('idb:')) {
+const data=await getStoredPhoto(item.id);
+if (data) { item.image=data; storedPhotoIds.add(item.id); changed=true; }
+else item.image=DEFAULT_FOOD_IMAGE;
+}
+}
+for (const item of (S.customQuickCuts||[])) {
+ const key='quickcut:'+String(item.id);
+ if(String(item.image||'').startsWith('idb:')){
+  const data=await getStoredPhoto(key);
+  if(data){item.image=data;storedPhotoIds.add(key);changed=true;}else item.image='';
+ }
+}
+for (const item of (S.deletedCustomMeals||[])) {
+ if(String(item.image||'').startsWith('idb:')){
+  const data=await getStoredPhoto(item.id);
+  if(data){item.image=data;storedPhotoIds.add(item.id);}else item.image=DEFAULT_FOOD_IMAGE;
+ }
+}
+if(changed && S.screen==='food'){ buildFood(); foodQuick(); drawFood(); }
+}
+function updateStorageIndicator() {
+const el=$('storageIndicator'); if(!el)return;
+el.classList.toggle('hidden', !S.storageWarning);
+}
+async function migrateCustomPhotos() {
+let changed=false;
+for(const item of S.custom){
+if(typeof item.image==='string' && item.image.startsWith('data:image/')){
+const ok=await putStoredPhoto(item.id,item.image);
+if(ok){ item.image='idb:'+item.id; changed=true; }
+}
+}
+if(changed){ save(); if(S.screen==='food'){ buildFood(); foodQuick(); drawFood(); } }
+}
+function save() {
+const data = {
+screen:S.screen, hidden:[...S.hidden], hiddenRestaurants:S.hiddenRestaurants,
+cutCats:[...S.cutCats], foodCuts:[...S.foodCuts], maybe:[...S.maybe],
+pool:S.pool, index:S.index, foodActions:S.foodActions,
+restaurantPool:S.restaurantPool, restaurantIndex:S.restaurantIndex,
+restaurantCuts:[...S.restaurantCuts], restaurantActions:S.restaurantActions,
+restaurantQuery:S.restaurantQuery, location:S.location, locationSource:S.locationSource,
+saved:S.saved, winnerItem:S.winnerItem, winnerType:S.winnerType, schemaVersion:STORAGE_VERSION, deleted:[...(S.deleted||[])], deletedCustomMeals:S.deletedCustomMeals||[],
+restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
+custom:S.custom.map(x=>({...x,image:(String(x.image||'').startsWith('data:image/') && storedPhotoIds.has(x.id))?'idb:'+x.id:x.image})),
+customQuickCuts:(S.customQuickCuts||[]).map(x=>({...x,image:(String(x.image||'').startsWith('data:image/') && storedPhotoIds.has('quickcut:'+x.id))?'idb:quickcut:'+x.id:x.image}))
+};
+try {
+localStorage.setItem(KEY, JSON.stringify(data));
+S.storageWarning=false;
+updateStorageIndicator();
+S.saved=true;
+return true;
+} catch {
+S.storageWarning=true;
+updateStorageIndicator();
+S.saved=true;
+return false;
+}
+}
+function load() {
+loadItemNotes();
+try {
+const raw = localStorage.getItem(KEY);
+if (!raw) return false;
+const d = JSON.parse(raw);
+
+if(!Array.isArray(d.foodCuts)) d.foodCuts=[];
+if(!d.foodCuts.length && Array.isArray(d.foodActions))
+for(const a of d.foodActions) if(a?.type==='cut'&&a.id) d.foodCuts.push(a.id);
+delete d.cutPrimary;
+const legacyKeys=['cutPrimary','allCut','foodAllCut','savedRound','savedRoundType','legacyRestaurantPool','restaurantResults','pass','passDraftCount','passDraftNames','passDraftMode','passStartVoter'];
+legacyKeys.forEach(key=>{try{delete d[key]}catch{}});
+Object.assign(S, d);
+legacyKeys.forEach(key=>{try{delete S[key]}catch{}});
+S.hidden = new Set(d.hidden || []);
+S.deleted = new Set(Array.isArray(d.deleted)?d.deleted:[]);
+S.hiddenRestaurants = d.hiddenRestaurants || {};
+S.cutCats = new Set(d.cutCats || []);
+S.foodCuts = new Set(d.foodCuts || []);
+S.maybe = new Set(d.maybe || []);
+S.maybeDeck = !!d.maybeDeck;
+S.foodMaybeRound = !!d.foodMaybeRound;
+S.restaurantCuts = new Set(d.restaurantCuts || []);
+S.foodActions = Array.isArray(d.foodActions) ? d.foodActions : [];
+S.restaurantActions = Array.isArray(d.restaurantActions) ? d.restaurantActions : [];
+S.restaurantMaybeRound = !!d.restaurantMaybeRound;
+S.restaurantPool = Array.isArray(d.restaurantPool) ? d.restaurantPool : [];
+S.custom = Array.isArray(d.custom) ? d.custom : [];
+S.customQuickCuts = Array.isArray(d.customQuickCuts) ? d.customQuickCuts : [];
+S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals : [];
+S.winnerType = d.winnerType || 'food';
+S.restaurantSearchOrigin = d.restaurantSearchOrigin && Number.isFinite(Number(d.restaurantSearchOrigin.lat)) && Number.isFinite(Number(d.restaurantSearchOrigin.lon)) ? {lat:Number(d.restaurantSearchOrigin.lat),lon:Number(d.restaurantSearchOrigin.lon)} : null;
+S.restaurantSearchKey = String(d.restaurantSearchKey||'');
+S.locationSource = String(d.locationSource||'none');
+S.locationFreshAt = Number.isFinite(Number(d.locationFreshAt)) ? Number(d.locationFreshAt) : null;
+S.quickCutsCollapsed = {food:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'food') ? !!d.quickCutsCollapsed.food : true,restaurant:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'restaurant') ? !!d.quickCutsCollapsed.restaurant : true};
+S.mealTimeCutsCollapsed = Object.prototype.hasOwnProperty.call(d,'mealTimeCutsCollapsed') ? !!d.mealTimeCutsCollapsed : true;
+S.mealTimeFilters = new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).filter(x=>MEAL_TIME_CUTS.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(MEAL_TIME_CUTS);
+if(S.locationSource==='device' && S.location)S.locationSource='last';
+S.restaurantSearchDegraded = !!d.restaurantSearchDegraded;
+S.schemaVersion = STORAGE_VERSION;
+return true;
+} catch { return false; }
+}
+function show(screen) {
+document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
+$(screen)?.classList.remove('hidden');
+S.screen = screen;
+document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
+$('globalBack')?.classList.add('hidden');
+$('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
+window.scrollTo?.(0,0);
+}
+function closeOverlays() {
+
+['drawer','drawerBg','modal','modalBg'].forEach(id => $(id)?.classList.add('hidden'));
+['manageFoodsModal','manageFoodsModalBg','foodEditorModal','foodEditorModalBg','resetRestoreModal','resetRestoreModalBg','settingsModal','settingsModalBg','historyModal','historyModalBg','aboutModal','aboutModalBg','iphoneModal','iphoneModalBg','detailsModal','detailsModalBg'].forEach(id => $(id)?.remove());
+clearSuggestions();
+}
+function home() {
+closeOverlays();
+S.screen = 'home';
+show('home');
+maybeShowHomeNudge();
+}
+function maybeShowHomeNudge(){
+ const key='dinliminate.homeNudge.v1';
+ try{if(localStorage.getItem(key)){document.querySelector('#homeFirstNudge')?.remove();return;}}catch{}
+ const foot=document.querySelector('#home .home-foot');
+ if(!foot||document.querySelector('#homeFirstNudge'))return;
+ const nudge=document.createElement('div');
+ nudge.id='homeFirstNudge';
+ nudge.className='home-first-nudge';
+ nudge.textContent='Swipe until it’s revealed.';
+ foot.parentNode.insertBefore(nudge,foot);
+ try{localStorage.setItem(key,'1')}catch{}
+ window.setTimeout(()=>nudge.classList.add('is-faded'),4200);
+ window.setTimeout(()=>nudge.remove(),4700);
+}
+const MEAL_TIME_CUTS=['Breakfast','Lunch / Dinner','Snacks / Desserts'];
+function mealTimesFor(item){
+ const raw=Array.isArray(item?.mealTimes)?item.mealTimes:(item?.mealTime?[item.mealTime]:[]);
+ const explicit=raw.map(x=>String(x||'').trim()).filter(x=>MEAL_TIME_CUTS.includes(x));
+ if(explicit.length)return [...new Set(explicit)];
+ const category=String(item?.category||'').trim().toLowerCase();
+ const cuts=(Array.isArray(item?.quickCuts)?item.quickCuts:[item?.category]).map(x=>String(x||'').trim().toLowerCase());
+ if(category==='breakfast' || cuts.includes('breakfast')) return ['Breakfast'];
+ if(category==='snack' || category==='dessert' || category==='desserts' || cuts.some(x=>x==='snack'||x==='dessert'||x==='desserts')) return ['Snacks / Desserts'];
+ return ['Lunch / Dinner'];
+}
+function mealTimeFor(item){ return mealTimesFor(item)[0]||'Lunch / Dinner'; }
+function foodBasePool(){
+ return allFoods().filter(item=>{
+  if(S.hidden.has(item.id)||S.foodCuts.has(item.id))return false;
+  if(S.mealTimeFilters?.size){const times=mealTimesFor(item);if(!times.some(t=>S.mealTimeFilters.has(t)))return false;}
+  const cuts=Array.isArray(item.quickCuts)?item.quickCuts:[item.category];
+  if([...S.cutCats].some(label=>cuts.includes(label)))return false;
+  return true;
+ });
+}
+function foodPool(){
+ const base=foodBasePool();
+ return S.maybeDeck ? base.filter(item=>S.maybe.has(item.id)) : base;
+}
+function buildFood() {
+S.pool = foodPool();
+S.index = Math.max(0, Math.min(S.index, Math.max(0, S.pool.length - 1)));
+}
+function setMaybeDeck(kind, enabled){
+ const next=!!enabled;
+ const hasMaybe=maybeDeckCount(kind)>0;
+ // Never enter Maybe mode when there are no Maybe choices.
+ if(next && !hasMaybe){
+  S.maybeDeck=false;
+  if(kind==='food'){S.foodMaybeRound=false;S.index=0;buildFood();drawFood();}
+  else{S.restaurantMaybeRound=false;S.restaurantIndex=0;drawRestaurants();}
+  renderMaybeDeckToggle(kind);save();
+  return;
+ }
+ if(kind==='food'){
+  S.maybeDeck=next; S.foodMaybeRound=next; S.index=0; buildFood(); drawFood();
+ }else{
+  S.maybeDeck=next; S.restaurantMaybeRound=next; S.restaurantIndex=0; drawRestaurants();
+ }
+ renderMaybeDeckToggle(kind); save();
+}
+function maybeDeckCount(kind){
+ if(kind==='food'){
+  return foodBasePool().filter(item=>S.maybe.has(item.id)).length;
+ }
+ return restaurantPoolBase().filter(row=>row._maybe).length;
+}
+function renderMaybeDeckToggle(kind){
+ const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
+ const btn=$(id);if(!btn)return;
+ const hasMaybe=maybeDeckCount(kind)>0;
+ btn.dataset.mode=S.maybeDeck?'maybe':'all';
+ // In All mode with zero Maybes the control remains visibly bright but is
+ // inert; it must never route an empty deck into Hungry mode.
+ btn.disabled=!hasMaybe;
+ const target=S.maybeDeck?'Show all choices':'Show Maybe choices';
+ btn.setAttribute('aria-label',S.maybeDeck?'Viewing Maybe choices. Tap to show all choices.':'Viewing all choices. Tap to show Maybe choices.');
+ btn.setAttribute('aria-pressed',S.maybeDeck?'true':'false');
+ btn.title=target;
+ btn.innerHTML='<span class="deck-filter-label-all" aria-hidden="true">ALL</span><span class="deck-filter-divider" aria-hidden="true">·</span><span class="deck-filter-label-maybe" aria-hidden="true">MAYBES</span>';
+ btn.classList.toggle('is-maybe',S.maybeDeck);
+ btn.classList.toggle('is-all',!S.maybeDeck);
+}
+function bindMaybeDeckToggle(kind){
+ const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
+ const btn=$(id);if(!btn)return;
+ btn.onclick=()=>{
+  const hasMaybe=maybeDeckCount(kind)>0;
+  if(!S.maybeDeck && !hasMaybe)return;
+  setMaybeDeck(kind,!S.maybeDeck);
+ };
+ renderMaybeDeckToggle(kind);
+}
+function renderQuickCutsCollapse(kind){
+ const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
+ const toggle=section?.querySelector('.quick-cuts-collapse-toggle');
+ const chips=kind==='food' ? document.getElementById('foodQuick') : document.getElementById('restQuick');
+ if(!section||!toggle||!chips)return;
+ const collapsed=!!S.quickCutsCollapsed?.[kind];
+ if(kind==='food'){
+  section.classList.remove('is-collapsed');
+  chips.classList.toggle('is-rail-collapsed',collapsed);
+ }else{
+  section.classList.toggle('is-collapsed',collapsed);
+ }
+ toggle.setAttribute('aria-expanded',String(!collapsed));
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Cuisine Cuts');
+ toggle.title=collapsed?'Show Cuisine Cuts':'Hide Cuisine Cuts';
+ chips.setAttribute('aria-hidden',String(collapsed));
+}
+function bindQuickCutsCollapse(kind){
+ const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
+ const toggle=section?.querySelector('.quick-cuts-collapse-toggle');
+ if(!toggle)return;
+ toggle.onclick=(event)=>{
+  event.preventDefault();
+  event.stopPropagation();
+  S.quickCutsCollapsed = {...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
+  if(kind==='food' && !S.quickCutsCollapsed.food){S.mealTimeCutsCollapsed=true;renderMealTimeCuts();}
+  if(kind==='restaurant' && !S.quickCutsCollapsed.restaurant) collapseRestaurantSearch(false);
+  renderQuickCutsCollapse(kind);
+  save();
+ };
+ renderQuickCutsCollapse(kind);
+}
+function renderMealTimeCuts(){
+ const section=document.querySelector('#food .quick-section');
+ const toggle=document.getElementById('foodMealTimeToggle');
+ const chips=document.getElementById('mealTimeQuick');
+ if(!section||!toggle||!chips)return;
+ const collapsed=!!S.mealTimeCutsCollapsed;
+ chips.classList.toggle('is-rail-collapsed',collapsed);
+ chips.setAttribute('aria-hidden',String(collapsed));
+ toggle.setAttribute('aria-expanded',String(!collapsed));
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times');
+ toggle.title=collapsed?'Show Meal Times':'Hide Meal Times';
+ const allMealTimesSelected=MEAL_TIME_CUTS.every(label=>S.mealTimeFilters?.has(label));
+ const filtered=!allMealTimesSelected;
+ toggle.classList.toggle('is-filtered',filtered);
+ toggle.setAttribute('aria-pressed',filtered?'true':'false');
+ toggle.setAttribute('data-all-selected',allMealTimesSelected?'true':'false');
+ chips.innerHTML=MEAL_TIME_CUTS.map(label=>'<button class="chip meal-time-chip'+(S.mealTimeFilters?.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(S.mealTimeFilters?.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
+ chips.querySelectorAll('[data-meal-time]').forEach(btn=>{
+  btn.onclick=()=>{
+   const label=btn.dataset.mealTime;
+   if(S.mealTimeFilters.has(label)){
+    if(S.mealTimeFilters.size===1){
+     S.mealTimeFilters = new Set(MEAL_TIME_CUTS);
+    }else{
+     S.mealTimeFilters.delete(label);
+    }
+   }else{
+    S.mealTimeFilters.add(label);
+   }
+   S.index=0;
+   buildFood();
+   renderMealTimeCuts();
+   foodQuick();
+   drawFood();
+   save();
+  };
+ });
+}
+function bindMealTimeCuts(){
+ const toggle=document.getElementById('foodMealTimeToggle');
+ if(!toggle)return;
+ toggle.onclick=(event)=>{
+  event.preventDefault();
+  event.stopPropagation();
+  S.mealTimeCutsCollapsed=!S.mealTimeCutsCollapsed;
+  if(!S.mealTimeCutsCollapsed){S.quickCutsCollapsed.food=true;renderQuickCutsCollapse('food');}
+  renderMealTimeCuts();
+  save();
+ };
+ renderMealTimeCuts();
+}
+function foodQuick() {
+ const labels=foodQuickLabels();
+ const existing=[...document.querySelectorAll('#foodQuick [data-food-quick]')].map(btn=>btn.dataset.foodQuick);
+ if(existing.length!==labels.length||existing.some((x,i)=>x!==labels[i])){
+  $('foodQuick').innerHTML = labels.map(label => {
+   const src=foodQuickImage(label);
+   return '<button class="chip photo-chip" data-food-quick="'+esc(label)+'"><img class="quick-chip-photo" src="'+esc(src)+'" alt="'+esc(label)+' meal photo" draggable="false"><span>'+esc(label)+'</span></button>';
+  }).join('');
+  bindImageFallbackAttrs('[data-food-quick] img');
+ }
+ document.querySelectorAll('#foodQuick [data-food-quick]').forEach(btn => {
+  const label=btn.dataset.foodQuick;
+  const img=btn.querySelector('.quick-chip-photo');if(img)img.src=foodQuickImage(label);
+  btn.classList.toggle('cut',S.cutCats.has(label));
+  btn.onclick = () => {
+   S.cutCats.has(label) ? S.cutCats.delete(label) : S.cutCats.add(label);
+   S.index=0;
+   buildFood();
+   foodQuick();
+   drawFood();
+   save();
+  };
+ });
+ bindQuickCutsCollapse('food');
+ renderMealTimeCuts();
+ bindMealTimeCuts();
+}
+function clearLegacySwipeInstructions(){
+ document.querySelectorAll('.swipe-card-coach,.swipe-hint,[data-swipe-instruction="true"]').forEach(el=>el.remove());
+}
+function dismissSwipeHint(){
+ clearLegacySwipeInstructions();
+ try{localStorage.setItem('dinliminate.swipeHint.v5','1')}catch{}
+}
+document.addEventListener('pointerdown',event=>{
+ const target=event.target;
+ if(!(target instanceof Element))return;
+ if(target.closest('#food .card,#restaurant .card,#food .unified-swipe-actions .round-action,#restaurant .unified-swipe-actions .round-action')){
+   dismissSwipeHint();
+ }
+},true);
+function maybeShowInCardSwipeCoach(){
+ try{if(localStorage.getItem('dinliminate.swipeHint.v5')||localStorage.getItem('dinliminate.swipeHint.v4')){clearLegacySwipeInstructions();return;}}catch{}
+ const card=S.screen==='restaurant' ? $('restaurantCard') : $('foodCard');
+ if(!card || card.querySelector('.swipe-card-coach'))return;
+ const coach=document.createElement('div');
+ coach.className='swipe-card-coach';
+ coach.setAttribute('role','note');
+ coach.setAttribute('aria-label','Swipe left to Cut or right for Maybe. This lesson disappears after your first meaningful interaction.');
+ coach.innerHTML='<span class="swipe-card-coach-cut">← CUT</span><span class="swipe-card-coach-mid">· SWIPE ·</span><span class="swipe-card-coach-maybe">MAYBE →</span>';
+ card.appendChild(coach);
+}
+function startFood() {
+S.foodActions = [];
+S.maybe.clear();
+S.maybeDeck = false;
+S.foodMaybeRound = false;
+S.cutCats.clear();
+S.foodCuts.clear();
+S.mealTimeFilters = new Set(MEAL_TIME_CUTS);
+S.index = 0;
+S.winnerItem = null;
+buildFood();
+foodQuick();
+show('food');
+drawFood();
+save();
+maybeShowInCardSwipeCoach();
+}
+function setChoiceCount(el,count){
+ const value=Number(count)||0;
+ const next=String(value);
+ if(!el||el.textContent===next)return;
+ el.textContent=next;
+ el.classList.remove('count-updated');
+ void el.offsetWidth;
+ el.classList.add('count-updated');
+ clearTimeout(el.__countPulseTimer);
+ el.__countPulseTimer=window.setTimeout(()=>el.classList.remove('count-updated'),380);
+}
+function foodChoiceIndex(rows,start,keepState=false){
+ const len=rows.length;if(!len)return -1;
+ for(let step=0;step<len;step++){const i=(start+step)%len;if(keepState?S.maybe.has(rows[i].id):!S.maybe.has(rows[i].id))return i;}
+ return -1;
+}
+function drawFood(){
+ if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
+ if(!S.foodMaybeRound){const ni=foodChoiceIndex(S.pool,S.index,false);if(ni>=0)S.index=ni;else if(S.maybe.size)S.foodMaybeRound=true;}
+ const item=S.pool[S.index],img=$('foodImg');if(!img)return;
+ img.src=foodPhoto(item);img.dataset.fallback=foodPhotoFallback(item);img.dataset.finalFallback=FINAL_FOOD_IMAGE;img.alt=item.name;img.referrerPolicy='no-referrer';img.loading='eager';
+ img.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};
+ const foodCard=$('foodCard');if(foodCard){foodCard.querySelector('.maybe-stamp')?.remove();if(S.maybe.has(item.id)){const stamp=document.createElement('span');stamp.className='maybe-stamp';stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';foodCard.appendChild(stamp);}}
+$('foodName').textContent=item.name;$('foodCat').textContent=item.category;setChoiceCount($('foodCount'),S.pool.length);
+const foodBackButton=$('foodBack');if(foodBackButton){foodBackButton.disabled=S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(S.foodActions.length===0));}
+renderMaybeDeckToggle('food');
+ const nextCard=$('foodNextCard');
+ if(nextCard){
+  let ni=S.pool.length>1?(S.foodMaybeRound?foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true):foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,false)):-1;
+  if(ni<0&&S.pool.length>1)ni=(S.index+1)%S.pool.length;
+  const next=ni>=0?S.pool[ni]:null;nextCard.classList.toggle('hidden',!next);nextCard.style.display=next?'block':'none';
+  if(next){const nimg=$('foodNextImg');nimg.src=foodPhoto(next);nimg.dataset.fallback=foodPhotoFallback(next);nimg.dataset.finalFallback=FINAL_FOOD_IMAGE;nimg.alt=next.name;nimg.referrerPolicy='no-referrer';nimg.loading='eager';nimg.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};nextCard.style.transform='scale(.96)';}
+ }
+ maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
+}
+
+function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
+function foodCut(item=S.pool[S.index]){
+ dismissSwipeHint();
+ if(!item)return;
+ const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;
+ foodCommit('cut',item);
+ const roundAfter=!!S.foodMaybeRound|| (S.maybe.size>0 && unkept<=1);
+ S.foodActions[S.foodActions.length-1].roundAfter=roundAfter;
+ S.foodCuts.add(item.id);buildFood();resolveFoodAfterDecision();
+}
+function foodMaybe(item=S.pool[S.index]){
+ dismissSwipeHint();
+ if(!item)return;
+ if(S.pool.length===1){foodCommit('maybe',item);winner(item);return;}
+ foodCommit('maybe',item);S.maybe.add(item.id);
+ if(!S.foodMaybeRound){
+  const ni=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,false);
+  if(ni>=0)S.index=ni;else{S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true);}
+ }else S.index=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true);
+ drawFood();save();
+}
+function resolveFoodAfterDecision(){
+ if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
+ if(!S.foodMaybeRound){const ni=foodChoiceIndex(S.pool,S.index,false);if(ni>=0)S.index=ni;else if(S.maybe.size){S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,0,true);}}
+ S.index=Math.max(0,Math.min(S.index,S.pool.length-1));drawFood();save();
+}
+function foodBack(){
+ const action=S.foodActions.pop();if(!action)return;
+ if(action.type==='cut')S.foodCuts.delete(action.id);
+ if(action.type==='maybe'){if(action.hadMaybe)S.maybe.add(action.id);else S.maybe.delete(action.id);}
+ S.foodMaybeRound=!!action.maybeRound||!!action.recycleOnUndo||!!action.roundAfter;buildFood();
+ const restored=S.pool.findIndex(x=>x.id===action.id);S.index=restored>=0?restored:Math.max(0,Math.min(action.index||0,Math.max(0,S.pool.length-1)));drawFood();save();
+}
+
+function triggerSwipeHaptic(){
+ try{
+  const nativeHandler=window?.webkit?.messageHandlers?.haptic;
+  if(nativeHandler?.postMessage){nativeHandler.postMessage('light');return true;}
+ }catch{}
+ try{
+  if(typeof navigator!=='undefined'&&typeof navigator.vibrate==='function'){
+   return !!navigator.vibrate(8);
+  }
+ }catch{}
+ return false;
+}
+
+function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
+ const card=$(cardId);if(!card)return;
+ const next=$(nextId);
+ let downX=0,lastX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
+ card.style.touchAction='none';
+ card.style.userSelect='none';
+ card.style.webkitUserSelect='none';
+ card.style.webkitTouchCallout='none';
+ card.querySelectorAll('img').forEach(img=>{
+  img.draggable=false;
+  img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
+ });
+ const cancelMoveFrame=()=>{
+  if(moveFrame!=null){
+   try{cancelAnimationFrame(moveFrame);}catch{}
+   moveFrame=null;
+  }
+ };
+ const reset=()=>{
+  cancelMoveFrame();
+  card.classList.remove('swipe-active');
+  card.style.transition='';
+  card.style.transform='';
+  card.style.opacity='1';
+  card.dataset.swipe='';
+  if(next)next.style.transform='scale(.96)';
+ };
+ const settleBack=()=>{
+  cancelMoveFrame();
+  card.classList.remove('swipe-active');
+  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1)';
+  card.style.transform='translate3d(0,0,0)';
+  card.style.opacity='1';
+  card.dataset.swipe='';
+  window.setTimeout(()=>{
+   if(!active&&!committed){
+    card.style.transition='';
+    card.style.transform='';
+   }
+  },190);
+ };
+ const cleanup=()=>{
+  try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}
+  pointerId=null;
+ };
+ const cancel=()=>{
+  if(!active)return;
+  active=false;
+  committed=false;
+  hapticTriggered=false;
+  cleanup();
+  settleBack();
+ };
+ const commit=(dx)=>{
+  if(committed||!active)return;
+  cancelMoveFrame();
+  committed=true;
+  active=false;
+  hapticTriggered=false;
+  cleanup();
+  suppressClickUntil=Date.now()+450;
+  card.classList.remove('swipe-active');
+  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1)';
+  card.style.opacity='1';
+  card.style.transform='translate3d('+(dx<0?-520:520)+'px,0,0) rotate('+(dx<0?-10:10)+'deg)';
+  dismissSwipeHint();
+  const action=dx<0?onCut:onMaybe;
+  window.setTimeout(()=>{reset();action();},185);
+ };
+ const paintMove=()=>{
+  moveFrame=null;
+  if(!active||committed)return;
+  const dx=lastX-downX;
+  if(Math.abs(dx)<=8)return;
+  const absX=Math.abs(dx);
+  if(absX>=90&&!hapticTriggered){
+   hapticTriggered=true;
+   triggerSwipeHaptic();
+  }
+  const rotationStart=42;
+  const eased=Math.min(1,Math.max(0,(absX-rotationStart)/95));
+  const rotation=(dx<0?-1:1)*Math.min(10,eased*(3+absX*.045));
+  card.style.transform=rotation===0
+    ? 'translate3d('+dx+'px,0,0)'
+    : 'translate3d('+dx+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
+  card.style.opacity='1';
+  card.style.setProperty('--swipe-tint-alpha',String(Math.min(.18,absX/700)));
+  card.dataset.swipe=dx<0?'cut':'maybe';
+ };
+ const scheduleMove=()=>{
+  if(moveFrame!=null)return;
+  moveFrame=requestAnimationFrame(paintMove);
+ };
+ const finish=(e)=>{
+  if(!active)return;
+  if(e?.clientX!=null)lastX=e.clientX;
+  cancelMoveFrame();
+  const dx=lastX-downX;
+  if(Math.abs(dx)>=90)commit(dx);
+  else{
+   active=false;
+   cleanup();
+   settleBack();
+  }
+ };
+ card.onpointerdown=e=>{
+  if(e.isPrimary===false)return;
+  if(e.button!=null&&e.button!==0)return;
+  if(e.target.closest?.('button,a,input,select'))return;
+  downX=e.clientX;
+  lastX=e.clientX;
+  active=true;
+  committed=false;
+  hapticTriggered=false;
+  pointerId=e.pointerId;
+  card.dataset.swipe='';
+  card.classList.add('swipe-active');
+  card.style.transition='none';
+  card.style.opacity='1';
+  try{card.setPointerCapture?.(e.pointerId);}catch{}
+  if(e.cancelable)e.preventDefault();
+ };
+ card.onpointermove=e=>{
+  if(!active||e.isPrimary===false||e.pointerId!==pointerId)return;
+  if(e.clientX!=null)lastX=e.clientX;
+  if(Math.abs(lastX-downX)>8){
+   if(e.cancelable)e.preventDefault();
+   scheduleMove();
+  }
+ };
+ card.onpointerup=e=>finish(e);
+ card.onpointercancel=cancel;
+ card.onlostpointercapture=()=>{if(active)cancel();};
+ card.onclick=e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();}};
+}
+function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>foodCut(),()=>foodMaybe())}
+function appToast(message){
+document.querySelector('#appToast')?.remove();
+const el=document.createElement('div'); el.id='appToast'; el.className='app-toast'; el.textContent=message;
+document.body.appendChild(el);
+setTimeout(()=>el.remove(),2200);
+}
+function appConfirm(title, message, confirmLabel='Confirm') {
+return new Promise(resolve => {
+document.querySelector('#appConfirmModal')?.remove();
+document.querySelector('#appConfirmModalBg')?.remove();
+const restoreFocus=document.activeElement instanceof HTMLElement ? document.activeElement : null;
+const bg=document.createElement('div'); bg.id='appConfirmModalBg'; bg.className='modal-bg';
+const modal=document.createElement('section'); modal.id='appConfirmModal'; modal.className='modal confirm-modal';
+modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-labelledby','appConfirmTitle'); modal.setAttribute('aria-describedby','appConfirmMessage');
+modal.innerHTML='<div class="confirm-hero"><span class="confirm-mark" aria-hidden="true">×</span><div><small>CONFIRM ACTION</small><h3 id="appConfirmTitle">'+esc(title)+'</h3></div><button class="menu" type="button" id="appConfirmClose" aria-label="Close confirmation">×</button></div>'+
+'<div class="confirm-copy" id="appConfirmMessage">'+esc(message)+'</div>'+
+'<div class="confirm-actions"><button type="button" class="secondary" id="appConfirmCancel">Cancel</button><button type="button" class="danger-action" id="appConfirmOk">'+esc(confirmLabel)+'</button></div>';
+document.body.append(bg,modal);
+const focusables=()=>[...modal.querySelectorAll('button:not([disabled]),a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')];
+let done=false;
+const finish=v=>{
+if(done)return; done=true; modal.remove(); bg.remove(); if(restoreFocus&&document.contains(restoreFocus))restoreFocus.focus(); resolve(v);
+};
+$('appConfirmCancel').onclick=()=>finish(false);
+$('appConfirmClose').onclick=()=>finish(false);
+$('appConfirmOk').onclick=()=>finish(true);
+bg.onclick=()=>finish(false);
+modal.onkeydown=e=>{
+if(e.key==='Escape'){e.preventDefault();finish(false);return}
+if(e.key==='Tab'){
+const nodes=focusables(); if(!nodes.length)return;
+const first=nodes[0],last=nodes[nodes.length-1];
+if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+}
+};
+queueMicrotask(()=>$('appConfirmCancel')?.focus());
+});
+}
+async function foodHideItem(item) {
+if (!item) return false;
+if (!await appConfirm('Hide this meal?', 'Hide '+item.name+' until you restore it in Settings.', 'Hide')) return false;
+S.hidden.add(item.id);
+buildFood();
+S.index = Math.min(S.index, Math.max(0, S.pool.length - 1));
+drawFood();
+save();
+return true;
+}
+async function foodHide() {
+const item = S.pool[S.index];
+if (!item) return;
+if (!await appConfirm('Hide this meal?', 'Hide '+item.name+' until you restore it in Settings.', 'Hide')) return;
+S.hidden.add(item.id);
+buildFood();
+S.index = Math.min(S.index, Math.max(0, S.pool.length - 1));
+drawFood();
+save();
+}
+function milesBetween(lat1,lon1,lat2,lon2){
+ const a=Number(lat1),b=Number(lon1),c=Number(lat2),d=Number(lon2);
+ if(![a,b,c,d].every(Number.isFinite))return NaN;
+ const R=3958.7613,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,z=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;
+ return 2*R*Math.asin(Math.sqrt(z));
+}
+function restaurantAddressFamily(value){
+ const replacements={
+  street:'st',road:'rd',avenue:'ave',boulevard:'blvd',drive:'dr',lane:'ln',parkway:'pkwy',highway:'hwy',route:'rte',
+  circle:'cir',court:'ct',place:'pl',trail:'trl',terrace:'ter',north:'n',south:'s',east:'e',west:'w',
+  alabama:'al',alaska:'ak',arizona:'az',arkansas:'ar',california:'ca',colorado:'co',connecticut:'ct',delaware:'de',
+  florida:'fl',georgia:'ga',hawaii:'hi',idaho:'id',illinois:'il',indiana:'in',iowa:'ia',kansas:'ks',kentucky:'ky',
+  louisiana:'la',maine:'me',maryland:'md',massachusetts:'ma',michigan:'mi',minnesota:'mn',mississippi:'ms',
+  missouri:'mo',montana:'mt',nebraska:'ne',nevada:'nv','new-hampshire':'nh',newhampshire:'nh','new-jersey':'nj',
+  newjersey:'nj','new-mexico':'nm',newmexico:'nm','new-york':'ny',newyork:'ny',northcarolina:'nc',
+  'north-carolina':'nc','north-dakota':'nd',northdakota:'nd',ohio:'oh',oklahoma:'ok',oregon:'or',
+  pennsylvania:'pa',rhodeisland:'ri','rhode-island':'ri',southcarolina:'sc','south-carolina':'sc',
+  'south-dakota':'sd',southdakota:'sd',tennessee:'tn',tn:'tn',texas:'tx',utah:'ut',vermont:'vt',virginia:'va',
+  washington:'wa',westvirginia:'wv','west-virginia':'wv',wisconsin:'wi',wyoming:'wy',
+  'district-of-columbia':'dc',districtcolumbia:'dc',dc:'dc'
+ };
+ return normKey(value).split(' ').map(x=>replacements[x]||x).join(' ').replace(/\b(?:usa|united states)\b/g,'').replace(/\s+/g,' ').trim();
+}
+function restaurantNameTokensUI(value){
+ const text=normKey(String(value||'').replace(/[’']s\b/gi,'s'))
+   .replace(/\bbar\s+b\s+q\b/g,'bbq')
+   .replace(/\bbarbecue\b/g,'bbq')
+   .replace(/\bb\s+q\b/g,'bbq');
+ return text.split(' ').filter(Boolean);
+}
+function restaurantNameFamily(value){return restaurantNameTokensUI(value).join(' ');}
+const RESTAURANT_NAME_GENERIC_UI=new Set([
+ 'market','markets','bar','bars','bbq','barbecue','bq','restaurant','restaurants','grill','grills',
+ 'kitchen','cafe','café','coffee','house','food','foods','eatery','deli','bakery','pizza','pizzeria'
+]);
+function restaurantNameCoreTokensUI(value){
+ return restaurantNameTokensUI(value).filter(t=>t.length>=4&&!RESTAURANT_NAME_GENERIC_UI.has(t));
+}
+function restaurantNameCoreMatchUI(a,b){
+ const aa=new Set(restaurantNameCoreTokensUI(a)),bb=new Set(restaurantNameCoreTokensUI(b));
+ if(!aa.size||!bb.size)return false;
+ return [...aa].some(t=>bb.has(t));
+}
+function restaurantNameSimilarityUI(a,b){
+ const aa=restaurantNameTokensUI(a),bb=restaurantNameTokensUI(b);
+ if(!aa.length||!bb.length)return 0;
+ const as=new Set(aa),bs=new Set(bb);
+ const shared=[...as].filter(t=>bs.has(t)).length;
+ const shorter=Math.min(as.size,bs.size),union=new Set([...as,...bs]).size;
+ if(!shared||!shorter||!union)return restaurantNameCoreMatchUI(a,b)?1:0;
+ const coverage=shared/shorter,jaccard=shared/union;
+ return coverage>=0.75&&jaccard>=0.60?Math.max(coverage,jaccard):(restaurantNameCoreMatchUI(a,b)?1:0);
+}
+function restaurantAddressKeyUI(value){
+ const raw=restaurantAddressFamily(value);
+ if(!raw)return '';
+ const tokens=raw.split(' ').filter(Boolean);
+ const number=(tokens[0]||'').match(/^\d+[a-z]?$/i)?.[0]||'';
+ const streetTokens=[];
+ const suffixes=new Set(['st','rd','ave','blvd','dr','ln','pkwy','hwy','rte','cir','ct','pl','trl','ter','way']);
+ const begin=number?1:0;
+ for(let i=begin;i<tokens.length&&streetTokens.length<6;i++){
+   streetTokens.push(tokens[i]);
+   if(suffixes.has(tokens[i]))break;
+ }
+ return number&&streetTokens.length ? number+'|'+streetTokens.join(' ') : streetTokens.join(' ');
+}
+function restaurantAddressSimilarityUI(a,b){
+ const ax=restaurantAddressFamily(a),bx=restaurantAddressFamily(b);
+ if(!ax||!bx)return 0;
+ if(ax===bx)return 1;
+ const ka=restaurantAddressKeyUI(a),kb=restaurantAddressKeyUI(b);
+ if(ka&&kb&&ka===kb)return 0.90;
+ const sa=restaurantStreetFamily(a),sb=restaurantStreetFamily(b);
+ if(sa&&sb&&sa===sb)return 0.72;
+ const at=ax.split(' '),bt=bx.split(' '),shared=at.filter(t=>bt.includes(t)).length;
+ const coverage=shared/Math.min(at.length,bt.length);
+ return coverage>=0.80?0.80:0;
+}
+function restaurantStreetFamily(value){
+ const raw=restaurantAddressFamily(value);
+ if(!raw)return '';
+ const first=raw.split(',')[0].trim();
+ const tokens=first.split(' ').filter(Boolean);
+ const start=/^\d+[a-z]?$/i.test(tokens[0]||'')?1:0;
+ return tokens.slice(start,start+5).join(' ').trim();
+}
+function addressHasStreetNumber(value){return /^\s*\d+[a-z]?\b/i.test(String(value||''));}
+const RESTAURANT_NAME_VARIANT_BLOCKERS_UI=new Set(['express','grill','kitchen','cafe','coffee','bar','deli','bakery','shop','and','at','inside','food','foods','eatery','restaurant','restaurants']);
+function restaurantNameVariantMatchUI(a,b){
+ const score=restaurantNameSimilarityUI(a,b);
+ return score>=0.60;
+}
+function restaurantPhotoQualityScore(row){
+ const confidence=Number(row?.photoConfidence);
+ if(Number.isFinite(confidence))return confidence;
+ const source=String(row?.photoSource||'').toLowerCase();
+ if(source==='google-places')return 0.95;
+ if(source==='provider')return 0.85;
+ if(source==='known-entity')return 0.55;
+ if(source==='cuisine-fallback')return 0.4;
+ if(source==='generic-fallback')return 0.2;
+ return /^https:\/\//i.test(String(row?.photo||''))?0.8:0;
+}
+
+function dedupeRestaurantPool(rows){
+ const out=[];
+ for(const row of (rows||[])){
+  if(!row)continue;
+  const name=restaurantNameFamily(row.name),address=restaurantAddressFamily(row.address||'');
+  const phone=String(row.phone||'').replace(/\D/g,'').slice(-10),website=String(row.website||'').toLowerCase().replace(/^https?:\/\/(?:www\.)?/,'').replace(/\/$/,'');
+  const lat=Number(row.lat),lon=Number(row.lon);
+  let match=out.find(x=>{
+   const xn=restaurantNameFamily(x.name),xa=restaurantAddressFamily(x.address||'');
+   const xp=String(x.phone||'').replace(/\D/g,'').slice(-10),xw=String(x.website||'').toLowerCase().replace(/^https?:\/\/(?:www\.)?/,'').replace(/\/$/,'');
+   const dist=milesBetween(x.lat,x.lon,lat,lon);
+   const sameName=!!name&&name===xn;
+   const nameScore=restaurantNameSimilarityUI(name,xn);
+   const sameNameFamily=sameName||nameScore>=0.60;
+   const sameAddrScore=restaurantAddressSimilarityUI(address,xa);
+   const sameAddr=sameAddrScore>=0.90;
+   const sameStreet=sameAddrScore>=0.72;
+   const samePhysical=Number.isFinite(dist)&&dist<=0.15;
+   const coreNameMatch=restaurantNameCoreMatchUI(name,xn);
+   const sameAddressAndName=sameAddr&&(sameNameFamily||coreNameMatch);
+   const sameStreetAndName=sameStreet&&(sameNameFamily||coreNameMatch)&&samePhysical;
+   const sameNearbyAndName=samePhysical&&sameNameFamily&&(!address||!xa);
+   const identityKey=RESTAURANT_TAXONOMY.restaurantIdentityKey(row);
+   const existingIdentityKey=RESTAURANT_TAXONOMY.restaurantIdentityKey(x);
+   const sameCanonicalIdentity=!!identityKey&&identityKey===existingIdentityKey&&samePhysical;
+   const sameContact=(phone&&xp&&phone===xp)||(website&&xw&&website===xw);
+   const strongContact=sameContact&&samePhysical;
+   return sameAddressAndName
+     || sameStreetAndName
+     || sameNearbyAndName
+     || sameCanonicalIdentity
+     || strongContact;
+  });
+  if(!match){
+    const inferred=RESTAURANT_TAXONOMY.classifyRestaurant(row);
+    out.push({...row,category:(inferred.primary||row.category||'American'),quickCutTags:[...new Set([...(row.quickCutTags||[]),...inferred.tags])]});
+    continue;
+  }
+  match.fastFood=match.fastFood||row.fastFood;
+  if(typeof row.openNow==='boolean' && typeof match.openNow!=='boolean')match.openNow=row.openNow;
+  if(restaurantPhotoQualityScore(row)>restaurantPhotoQualityScore(match)){
+    if(row.photo)match.photo=row.photo;
+    if(row.photoFallback)match.photoFallback=row.photoFallback;
+    if(row.photoSource)match.photoSource=row.photoSource;
+    if(Number.isFinite(Number(row.photoConfidence)))match.photoConfidence=Number(row.photoConfidence);
+    if(typeof row.photoIsGeneric==='boolean')match.photoIsGeneric=row.photoIsGeneric;
+    if(row.googlePlaceId)match.googlePlaceId=row.googlePlaceId;
+  }
+  for(const key of ['address','phone','website','opening_hours','photo','cuisine','brand','operator'])if(!match[key]&&row[key])match[key]=row[key];
+  match.menuItems=[...new Set([...(Array.isArray(match.menuItems)?match.menuItems:[]),...(Array.isArray(row.menuItems)?row.menuItems:[])])].slice(0,10);
+  match.quickCutTags=[...new Set([...(match.quickCutTags||[]),...(row.quickCutTags||[]),...RESTAURANT_TAXONOMY.classifyRestaurant({...match,...row}).tags])];
+  const inferred=RESTAURANT_TAXONOMY.classifyRestaurant({...match,...row});
+  if(!match.category || /^(restaurant|eatery|food)$/i.test(String(match.category)))match.category=inferred.primary||'American';
+  match.distance=Math.min(Number(match.distance)||Infinity,Number(row.distance)||Infinity);
+ }
+ return out.sort((a,b)=>Number(a.distance)-Number(b.distance));
+}
+function restaurantCanonicalId(row){
+const name=normKey(row?.name);
+const address=normKey(row?.address);
+const geo=(Number.isFinite(Number(row?.lat))&&Number.isFinite(Number(row?.lon))) ? Number(row.lat).toFixed(4)+'-'+Number(row.lon).toFixed(4) : '';
+return 'restaurant-'+(name+'|'+(address||geo)).replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,150);
+}
+function restaurantHidden(row){
+if(!row)return false;
+if(S.hiddenRestaurants[row.id] || (row.canonicalId && S.hiddenRestaurants[row.canonicalId]))return true;
+const targetName=normKey(row.name),targetAddr=normKey(row.address),targetCanonical=row.canonicalId||restaurantCanonicalId(row);
+return Object.values(S.hiddenRestaurants||{}).some(x=>{
+if(x.canonicalId && x.canonicalId===targetCanonical)return true;
+if(normKey(x.name)!==targetName)return false;
+if(targetAddr&&normKey(x.address)===targetAddr)return true;
+if(x.lat!=null&&x.lon!=null&&row.lat!=null&&row.lon!=null){
+const dlat=Math.abs(Number(x.lat)-Number(row.lat)),dlon=Math.abs(Number(x.lon)-Number(row.lon));
+return dlat<0.001&&dlon<0.001;
+}
+return false;
+});
+}
+function restaurantSearchText(row){
+ return [
+  row?.name,row?.brand,row?.operator,row?.category,row?.cuisine,
+  restaurantCategory(row),
+  ...(Array.isArray(row?.menuItems)?row.menuItems:[])
+ ].filter(Boolean).join(' ');
+}
+const normalizeRestaurantSearch = RESTAURANT_TAXONOMY.normalizeRestaurantSearch;
+const restaurantIdentityHay = RESTAURANT_TAXONOMY.identityHay;
+function restaurantIsFastFood(row){
+ return RESTAURANT_TAXONOMY.isFastFood(row);
+}
+function restaurantCuisineTags(row){
+ const preset=Array.isArray(row?.quickCutTags)?row.quickCutTags:[];
+ const inferred=RESTAURANT_TAXONOMY.classifyRestaurant(row).tags;
+ return inferred.length ? inferred : [...new Set(preset)];
+}
+function restaurantCuisineEvidence(row){
+ return RESTAURANT_TAXONOMY.classifyRestaurant(row).evidence;
+}
+function restaurantCategory(row){
+ const inferred=RESTAURANT_TAXONOMY.classifyRestaurant(row);
+ if(inferred.primary)return inferred.primary;
+ const tags=restaurantCuisineTags(row),raw=String(row?.category||'').trim();
+ if(/^(American|Mexican|Asian|Italian|Southern|BBQ|Seafood|Breakfast|Burgers|Fast Food)$/i.test(raw))return raw;
+ const order=['Burgers','Pizza','Mexican','Asian','Italian','BBQ','Seafood','Breakfast','Southern','Fast Food','American'];
+ for(const label of order) if(tags.includes(label)) return label;
+ const providerRaw=RESTAURANT_TAXONOMY.normalizeRestaurantSearch([row?.cuisine,row?.category,row?.providerType,row?.primaryType,row?.types?.join?.(' ')].join(' '));
+ const nameRaw=RESTAURANT_TAXONOMY.normalizeRestaurantSearch([row?.name,row?.brand,row?.operator].join(' '));
+ const fallback=[
+  ['Pizza',/\b(pizza|pizzeria|calzone)\b/],
+  ['Mexican',/\b(mexican|taco|burrito|taqueria|enchilada|quesadilla|fajita)\b/],
+  ['Asian',/\b(asian|chinese|japanese|thai|korean|sushi|ramen|pho|hibachi|teriyaki)\b/],
+  ['Italian',/\b(italian|pasta|spaghetti|lasagna|ravioli|trattoria|ristorante)\b/],
+  ['BBQ',/\b(bbq|barbecue|smokehouse|brisket|ribs|pulled pork)\b/],
+  ['Seafood',/\b(seafood|fish house|catfish|shrimp|crab|lobster|oyster|salmon)\b/],
+  ['Breakfast',/\b(breakfast|brunch|pancake|waffle|omelet|eggs benedict|biscuits and gravy)\b/],
+  ['Burgers',/\b(burger|hamburger|cheeseburger|smashburger)\b/],
+  ['Southern',/\b(southern|soul food|country cooking|meat and three|comfort food)\b/],
+  ['American',/\b(diner|steakhouse|roadhouse|grill|bistro|pub|tavern|american)\b/]
+ ];
+ for(const [label,re] of fallback)if(re.test(nameRaw)||re.test(providerRaw))return label;
+ return raw&&/^(restaurant|eatery|food)$/i.test(raw)?'American':(raw||'American');
+}
+function restaurantQuickMatches(row,label){
+ return restaurantCuisineTags(row).includes(label);
+}
+
+function restaurantCategorySearchMatches(row,tag){
+ const tags=restaurantCuisineTags(row);
+ if(tag==='Burgers')return tags.includes('Burgers')||tags.includes('Fast Food');
+ return tags.includes(tag);
+}
+function restaurantSearchTermMatches(row,term,hay){
+ const normalized=normalizeRestaurantSearch(term);
+ if(!normalized)return true;
+ const classification=RESTAURANT_TAXONOMY.restaurantSearchClassification(normalized);
+ if(classification.kind==='category'&&classification.tag) return restaurantCategorySearchMatches(row,classification.tag);
+ const words=normalized.split(' ').filter(Boolean);
+ if(words.length===1 && ['restaurant','restaurants','place','places'].includes(words[0]))return true;
+ return words.every(word=>hay.includes(word));
+}
+function restaurantMatchesQuery(row){
+ const q=String(S.restaurantQuery||'').trim();
+ if(!q)return true;
+ const classification=RESTAURANT_TAXONOMY.restaurantSearchClassification(q);
+ if(classification.kind==='category'&&classification.tag)return restaurantCategorySearchMatches(row,classification.tag);
+ const hay=normalizeRestaurantSearch(restaurantSearchText(row));
+ return q.split(/\s+/).filter(Boolean).every(term=>restaurantSearchTermMatches(row,term,hay));
+}
+
+function restaurantChoiceIndex(rows,start,keepState=false){
+ const len=rows.length;if(!len)return -1;
+ for(let step=0;step<len;step++){const i=(start+step)%len;if(keepState?!!rows[i]._maybe:!rows[i]._maybe)return i;}
+ return -1;
+}
+function restaurantPoolBase(){
+ return (S.restaurantPool||[]).filter(row=>{
+  if([...S.restaurantCuts].some(label=>restaurantQuickMatches(row,label)))return false;
+  if(row._cut||row._hidden||restaurantHidden(row))return false;
+  return restaurantMatchesQuery(row);
+ });
+}
+function restaurantPoolFiltered(){
+ const base=restaurantPoolBase();
+ return S.maybeDeck ? base.filter(row=>row._maybe) : base;
+}
+function updateRestaurantStatus(){
+ const el=$('status'); if(!el)return;
+ const radius=Math.min(100,Number($('radius')?.value)||10);
+ const base=restaurantPoolBase();
+ const total=base.length,degraded=S.restaurantSearchDegraded;
+ if(!total){
+  el.textContent=degraded?'Restaurant sources are unavailable. Try again.':'No restaurants match the current filters.';
+      return;
+ }
+ el.textContent=total+' restaurant'+(total===1?'':'s')+' · '+radius+' mi';
+}
+
+function restaurantQuick() {
+ const labels=REST_QUICK;
+ const existing=[...document.querySelectorAll('#restQuick [data-rest-quick]')].map(btn=>btn.dataset.restQuick);
+ if(existing.length!==labels.length||existing.some((x,i)=>x!==labels[i])){
+  $('restQuick').innerHTML = labels.map(label => {
+   const src=imageProxyUrl(REST_QUICK_IMAGES[label] || REST_QUICK_IMAGES.American);
+   return '<button class="chip photo-chip" data-rest-quick="'+esc(label)+'"><img class="quick-chip-photo" src="'+esc(src)+'" alt="'+esc(label)+' restaurant photo" draggable="false"><span>'+esc(label)+'</span></button>';
+  }).join('');
+  bindImageFallbackAttrs('[data-rest-quick] img');
+ }
+ document.querySelectorAll('#restQuick [data-rest-quick]').forEach(btn => {
+  const label=btn.dataset.restQuick;
+  btn.classList.toggle('cut',S.restaurantCuts.has(label));
+  btn.onclick = () => {
+   S.restaurantCuts.has(label) ? S.restaurantCuts.delete(label) : S.restaurantCuts.add(label);
+   S.restaurantIndex=0;
+   restaurantQuick();
+   drawRestaurants();
+   save();
+  };
+ });
+ bindQuickCutsCollapse('restaurant');
+}
+function renderLocationSource(){
+const el=$('locationSourceLabel'); if(!el)return;
+const labels={device:'Using your location',last:'Last used location',address:'Using selected address',typed:'Address needs selection',none:'No location selected'};
+el.textContent=labels[S.locationSource]||labels.none;
+el.classList.toggle('is-ready',S.locationSource==='device'||S.locationSource==='address');
+renderFindButton();
+}
+function displayRestaurantLocationLabel(value,originalQuery=''){
+ const raw=String(value||'').trim().replace(/\s+/g,' ');
+ const query=String(originalQuery||'').trim().replace(/\s+/g,' ');
+ if(query && !addressLooksComplete(query)) return query;
+ if(!raw)return query||'Current location';
+ const parts=raw.split(',').map(x=>x.trim()).filter(Boolean);
+ const stateIndex=parts.findIndex(x=>/^(Tennessee|TN|Kentucky|KY|Georgia|GA|Alabama|AL|Illinois|IL|Missouri|MO)$/i.test(x));
+ if(stateIndex>=1){
+  const stateMap={tennessee:'TN',tn:'TN',kentucky:'KY',ky:'KY',georgia:'GA',ga:'GA',alabama:'AL',al:'AL',illinois:'IL',il:'IL',missouri:'MO',mo:'MO'};
+  const state=stateMap[parts[stateIndex].toLowerCase()]||parts[stateIndex];
+  const city=parts[stateIndex-1];
+  let street='';
+  for(let i=0;i<stateIndex;i++){
+    const p=parts[i];
+    if(/^\d+[a-z]?$/i.test(p)&&parts[i+1]){street=p+' '+parts[i+1];break;}
+    if(/^\d+\s+/i.test(p)){street=p;break;}
+  }
+  if(!street && stateIndex>=2 && !/^\d/.test(parts[stateIndex-2])) street=parts[stateIndex-2];
+  if(street && city && street!==city)return street+', '+city+', '+state;
+  if(city)return city+', '+state;
+ }
+ return parts.slice(0,3).join(', ');
+}
+function setLocation(lat, lon, label, source='address') {
+S.location = {lat, lon, label};
+S.locationSource = source;
+if(source==='device')S.locationFreshAt=Date.now();
+else S.locationFreshAt=null;
+$('address').value = label || 'Current location';
+renderLocationSource();
+save();
+}
+let suggestController = null;
+let restaurantSearchController = null;
+let reverseLocationController = null;
+let locationRequestActive = false;
+let locationRequestSeq = 0;
+function renderFindButton(){
+ const btn=$('find');if(!btn)return;
+ const hasSearchTarget=!!S.location || !!$('address')?.value.trim();
+ const state=hasSearchTarget?'refresh':'find';
+ const label=state==='refresh'?'Refresh restaurant search using this location and radius':'Find restaurants near the selected location';
+ btn.dataset.state=state;
+ btn.title=label;
+ btn.innerHTML=state==='refresh'
+  ? '<svg class="find-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 8.5V4.8l-2.2 2.2A7.5 7.5 0 1 0 19.2 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 4.8h-3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="sr-only">Refresh</span>'
+  : '<svg class="find-icon find-locator-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21c4.2-4.8 6.4-8.2 6.4-11.3A6.4 6.4 0 0 0 5.6 9.7C5.6 12.8 7.8 16.2 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.2" fill="currentColor"/></svg><span class="sr-only">Find restaurants nearby</span>';
+ btn.setAttribute('aria-label',label);
+}
+function setFindBusy(busy) {
+const btn=$('find'); if(!btn)return;
+btn.disabled=busy;
+btn.setAttribute('aria-busy',String(busy));
+const hasSearchTarget=!!S.location || !!$('address')?.value.trim();
+ const state=busy?'busy':(hasSearchTarget?'refresh':'find');
+btn.dataset.state=state;
+btn.title=busy?'Searching for restaurants…':(state==='refresh'?'Refresh restaurant search using this location and radius':'Find restaurants near the selected location');
+btn.innerHTML=busy
+ ? '<span class="find-spinner" aria-hidden="true"></span><span class="sr-only">Searching</span>'
+ : (state==='refresh'
+   ? '<svg class="find-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 8.5V4.8l-2.2 2.2A7.5 7.5 0 1 0 19.2 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 4.8h-3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="sr-only">Refresh</span>'
+   : '<svg class="find-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="5.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m15.2 15.2 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="sr-only">Find</span>');
+}
+function setLocationBusy(busy) {
+const btn=$('locate');if(!btn)return;
+btn.disabled=busy;
+btn.setAttribute('aria-busy',String(busy));
+const label=busy?'Getting your current location…':'Use your current location for nearby restaurants';
+btn.setAttribute('aria-label',label);
+btn.title=label;
+}
+function requestBrowserPosition(options={}) {
+return new Promise((resolve,reject)=>{
+ try{
+  navigator.geolocation.getCurrentPosition(resolve,reject,options);
+ }catch(err){reject(err);}
+});
+}
+function locationMovedMiles(a,b) {
+return milesBetween(a?.lat,a?.lon,b?.lat,b?.lon);
+}
+async function reverseLocationLabel(lat,lon,seq) {
+reverseLocationController?.abort();
+const ctl=new AbortController();
+reverseLocationController=ctl;
+const timer=setTimeout(()=>ctl.abort(),5000);
+try{
+const r=await fetch('/api/restaurant-search?mode=reverse&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon),{signal:ctl.signal});
+const d=await r.json();
+if(seq!==locationRequestSeq||ctl.signal.aborted)return null;
+if(!r.ok||!d.ok)return null;
+return String(d.display||'Current location');
+}catch{return null}
+finally{clearTimeout(timer);if(reverseLocationController===ctl)reverseLocationController=null;}
+}
+async function useLocation() {
+if (!navigator.geolocation) {
+ $('status').textContent='Location is not available in this browser.';
+ $('locationSourceLabel').textContent='Location unavailable';
+ return false;
+}
+if(!window.isSecureContext){
+ $('status').textContent='Location requires a secure connection. Open the HTTPS app address.';
+ $('locationSourceLabel').textContent='Secure connection required';
+ return false;
+}
+if(locationRequestActive)return false;
+const seq=++locationRequestSeq;
+locationRequestActive=true;
+setLocationBusy(true);
+invalidateAddressSuggestions();
+$('locationSourceLabel').textContent='Getting your location…';
+$('status').textContent='Allow location access when your browser asks.';
+try{
+ let permission='unknown';
+ try{
+  const p=await navigator.permissions?.query?.({name:'geolocation'});
+  permission=p?.state||'unknown';
+ }catch{}
+ if(permission==='denied')throw Object.assign(new Error('Location permission is blocked for this site. Enable Location in your browser site permissions, then try again.'),{code:1});
+ const attempts=[
+  {enableHighAccuracy:true,timeout:8500,maximumAge:0},
+  {enableHighAccuracy:false,timeout:10000,maximumAge:0},
+  {enableHighAccuracy:false,timeout:12000,maximumAge:120000}
+ ];
+ let position=null,lastError=null;
+ for(const options of attempts){
+  if(seq!==locationRequestSeq) return false;
+  try{position=await requestBrowserPosition(options);break;}catch(err){lastError=err;}
+ }
+ if(!position)throw lastError||new Error('Could not access your current location.');
+ const loc={lat:Number(position.coords.latitude),lon:Number(position.coords.longitude)};
+ if(!Number.isFinite(loc.lat)||!Number.isFinite(loc.lon))throw new Error('Your browser returned an invalid location.');
+ setLocation(loc.lat,loc.lon,'Current location','device');
+ $('locationSourceLabel').textContent='Using your current location';
+ $('status').textContent='Location found. Finding nearby restaurants…';
+ if(seq!==locationRequestSeq)return false;
+ const searchPromise=searchRestaurants();
+ const label=await reverseLocationLabel(loc.lat,loc.lon,seq).catch(()=>null);
+ if(seq!==locationRequestSeq)return false;
+ if(label){
+  const visibleLabel=displayRestaurantLocationLabel(label,'');
+  S.location={...S.location,label:visibleLabel};
+  $('address').value=visibleLabel;
+  $('locationSourceLabel').textContent='Using your current location';
+  save();
+ }
+ await searchPromise;
+ if(seq!==locationRequestSeq)return false;
+ S.locationFreshAt=Date.now();
+ S.locationSource='device';
+ renderLocationSource();
+ if(!S.restaurantSearchDegraded) $('status').textContent=S.restaurantPool.length?'Location ready.':'Location found, but no restaurants were returned.';
+ save();
+ return true;
+}catch(err){
+ if(seq!==locationRequestSeq)return false;
+ const code=Number(err?.code);
+ if(code===1){
+  $('locationSourceLabel').textContent='Location permission needed';
+  $('status').textContent=err?.message||'Location permission was denied. Enable Location for this site and try again.';
+ }else if(code===3){
+  $('locationSourceLabel').textContent='Location timed out';
+  $('status').textContent='Your browser could not get a fresh location. Try again or enter an address.';
+ }else if(code===2){
+  $('locationSourceLabel').textContent='Location unavailable';
+  $('status').textContent='Your device could not provide a location. Try again or enter an address.';
+ }else{
+  $('locationSourceLabel').textContent='Location unavailable';
+  $('status').textContent=err?.message||'Could not access your current location. Try again or enter an address.';
+ }
+ return false;
+}finally{
+ if(seq===locationRequestSeq){
+  locationRequestActive=false;
+  setLocationBusy(false);
+  renderLocationSource();
+ }
+}
+}
+let autoRestaurantRefreshActive=false;
+async function maybeAutoRefreshRestaurantLocation(){
+ if(autoRestaurantRefreshActive||S.screen!=='restaurant'||S.locationSource!=='device'||!S.location)return false;
+ const age=Date.now()-Number(S.locationFreshAt||0);
+ if(age<10*60*1000)return false;
+ autoRestaurantRefreshActive=true;
+ try{
+  const pos=await requestBrowserPosition({enableHighAccuracy:false,timeout:2500,maximumAge:120000});
+  const fresh={lat:Number(pos.coords.latitude),lon:Number(pos.coords.longitude)};
+  if(!Number.isFinite(fresh.lat)||!Number.isFinite(fresh.lon))return false;
+  const moved=locationMovedMiles(S.location,fresh);
+  S.locationFreshAt=Date.now();
+  if(Number.isFinite(moved)&&moved>=0.15){
+   setLocation(fresh.lat,fresh.lon,'Current location','device');
+   if(S.screen==='restaurant'){
+    $('status').textContent='Location updated. Refreshing restaurants…';
+    await searchRestaurants().catch(()=>{});
+   }
+   return true;
+  }
+  save();
+ }catch{}
+ finally{autoRestaurantRefreshActive=false;}
+ return false;
+}
+let suggestTimer = 0;
+let suggestSeq = 0;
+let suggestionIndex = -1;
+const suggestCache = new Map();
+function invalidateAddressSuggestions() {
+  suggestSeq++;
+  clearTimeout(suggestTimer);
+  suggestTimer=0;
+  suggestController?.abort();
+  suggestController=null;
+  clearSuggestions();
+}
+function addressLooksComplete(value) {
+  const q=String(value||'').trim().replace(/\s+/g,' ');
+  if(!/^\d+\s+[^,]+/i.test(q))return false;
+  if(/\b\d{5}(?:-\d{4})?\b/.test(q))return true;
+  const parts=q.split(',').map(x=>x.trim()).filter(Boolean);
+  if(parts.length>=3&&/\b[A-Z]{2}\b/i.test(parts[parts.length-2]))return true;
+  const last=parts[parts.length-1]||'';
+  return parts.length>=2&&/\b[A-Za-z][A-Za-z .'-]+\s+[A-Z]{2}\b/i.test(last);
+}
+async function chooseAddressSuggestion(index) {
+  const opts=[...document.querySelectorAll('#suggestionsBox [data-suggestion]')];
+  const btn=opts[index];
+  if(!btn)return false;
+  btn.click();
+  return true;
+}
+async function suggestAddresses() {
+const q = $('address').value.trim();
+const seq = ++suggestSeq;
+if (q.length < 2) { clearSuggestions(); $('status').textContent='Enter an address or use your location.'; return; }
+const cached=suggestCache.get(q.toLowerCase());
+if(cached&&Date.now()-cached.t<300000){ renderSuggestions(cached.rows); return; }
+$('status').textContent='Searching addresses…';
+clearTimeout(suggestTimer);
+suggestTimer=setTimeout(async()=>{
+suggestController?.abort();
+suggestController=new AbortController();
+try{
+const r=await fetch('/api/restaurant-search?mode=suggest&q='+encodeURIComponent(q),{signal:suggestController.signal});
+const d=await r.json();
+if(seq!==suggestSeq)return;
+const rows=Array.isArray(d.results)?d.results:[];
+suggestCache.set(q.toLowerCase(),{t:Date.now(),rows});
+renderSuggestions(rows);
+}catch(e){
+if(e?.name==='AbortError')return;
+clearSuggestions();$('status').textContent='Address lookup is temporarily unavailable.';
+}
+},380);
+}
+function renderSuggestions(rows) {
+suggestionIndex = -1;
+let box = $('suggestionsBox');
+if (!box) {
+box = document.createElement('div');
+box.id = 'suggestionsBox';
+$('address').insertAdjacentElement('afterend', box);
+}
+box.innerHTML = (rows || []).map((row, i) =>
+'<button type="button" role="option" aria-selected="false" id="addressSuggestion-'+i+'" data-suggestion="'+i+'">'+esc(row.display)+'</button>'
+).join('');
+const hasRows=!!rows?.length;
+box.hidden=!hasRows;
+box.style.display=hasRows ? 'grid' : 'none';
+$('address')?.setAttribute('aria-expanded',String(hasRows));
+$('address')?.removeAttribute('aria-activedescendant');
+box.querySelectorAll('[data-suggestion]').forEach((btn, i) => {
+  btn.onclick = async () => {
+    const row = rows[i];
+    suggestionIndex = -1;
+    invalidateAddressSuggestions();
+    setLocation(row.lat, row.lon, displayRestaurantLocationLabel(row.display,$('address').value),'address');
+    $('status').textContent = 'Location selected. Searching restaurants…';
+    await searchRestaurants();
+  };
+});
+}
+function clearSuggestions() {
+suggestionIndex = -1;
+const box = $('suggestionsBox');
+if (box) { box.style.display = 'none'; box.hidden=true; }
+$('address')?.setAttribute('aria-expanded','false');
+$('address')?.removeAttribute('aria-activedescendant');
+}
+function moveSuggestion(delta){
+const opts=[...document.querySelectorAll('#suggestionsBox [data-suggestion]')];
+if(!opts.length)return false;
+suggestionIndex=(suggestionIndex+delta+opts.length)%opts.length;
+opts.forEach((el,i)=>el.setAttribute('aria-selected',String(i===suggestionIndex)));
+const active=opts[suggestionIndex];
+$('address')?.setAttribute('aria-activedescendant',active.id);
+active.scrollIntoView?.({block:'nearest'});
+return true;
+}
+let restaurantSearchSeq = 0;
+async function responseJson(response, message){
+let body=null;
+try{body=await response.json();}catch{throw new Error(message||'The restaurant search returned an invalid response.');}
+return body;
+}
+async function fetchRestaurantEndpoint(url,signal){
+let lastError=null;
+for(let attempt=0;attempt<2;attempt++){
+  try{
+    const response=await fetch(url,{signal});
+    if(response.ok || attempt===1 || ![429,500,502,503,504].includes(response.status)) return response;
+    await new Promise(resolve=>setTimeout(resolve,response.status===429?500:250));
+    if(signal?.aborted) throw Object.assign(new Error('Aborted'),{name:'AbortError'});
+  }catch(e){
+    if(e?.name==='AbortError')throw e;
+    lastError=e;
+    if(attempt===1)throw e;
+    await new Promise(resolve=>setTimeout(resolve,250));
+    if(signal?.aborted) throw Object.assign(new Error('Aborted'),{name:'AbortError'});
+  }
+}
+throw lastError||new Error('Restaurant service unavailable.');
+}
+async function searchRestaurants() {
+invalidateAddressSuggestions();
+const searchSeq = ++restaurantSearchSeq;
+restaurantSearchController?.abort();
+restaurantSearchController = new AbortController();
+const signal=restaurantSearchController.signal;
+let timedOut=false;
+const deadline=setTimeout(()=>{timedOut=true;restaurantSearchController.abort()},14500);
+clearSuggestions(); setFindBusy(true); $('status').textContent = 'Searching restaurants…';
+$('restStage').innerHTML='';
+try {
+let loc = S.location;
+if (!loc) {
+const q = $('address').value.trim();
+if (!q) { $('status').textContent = 'Enter an address or use your location.'; return; }
+const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=resolve&q='+encodeURIComponent(q),signal);
+const rd = await responseJson(rr,'Could not locate that address. Please try another address.');
+if (searchSeq !== restaurantSearchSeq) return;
+if (!rr.ok || !rd.ok) throw new Error(rr.status===429 ? 'Address lookup is temporarily busy. Please try again.' : (rd.message || 'Could not locate that address.'));
+const visibleLabel=displayRestaurantLocationLabel(rd.display,q); loc = {lat:rd.lat, lon:rd.lon, label:visibleLabel}; S.location = loc; S.locationSource='address'; renderLocationSource(); $('address').value = visibleLabel;
+}
+const radius = Math.min(100,Math.max(1,Number($('radius').value)||10));
+const searchTerm = String(S.restaurantQuery||'').trim().slice(0,100);
+const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+radius+':'+normalizeRestaurantSearch(searchTerm);
+const queryParam = searchTerm ? '&q='+encodeURIComponent(searchTerm) : '';
+const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=search&lat='+encodeURIComponent(loc.lat)+'&lon='+encodeURIComponent(loc.lon)+'&radius='+radius+queryParam,signal);
+const d = await responseJson(rr,'Restaurant search returned an invalid response. Please try again.');
+if (searchSeq !== restaurantSearchSeq) return;
+if (!rr.ok || !d.ok) throw new Error(rr.status===429 ? 'Restaurant search is temporarily busy. Please try again.' : (d.message || 'Restaurant search failed.'));
+S.restaurantSearchDegraded = !!(d.providerErrors?.length);
+S.restaurantSearchLatencyMs = Number(d.searchLatencyMs)||0;
+S.restaurantSearchQuery = String(d.searchQuery||searchTerm||'');
+S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
+// Rebuild the active restaurant pool from the fresh provider response.
+ // Do not carry the previous pool forward: stale rows can survive provider-side
+ // dedupe/filter fixes and reappear as duplicate or non-restaurant cards.
+ const previousRows=[];
+const incomingRows=(d.results || []).map(row => ({...row, providerId:row.id, canonicalId:restaurantCanonicalId(row), _maybe:false, _cut:false, _hidden:false})).filter(row=>{
+ const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
+ return Number.isFinite(dist) && dist<=radius+0.001;
+});
+S.restaurantPool = dedupeRestaurantPool([...incomingRows,...previousRows]).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
+S.restaurantSearchOrigin = {lat:Number(loc.lat),lon:Number(loc.lon)};
+S.restaurantSearchKey = searchKey;
+S.restaurantIndex = 0; S.restaurantActions = []; S.restaurantMaybeRound = false;
+S.winnerItem = null;
+const poolFastFoodCount=S.restaurantPool.filter(r=>restaurantIsFastFood(r)).length;
+if(S.restaurantPool.length) {
+  updateRestaurantStatus();
+} else {
+  $('status').textContent = d.providerErrors?.length ? 'Restaurant sources are unavailable. Try again.' : 'No restaurants found in this radius.';
+}
+restaurantQuick(); drawRestaurants(); save();
+} catch (err) {
+if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
+S.restaurantSearchDegraded=true;
+S.restaurantPool=[]; S.restaurantIndex=0; S.restaurantActions=[]; S.restaurantCuts.clear();
+drawRestaurants();
+$('status').textContent = timedOut ? 'The restaurant search took too long. Please try again.' : (err?.message || 'Could not complete the search.');
+} finally {
+clearTimeout(deadline);
+if(searchSeq===restaurantSearchSeq) setFindBusy(false);
+}
+}
+function openRestaurant() {
+renderRestaurantSearchControl();
+S.screen = 'restaurant';
+S.restaurantActions = [];
+S.restaurantMaybeRound = false;
+S.maybeDeck = false;
+S.restaurantQuery = '';
+S.restaurantCuts.clear();
+for (const row of S.restaurantPool || []) {
+row._cut = false;
+row._maybe = false;
+}
+S.winnerItem = null;
+show('restaurant');
+restaurantQuick();
+$('restaurantSearchBox')?.classList.add('hidden');
+$('restaurantQuery').value = '';
+maybeShowInCardSwipeCoach();
+
+// Restaurants should proactively request device location the first time the user enters
+// this screen, but never overwrite an active location or a typed address search.
+const hasTypedAddress=!!String($('address')?.value||'').trim();
+if(!S.location&&!hasTypedAddress) {
+ window.setTimeout(()=>{ if(S.screen==='restaurant'&&!S.location&&!String($('address')?.value||'').trim()) useLocation(); },80);
+}
+}
+function drawRestaurants() {
+const rows = restaurantPoolFiltered();
+renderRestaurantSearchControl();
+updateRestaurantStatus();
+const countEl = $('restaurantCount');
+if (countEl) setChoiceCount(countEl,rows.length);
+renderMaybeDeckToggle('restaurant');
+if (!rows.length) {
+const hasResults=!!S.restaurantPool.length;
+const message=hasResults ? 'No restaurants match the current cuts.' : (S.restaurantSearchDegraded ? 'Some restaurant sources are unavailable.' : (S.location ? 'No restaurants found in this radius.' : 'Set a location, then find restaurants.'));
+const actions = (S.location || hasResults) ? '<div class="empty-actions">'+(hasResults?'<button class="secondary" id="clearRestaurantSearch">Clear filter</button>':'')+(S.location?'<button class="premium-retry" id="retryRestaurantSearch">Retry Search</button>':'')+'</div>' : '';
+$('restStage').innerHTML = '<div class="empty"><b>Hungry.</b><span>'+esc(message)+'</span>'+actions+'</div>';
+if($('retryRestaurantSearch')) $('retryRestaurantSearch').onclick=searchRestaurants;
+if($('clearRestaurantSearch')) $('clearRestaurantSearch').onclick=()=>{S.restaurantQuery=''; if($('restaurantQuery'))$('restaurantQuery').value=''; drawRestaurants(); save();};
+return;
+}
+S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
+if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
+const row = rows[S.restaurantIndex];
+const category = restaurantCategory(row);
+const restaurantFallback = (r) => imageProxyUrl(r?.photo || r?.photoFallback || r?.image || restaurantFallbackImage(r));
+const image = restaurantFallback(row);
+const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
+const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
+const nextRow = rows[S.restaurantIndex + 1];
+const nextImage = restaurantFallback(nextRow);
+const shortAddress = row.address ? esc(String(row.address).split(',').slice(0,2).join(', ')) : '';
+ const cardLocation = (shortAddress || distanceLabel) ? '<div class="restaurant-card-location-distance" title="'+esc(row.address||'')+'">'+[shortAddress,distanceLabel?esc(distanceLabel):''].filter(Boolean).join(' <span aria-hidden="true">•</span> ')+'</div>' : '';
+const cardDetailsAction = '<button class="restaurant-card-utility restaurant-card-details-utility" id="restDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+ const cardUtilityRow='<div class="restaurant-card-meta-row"><span class="restaurant-card-meta">'+esc(category)+'</span>'+cardDetailsAction+'</div>';
+$('restStage').innerHTML =
+'<div class="restaurant-card-stack"><article class="card next-card '+(nextRow?'':'hidden')+'" id="restaurantNextCard" aria-hidden="true"><img src="'+esc(nextImage)+'" data-restaurant-photo-key="'+esc(nextRow?.id||'')+'" data-fallback="'+esc(nextRow?.photoFallback||restaurantFallbackImage(nextRow))+'" data-final-fallback="'+esc(restaurantFallbackImage(nextRow))+'" alt="'+esc(nextRow?.name||'')+'"><div class="shade"></div><div class="restaurant-photo-credit" aria-live="polite"></div></article><article class="card" id="restaurantCard"><img src="'+esc(image)+'" data-restaurant-photo-key="'+esc(row.id||'')+'" data-fallback="'+esc(row.photoFallback||restaurantFallbackImage(row))+'" data-final-fallback="'+esc(restaurantFallbackImage(row))+'" alt="'+esc(row.name)+'"><div class="shade"></div><div class="restaurant-card-photo-ui">'+restaurantMaybeBadge+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy">'+cardUtilityRow+'<h3>'+esc(row.name)+'</h3>'+cardLocation+'</div></div></article></div>'+'<div class="swipe-actions unified-swipe-actions" aria-label="Restaurant decision controls"><button class="round-action round-back secondary" id="restBack" aria-label="Back"><span>↶</span></button><button class="round-action round-cut cut" id="restCut" aria-label="Cut"><span>✕</span></button><button class="round-action round-maybe maybe" id="restMaybe" aria-label="Maybe"><span>♥</span></button><button class="round-action round-choose choose" id="restChoose" aria-label="Choose this restaurant"><span>✓</span></button></div>';
+const current = rows[S.restaurantIndex];
+const restBackButton=$('restBack');if(restBackButton){restBackButton.disabled=S.restaurantActions.length===0;restBackButton.setAttribute('aria-disabled',String(S.restaurantActions.length===0));}
+bindCardButton('restBack', restaurantBack);
+bindCardButton('restCut', () => restaurantCut(current));
+bindCardButton('restMaybe', () => restaurantMaybe(current));
+bindCardButton('restChoose', () => {dismissSwipeHint();winner(current)});
+bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
+bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
+bindImageFallback('#restStage img',restaurantFallback(row),restaurantFallbackImage(row));
+hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
+if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
+prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
+maybeShowInCardSwipeCoach();
+}
+function restaurantCut(row){
+ dismissSwipeHint();
+ if(!row)return;
+ const unkept=restaurantPoolFiltered().filter(x=>!x._maybe).length;
+ S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
+ row._cut=true;
+ const remaining=restaurantPoolFiltered();
+ if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);drawRestaurants();}
+ save();
+}
+
+function restaurantMaybe(row){
+ dismissSwipeHint();
+ if(!row)return;const rows=restaurantPoolFiltered();if(rows.length===1){winner(row);return;}
+ const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
+ const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
+ if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
+ drawRestaurants();save();
+}
+
+function restaurantBack(){
+ const action=S.restaurantActions.pop();if(!action)return;
+ const row=S.restaurantPool.find(x=>x.id===action.id);if(row){if(action.type==='cut')row._cut=false;if(action.type==='maybe')row._maybe=!!action.hadMaybe;}
+ S.restaurantMaybeRound=!!action.maybeRound||!!action.roundAfter;const rows=restaurantPoolFiltered(),restored=rows.findIndex(x=>x.id===action.id);
+ S.restaurantIndex=restored>=0?restored:Math.max(0,Math.min(action.index||0,Math.max(0,rows.length-1)));drawRestaurants();save();
+}
+
+async function restaurantHide(row) {
+if (!row) return false;
+if (!await appConfirm('Hide this restaurant?', 'Hide '+row.name+' until you restore it in Settings.', 'Hide')) return false;
+row._hidden = true;
+S.hiddenRestaurants[row.id] = {
+id:row.id,canonicalId:row.canonicalId||restaurantCanonicalId(row),name:row.name,photo:row.photo||row.image||'',category:restaurantCategory(row),
+address:row.address||'',phone:row.phone||'',lat:row.lat,lon:row.lon,website:row.website||''
+};
+drawRestaurants();
+save();
+return true;
+}
+function bindCardButton(id,handler){
+ const el=$(id);if(!el)return;
+ const premiumDecision=/^(?:food|rest)(?:Cut|Maybe|Choose)$/.test(id);
+ let pressTimer=0;
+ el.setAttribute('type',el.getAttribute('type')||'button');
+ el.style.touchAction='manipulation';
+ el.style.webkitUserSelect='none';
+ el.style.userSelect='none';
+ const clearPress=()=>{
+  if(!premiumDecision)return;
+  clearTimeout(pressTimer);
+  pressTimer=window.setTimeout(()=>el.classList.remove('is-pressed'),150);
+ };
+ if(!Number.isFinite(Number(el.__dinliminateLastActivation)))el.__dinliminateLastActivation=0;
+ el.onpointerdown=()=>{
+  if(premiumDecision){clearTimeout(pressTimer);el.classList.add('is-pressed');}
+ };
+ const activate=e=>{
+  const now=performance.now();
+  const last=Number(el.__dinliminateLastActivation)||0;
+  if(now-last<450)return;
+  el.__dinliminateLastActivation=now;
+  if(premiumDecision)el.classList.add('is-pressed');
+  clearPress();
+  e?.preventDefault?.();
+  e?.stopPropagation?.();
+  try{
+   const result=handler?.(e);
+   if(result&&typeof result.catch==='function')result.catch(()=>{});
+  }catch{}
+ };
+ el.onpointerup=e=>{
+  if(e.pointerType&&e.button!=null&&e.button!==0)return;
+  activate(e);
+ };
+ el.onpointercancel=clearPress;
+ el.onclick=e=>activate(e);
+}
+function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard','restaurantNextCard',()=>restaurantCut(row),()=>restaurantMaybe(row))}
+let restaurantQueryTimer = 0;
+function scheduleRestaurantProviderSearch(){
+ clearTimeout(restaurantQueryTimer);
+ const q=String(S.restaurantQuery||'').trim();
+ if(q.length<2)return;
+ restaurantQueryTimer=setTimeout(()=>{searchRestaurants();},650);
+}
+function renderRestaurantSearchControl(){
+ const btn=$('restaurantSearchToggle');
+ const box=$('restaurantSearchBox');
+ if(!btn||!box)return;
+ const isOpen=!box.classList.contains('hidden');
+ btn.classList.toggle('is-open',isOpen);
+ btn.setAttribute('aria-expanded',String(isOpen));
+ btn.setAttribute('aria-label',isOpen?'Close Search':'Open Search');
+ btn.title=isOpen?'Close Search':'Open Search';
+}
+function collapseRestaurantSearch(clear=false){
+ clearTimeout(restaurantQueryTimer);
+ restaurantQueryTimer=0;
+ restaurantSearchSeq++;
+ restaurantSearchController?.abort();
+ restaurantSearchController=null;
+ setFindBusy(false);
+ const box=$('restaurantSearchBox');
+ if(box)box.classList.add('hidden');
+ if(clear){
+   const input=$('restaurantQuery');
+   if(input)input.value='';
+   S.restaurantQuery='';
+   S.restaurantIndex=0;
+ }
+ renderRestaurantSearchControl();
+}
+function closeRestaurantSearch(){
+ collapseRestaurantSearch(true);
+ drawRestaurants();
+ save();
+}
+function bindRestaurantTools(){
+ const searchButton=$('restaurantSearchToggle');
+ if(searchButton)searchButton.onclick=()=>{
+   const box=$('restaurantSearchBox');
+   if(!box)return;
+   const willOpen=box.classList.contains('hidden');
+   if(willOpen){
+     S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};
+     renderQuickCutsCollapse('restaurant');
+     box.classList.remove('hidden');
+     const input=$('restaurantQuery');
+     if(input)input.value=S.restaurantQuery||'';
+     renderRestaurantSearchControl();
+     input?.focus();
+     return;
+   }
+   collapseRestaurantSearch(false);
+ };
+$('restaurantQuery').oninput=()=>{
+   const previousQuery=String(S.restaurantQuery||'').trim();
+   S.restaurantQuery=$('restaurantQuery').value;
+   S.restaurantIndex=0;
+   drawRestaurants();
+   save();
+   if(!String(S.restaurantQuery||'').trim() && previousQuery){
+     clearTimeout(restaurantQueryTimer);
+     searchRestaurants();
+     return;
+   }
+   scheduleRestaurantProviderSearch();
+};
+ $('restaurantQuery').onkeydown=e=>{
+   if(e.key==='Enter'){
+     e.preventDefault();
+     clearTimeout(restaurantQueryTimer);
+     if(String(S.restaurantQuery||'').trim())searchRestaurants();
+   }
+ };
+ renderRestaurantSearchControl();
+}
+
+function triggerCelebration(goldOnly=false) {
+const el = $('celebration');
+if (!el) return;
+el.innerHTML = '';
+const colors = goldOnly
+ ? ['#c6a46a','#f1d894','#fff7df','#d8b86b','#fffaf0']
+ : ['#c6a46a','#f1d894','#f5f1e8','#ffb04a','#fffaf0'];
+for (let b=0;b<3;b++) {
+const burst = document.createElement('div');
+burst.className='firework-burst burst-'+(b+1);
+for (let i=0;i<18;i++) {
+const p=document.createElement('span');
+p.style.setProperty('--angle',(i*20)+'deg');
+p.style.setProperty('--delay',(b*0.11 + (i%5)*0.015)+'s');
+p.style.setProperty('--color',colors[i%colors.length]);
+burst.appendChild(p);
+}
+el.appendChild(burst);
+}
+el.classList.remove('hidden');
+window.setTimeout(()=>el.classList.add('hidden'),14000);
+}
+function triggerWinnerMoment(hungry=false){
+ const el=$('winner');if(!el)return;
+ el.classList.remove('winner-reveal');
+ void el.offsetWidth;
+ if(!hungry){
+  el.classList.add('winner-reveal');
+  triggerSwipeHaptic();
+  window.setTimeout(()=>el.classList.remove('winner-reveal'),1800);
+ }
+}
+
+function wheelPoint(cx,cy,r,angle){
+const rad=angle*Math.PI/180;
+return {x:cx+Math.cos(rad)*r,y:cy+Math.sin(rad)*r};
+}
+
+function sampleHungryWheel(pool,selected=null,count=12){
+ const source=[...(pool||[])].filter(Boolean);
+ if(!source.length)return [];
+ const target=String(selected?.id||'');
+ const others=source.filter(x=>String(x.id)!==target);
+ for(let i=others.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[others[i],others[j]]=[others[j],others[i]];}
+ const take=Math.min(count,source.length);
+ const chosen=others.slice(0,Math.max(0,take-(selected?1:0)));
+ if(selected){
+   const slot=Math.floor(Math.random()*Math.min(take,Math.max(1,chosen.length+1)));
+   chosen.splice(Math.min(slot,chosen.length),0,selected);
+ }
+ return chosen.slice(0,take);
+}
+function renderHungryWheel(){
+ const svg=$('hungryWheel');
+ const countEl=$('hungryWheelCount');
+ if(!svg)return;
+ const basePool=hungryWheelPool();
+ const pool=basePool.length?basePool:allFoods();
+ S.hungryWheelDisplayItems=pool;
+ if(countEl)countEl.textContent=pool.length+' meals on the wheel';
+ const cx=180,cy=180,r=168,inner=35,step=360/Math.max(1,pool.length);
+ const fills=['#171716','#26333b','#4a3a25','#d9cdb7','#20282d','#5a4426','#191918','#31414a','#745b31','#c9bea9','#242c30','#846736'];
+ svg.setAttribute('aria-label','Dinner wheel with '+pool.length+' meals');
+ svg.innerHTML=pool.map((item,index)=>{
+   const start=-90+index*step, end=start+step-.08;
+   const p1=wheelPoint(cx,cy,r,start),p2=wheelPoint(cx,cy,r,end);
+   const q1=wheelPoint(cx,cy,inner,end),q2=wheelPoint(cx,cy,inner,start);
+   const d='M '+p1.x.toFixed(2)+' '+p1.y.toFixed(2)+' A '+r+' '+r+' 0 0 1 '+p2.x.toFixed(2)+' '+p2.y.toFixed(2)+' L '+q1.x.toFixed(2)+' '+q1.y.toFixed(2)+' A '+inner+' '+inner+' 0 0 0 '+q2.x.toFixed(2)+' '+q2.y.toFixed(2)+' Z';
+   const landed=String(S.hungryWheelLandedId||'')===String(item.id);
+   const fill=landed?'#c6a46a':fills[index%fills.length];
+   return '<path class="wheel-segment'+(landed?' is-landed':'')+'" data-wheel-index="'+index+'" d="'+d+'" fill="'+fill+'" stroke="#0b0b0b" stroke-width="1.15"><title>Meal choice</title></path>';
+ }).join('')+
+ '<circle class="wheel-center" cx="180" cy="180" r="36" fill="#0e0e0d" stroke="#c6a46a" stroke-width="1.7"/>'+
+ '<circle cx="180" cy="180" r="7" fill="#c6a46a"/>';
+ svg.style.setProperty('--wheel-rotation',S.hungryWheelRotation+'deg');
+ svg.style.setProperty('--wheel-resting-rotation',S.hungryWheelRotation+'deg');
+}
+
+function hungryWheelPool(){
+const active=allFoods().filter(item=>!S.hidden.has(String(item.id)));
+return active.length?active:allFoods();
+}
+function showHungryWheelResult(item){
+const panel=$('hungryWheelPanel'),result=$('hungryWheelResult'),name=$('hungryWheelResultName'),img=$('hungryWheelResultImg'),choose=$('hungryWheelChoose'),spin=$('hungryWheelSpin');
+if(name)name.textContent=item?.name||'';
+if(img){
+ const src=foodPhoto(item);
+ img.src=src;
+ img.alt=item?.name||'Chosen meal';
+ img.onerror=function(){
+   const fb=foodPhotoFallback(item);
+   if(this.src!==fb)this.src=fb;
+ };
+}
+result?.classList.remove('hidden');
+panel?.classList.add('has-landed');
+if(choose){choose.disabled=false;choose.classList.remove('hidden');}
+if(spin){spin.disabled=false;spin.textContent='Spin Again';}
+}
+function hungryRestaurantPool(){
+ const raw=(S.restaurantPool||[]).filter(row=>{
+   if(!row)return false;
+   if(row._hidden||restaurantHidden(row))return false;
+   if(!restaurantMatchesQuery(row))return false;
+   if([...S.restaurantCuts].some(label=>restaurantQuickMatches(row,label)))return false;
+   return true;
+ });
+ const unique=dedupeRestaurantPool(raw);
+ return unique.length?unique:raw;
+}
+function hungryRestaurantPick(excludeId=null){
+ const pool=hungryRestaurantPool();
+ if(!pool.length)return null;
+ const candidates=excludeId==null?pool:pool.filter(row=>String(row.id)!==String(excludeId));
+ const source=candidates.length?candidates:pool;
+ const forced=Number(window.__DINLIMINATE_TEST_MYSTERY_INDEX);
+ const index=Number.isInteger(forced)&&forced>=0&&forced<source.length?forced:Math.floor(Math.random()*source.length);
+ return source[index]||null;
+}
+function renderHungryRestaurantMystery(item,covered=true){
+ const card=$('hungryMysteryCard'),img=$('hungryMysteryImg'),result=$('hungryMysteryResult');
+ const choose=$('hungryMysteryChoose'),again=$('hungryMysteryAgain'),reveal=$('hungryMysteryReveal');
+ if(!card||!img||!result)return;
+ if(item){
+   const src=imageProxyUrl(item?.photo||item?.image||item?.photoFallback||restaurantFallbackImage(item));
+   img.src=src;
+   img.alt=item.name||'Mystery restaurant';
+   img.onerror=function(){
+     const fb=restaurantFallbackImage(item);
+     if(this.src!==fb)this.src=fb;
+   };
+   img.dataset.restaurantPhotoKey=String(item.id||item.canonicalId||'');
+ }
+ card.classList.toggle('is-revealed',!covered);
+ const cover=card.querySelector('.hungry-mystery-cover');
+ if(cover)cover.classList.toggle('hidden',!covered);
+ result.classList.toggle('hidden',covered||!item);
+ if(item&&!covered){
+   $('hungryMysteryResultImg').src=imageProxyUrl(item?.photo||item?.image||item?.photoFallback||restaurantFallbackImage(item));
+   $('hungryMysteryResultImg').alt=item.name||'Chosen restaurant';
+   $('hungryMysteryResultImg').dataset.restaurantPhotoKey=String(item.id||item.canonicalId||'');
+   $('hungryMysteryResultName').textContent=item.name||'';
+   const meta=[restaurantCategory(item),Number.isFinite(Number(item.distance))?Number(item.distance).toFixed(1)+' mi':String(item.address||'').split(',')[0]].filter(Boolean).join(' · ');
+   $('hungryMysteryResultMeta').textContent=meta;
+   hydrateRestaurantPhoto(item,'#hungryRestaurantPanel');
+ }
+ if(again){const canAgain=hungryRestaurantPool().length>=2;again.classList.toggle('hidden',covered||!canAgain);again.disabled=false;}
+ if(choose)choose.classList.toggle('hidden',covered);
+ if(reveal)reveal.classList.toggle('hidden',!covered);
+}
+function startHungryRestaurantMystery(){
+ const countEl=$('hungryRestaurantCount');
+ const pool=hungryRestaurantPool();
+ if(countEl)countEl.textContent=pool.length?pool.length+' restaurants from your current search':'No restaurant options available';
+ S.hungryRestaurantChoice=null;
+ S.hungryRestaurantPendingChoice=null;
+ const img=$('hungryMysteryImg');
+ if(img){img.removeAttribute('src');img.alt='Mystery restaurant';}
+ renderHungryRestaurantMystery(null,true);
+ const reveal=$('hungryMysteryReveal');
+ if(reveal)reveal.disabled=!pool.length;
+}
+function revealHungryRestaurant(){
+ if(S.hungryRestaurantChoice)return;
+ const item=S.hungryRestaurantPendingChoice||hungryRestaurantPick();
+ if(!item){appToast('No restaurant options are available for a mystery pick.');return;}
+ S.hungryRestaurantChoice=item;
+ S.hungryRestaurantPendingChoice=null;
+ const card=$('hungryMysteryCard'),reveal=$('hungryMysteryReveal'),result=$('hungryMysteryResult'),cover=card?.querySelector('.hungry-mystery-cover');
+ if(!card||!result){renderHungryRestaurantMystery(item,false);return;}
+ const img=$('hungryMysteryImg');
+ if(img){
+   const src=imageProxyUrl(item?.photo||item?.image||item?.photoFallback||restaurantFallbackImage(item));
+   img.src=src; img.alt=item.name||'Mystery restaurant'; img.dataset.restaurantPhotoKey=String(item.id||item.canonicalId||'');
+   img.onerror=function(){const fb=restaurantFallbackImage(item);if(this.src!==fb)this.src=fb;};
+ }
+ card.classList.remove('is-revealed');
+ card.classList.add('is-revealing');
+ cover?.classList.remove('hidden');
+ result.classList.add('hidden');
+ if(reveal){reveal.disabled=true;reveal.textContent='Unveiling…';}
+ window.setTimeout(()=>{
+   if(S.hungryRestaurantChoice!==item)return;
+   card.classList.remove('is-revealing');
+   card.classList.add('is-revealed');
+   cover?.classList.add('hidden');
+   renderHungryRestaurantMystery(item,false);
+   const again=$('hungryMysteryAgain'),choose=$('hungryMysteryChoose');
+   if(again)again.disabled=hungryRestaurantPool().length<2;
+   if(choose)choose.focus?.();
+ },1850);
+}
+function tryAnotherHungryRestaurant(){
+ const current=S.hungryRestaurantChoice;
+ const next=hungryRestaurantPick(current?.id);
+ S.hungryRestaurantChoice=null;
+ S.hungryRestaurantPendingChoice=next;
+ renderHungryRestaurantMystery(null,true);
+ const reveal=$('hungryMysteryReveal');
+ if(reveal){
+   reveal.disabled=!next;
+   reveal.textContent='Reveal';
+   reveal.classList.remove('hidden');
+ }
+ if(!next)appToast('No other restaurant options are available.');
+}
+function finishHungryWheelRotation(item,rotation){
+ const svg=$('hungryWheel'),spin=$('hungryWheelSpin');
+ S.hungryWheelRotation=rotation;
+ S.hungryWheelChoice=item||null;
+ S.hungryWheelLandedId=item?.id?String(item.id):null;
+ S.hungryWheelSpinning=false;
+ S.hungryWheelSpinPhase='idle';
+ if(S.hungryWheelFrame){cancelAnimationFrame(S.hungryWheelFrame);S.hungryWheelFrame=null;}
+ if(spin){spin.disabled=false;spin.setAttribute('aria-busy','false');spin.textContent='Spin Again';}
+ svg?.classList.remove('is-spinning','is-continuous','is-slowing');
+ if(svg){
+   svg.style.setProperty('--wheel-rotation',rotation+'deg');
+   svg.style.setProperty('--wheel-resting-rotation',rotation+'deg');
+ }
+ showHungryWheelResult(item);
+ renderHungryWheel();
+ triggerCelebration(true);
+ triggerSwipeHaptic();
+}
+
+function startContinuousWheelSpin(){
+ const svg=$('hungryWheel');
+ if(!svg||S.hungryWheelSpinning)return;
+ const pool=hungryWheelPool();
+ if(!pool.length){appToast('There are no meals available to spin.');return;}
+ S.hungryWheelDisplayItems=pool;
+ S.hungryWheelSpinning=true;
+ S.hungryWheelSpinPhase='spinning';
+ S.hungryWheelWheelStartAt=performance.now();
+ S.hungryWheelVelocity=420;
+ S.hungryWheelLandedId=null;
+ S.hungryWheelChoice=null;
+ $('hungryWheelResult')?.classList.add('hidden');
+ $('hungryWheelChoose')?.classList.add('hidden');
+ $('hungryWheelPanel')?.classList.remove('has-landed');
+ const spin=$('hungryWheelSpin');
+ if(spin){spin.disabled=false;spin.textContent='Slow It Down';spin.setAttribute('aria-busy','true');}
+ svg.classList.remove('is-slowing');
+ svg.classList.add('is-continuous');
+ const frame=(now)=>{
+   if(!S.hungryWheelSpinning||S.hungryWheelSpinPhase!=='spinning')return;
+   const dt=Math.min(40,Math.max(0,now-(S.hungryWheelLastFrame||now)));
+   S.hungryWheelLastFrame=now;
+   S.hungryWheelRotation+=S.hungryWheelVelocity*(dt/1000);
+   svg.style.setProperty('--wheel-rotation',S.hungryWheelRotation+'deg');
+   S.hungryWheelFrame=requestAnimationFrame(frame);
+ };
+ S.hungryWheelLastFrame=performance.now();
+ S.hungryWheelFrame=requestAnimationFrame(frame);
+}
+
+function slowAndStopHungryWheel(){
+ const svg=$('hungryWheel'),spin=$('hungryWheelSpin');
+ if(!svg||!S.hungryWheelSpinning||S.hungryWheelSpinPhase!=='spinning')return;
+ const pool=Array.isArray(S.hungryWheelDisplayItems)&&S.hungryWheelDisplayItems.length?S.hungryWheelDisplayItems:hungryWheelPool();
+ if(!pool.length){S.hungryWheelSpinning=false;return;}
+ const forced=Number(window.__DINLIMINATE_TEST_WHEEL_INDEX);
+ const idx=Number.isInteger(forced)&&forced>=0&&forced<pool.length
+   ? forced
+   : Math.floor(Math.random()*pool.length);
+ const item=pool[idx];
+ const step=360/pool.length;
+ const targetBase=-(idx*step+step/2);
+ const current=S.hungryWheelRotation;
+ const target=targetBase+360*Math.ceil((current-targetBase+720)/360);
+ const token=++S.hungryWheelSpinToken;
+ S.hungryWheelSpinPhase='slowing';
+ if(S.hungryWheelFrame){cancelAnimationFrame(S.hungryWheelFrame);S.hungryWheelFrame=null;}
+ S.hungryWheelChoice=item;
+ S.hungryWheelSpinning=true;
+ if(spin){spin.disabled=true;spin.textContent='Slowing…';}
+ svg.classList.remove('is-continuous');
+ svg.classList.add('is-slowing');
+ svg.style.setProperty('--wheel-rotation',target+'deg');
+ const finish=()=>{if(token!==S.hungryWheelSpinToken)return;finishHungryWheelRotation(item,target);};
+ svg.addEventListener('transitionend',finish,{once:true});
+ window.setTimeout(()=>{if(S.hungryWheelSpinning&&S.hungryWheelSpinPhase==='slowing')finish();},3400);
+}
+
+function spinHungryWheel(){
+ const spin=$('hungryWheelSpin');
+ if(S.hungryWheelSpinPhase==='spinning'){slowAndStopHungryWheel();return;}
+ if(S.hungryWheelSpinning)return;
+ startContinuousWheelSpin();
+}
+
+function winner(item, explicitType=null) {
+const chosenFromWheel=!!S.hungryWheelChoice && String(S.hungryWheelChoice.id)===String(item?.id);
+S.winnerItem = item;
+S.winnerType = explicitType || (S.screen === 'restaurant' ? 'restaurant' : 'food');
+if (item?.category !== 'Hungry' && item?.id) recordHistory(item, S.winnerType);
+show('winner');
+const hungry = item?.category === 'Hungry';
+S.hungryWheelChoice=null;
+S.hungryWheelSpinning=false;
+S.hungryWheelRotation=0;
+S.hungryWheelDisplayItems=null;
+S.hungryWheelLandedId=null;
+S.hungryWheelSpinPhase='idle';
+S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
+S.hungryRestaurantChoice=null;
+S.hungryRestaurantPendingChoice=null;
+S.hungryWheelSpinToken++;
+const detailsBtn=$('details');
+if(detailsBtn){detailsBtn.classList.toggle('hidden',hungry);detailsBtn.setAttribute('aria-hidden',String(hungry));detailsBtn.disabled=hungry;}
+$('winner')?.classList.toggle('hungry-mode',hungry);
+$('winnerEyebrow')?.classList.toggle('hidden',hungry);
+$('winName').classList.toggle('hidden',hungry);
+const isRestaurantHungry=hungry&&S.winnerType==='restaurant';
+$('hungryWheelPanel')?.classList.toggle('hidden',!hungry||isRestaurantHungry);
+$('hungryWheelPanel')?.setAttribute('aria-hidden',String(!hungry||isRestaurantHungry));
+$('hungryRestaurantPanel')?.classList.toggle('hidden',!isRestaurantHungry);
+$('hungryRestaurantPanel')?.setAttribute('aria-hidden',String(!isRestaurantHungry));
+$('hungryNote').textContent=hungry
+ ? (S.winnerType==='restaurant'?"You eliminated everything. It’s either this or Waffle House.":"You eliminated everything. It’s either this or Fish Sticks.")
+ : '';
+$('hungryNote').classList.toggle('hidden',!hungry);
+$('winName').textContent = hungry ? 'HUNGRY ☹' : item.name;
+const winImg = $('winImg');
+if (!winImg) return;
+winImg.classList.toggle('hungry-image', hungry);
+winImg.classList.toggle('hidden',hungry);
+const winnerBaseFallback=S.winnerType==='restaurant'?restaurantFallbackImage(item):HUNGRY_IMAGE;
+const winnerImage=imageProxyUrl(item?.image || item?.photo || item?.photoFallback || winnerBaseFallback);
+const winnerFallback=imageProxyUrl(item?.photoFallback || item?.image || winnerBaseFallback);
+winImg.src = winnerImage;
+winImg.dataset.fallback = winnerFallback;
+winImg.alt = item.name || 'Hungry';
+winImg.referrerPolicy='no-referrer';
+winImg.loading='eager';
+winImg.onerror=function(){
+  const fb=this.dataset.fallback||HUNGRY_IMAGE;
+  const current=this.currentSrc||this.src;
+  if(fb && current!==fb){this.src=fb;return;}
+  if(!String(current||'').startsWith('data:image/svg') && HUNGRY_IMAGE){this.src=HUNGRY_IMAGE;}
+};
+winImg.dataset.restaurantPhotoKey = String(item?.id||item?.canonicalId||'');
+if ($('celebration')) $('celebration').classList.toggle('hidden', hungry);
+triggerWinnerMoment(hungry);
+if(hungry){
+  if(isRestaurantHungry){
+    startHungryRestaurantMystery();
+  }else{
+    renderHungryWheel();
+
+    $('hungryWheelPanel')?.classList.remove('has-landed');
+    $('hungryWheelResult')?.classList.add('hidden');
+    $('hungryWheelChoose')?.classList.add('hidden');
+    const spinBtn=$('hungryWheelSpin');
+    if(spinBtn){spinBtn.disabled=false;spinBtn.textContent='Spin the Wheel';spinBtn.setAttribute('aria-busy','false');}
+  }
+}else{
+  if(!(chosenFromWheel && $('celebration') && !$('celebration').classList.contains('hidden')))triggerCelebration(chosenFromWheel);
+  hydrateRestaurantPhoto(item,'#winner');
+}
+save();
+}
+function openModal(id, title, body) {
+const opener=document.activeElement;
+$(id)?.remove();
+$(id+'Bg')?.remove();
+const bg=document.createElement('div');
+bg.id=id+'Bg';
+bg.className='modal-bg modal-bg-opening';
+const modal=document.createElement('section');
+modal.id=id;
+modal.className='modal modal-opening';
+if(['manageFoodsModal','historyModal','settingsModal'].includes(id))modal.classList.add('utility-modal');
+if(id==='detailsModal')modal.classList.add('details-modal');
+modal.setAttribute('role','dialog');
+modal.setAttribute('aria-modal','true');
+modal.setAttribute('aria-labelledby',id+'Title');
+modal.setAttribute('tabindex','-1');
+modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="menu" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
+document.body.append(bg,modal);
+requestAnimationFrame(()=>{
+ bg.classList.add('modal-bg-open');
+ modal.classList.add('modal-open');
+ modal.classList.remove('modal-opening');
+});
+let closed=false;
+const close=()=>{
+ if(closed)return;
+ closed=true;
+ modal.classList.remove('modal-open');
+ modal.classList.add('modal-closing');
+ bg.classList.remove('modal-bg-open');
+ bg.classList.add('modal-bg-closing');
+ window.setTimeout(()=>{
+  modal.remove();bg.remove();
+  if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
+  if(id==='settingsModal')removeFoodOverlays();
+  if(S.screen&&$(S.screen))show(S.screen);
+ },150);
+};
+bg.onclick=close;
+modal.querySelector('[data-close]').onclick=close;
+modal.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){e.preventDefault();close();return;}
+ if(e.key==='Tab'){
+  const f=[...modal.querySelectorAll('button,input,select,textarea,a[href]')].filter(x=>!x.disabled);
+  if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+ }
+});
+queueMicrotask(()=>modal.querySelector('[data-close]')?.focus());
+return modal;
+}
+function bindDetailNotes(modal,item,type){
+ const noteKey=itemNoteKey(item,type);
+ const noteSection=modal.querySelector('#detailNotesSection');
+ const toggle=modal.querySelector('#detailNotesToggle');
+ const editButton=modal.querySelector('#detailNoteEdit');
+ const deleteButton=modal.querySelector('#detailNotesDelete');
+ const noteRow=modal.querySelector('#detailNoteRow');
+ const editor=modal.querySelector('#detailNotesEditor');
+ const field=modal.querySelector('#detailNotesInput');
+ const saveButton=modal.querySelector('#detailNotesSave');
+ const cancelButton=modal.querySelector('#detailNotesCancel');
+ const preview=modal.querySelector('#detailNotesPreview');
+ const empty=modal.querySelector('#detailNotesEmpty');
+ if(!noteSection||!toggle||!editButton||!deleteButton||!noteRow||!editor||!field||!saveButton||!cancelButton)return;
+ const render=()=>{
+  const note=String((S.notes||{})[noteKey]||'').trim();
+  const hasNote=!!note;
+  if(preview)preview.textContent=note;
+  noteRow.classList.toggle('hidden',!hasNote);
+  empty?.classList.toggle('hidden',hasNote);
+  const label=toggle.querySelector('span:last-child');
+  if(label)label.textContent=' '+(hasNote?'Edit note':'Add a note');
+  toggle.setAttribute('aria-label',hasNote?'Edit note for '+item.name:'Add a note for '+item.name);
+  toggle.setAttribute('aria-expanded',(!editor.classList.contains('hidden')).toString());
+ };
+ const openEditor=()=>{
+  editor.classList.remove('hidden');
+  field.value=String((S.notes||{})[noteKey]||'');
+  window.setTimeout(()=>field.focus(),0);
+  render();
+ };
+ toggle.onclick=openEditor;
+ editButton.onclick=openEditor;
+ deleteButton.onclick=()=>{
+  setItemNote(item,type,'');
+  field.value='';
+  editor.classList.add('hidden');
+  render();
+ };
+ saveButton.onclick=()=>{
+  setItemNote(item,type,field.value);
+  editor.classList.add('hidden');
+  render();
+ };
+ cancelButton.onclick=()=>{
+  field.value=String((S.notes||{})[noteKey]||'');
+  editor.classList.add('hidden');
+  render();
+ };
+ field.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();cancelButton.click();}
+ });
+ render();
+}
+
+function detailsSheet(item,type){
+ if(item?.category==='Hungry')return;
+ const isRestaurant=type==='restaurant';
+ const image=imageProxyUrl(item.image||item.photo||item.photoFallback||(isRestaurant?restaurantFallbackImage(item):HUNGRY_IMAGE));
+ const note=itemNote(item,type);
+ const notePreview=note.replace(/\s+/g,' ').trim();
+ const notesSection='<section class="detail-section detail-notes-section" id="detailNotesSection"><div class="detail-section-head"><div><div class="detail-section-title">Notes</div><p class="detail-section-helper">Private to this device.</p></div><div class="detail-notes-actions"><button class="detail-notes-toggle" id="detailNotesToggle" type="button" aria-expanded="false"><span class="detail-notes-toggle-icon" aria-hidden="true">✎</span><span> '+(note?'Edit note':'Add a note')+'</span></button></div></div><div class="detail-note-row '+(note?'':'hidden')+'" id="detailNoteRow"><p class="detail-note-preview" id="detailNotesPreview">'+esc(notePreview)+'</p><div class="detail-note-row-actions"><button class="detail-note-edit" id="detailNoteEdit" type="button" aria-label="Edit note for '+esc(item.name)+'" title="Edit note"><span aria-hidden="true">✎</span><span>Edit</span></button><button class="detail-notes-delete" id="detailNotesDelete" type="button" aria-label="Delete note for '+esc(item.name)+'" title="Delete note"><span aria-hidden="true">×</span></button></div></div><p class="detail-notes-empty '+(note?'hidden':'')+'" id="detailNotesEmpty">Add a quick reminder, favorite, or thought.</p><div class="detail-notes-editor hidden" id="detailNotesEditor"><textarea id="detailNotesInput" maxlength="1200" rows="4" placeholder="Write a note about this '+(isRestaurant?'restaurant':'meal')+'…"></textarea><div class="detail-notes-editor-actions"><button class="secondary" id="detailNotesCancel" type="button">Cancel</button><button class="detail-notes-save" id="detailNotesSave" type="button">Save Note</button></div></div></section>';
+
+ if(!isRestaurant){
+   const cat=String(item.category||'Meal').trim();
+   const nut=item.nutrition||{};
+   const about=String(item.description||'').trim();
+   const ingredients=Array.isArray(item.ingredients)?item.ingredients.filter(Boolean):[];
+   const recipe=String(item.recipe||'').trim();
+   const aboutSection=about?'<section class="detail-section"><div class="detail-section-title">About</div><p class="detail-body-copy">'+esc(about)+'</p></section>':'';
+   const detailRows='<div class="detail-info-list">'+
+     '<div class="detail-info-row"><span>Cuisine</span><strong>'+esc(cat)+'</strong></div>'+
+     '<div class="detail-info-row"><span>Meal Times</span><strong>'+esc(mealTimesFor(item).join(' · '))+'</strong></div>'+
+     (ingredients.length?'<div class="detail-info-row detail-info-row-stack"><span>Ingredients</span><strong>'+esc(ingredients.slice(0,16).join(' · '))+'</strong></div>':'')+
+     (recipe?'<div class="detail-info-row detail-info-row-stack"><span>Preparation</span><strong>'+esc(recipe).replace(/\n/g,'<br>')+'</strong></div>':'')+
+     '</div>';
+   const nutrition=Object.values(nut).some(v=>String(v??'').trim()!=='')?
+     '<section class="detail-section"><div class="detail-section-title">Typical nutrition · per serving</div><div class="nutrition-grid detail-nutrition-grid">'+
+     '<div><b>'+esc(nut.calories||'—')+'</b><span>Calories</span></div>'+
+     '<div><b>'+esc(nut.protein||'—')+' g</b><span>Protein</span></div>'+
+     '<div><b>'+esc(nut.carbs||'—')+' g</b><span>Carbs</span></div>'+
+     '<div><b>'+esc(nut.fat||'—')+' g</b><span>Fat</span></div>'+
+     '<div><b>'+esc(nut.sodium||'—')+' mg</b><span>Sodium</span></div>'+
+     '</div><p class="detail-note">'+esc(item.nutritionNote||'Typical estimate per serving.')+'</p></section>' : '';
+   const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHide" type="button" aria-label="Hide this meal"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Meal</span></button></div>';
+   const body='<div class="detail-unified detail-meal"><div class="detail-hero detail-meal-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-final-fallback="'+FINAL_FOOD_IMAGE+'" alt="'+esc(item.name)+'"></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">MEAL</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+' · Meal</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+detailRows+'</section>'+nutrition+notesSection+hide+'</div>';
+   const modal=openModal('detailsModal','Details',body);
+   bindImageFallback('#detailsModal img',foodPhoto(item),FINAL_FOOD_IMAGE);
+   bindDetailNotes(modal,item,'food');
+   const detailHide=$('detailHide');
+   if(detailHide)detailHide.onclick=async()=>{const hidden=await foodHideItem(item);if(hidden){modal.remove();$('detailsModalBg')?.remove();}};
+   return;
+ }
+
+ const cat=restaurantCategory(item);
+ const detailPhone=String(item.phone||item.nationalPhoneNumber||item['contact:phone']||'').trim();
+ const phoneHrefValue=detailPhone?phoneHref(detailPhone):restaurantPhoneSearchUrl(item);
+ const phoneLabel=detailPhone?detailPhone:'Find phone number';
+ const hours=String(item.opening_hours||'').trim();
+ const address=String(item.address||'').trim();
+ const distance=Number.isFinite(Number(item.distance))?Number(item.distance).toFixed(1)+' mi away':'';
+ const about=String(item.description||'').trim();
+ const detailWebsitePresentation=restaurantWebsitePresentation(item);
+ const detailWebsiteLabel=detailWebsitePresentation.kind==='website'?'Website':(detailWebsitePresentation.kind==='official-page'?'Official Page':'Search Website');
+ const websiteAction='<a class="detail-icon-button restaurant-detail-action" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 10.5 18 6m0 0h-3.8M18 6v3.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 13.5v3.25A1.25 1.25 0 0 1 15.75 18h-9.5A1.25 1.25 0 0 1 5 16.75v-9.5A1.25 1.25 0 0 1 6.25 6H9.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="detail-action-label">'+esc(detailWebsiteLabel)+'</span></a>';
+ const callAction='<a class="detail-icon-button restaurant-detail-action" href="'+esc(phoneHrefValue)+'" '+(detailPhone?'':'target="_blank" rel="noopener noreferrer')+' aria-label="'+esc((detailPhone?'Call ':'Find phone for ')+item.name)+'" title="'+esc(detailPhone?'Call':'Find phone')+'"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.8 9.8 4a1.6 1.6 0 0 1 1.9.9l1.2 3a1.6 1.6 0 0 1-.4 1.7l-1.1 1a12.5 12.5 0 0 0 3.9 3.9l1-1.1a1.6 1.6 0 0 1 1.7-.4l3 1.2a1.6 1.6 0 0 1 .9 1.9l-.8 2.6a2.1 2.1 0 0 1-2.4 1.4C11.3 18.9 5.1 12.7 4 6.2a2.1 2.1 0 0 1 1.4-2.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="detail-action-label">'+esc(detailPhone?'Call':'Find phone')+'</span></a>';
+ const directionsAction='<a class="detail-icon-button restaurant-detail-action" href="'+esc(restaurantDirectionsUrl(item))+'" target="_blank" rel="noopener noreferrer" aria-label="Get directions to '+esc(item.name)+'" title="Directions"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="detail-action-label">Directions</span></a>';
+ const infoRows='<div class="detail-info-list">'+
+   '<div class="detail-info-row"><span>Category</span><strong>'+esc(cat)+'</strong></div>'+
+   (item.cuisine?'<div class="detail-info-row"><span>Cuisine</span><strong>'+esc(item.cuisine)+'</strong></div>':'')+
+   (address?'<div class="detail-info-row detail-info-row-stack"><span>Location</span><strong>'+esc(address)+'</strong></div>':'')+
+   (distance?'<div class="detail-info-row"><span>Distance</span><strong>'+esc(distance)+'</strong></div>':'')+
+   '</div>';
+ const hoursSection=hours?'<section class="detail-section"><div class="detail-section-title">Hours</div><p class="detail-body-copy detail-hours-copy">'+esc(hours)+'</p></section>':'';
+ const contactRows='<div class="detail-info-list detail-contact-list">'+
+   '<a class="detail-info-row detail-info-row-link" href="'+esc(phoneHrefValue)+'" '+(detailPhone?'':'target="_blank" rel="noopener noreferrer')+'><span>Phone</span><strong>'+esc(phoneLabel)+'</strong><span class="detail-row-arrow">↗</span></a>'+
+   '</div>';
+ const aboutSection=about?'<section class="detail-section"><div class="detail-section-title">About</div><p class="detail-body-copy">'+esc(about)+'</p></section>':'';
+ const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHideRestaurant" type="button" aria-label="Hide this restaurant"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Restaurant</span></button></div>';
+ const body='<div class="detail-unified detail-restaurant"><div class="detail-hero detail-restaurant-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-restaurant-photo-key="'+esc(item.id||item.canonicalId||'')+'" data-final-fallback="'+esc(restaurantFallbackImage(item))+'" alt="'+esc(item.name)+'"><div class="restaurant-photo-credit" aria-live="polite"></div></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">RESTAURANT</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+'</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+infoRows+'</section>'+hoursSection+'<section class="detail-section"><div class="detail-section-title">Contact</div>'+contactRows+'</section>'+notesSection+'<section class="detail-utility-actions"><a class="detail-utility-action" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'">Website</a>'+callAction+directionsAction+'</section>'+hide+'</div>';
+ const modal=openModal('detailsModal','Restaurant Details',body);
+ bindImageFallback('#detailsModal img',image,restaurantFallbackImage(item));
+ bindDetailNotes(modal,item,'restaurant');
+ const detailHideRestaurant=$('detailHideRestaurant');
+ if(detailHideRestaurant)detailHideRestaurant.onclick=async()=>{const hidden=await restaurantHide(item);if(hidden){modal.remove();$('detailsModalBg')?.remove();}};
+ hydrateRestaurantPhoto(item,'#detailsModal');
+ hydrateRestaurantWebsite(item,'#detailsModal');
+}
+
+function historyImageSource(row){
+ const fallback=row?.type==='restaurant'?restaurantFallbackImage(row):HUNGRY_IMAGE;
+ return imageProxyUrl(row?.image||row?.photoFallback||fallback);
+}
+function recordHistory(item, type, options={}) {
+const history = readHistory();
+const familyRoundId=String(options.familyRoundId||'').trim();
+if(familyRoundId && history.some(x=>String(x?.familyRoundId||'')===familyRoundId)) return false;
+history.unshift({
+id:String(Date.now())+'-'+Math.random().toString(36).slice(2),
+date:(() => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })(),
+type,
+name:item.name,
+sourceItemId:type==='food'?(item.id||''):'',
+image:item.image||item.photo||'',
+photoFallback:type==='restaurant'?(item.photoFallback||restaurantFallbackImage(item)):(item.photoFallback||''),
+photoSource:item.photoSource||'',
+googlePlaceId:item.googlePlaceId||'',
+photoIsGeneric:item.photoIsGeneric!==false,
+category:item.category||restaurantCategory(item),
+cuisine:item.cuisine||'',
+quickCuts:type==='food'&&Array.isArray(item.quickCuts)?item.quickCuts.slice():[],
+mealTimes:type==='food'?mealTimesFor(item):[],
+address:item.address||'',
+phone:item.phone||item.nationalPhoneNumber||'',
+website:item.website||'',
+opening_hours:item.opening_hours||'',
+hoursState:item.hoursState||'',
+menuItems:Array.isArray(item.menuItems)?item.menuItems.slice(0,10):[],
+lat:Number.isFinite(Number(item.lat))?Number(item.lat):null,
+lon:Number.isFinite(Number(item.lon))?Number(item.lon):null,
+distance:Number.isFinite(Number(item.distance))?Number(item.distance):null,
+familyRoundId:familyRoundId||null,
+familyMode:!!options.familyMode
+});
+writeHistory(history);
+return true;
+}
+function readHistory() {
+try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+}
+function writeHistory(rows) {
+try {
+localStorage.setItem(HISTORY_KEY, JSON.stringify((rows||[]).slice(0,120)));
+S.storageWarning=false; updateStorageIndicator();
+return true;
+} catch {
+S.storageWarning=true; updateStorageIndicator();
+return false;
+}
+}
+function historyView() {
+let cursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+const render = () => {
+const history = readHistory();
+const y = cursor.getFullYear(), m = cursor.getMonth();
+const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+const today = new Date();
+const todayKey = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+const mealCount=history.filter(x=>x?.type==='food').length;
+const restaurantCount=history.filter(x=>x?.type==='restaurant').length;
+const totalCount=history.length;
+const tallyChosen=(type)=>{
+ const counts=new Map();
+ history.filter(x=>x?.type===type).forEach(x=>{
+   const name=String(x?.name||'').trim();
+   if(name)counts.set(name,(counts.get(name)||0)+1);
+ });
+ return [...counts.entries()]
+   .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+   .slice(0,5);
+};
+const chosenMeals=tallyChosen('food');
+const chosenRestaurants=tallyChosen('restaurant');
+const choiceRows=(rows,emptyLabel)=>rows.length
+ ? rows.map(([name,count],index)=>'<div class="history-choice-row"><span class="history-choice-rank">'+(index+1)+'</span><span class="history-choice-name">'+esc(name)+'</span><b class="history-choice-count">'+count+'×</b></div>').join('')
+ : '<p class="history-stats-empty">'+emptyLabel+'</p>';
+const statsMarkup='<section class="history-stats hidden" id="historyStats" aria-label="Your stats">'+
+'<div class="history-stats-head"><div><span class="history-stats-kicker">YOUR STATS</span><b>What you choose most</b></div><span class="history-stats-note">'+totalCount+' decision'+(totalCount===1?'':'s')+'</span></div>'+
+'<div class="history-stats-totals"><span>'+mealCount+' meal'+(mealCount===1?'':'s')+'</span><span>'+restaurantCount+' restaurant'+(restaurantCount===1?'':'s')+'</span></div>'+
+'<div class="history-choice-section"><div class="history-choice-title">Meals chosen most</div><div class="history-choice-list">'+choiceRows(chosenMeals,'No meals chosen yet.')+'</div></div>'+
+'<div class="history-choice-section"><div class="history-choice-title">Restaurants chosen most</div><div class="history-choice-list">'+choiceRows(chosenRestaurants,'No restaurants chosen yet.')+'</div></div>'+
+'</section>';
+let body = '<div class="history-intro"><div class="history-intro-copy"><span class="history-kicker">YOUR DECISIONS</span><h4>History</h4><p>Browse previous meal and restaurant choices by date.</p></div><button class="history-stats-toggle" id="historyStatsToggle" type="button" aria-expanded="false">Your Stats</button></div>'+statsMarkup+'<div class="history-calendar"><div class="cal-nav"><button class="text-btn" id="calPrev" aria-label="Previous month">‹</button><b>'+cursor.toLocaleString(undefined,{month:'long',year:'numeric'})+'</b><button class="text-btn" id="calNext" aria-label="Next month">›</button></div><div class="cal-grid cal-grid-20" role="grid" aria-label="'+cursor.toLocaleString(undefined,{month:'long',year:'numeric'})+' history">'; 
+['S','M','T','W','T','F','S'].forEach(d => body += '<span class="cal-d" role="columnheader">'+d+'</span>');
+for(let i=0;i<first;i++) body += '<span class="cal-empty" aria-hidden="true"></span>';
+for(let day=1;day<=last;day++) {
+const key = y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+const entries = history.filter(x => x.date === key);
+const todayClass = key===todayKey ? ' today' : '';
+const limited = entries.slice(0,2);
+const more = entries.length>2 ? '<span class="cal-more">+'+(entries.length-2)+'</span>' : '';
+let dayMarkup;
+if(limited.length===0){
+  dayMarkup = '<div class="cal-day"><b>'+day+'</b></div>';
+} else if(limited.length===1){
+  const entry=limited[0];
+  dayMarkup = '<div class="cal-day has single"><span class="cal-date-chip">'+day+'</span><div class="cal-photo-wrap"><button class="cal-photo-link" data-history-date="'+esc(entry.id)+'" aria-label="View '+esc(entry.name)+' from '+esc(key)+'"><img src="'+esc(historyImageSource(entry))+'" data-restaurant-photo-key="'+esc(entry.type==='restaurant'?entry.id:'')+'" data-final-fallback="'+(entry.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(entry.name)+'"><span class="cal-photo-kind">'+(entry.type==='restaurant'?'Restaurant':'Food')+'</span></button><button class="cal-entry-x" data-history-delete="'+esc(entry.id)+'" aria-label="Remove '+esc(entry.name)+' from '+esc(key)+'">×</button></div></div>';
+} else {
+  dayMarkup = '<div class="cal-day has dual" aria-label="'+entries.length+' history entries on '+esc(key)+'"><span class="cal-date-chip">'+day+'</span>'+limited.map(entry=>'<div class="cal-photo-wrap"><button class="cal-photo-link" data-history-date="'+esc(entry.id)+'" aria-label="View '+esc(entry.name)+' from '+esc(key)+'"><img src="'+esc(historyImageSource(entry))+'" data-restaurant-photo-key="'+esc(entry.type==='restaurant'?entry.id:'')+'" data-final-fallback="'+(entry.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(entry.name)+'"><span class="cal-photo-kind">'+(entry.type==='restaurant'?'Restaurant':'Food')+'</span></button><button class="cal-entry-x" data-history-delete="'+esc(entry.id)+'" aria-label="Remove '+esc(entry.name)+' from '+esc(key)+'">×</button></div>').join('')+more+'</div>';
+}
+body += '<div class="cal-cell'+todayClass+'" role="gridcell">'+dayMarkup+'</div>';
+}
+body += '</div></div><div class="history-list">';
+body += history.length ? '<div class="history-toolbar"><span class="status">'+history.length+' saved decision'+(history.length===1?'':'s')+'</span><button class="secondary" id="historyClearAll" type="button">Clear all</button></div>'+history.slice(0,30).map(x => '<button class="history-row history-open" data-history-id="'+esc(x.id)+'"><img src="'+esc(historyImageSource(x))+'" data-restaurant-photo-key="'+esc(x.type==='restaurant'?x.id:'')+'" data-final-fallback="'+(x.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(x.name)+'"><span><b>'+esc(x.name)+'</b><small>'+esc(x.date)+' · '+esc(x.type)+(x.type==='food'&&Array.isArray(x.mealTimes)&&x.mealTimes.length?' · '+esc(x.mealTimes.join(' · ')):'')+'</small></span></button>').join('') : '<p class="status">No history yet.</p>';
+body += '</div>';
+const modal = openModal('historyModal','History',body);
+bindImageFallback('#historyModal img',FINAL_RESTAURANT_IMAGE,FINAL_RESTAURANT_IMAGE);
+for(const row of history.slice(0,30)) if(row?.type==='restaurant'&&row?.id) hydrateRestaurantPhoto(row,'#historyModal');
+$('historyStatsToggle').onclick=()=>{
+  const panel=$('historyStats'),btn=$('historyStatsToggle'); if(!panel||!btn)return;
+  const isHidden=panel.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded',String(!isHidden));
+  btn.textContent=isHidden?'Your Stats':'Hide Stats';
+};
+$('calPrev').onclick = () => { cursor = new Date(y,m-1,1); modal.remove(); $('historyModalBg')?.remove(); render(); };
+$('calNext').onclick = () => { cursor = new Date(y,m+1,1); modal.remove(); $('historyModalBg')?.remove(); render(); };
+modal.querySelectorAll('[data-history-id]').forEach(btn => btn.onclick = () => {
+const row = history.find(x => x.id === btn.dataset.historyId);
+if (row) detailsSheet(row, row.type);
+});
+modal.querySelectorAll('[data-history-date]').forEach(btn => btn.onclick = () => {
+const row = history.find(x => x.id === btn.dataset.historyDate);
+if (row) detailsSheet(row, row.type);
+});
+if(history.length){
+$('historyClearAll').onclick=async()=>{
+if(!await appConfirm('Clear history?','This permanently removes all saved meal and restaurant decisions from this device.','Clear History'))return;
+writeHistory([]); modal.remove(); $('historyModalBg')?.remove(); render();
+};
+}
+modal.querySelectorAll('[data-history-delete]').forEach(btn => {
+const remove = (e) => {
+e.preventDefault(); e.stopPropagation();
+writeHistory(history.filter(x => x.id !== btn.dataset.historyDelete));
+modal.remove(); $('historyModalBg')?.remove(); render();
+};
+btn.onclick = remove;
+btn.onpointerdown = (e) => e.stopPropagation();
+});
+};
+render();
+}
+function readImageFile(file) {
+return new Promise((resolve,reject) => {
+if (!file) return resolve('');
+if (!file.type.startsWith('image/')) return reject(new Error('Please choose an image file.'));
+const reader = new FileReader();
+reader.onerror = () => reject(new Error('Could not read that image.'));
+reader.onload = () => {
+const img = new Image();
+img.onload = () => {
+const max=1200, scale=Math.min(1,max/Math.max(img.width,img.height));
+const canvas=document.createElement('canvas');
+canvas.width=Math.max(1,Math.round(img.width*scale));
+canvas.height=Math.max(1,Math.round(img.height*scale));
+const ctx=canvas.getContext('2d');
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+resolve(canvas.toDataURL('image/jpeg',0.82));
+};
+img.onerror=()=>reject(new Error('Could not decode that image.'));
+img.src=reader.result;
+};
+reader.readAsDataURL(file);
+});
+}
+async function findOnlineMealPhoto(name) {
+ try {
+  const query=String(name||'').trim();
+  if(!query)return '';
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),4500);
+  const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(query)+'&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url&iiurlwidth=1200&format=json&formatversion=2&origin=*';
+  const response=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+  clearTimeout(timer);
+  if(!response.ok)return '';
+  const data=await response.json();
+  const pages=Array.isArray(data?.query?.pages)?data.query.pages:[];
+  const terms=query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const ranked=pages.map(page=>{
+   const title=String(page?.title||'').toLowerCase();
+   const info=Array.isArray(page?.imageinfo)?page.imageinfo[0]:null;
+   const src=String(info?.thumburl||info?.url||'');
+   let score=0;
+   for(const term of terms){if(title.includes(term))score+=3;}
+   if(/\b(food|dish|meal|butter|sandwich|soup|pasta|rice|chicken|beef|pork|fish|seafood|vegetable|dessert|bread|potato)\b/.test(title))score+=1;
+   if(src.startsWith('https://upload.wikimedia.org/'))score+=2;
+   return {score,src};
+  }).filter(x=>x.src);
+  ranked.sort((a,b)=>b.score-a.score);
+  return ranked[0]?.src||'';
+ } catch {
+  return '';
+ }
+}
+
+function foodEditor(item=null) {
+const isEdit=!!item;
+const defaultItem=isEdit?getDefaultFoods().find(x=>String(x.id)===String(item?.id)):null;
+const isBuiltInEdit=!!defaultItem;
+const managerWasOpen = !!$('manageFoodsModal');
+if(managerWasOpen){ $('manageFoodsModal')?.remove(); $('manageFoodsModalBg')?.remove(); }
+const cats=[...FOOD_QUICK,'Other',...(S.customQuickCuts||[]).map(x=>String(x.name||'').trim()).filter(Boolean)];
+const existingCuts=Array.isArray(item?.quickCuts)&&item.quickCuts.length ? [...item.quickCuts] : [item?.category||'American'];
+const existingMealTimes=isEdit?new Set(mealTimesFor(item)):new Set();
+const nut=item?.nutrition||{};
+const ingredientsText=Array.isArray(item?.ingredients)?item.ingredients.join('\n'):'';
+const descriptionText=String(item?.description||'').trim();
+const body='<form class="add" id="foodEditorForm">'+
+'<input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'">'+
+'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><legend>Meal Times</legend><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid">'+MEAL_TIME_CUTS.map(label=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(label)+'" '+(existingMealTimes.has(label)?'checked':'')+'><span>'+esc(label)+'</span></label>').join('')+'</div></fieldset>'+
+'<div class="meal-editor-section"><div class="meal-editor-section-title">Nutrition per serving</div><p class="meal-editor-helper">Fill in the five numbers that will appear in the meal Details screen.</p><div class="meal-nutrition-editor-grid">'+
+'<label>Calories<input id="editFoodCalories" type="number" required min="0" step="1" inputmode="numeric" placeholder="520" value="'+esc(nut.calories??'')+'"><span>kcal</span></label>'+
+'<label>Protein<input id="editFoodProtein" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="27" value="'+esc(nut.protein??'')+'"><span>g</span></label>'+
+'<label>Carbs<input id="editFoodCarbs" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="46" value="'+esc(nut.carbs??'')+'"><span>g</span></label>'+
+'<label>Fat<input id="editFoodFat" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="25" value="'+esc(nut.fat??'')+'"><span>g</span></label>'+
+'<label>Sodium<input id="editFoodSodium" type="number" required min="0" step="1" inputmode="numeric" placeholder="1050" value="'+esc(nut.sodium??'')+'"><span>mg</span></label>'+
+'</div></div>'+
+'<label class="meal-editor-text-label">About this meal<textarea id="editFoodDescription" placeholder="A short description of the meal (optional)" rows="3">'+esc(descriptionText)+'</textarea></label>'+
+'<label class="meal-editor-text-label">Ingredients<textarea id="editFoodIngredients" placeholder="One ingredient per line" rows="5">'+esc(ingredientsText)+'</textarea></label>'+
+'<label class="meal-editor-text-label">Recipe / preparation<textarea id="editFoodRecipe" placeholder="Preparation steps or recipe (optional)" rows="5">'+esc(item?.recipe||'')+'</textarea></label>'+(isEdit?'<section class="meal-editor-note-section"><div class="meal-editor-note-copy"><b>Add a note</b><small>Private to this device. Keep a reminder, favorite, or thought with this meal.</small></div><textarea id="editFoodNote" maxlength="1200" rows="3" placeholder="Write a note about this meal…">'+esc(itemNote(item,'food'))+'</textarea></section>':'')+
+'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Choose a new image to replace the current photo, or leave it unchanged.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Choose image</span><input id="editFoodFile" type="file" accept="image/*"></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
+'<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
+const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
+const renderEditorQuickCuts=focusId=>{
+ const host=$('editFoodQuickCuts');if(!host)return;
+ const standard=[...FOOD_QUICK,'Other'];
+ host.innerHTML=standard.map(label=>'<label class="quick-cut-tile"><input type="checkbox" name="editQuickCut" value="'+esc(label)+'" '+(existingCuts.includes(label)?'checked':'')+'><span>'+esc(label)+'</span></label>').join('');
+ host.insertAdjacentHTML('beforeend',(S.customQuickCuts||[]).map(qc=>{
+   const name=String(qc?.name||'').trim();if(!name)return '';
+   const src=customQuickCutImage(name);
+   return '<div class="custom-qc-tile" data-custom-qc-id="'+esc(qc.id)+'"><label class="quick-cut-tile custom-qc-select"><input type="checkbox" name="editQuickCut" value="'+esc(name)+'" '+(existingCuts.includes(name)?'checked':'')+'><span class="custom-qc-photo" style="background-image:url(\''+esc(src)+'\')"></span><span class="custom-qc-label">'+esc(name)+'</span></label><div class="custom-qc-tools"><label class="custom-qc-upload" title="Upload Cuisine Cut photo"><span aria-hidden="true">＋</span><input type="file" accept="image/*" data-custom-qc-file="'+esc(qc.id)+'"></label><input class="custom-qc-rename" type="text" value="'+esc(name)+'" aria-label="Rename '+esc(name)+'" data-custom-qc-rename="'+esc(qc.id)+'"><button type="button" class="custom-qc-delete" data-custom-qc-delete="'+esc(qc.id)+'" aria-label="Delete '+esc(name)+'">×</button></div></div>';
+ }).join(''));
+ host.insertAdjacentHTML('beforeend','<button type="button" class="quick-cut-custom-add" id="addCustomQuickCut"><span>＋</span><b>Custom</b><small>New box</small></button>');
+ host.querySelectorAll('[data-custom-qc-file]').forEach(input=>input.onchange=async()=>{
+   const id=input.dataset.customQcFile,qc=(S.customQuickCuts||[]).find(x=>String(x.id)===String(id));if(!qc)return;
+   try{const data=await readImageFile(input.files?.[0]);if(!data)return;const storageId='quickcut:'+id;const ok=await putStoredPhoto(storageId,data);if(!ok){appToast('Could not save that Cuisine Cut photo on this device.');return;}qc.image=data;save();foodQuick();renderEditorQuickCuts(id);appToast('Cuisine Cut photo updated.');}catch(e){appToast(e.message);}
+ });
+ host.querySelectorAll('[data-custom-qc-rename]').forEach(input=>input.onchange=()=>{
+   const id=input.dataset.customQcRename,qc=(S.customQuickCuts||[]).find(x=>String(x.id)===String(id));if(!qc)return;
+   const old=String(qc.name||'').trim(),next=input.value.trim();
+   if(!next){input.value=old;appToast('Give the Custom Cuisine Cut a name.');return;}
+   const conflict=[...FOOD_QUICK,'Other',...(S.customQuickCuts||[]).filter(x=>x!==qc).map(x=>x.name)].some(x=>normKey(x)===normKey(next));
+   if(conflict){input.value=old;appToast('That Cuisine Cut name is already in use.');return;}
+   qc.name=next;
+   const selectedIndex=existingCuts.indexOf(old);if(selectedIndex>=0)existingCuts[selectedIndex]=next;
+   S.custom.forEach(meal=>{
+     if(Array.isArray(meal.quickCuts))meal.quickCuts=meal.quickCuts.map(x=>x===old?next:x);
+     if(meal.category===old)meal.category=next;
+   });
+   if(S.cutCats.has(old)){S.cutCats.delete(old);S.cutCats.add(next);}
+   save();buildFood();foodQuick();renderEditorQuickCuts(id);
+ });
+ host.querySelectorAll('[data-custom-qc-delete]').forEach(btn=>btn.onclick=async()=>{
+   const id=btn.dataset.customQcDelete,qc=(S.customQuickCuts||[]).find(x=>String(x.id)===String(id));if(!qc)return;
+   const name=String(qc.name||'Custom Cuisine Cut');
+   if(!await appConfirm('Delete '+name+'?','This removes the Custom Cuisine Cut from your category list and unassigns it from meals.','Delete Cuisine Cut'))return;
+   S.customQuickCuts=S.customQuickCuts.filter(x=>String(x.id)!==String(id));
+   const cutIndex=existingCuts.indexOf(name);if(cutIndex>=0)existingCuts.splice(cutIndex,1);
+   S.custom.forEach(meal=>{
+     if(Array.isArray(meal.quickCuts))meal.quickCuts=meal.quickCuts.filter(x=>x!==name);
+     if(meal.category===name)meal.category=meal.quickCuts?.[0]||'Other';
+     if(!meal.quickCuts?.length)meal.quickCuts=['Other'];
+   });
+   S.cutCats.delete(name);
+   await deleteStoredPhoto('quickcut:'+id);
+   save();buildFood();foodQuick();renderEditorQuickCuts();appToast(name+' deleted.');
+ });
+ $('addCustomQuickCut').onclick=()=>{
+   const taken=new Set([...FOOD_QUICK,'Other',...(S.customQuickCuts||[]).map(x=>String(x.name||''))]);
+   let number=(S.customQuickCuts||[]).length+1,name='Custom '+number;
+   while(taken.has(name)){number++;name='Custom '+number;}
+   const id='custom-qc-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+   S.customQuickCuts.push({id,name,image:''});
+   existingCuts.push(name);
+   save();renderEditorQuickCuts(id);
+   const input=host.querySelector('[data-custom-qc-rename="'+id+'"]');input?.focus();input?.select();
+ };
+};
+renderEditorQuickCuts();
+$('editFoodFile').onchange=async()=>{
+try {
+const data=await readImageFile($('editFoodFile').files?.[0]);
+if(data){ $('editFoodPhoto').value=data; appToast('New photo selected. Save the meal to apply it.'); }
+} catch(e) { appToast(e.message); }
+};
+$('foodEditorForm').onsubmit=async e=>{
+e.preventDefault();
+const name=$('editFoodName').value.trim();
+const mealTimes=[...document.querySelectorAll('input[name="editMealTime"]:checked')].map(x=>String(x.value||'').trim()).filter(x=>MEAL_TIME_CUTS.includes(x));
+if(!mealTimes.length){appToast('Choose at least one Meal Time.');return;}
+let quickCuts=[...document.querySelectorAll('input[name="editQuickCut"]:checked')].map(x=>x.value);
+if(!quickCuts.length){appToast('Choose at least one Cuisine Cut.');return;}
+const preferred=item?.category&&quickCuts.includes(item.category)?item.category:quickCuts[0];
+quickCuts=[preferred,...quickCuts.filter(x=>x!==preferred)];
+const cat=preferred;
+const readNumeric=id=>{
+const value=$(id).value.trim();
+if(!value)return '';
+const number=Number(value);
+return Number.isFinite(number)&&number>=0?number:'';
+};
+const nutritionValues={
+calories:readNumeric('editFoodCalories'),
+protein:readNumeric('editFoodProtein'),
+carbs:readNumeric('editFoodCarbs'),
+fat:readNumeric('editFoodFat'),
+sodium:readNumeric('editFoodSodium')
+};
+if(Object.values(nutritionValues).some(value=>value==='')){
+ appToast('Fill in Calories, Protein, Carbs, Fat, and Sodium.');
+ return;
+}
+const nutrition=nutritionValues;
+const description=String($('editFoodDescription').value||'').trim();
+const ingredients=String($('editFoodIngredients').value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+const editorNote=isEdit?String($('editFoodNote')?.value||'').trim():'';
+const photoInput=$('editFoodPhoto').value.trim();
+let photo=photoInput||(isEdit&&item?.image?String(item.image):'');
+if(!photo && !isEdit){
+  const saveButton=document.querySelector('#foodEditorForm button.cut');
+  if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Finding photo…';}
+  photo=await findOnlineMealPhoto(name);
+  if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Add Meal';}
+}
+if(!photo)photo=DEFAULT_FOOD_IMAGE;
+let recipe=$('editFoodRecipe').value.trim();
+if(!name)return;
+if(isEdit&&isBuiltInEdit){
+const id=String(item.id);
+const idx=S.custom.findIndex(x=>String(x.id)===id);
+const previous=idx>=0?S.custom[idx]:null;
+if(photo.startsWith('data:image/')){
+ const ok=await putStoredPhoto(id,photo);
+ if(!ok){appToast('Could not save that photo on this device.');return;}
+
+}else if(String(photo).startsWith('idb:')){
+ /* Existing device photo is intentionally preserved when no new upload was chosen. */
+}
+const updated={...defaultItem,...(previous||{}),builtInEdit:true,builtInId:id,id,name,primary:defaultItem.primary,category:cat,quickCuts,mealTimes,image:photo,description,ingredients,recipe,nutrition};
+if(idx>=0)S.custom[idx]=updated;else S.custom.push(updated);
+S.maybe.delete(id); S.hidden.delete(id);
+} else if(isEdit){
+const idx=S.custom.findIndex(x=>x.id===item.id);
+if(idx<0)return;
+const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+if(id!==item.id && allFoods().some(x=>x.id===id)){appToast('A meal with that name already exists.');return;}
+if(photo.startsWith('data:image/')){const ok=await putStoredPhoto(id,photo);if(!ok){appToast('Could not save that photo on this device.');return;}}
+if(id!==item.id&&String(photo).startsWith('idb:')){const oldPhoto=await getStoredPhoto(item.id);if(oldPhoto){const ok=await putStoredPhoto(id,oldPhoto);if(!ok){appToast('Could not move the saved photo.');return;}photo=oldPhoto;}}
+const updated={...S.custom[idx],id,name,primary:S.custom[idx].primary,category:cat,quickCuts,mealTimes,image:photo,description,ingredients,recipe,nutrition};
+S.custom[idx]=updated;
+if(id!==item.id){ await deleteStoredPhoto(item.id); const oldNoteKey='food:'+item.id,newNoteKey='food:'+id; if(S.notes[oldNoteKey]){S.notes[newNoteKey]=S.notes[oldNoteKey];delete S.notes[oldNoteKey];saveItemNotes();} }
+S.maybe.delete(item.id); S.hidden.delete(item.id);
+} else {
+const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+if(allFoods().some(x=>x.id===id)){appToast('A meal with that name already exists.');return;}
+if(photo.startsWith('data:image/')) await putStoredPhoto(id,photo);
+const added={id,name,primary:id,category:cat,quickCuts,mealTimes,image:photo,description,ingredients,recipe};
+if(nutrition)added.nutrition=nutrition;
+S.custom.push(added);
+}
+if(!S.custom.some(x=>Array.isArray(x.quickCuts)&&x.quickCuts.includes('Other')))S.cutCats.delete('Other');
+if(isEdit) setItemNote({id:(S.custom.find(x=>x.id===name.toLowerCase().replace(/[^a-z0-9]+/g,'-'))?.id||item?.id),name},'food',editorNote);
+buildFood(); foodQuick(); save(); modal.remove(); $('foodEditorModalBg')?.remove();
+if(S.screen==='food' && !isEdit){ show('food'); foodQuick(); drawFood(); }
+else manageFoodsView();
+};
+}
+function deletedFoodRows(){
+ const defaults=getDefaultFoods(),defaultIds=new Set(defaults.map(x=>String(x.id))),overrides=new Map((S.custom||[]).map(x=>[String(x.id),x]));
+ const built=defaults.filter(x=>(S.deleted||new Set()).has(String(x.id))).map(item=>{
+  const override=overrides.get(String(item.id)),source=override||item;
+  return Object.assign({},item,override||{},{builtInEdit:!!override,builtInId:String(item.id),deleted:true,quickCuts:Array.isArray(source.quickCuts)&&source.quickCuts.length?source.quickCuts:[String(source.category||item.category||'American')]});
+ });
+ const customs=(S.deletedCustomMeals||[]).filter(x=>!defaultIds.has(String(x.id))).map(x=>Object.assign({},x,{deleted:true,quickCuts:Array.isArray(x.quickCuts)&&x.quickCuts.length?x.quickCuts:[x.category||'American']}));
+ return built.concat(customs);
+}
+async function deleteMealFromLibrary(id){
+ const row=allFoods().find(x=>String(x.id)===String(id));if(!row)return;
+ if(!await appConfirm('Delete '+row.name+'?','This removes the meal from decisions. You can restore it from Deleted Meals; built-in meals can also be recovered with Restore Defaults.','Delete Meal'))return;
+ const key=String(id),defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
+ S.deleted.add(key);S.hidden.delete(key);S.foodCuts.delete(key);S.maybe.delete(key);
+ if(!defaultIds.has(key)){
+  if(!S.deletedCustomMeals.some(x=>String(x.id)===key))S.deletedCustomMeals.push({...row});
+  const idx=S.custom.findIndex(x=>String(x.id)===key);if(idx>=0)S.custom.splice(idx,1);
+ }
+ buildFood();foodQuick();save();manageFoodsView();
+}
+function restoreDeletedMeal(id){
+ const key=String(id),defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
+ if(defaultIds.has(key))S.deleted.delete(key);
+ else{
+  const archived=S.deletedCustomMeals.find(x=>String(x.id)===key);
+  if(archived&&!S.custom.some(x=>String(x.id)===key))S.custom.push({...archived});
+  S.deletedCustomMeals=S.deletedCustomMeals.filter(x=>String(x.id)!==key);
+  S.deleted.delete(key);
+ }
+ buildFood();foodQuick();save();manageFoodsView();
+}
+function manageFoodsView() {
+ const rows=allFoods(),deletedRows=deletedFoodRows();
+ const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
+ const rowMarkup=(item,deleted=false)=>{
+  const id=String(item.id),hidden=S.hidden.has(id),builtIn=defaultIds.has(id),customRecord=S.custom.find(x=>String(x.id)===id),edited=builtIn&&!!customRecord,customOnly=!builtIn&&!!customRecord;
+  const state=deleted?'Deleted':(hidden?'Hidden':'Active');
+  const stateLabel=state+(edited?' · Edited':(customOnly?' · Custom':''));
+  const mealTimeLabel=mealTimesFor(item).join(' · ');
+  const primary=deleted
+    ? '<button class="manage-row-action manage-restore" data-food-deleted-restore="'+esc(id)+'">Restore</button>'
+    : hidden
+      ? '<button class="manage-row-action manage-restore" data-food-restore="'+esc(id)+'">Restore</button>'
+      : '<button class="manage-row-action manage-hide" data-food-hide="'+esc(id)+'">Hide</button>';
+  const extra=deleted?'':'<button class="manage-row-action manage-edit" data-food-edit="'+esc(id)+'">Edit</button>';
+  const deleteAction=deleted?'':'<button class="manage-row-action manage-delete" data-food-delete="'+esc(id)+'">Delete</button>';
+  return '<div class="food-row manage-food-row"><span class="manage-food-name"><b>'+esc(item.name)+'</b><small class="row-state '+(deleted?'is-deleted':(hidden?'is-hidden':'is-active'))+'">'+esc(stateLabel)+'</small><small class="row-meal-time">'+esc(mealTimeLabel)+'</small></span><span class="food-row-actions">'+extra+primary+deleteAction+'</span></div>';
+ };
+ const body='<div class="manage-meals-view"><div class="manage-hero"><span class="manage-kicker">MEAL LIBRARY</span><h4>Shape your choices.</h4><p>Edit any meal, replace its photo, hide it from decisions, or delete it. Deleted meals stay recoverable on this device.</p></div>'+
+ '<button class="manage-add-action" id="openFoodEditor" type="button"><span class="manage-add-icon" aria-hidden="true">＋</span><span>Add Meal</span></button>'+
+ '<div class="food-list">'+rows.map(x=>rowMarkup(x)).join('')+'</div>'+
+ (deletedRows.length?'<section class="deleted-meals-section"><div class="deleted-meals-heading"><span class="manage-kicker">RECOVERY</span><h5>Deleted Meals</h5><p>Restore a deleted meal without changing the rest of your library.</p></div><div class="food-list">'+deletedRows.map(x=>rowMarkup(x,true)).join('')+'</div></section>':'')+
+ '</div>';
+ const modal=openModal('manageFoodsModal','Manage Meals',body);
+ $('openFoodEditor').onclick=()=>foodEditor();
+ modal.querySelectorAll('[data-food-restore]').forEach(btn=>btn.onclick=()=>{S.hidden.delete(btn.dataset.foodRestore);buildFood();save();manageFoodsView();});
+ modal.querySelectorAll('[data-food-hide]').forEach(btn=>btn.onclick=()=>{S.hidden.add(btn.dataset.foodHide);buildFood();save();manageFoodsView();});
+ modal.querySelectorAll('[data-food-edit]').forEach(btn=>btn.onclick=()=>{const row=allFoods().find(x=>String(x.id)===String(btn.dataset.foodEdit));if(row){modal.remove();$('manageFoodsModalBg')?.remove();foodEditor(row);}});
+ modal.querySelectorAll('[data-food-delete]').forEach(btn=>btn.onclick=()=>deleteMealFromLibrary(btn.dataset.foodDelete));
+ modal.querySelectorAll('[data-food-deleted-restore]').forEach(btn=>btn.onclick=()=>restoreDeletedMeal(btn.dataset.foodDeletedRestore));
+}
+function settingsActionButton(id,icon,title,note,extraClass=''){
+ return '<button class="settings-action '+extraClass+'" id="'+id+'" type="button"><span class="settings-action-icon" aria-hidden="true">'+icon+'</span><span class="settings-action-copy"><b>'+title+'</b><small>'+note+'</small></span><span class="settings-action-chevron" aria-hidden="true">›</span></button>';
+}
+function settingsView(){
+ removeFoodOverlays();
+ const hiddenRestaurants=Object.values(S.hiddenRestaurants);
+ const body='<div class="settings-stack">'+
+ '<section class="settings-section"><div class="settings-section-kicker">YOUR CHOICES</div><h4>Hidden Restaurants</h4><p class="settings-section-note">Restaurants you have chosen to hide stay out of your current restaurant decisions.</p><div class="settings-inline-list">'+
+ (hiddenRestaurants.length?hiddenRestaurants.map(x=>'<div class="food-row settings-hidden-row"><span><b>'+esc(x.name)+'</b><small>Hidden restaurant</small></span><button class="restore settings-inline-action" data-setting-rest="'+esc(x.id)+'">Restore</button></div>').join(''):'<p class="settings-empty">No hidden restaurants.</p>')+
+ '</div></section>'+
+ '<section class="settings-section"><div class="settings-section-kicker">TOOLS</div><div class="settings-actions">'+
+ settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
+ settingsActionButton('resetRestore','↺','Reset & Restore','Restore original meals or wipe all local app data.','restore-action')+
+ '</div></section>'+
+ '<section class="settings-section"><div class="settings-section-kicker">YOUR DATA</div><div class="settings-actions settings-actions-utility">'+
+ settingsActionButton('exportPdf','▣','Export PDF','Save or share your Dinliminate history as a polished PDF.','export-action')+
+ settingsActionButton('privacySettings','◇','Privacy & Data','How location, history, notes, and third-party data are handled.','privacy-action')+
+ '</div></section>'+
+ '<section class="settings-section settings-about-section"><div class="settings-section-kicker">ABOUT DINLIMINATE</div><div class="settings-about-copy"><p>Cut the dinner choices until one survives.</p></div><div class="about-meta"><p><span>Version</span><b>'+esc(APP_VERSION)+'</b></p><p><span>Build</span><b>'+esc(APP_BUILD)+'</b></p><p><span>Date</span><b>'+esc(new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date()))+'</b></p></div><p class="about-credit">Made by Brian Dunn for Devona Dunn</p></section>'+
+ '</div>';
+ const modal=openModal('settingsModal','Settings',body);
+ modal.querySelectorAll('[data-setting-rest]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.settingRest;delete S.hiddenRestaurants[id];const row=S.restaurantPool.find(x=>x.id===id);if(row)row._hidden=false;save();modal.remove();$('settingsModalBg')?.remove();settingsView();});
+ $('appDiagnosis').onclick=()=>{modal.classList.add('diagnosis-modal');modal.style.minHeight='min(78svh,720px)';modal.style.maxHeight='88svh';appDiagnosisView(modal);};
+ $('resetRestore').onclick=()=>resetRestoreView();
+ $('exportPdf').onclick=()=>exportPdfView();
+ $('privacySettings').onclick=()=>privacyView();
+}
+function diagnosisMiles(a,b,c,d){
+ const R=3958.7613,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,z=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;
+ return 2*R*Math.asin(Math.sqrt(z));
+}
+function diagnosisNameTokens(value){
+ return String(value||'').toLowerCase().replace(/[’']s\b/gi,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+}
+function diagnosisNameVariant(a,b){
+ const aa=diagnosisNameTokens(a),bb=diagnosisNameTokens(b);if(!aa.length||!bb.length)return false;
+ const as=new Set(aa),bs=new Set(bb),shared=aa.filter(t=>bs.has(t)).length;
+ return shared===Math.min(as.size,bs.size)&&shared/new Set([...aa,...bb]).size>=0.6;
+}
+function diagnosisRestaurantDuplicates(rows){
+ const out=[];
+ for(let i=0;i<(rows||[]).length;i++)for(let j=i+1;j<(rows||[]).length;j++){
+  const a=rows[i],b=rows[j];
+  const d=Number.isFinite(Number(a?.lat))&&Number.isFinite(Number(a?.lon))&&Number.isFinite(Number(b?.lat))&&Number.isFinite(Number(b?.lon))?diagnosisMiles(Number(a.lat),Number(a.lon),Number(b.lat),Number(b.lon)):Infinity;
+  const addrA=normKey(a?.address),addrB=normKey(b?.address),sameAddr=addrA&&addrB&&addrA===addrB,sameName=normKey(a?.name)===normKey(b?.name),conflictingAddress=addrA&&addrB&&!sameAddr;
+  if(d<=0.2&&!conflictingAddress&&(sameName||sameAddr||diagnosisNameVariant(a?.name,b?.name)))out.push([a?.name,b?.name,d]);
+ }
+ return out;
+}
+function foodPhotoAuditCatalog(foods){
+ const byUrl=new Map(),missing=[];
+ for(const food of foods||[]){
+  const url=String(food?.image||'').trim();
+  if(!url||url===DEFAULT_FOOD_IMAGE){missing.push(food?.name||food?.id||'Unnamed meal');continue;}
+  if(!byUrl.has(url))byUrl.set(url,[]);
+  byUrl.get(url).push(food);
+ }
+ const reused=[...byUrl.entries()]
+  .filter(([,items])=>items.length>1)
+  .map(([url,items])=>({url,meals:items.map(x=>x?.name||x?.id||'Unnamed meal')}))
+  .sort((a,b)=>b.meals.length-a.meals.length);
+ return {mealCount:(foods||[]).length,uniquePhotoCount:byUrl.size,missing,reused};
+}
+async function auditFoodPhotoUrls(foods){
+ const urls=[...new Set((foods||[]).map(x=>String(x?.image||'').trim()).filter(x=>/^https?:\/\//i.test(x)))];
+ const failed=[],checked=[];
+ let cursor=0;
+ const worker=async()=>{
+  while(true){
+   const i=cursor++;
+   if(i>=urls.length)return;
+   const url=urls[i],src=imageProxyUrl(url);
+   const result=await new Promise(resolve=>{
+    const img=new Image();let done=false;
+    const timer=setTimeout(()=>{if(done)return;done=true;resolve({ok:false,timeout:true})},7000);
+    img.onload=()=>{if(done)return;done=true;clearTimeout(timer);resolve({ok:true})};
+    img.onerror=()=>{if(done)return;done=true;clearTimeout(timer);resolve({ok:false,timeout:false})};
+    img.referrerPolicy='no-referrer';img.src=src;
+   });
+   checked.push({url,...result});
+   if(!result.ok)failed.push(url);
+  }
+ };
+ await Promise.all(Array.from({length:Math.min(8,urls.length)},()=>worker()));
+ const failedSet=new Set(failed);
+ return {uniqueUrls:urls.length,failed,failedSet,checked};
+}
+async function appDiagnosisView(existingModal){
+ if(!existingModal||!document.body.contains(existingModal))return null;
+ const shellClass='diagnosis-modal';
+ const initialSections=['Core app','Meal system','Restaurant system','iPhone & PWA','Build & launch'];
+ const body='<div class="diagnosis-wrap"><div id="diagnosisBody" aria-busy="true"><div class="diagnosis-summary diagnosis-summary-strong"><span class="diagnosis-status-dot warn" aria-hidden="true"></span><div><b>App Diagnosis</b><small>Refreshing the current Dinliminate release.</small></div><strong>Live</strong></div>'+initialSections.map(label=>'<section class="diagnosis-section"><div class="diagnosis-section-head"><b>'+label+'</b><span>Checking…</span></div><div class="diagnosis-row info"><span class="diagnosis-mark" aria-hidden="true">i</span><span><b>Checking</b><small>Reading the current app state and release contracts.</small></span></div></section>').join('')+'</div><div class="diagnosis-runbar"><span id="diagnosisRunStatus" class="diagnosis-run-status" aria-live="polite">Checking…</span><button class="secondary diagnosis-refresh" id="diagnosisRefresh" type="button" aria-pressed="false" disabled aria-label="Run diagnostics again">Run again</button></div></div>';
+ const modal=existingModal;
+ modal.classList.add(shellClass);
+ const head=modal.querySelector('.modal-head');
+ [...modal.children].forEach(child=>{if(child!==head)child.remove();});
+ const title=head?.querySelector('h3');
+ if(title)title.textContent='App Diagnosis';
+ const close=head?.querySelector('[data-close]');
+ if(close)close.setAttribute('aria-label','Close App Diagnosis');
+ modal.insertAdjacentHTML('beforeend',body);
+ let running=false,run=0;
+ const render=async()=>{
+  if(running||!document.body.contains(modal))return;
+  running=true;run++;
+  const refresh=$('diagnosisRefresh'),runStatus=$('diagnosisRunStatus'),diagnosisBody=$('diagnosisBody');
+  if(refresh){refresh.disabled=true;refresh.setAttribute('aria-pressed','true');refresh.classList.add('selected');refresh.classList.remove('complete');refresh.textContent='✓ Checking…';}
+  if(runStatus){runStatus.textContent='Run '+run+' selected · checking now…';runStatus.classList.add('running');}
+  if(diagnosisBody)diagnosisBody.setAttribute('aria-busy','true');
+  const checks=[];
+  const add=(section,state,label,detail)=>checks.push({section,state,label,detail});
+  const pass=(s,l,d)=>add(s,'ok',l,d), warn=(s,l,d)=>add(s,'warn',l,d), info=(s,l,d)=>add(s,'info',l,d), fail=(s,l,d)=>add(s,'fail',l,d);
+  const sectionLabels={core:'Core app',food:'Meal system',restaurant:'Restaurant system',runtime:'iPhone & PWA',release:'Build & launch'};
+  try{
+   /* Core app structure */
+   const coreRequired=['home','food','restaurant','winner','menu','foodStart','restStart','addToPhone','shareApp'];
+   const coreMissing=coreRequired.filter(id=>!$(id));
+   coreMissing.length?fail('core','Home & navigation contract','Missing '+coreMissing.length+' required core element(s): '+coreMissing.join(', '),'Repair the missing shell element before relying on later checks.'):pass('core','Home & navigation contract','Home, Meal, Restaurant, Winner, Menu, and both Home utility actions are present.');
+   const navLabels=[...document.querySelectorAll('#drawer-nav .drawer-row')].map(x=>x.textContent?.trim()).join(' ');
+   const drawerSource=document.querySelector('#drawer')?.textContent||'';
+   if(drawerSource.includes('Manage Meals')&&drawerSource.includes('History')&&drawerSource.includes('Settings')&&drawerSource.includes('Back to Start')&&!drawerSource.includes('Restaurants</b>'))pass('core','Navigation menu','Top-level navigation uses Manage Meals, History, Settings, and Back to Start.','Restaurants remain part of the dedicated Restaurant flow rather than a top-level menu item.');
+   else warn('core','Navigation menu','Top-level navigation could not be fully verified from the current DOM.','Open the menu and rerun diagnosis.');
+   const homeActions=[...document.querySelectorAll('[data-home-action]')];
+   homeActions.length===2&&homeActions.every(x=>x.type==='button')?pass('core','Home utility actions','Add-to-phone and Share are separate icon actions with button semantics.','Both controls are intentionally discreet at the bottom of Home.'):fail('core','Home utility actions','The Home utility action contract is incomplete.','Expected exactly two data-home-action buttons.');
+   const addIcon=$('addToPhone')?.querySelector('.phone-plus-icon'),shareIcon=$('shareApp')?.querySelector('.share-icon');
+   addIcon&&shareIcon?pass('core','Home utility icons','Premium phone-plus and share icons are present.'):fail('core','Home utility icons','One or more Home utility icons are missing.','Restore the iPhone-plus and share artwork.');
+   const actionHandlerSource=String(homeActionHandler?.toString?.()||'');
+   actionHandlerSource.includes("action==='add'")&&actionHandlerSource.includes("action==='share'")?pass('core','Home action routing','Both icon actions have independent click routing.'):fail('core','Home action routing','Home action routing is incomplete.','Both Add and Share must be routed through the Home action handler.');
+   
+   /* Meal system */
+   const foods=getDefaultFoods();
+   const foodIds=foods.map(x=>x?.id).filter(Boolean);
+   const duplicateFoodIds=foodIds.length-new Set(foodIds).size;
+   duplicateFoodIds?fail('food','Meal catalog',duplicateFoodIds+' duplicate meal ID(s) detected.','Duplicate IDs can destabilize card, Hide, Maybe, and History state.'):pass('food','Meal catalog',foods.length+' built-in meals loaded with unique IDs.','Current catalog is expected to contain the restored 116-meal set.');
+   const requiredFoodNames=['Lasagna','Vegetable Lasagna','Salisbury Steak','Stuffed Peppers','Health Shake','White Fish','BLT','Reuben','Hot Dog','Corn Dog','Orange Chicken','Chicken Teriyaki','Sushi','Pancakes','Omelet','Oatmeal','Shrimp','Crab Cakes','Gumbo','Chicken Nuggets','Ramen','Pimento Cheese Sandwich','Liver & Onions','Enchiladas','Fish Sticks','Protein Bar'];
+   const normalizedNames=new Set(foods.map(x=>String(x?.name||'').trim().toLowerCase()));
+   const missingFoodNames=requiredFoodNames.filter(x=>!normalizedNames.has(x.toLowerCase()));
+   missingFoodNames.length?warn('food','Requested meal coverage',missingFoodNames.length+' named requested meal(s) are not present by exact display name.',missingFoodNames.join(', ')):pass('food','Requested meal coverage','The current catalog contains the requested restored meal set by exact display name.');
+   const invalidFood=foods.filter(x=>!x?.name||!x?.category||!x?.image||!Array.isArray(x?.quickCuts)||!x.quickCuts.length||!Array.isArray(x?.ingredients)||!x.ingredients.length||!x?.nutrition||!x?.recipe);
+   invalidFood.length?fail('food','Meal details',invalidFood.length+' meal(s) are missing required Details data.',invalidFood.slice(0,8).map(x=>x?.name||x?.id).join(', ')+(invalidFood.length>8?' + more':'')):pass('food','Meal details','All built-in meals have photo, Cuisine Cut, ingredients, nutrition, and recipe/detail data.');
+   const foodQuick=foodQuickLabels();
+   const expectedFoodQuick=['American','Southern','Mexican','Italian','Asian','Pasta','Soup/Stew','Healthy','Seafood','Potato','Other'];
+   const foodQuickContract=expectedFoodQuick.every((x,i)=>foodQuick[i]===x)&&foodQuick.length>=expectedFoodQuick.length;
+   foodQuickContract?pass('food','Meal Cuisine Cuts','The current Food Cuisine Cut order is present.','Other remains conditional for custom meals.'):fail('food','Meal Cuisine Cuts','Food Cuisine Cuts are out of sync.','Expected American, Southern, Mexican, Italian, Asian, Pasta, Soup/Stew, Healthy, Seafood, Potato, Other.');
+   const forbiddenPork=foods.some(x=>String(x?.name||'').toLowerCase().includes('pork')&&false);
+   const legacy=foods.filter(x=>/stouffer|frozen dinner/i.test(String(x?.name||'')));
+   legacy.length?fail('food','Legacy meal cleanup',legacy.length+' Stouffer/frozen-dinner choice(s) remain.',legacy.map(x=>x.name).join(', ')):pass('food','Legacy meal cleanup','Stouffer/frozen-dinner legacy choice is absent.');
+   const foodSourceChecks=typeof foodCut==='function'&&typeof foodMaybe==='function'&&typeof foodBack==='function'&&typeof bindCardButton==='function';
+   foodSourceChecks?pass('food','Meal decision actions','Cut, Maybe, Choose, and Details use the current card-button path.','The direct Choose action remains separate from swipe decisions.'):warn('food','Meal decision actions','Source could not confirm every current card action binding.','Open a Meal card and rerun diagnosis.');
+   const chooseCardActions=document.querySelectorAll('.choose-card-action');
+   chooseCardActions.length?pass('food','Choose-this placement','Direct Choose actions are present on the current card layout.','They remain separated from the larger Cut/Maybe controls.'):info('food','Choose-this placement','The current card is not rendered on this screen, so direct Choose placement is deferred until a Meal card is open.');
+   const noteSource=typeof bindDetailNotes==='function'&&typeof itemNoteKey==='function';
+   noteSource?pass('food','Notes','Meal/Restaurant Details notes are stored locally and have edit/delete controls.'):warn('food','Notes','The local Notes implementation could not be confirmed from source.');
+   
+   /* Restaurant system */
+   const radius=[...($('radius')?.options||[])].map(o=>Number(o.value)).filter(Number.isFinite);
+   const expectedRadius=[1,3,5,10,25,50,100];
+   radius.length===7&&expectedRadius.every((x,i)=>radius[i]===x)?pass('restaurant','Radius controls','1 / 3 / 5 / 10 / 25 / 50 / 100 miles are exposed.','The current API model is capped at 100 miles.'):fail('restaurant','Radius controls','Restaurant radius options are out of sync.', 'Expected exactly 1 / 3 / 5 / 10 / 25 / 50 / 100 miles.');
+   const locationControls=['locate','address','find','radius'].every(id=>$(id));
+   locationControls?pass('restaurant','Location controls','Use My Location, address search, Find/Refresh, and Radius controls are present.'):fail('restaurant','Location controls','One or more Restaurant location controls are missing.');
+   const restaurantSearchBox=$('restaurantQuery')||document.querySelector('#restaurantSearchBox input');
+   restaurantSearchBox?info('restaurant','Restaurant search','Restaurant search remains available in source but is intentionally hidden in the current UI.','The visible Restaurant shell does not expose a Search control right now.'):fail('restaurant','Restaurant search','Restaurant search input is missing from the source.');
+   const restTaxonomy=Array.isArray(REST_QUICK)?REST_QUICK:[];
+   const expectedRest=['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast'];
+   expectedRest.every(x=>restTaxonomy.includes(x))?pass('restaurant','Restaurant Cuisine Cuts','Restaurant Cuisine Cuts include Fast Food and the current cuisine/category taxonomy.'):fail('restaurant','Restaurant Cuisine Cuts','The Restaurant taxonomy is missing one or more required categories.','Expected Fast Food, Burgers, Pizza, Mexican, American, Italian, Asian, BBQ, Seafood, Breakfast.');
+   const openAllPresent=!!document.querySelector('#restaurant [data-filter="open"], #restaurant [data-restaurant-filter="open"]')&&!!document.querySelector('#restaurant [data-filter="all"], #restaurant [data-restaurant-filter="all"]');
+   openAllPresent?info('restaurant','Open / All filter','Open and All controls are available in the current shell.','All is the inclusive state for open, unknown, and closed results.'):info('restaurant','Open / All filter','Open / All controls are intentionally hidden for now.','The hour-state logic remains available without exposing the filter UI.');
+   const freshPoolSource=typeof searchRestaurants==='function'&&typeof restaurantPoolBase==='function';
+   freshPoolSource?pass('restaurant','Fresh restaurant result pool','Current search results are filtered from the active restaurant pool.','Cuisine Cuts and search work from the current loaded result pool rather than a separate stale base list.'):fail('restaurant','Fresh restaurant result pool','The active restaurant pool functions could not be confirmed.');
+   const deDupSource=typeof dedupeRestaurantPool==='function'&&typeof diagnosisRestaurantDuplicates==='function';
+   deDupSource?pass('restaurant','Restaurant de-duplication','The current restaurant pipeline has identity/distance de-duplication plus diagnosis review logic.'):warn('restaurant','Restaurant de-duplication','De-duplication safeguards could not be fully confirmed from source.');
+   const photoSourceChecks=typeof hydrateRestaurantPhoto==='function'&&typeof loadRestaurantPhoto==='function';
+   photoSourceChecks?pass('restaurant','Restaurant photography','The current cards hydrate restaurant-specific photos through the dedicated restaurant photo pipeline.','The photo system can fall back safely when a venue-specific source is unavailable.'):fail('restaurant','Restaurant photography','The dedicated restaurant-photo pipeline is not visible in the current app source.');
+   info('restaurant','Photo/search credential independence','Restaurant photography and search are integrated without requiring a Google credential in the client.','The backend can use provider/official/web verification paths when available; the diagnosis does not require a Google key to run.');
+   const restaurantIds=Object.keys(window).filter(()=>false);
+   const currentRestaurants=S.restaurantPool||[];
+   currentRestaurants.length?info('restaurant','Current restaurant pool',currentRestaurants.length+' restaurant result(s) are loaded on this device.', 'Run the restaurant search to inspect live counts and current Cuisine Cut behavior.'):info('restaurant','Current restaurant pool','No Restaurant results are loaded on this screen.','This is normal while the diagnosis is opened from Home or Settings.');
+   const healthUrl='./api/restaurant-search?mode=health&diagnosis='+Date.now();
+   try{
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),5000);
+    const rr=await fetch(healthUrl,{cache:'no-store',signal:ctl.signal});
+    clearTimeout(tm);
+    const d=await rr.json().catch(()=>null);
+    rr.ok&&d?.ok?pass('restaurant','Restaurant API health','Healthy · version '+String(d.version||'unknown')+' · max radius '+String(d.maxRadiusMiles||'unknown')+' mi.','Health check is read-only and does not alter the current restaurant pool.'):warn('restaurant','Restaurant API health','Health endpoint returned HTTP '+rr.status+'.','This can affect location, radius, search, Cuisine Cuts, and restaurant cards.');
+   }catch(e){warn('restaurant','Restaurant API health','Health check failed or timed out.','The diagnosis does not change location or search state.');
+   }
+   
+   /* iPhone / PWA */
+   const metaViewport=document.querySelector('meta[name="viewport"]')?.getAttribute('content')||'';
+   metaViewport.includes('viewport-fit=cover')?pass('runtime','iPhone viewport','Safe-area-aware viewport settings are present.'):warn('runtime','iPhone viewport','The expected viewport-fit setting is missing.');
+   const address16=!!document.querySelector('#address')&&String(getComputedStyle($('address')).fontSize)==='16px';
+   const search16=!!document.querySelector('#restaurantSearchBox input')&&String(getComputedStyle(document.querySelector('#restaurantSearchBox input')).fontSize)==='16px';
+   address16&&search16?pass('runtime','Safari form sizing','Restaurant editable fields are using 16px text to avoid Safari auto-zoom.'):info('runtime','Safari form sizing','16px field sizing is applied on phone media queries; this desktop runtime may not be using those rules.');
+   const installSource=typeof addToPhoneFlow==='function'&&typeof deferredInstallPrompt!=='undefined';
+   installSource?pass('runtime','Add to phone flow','The current PWA has an install-prompt path plus an iPhone Add to Home Screen fallback.'):fail('runtime','Add to phone flow','Install behavior is not fully wired in the current source.');
+   const shareSource=typeof shareApp==='function'&&typeof copyAppUrl==='function';
+   shareSource?pass('runtime','Share flow','Native sharing and clipboard fallbacks are present.'):fail('runtime','Share flow','The current Share action is missing a required fallback.');
+   ('serviceWorker' in navigator)?pass('runtime','Service worker support','This browser supports the PWA service-worker API.'):warn('runtime','Service worker support','This browser cannot register a service worker.');
+   const swSource=typeof navigator.serviceWorker!=='undefined';
+   swSource?pass('runtime','PWA registration','The app registers its service worker on load.'):fail('runtime','PWA registration','Service-worker registration code is missing.');
+   const phoneHitSource=!!document.querySelector('#restaurant .location-btn, #restaurant .find');
+   phoneHitSource?pass('runtime','Touch target pass','The current mobile stylesheet provides 44px location action hit areas.'):info('runtime','Touch target pass','Mobile hit-area rules exist in the stylesheet; exact physical target sizing needs device verification.');
+   const autoLocationSource=typeof maybeAutoRefreshRestaurantLocation==='function'&&typeof useLocation==='function';
+   autoLocationSource?pass('runtime','Restaurant auto-location','The Restaurant flow can request location automatically when no location/address is already set.'):warn('runtime','Restaurant auto-location','Automatic Restaurant location entry behavior was not confirmed from source.');
+   const addressCancelSource=typeof invalidateAddressSuggestions==='function'&&typeof useLocation==='function'&&typeof locationRequestSeq!=='undefined';
+   addressCancelSource?pass('runtime','Manual address protection','Manual address editing cancels pending GPS state so typed addresses cannot be overwritten.'):warn('runtime','Manual address protection','Pending GPS cancellation could not be confirmed.');
+   const offline=navigator.onLine===false;
+   offline?warn('runtime','Network','Browser currently reports offline.','Restaurant search and remote photos need connectivity.'):pass('runtime','Network','Browser currently reports online.','Remote restaurant data and photography still depend on external services.');
+   
+   /* Build / launch */
+   let releaseExpectedBuild=String(APP_BUILD),releaseExpectedBranch='';
+   try{
+    const local=await fetch('./app-release.json?diagnosis='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null);
+    const manifest=await fetch('./release-manifest.json?diagnosis='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null);
+    releaseExpectedBuild=String(local?.build||APP_BUILD);
+    releaseExpectedBranch=String(local?.sourceBranch||'');
+    const manifestBuild=String(manifest?.build||''),manifestBranch=String(manifest?.sourceBranch||'');
+    if(releaseExpectedBuild&&manifestBuild&&releaseExpectedBuild===manifestBuild&&releaseExpectedBranch&&releaseExpectedBranch===manifestBranch)pass('release','Release metadata','Build '+releaseExpectedBuild+' is synchronized across app-release and release-manifest.','Current candidate branch: '+releaseExpectedBranch+'.');
+    else fail('release','Release metadata','Current release metadata is inconsistent.','app-release build='+releaseExpectedBuild+', manifest build='+manifestBuild+', app branch='+releaseExpectedBranch+', manifest branch='+manifestBranch);
+   }catch{warn('release','Release metadata','Release metadata files could not be read from this runtime.','Hosted build identity remains unconfirmed.');}
+   try{
+    const rr=await fetch('./api/release?diagnosis='+Date.now(),{cache:'no-store'});
+    const d=await rr.json().catch(()=>null);
+    const runtimeBuild=String(d?.build||'');
+    const runtimeBranch=String(d?.sourceBranch||'');
+    const runtimeMatches=rr.ok&&runtimeBuild===releaseExpectedBuild&&(runtimeBranch===releaseExpectedBranch||!runtimeBranch);
+    runtimeMatches?pass('release','Release API identity','The runtime release endpoint matches the current build metadata.','Runtime Build '+runtimeBuild+(runtimeBranch?' · '+runtimeBranch:'')+'.'):warn('release','Release API identity','The runtime release endpoint does not match the current build metadata.','Runtime build='+runtimeBuild+', expected='+releaseExpectedBuild+', branch='+runtimeBranch);
+   }catch{warn('release','Release API identity','The release endpoint could not be checked.','Hosted release identity remains unconfirmed.');}
+   const currentReleaseSource=APP_BUILD===releaseExpectedBuild;
+   currentReleaseSource?pass('release','About / Diagnosis build source','App build display starts from the current release fallback and refreshes from app-release.json.'):warn('release','About / Diagnosis build source','The app build display fallback is stale.');
+   info('release','Hosted verification','Diagnosis is capable of checking live API/release endpoints from the current browser, but it does not claim Netlify/Vercel deployment success unless those endpoints answer accordingly.','Current target: dinliminate22.');
+   info('release','Physical iPhone gate','Desktop/browser diagnosis cannot certify physical iPhone Safari/PWA behavior.','Final device check still covers install, GPS permission, touch/swipe behavior, and share/add-to-home-screen behavior.');
+  }catch(e){
+   fail('core','Diagnostic runtime','Unexpected diagnostic failure: '+String(e?.message||e),'The diagnosis itself encountered an error while checking the current runtime.');
+  }
+  const failures=checks.filter(x=>x.state==='fail').length,warnings=checks.filter(x=>x.state==='warn').length,passing=checks.filter(x=>x.state==='ok').length,infos=checks.filter(x=>x.state==='info').length;
+  const overall=failures?'ACTION NEEDED':warnings?'REVIEW NEEDED':'HEALTHY';
+  const bySection=[];
+  for(const item of checks){let sec=bySection.find(x=>x.id===item.section);if(!sec){sec={id:item.section,items:[]};bySection.push(sec);}sec.items.push(item);}
+  const stateIcon={ok:'✓',warn:'!',fail:'×',info:'i'};
+  const sectionHtml=bySection.map(sec=>'<section class="diagnosis-section"><div class="diagnosis-section-head"><b>'+esc(sectionLabels[sec.id]||sec.id)+'</b><span>'+sec.items.filter(x=>x.state==='fail').length+' failed · '+sec.items.filter(x=>x.state==='warn').length+' warnings</span></div>'+sec.items.map(item=>'<div class="diagnosis-row '+item.state+'"><span class="diagnosis-mark" aria-hidden="true">'+stateIcon[item.state]+'</span><span><b>'+esc(item.label)+'</b><small>'+esc(item.detail)+'</small></span></div>').join('')+'</section>').join('');
+  if(diagnosisBody){diagnosisBody.setAttribute('aria-busy','false');diagnosisBody.innerHTML='<div class="diagnosis-summary diagnosis-summary-strong"><span class="diagnosis-status-dot '+(failures?'bad':warnings?'warn':'good')+'" aria-hidden="true"></span><div><b>'+esc(overall)+'</b><small>'+failures+' failed · '+warnings+' warnings · '+passing+' passing · '+infos+' informational</small></div><strong>Run '+run+'</strong></div>'+sectionHtml+'<p class="diagnosis-footnote">Green means this runtime verified the check. Yellow means something deserves review. Red means the diagnosis found a concrete problem. Informational items are deliberate launch notes, not failures.</p>';}
+  if(document.body.contains(modal)&&$('diagnosisRefresh')){$('diagnosisRefresh').disabled=false;$('diagnosisRefresh').setAttribute('aria-pressed','false');$('diagnosisRefresh').classList.remove('selected');$('diagnosisRefresh').classList.add('complete');$('diagnosisRefresh').textContent='↻ Run again';}
+  if(document.body.contains(modal)&&$('diagnosisRunStatus')){$('diagnosisRunStatus').textContent='✓ Run '+run+' complete · '+(failures?'action needed':warnings?'review needed':'no actionable warnings');$('diagnosisRunStatus').classList.remove('running');}
+  running=false;
+ };
+ $('diagnosisRefresh').onclick=()=>render();
+ render();
+ return modal;
+}
+function privacyView() {
+const body = '<div class="info-copy"><h4>Privacy & Data</h4><p>Dinliminate uses your selected address or optional device location to find nearby restaurants. Location access is optional.</p><p>Restaurant/address results are retrieved through Dinliminate’s search service using third-party mapping and place providers. Your exact location or selected address is used for that search request.</p><p>Your meal choices, hidden items, history, and custom-meal information are stored on this device using browser storage. Custom food photos may be stored in IndexedDB on the device.</p><p>Restaurant and meal images may be loaded from third-party image hosts. Restaurant availability, hours, phone numbers, websites, and menu information can change and are supplied by external providers.</p></div>';
+openModal('privacyModal','Privacy',body);
+}
+function exportHistoryPrint(scope){
+ const all=readHistory();
+ const filtered=scope==='food'?all.filter(x=>x?.type==='food'):scope==='restaurant'?all.filter(x=>x?.type==='restaurant'):all;
+ if(!filtered.length){appToast('No '+(scope==='all'?'history':scope+' history')+' to export yet.');return;}
+ const scopeLabel=scope==='food'?'Food':scope==='restaurant'?'Restaurants':'All History';
+ const dateLabel=new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date());
+ const rows=filtered.map(entry=>{
+  const image=String(entry?.image||'').trim();
+  const hasImage=!!image && image!==HUNGRY_IMAGE && image!==FINAL_RESTAURANT_IMAGE && image!=='idb:';
+  const photo=hasImage?imageProxyUrl(image):'';
+  const meta=[entry?.category||entry?.cuisine||'',entry?.type==='restaurant'?(entry?.address||''):''].filter(Boolean).map(esc).join(' · ');
+  const contact=[entry?.phone||'',entry?.website||''].filter(Boolean).map(esc).join(' · ');
+  return '<article class="pdf-entry"><div class="pdf-entry-head"><div><div class="pdf-entry-date">'+esc(entry?.date||'')+'</div><h2>'+esc(entry?.name||'Decision')+'</h2>'+ (meta?'<p>'+meta+'</p>':'')+(contact?'<p class="pdf-contact">'+contact+'</p>':'')+'</div></div>'+(photo?'<img src="'+esc(photo)+'" alt="" loading="eager">':'')+'</article>';
+ }).join('');
+ const w=window.open('','_blank');
+ if(!w){appToast('Allow pop-ups to export the PDF.');return;}
+ const css='@page{size:auto;margin:0.55in}html,body{margin:0;background:#fff;color:#151515;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding:28px}.pdf-header{border-bottom:1px solid #ddd;padding-bottom:18px;margin-bottom:18px}.pdf-kicker{font-size:10px;letter-spacing:.18em;color:#777;font-weight:800}.pdf-header h1{font-size:28px;letter-spacing:-.04em;margin:7px 0 4px}.pdf-header p{margin:0;color:#666;font-size:12px}.pdf-entry{break-inside:avoid;border-bottom:1px solid #e6e6e6;padding:0 0 18px;margin:0 0 18px}.pdf-entry-date{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#777;margin-bottom:5px}.pdf-entry h2{font-size:21px;letter-spacing:-.03em;margin:0 0 5px}.pdf-entry p{font-size:11px;color:#666;line-height:1.45;margin:3px 0}.pdf-contact{word-break:break-word}.pdf-entry img{display:block;width:100%;max-height:280px;object-fit:cover;border-radius:12px;margin-top:11px}.pdf-footer{margin-top:26px;padding-top:12px;border-top:1px solid #ddd;color:#888;font-size:9px;text-align:center}@media print{body{padding:0}}';
+ w.document.open();
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dinliminate — '+scopeLabel+'</title><style>'+css+'</style></head><body><header class="pdf-header"><div class="pdf-kicker">DINLIMINATE</div><h1>Dinner Decisions Simplified</h1><p>'+scopeLabel+' · Exported '+dateLabel+'</p></header>'+rows+'<footer class="pdf-footer">Dinner Decisions Simplified · Dinliminate</footer></body></html>');
+ w.document.close();
+ const printWhenReady=()=>{
+  const imgs=[...w.document.images];
+  Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});}))).then(()=>setTimeout(()=>{try{w.focus();w.print();}catch{}},250));
+ };
+ if(w.document.readyState==='complete')printWhenReady(); else w.addEventListener('load',printWhenReady,{once:true});
+}
+function exportPdfView(){
+ const history=readHistory();
+ if(!history.length){appToast('No history to export yet.');return;}
+ const body='<div class="export-pdf-copy"><div class="export-pdf-kicker">SAVE YOUR DECISIONS</div><h4>Export your history</h4><p>Choose what to include. A print-ready PDF opens next, where you can save or share it from your device.</p><div class="export-pdf-options">'+
+ '<button class="settings-action export-choice" data-export-scope="all" type="button"><span class="settings-action-icon">✦</span><span class="settings-action-copy"><b>All History</b><small>'+history.length+' saved decision'+(history.length===1?'':'s')+'</small></span><span class="settings-action-chevron">›</span></button>'+
+ '<button class="settings-action export-choice" data-export-scope="food" type="button"><span class="settings-action-icon">◈</span><span class="settings-action-copy"><b>Food</b><small>'+history.filter(x=>x?.type==='food').length+' saved decision'+(history.filter(x=>x?.type==='food').length===1?'':'s')+'</small></span><span class="settings-action-chevron">›</span></button>'+
+ '<button class="settings-action export-choice" data-export-scope="restaurant" type="button"><span class="settings-action-icon">⌖</span><span class="settings-action-copy"><b>Restaurants</b><small>'+history.filter(x=>x?.type==='restaurant').length+' saved decision'+(history.filter(x=>x?.type==='restaurant').length===1?'':'s')+'</small></span><span class="settings-action-chevron">›</span></button></div></div>';
+ const modal=openModal('exportPdfModal','Export PDF',body);
+ modal.querySelectorAll('[data-export-scope]').forEach(btn=>btn.onclick=()=>{const scope=btn.dataset.exportScope;modal.remove();$('exportPdfModalBg')?.remove();exportHistoryPrint(scope);});
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', event => {
+ event.preventDefault();
+ deferredInstallPrompt = event;
+});
+async function copyAppUrl(url){
+ try{
+  if(navigator.clipboard && window.isSecureContext){
+   await navigator.clipboard.writeText(url);
+   return true;
+  }
+ }catch{}
+ try{
+  const helper=document.createElement('textarea');
+  helper.value=url;
+  helper.setAttribute('readonly','');
+  helper.style.position='fixed';
+  helper.style.opacity='0';
+  helper.style.pointerEvents='none';
+  document.body.appendChild(helper);
+  helper.select();
+  const copied=document.execCommand('copy');
+  helper.remove();
+  return copied;
+ }catch{return false;}
+}
+async function addToPhoneFlow(){
+ if(deferredInstallPrompt){
+  try{
+   await deferredInstallPrompt.prompt();
+   await deferredInstallPrompt.userChoice;
+   deferredInstallPrompt=null;
+   return;
+  }catch{}
+ }
+ openModal('addToPhoneModal','How to add to your phone','<div class="add-phone-fallback"><span class="share-app-kicker">IPHONE</span><h4>Keep Dinliminate close.</h4><div class="add-phone-steps"><div class="add-phone-step"><span>1</span><p>Tap the <b>Share</b> button in Safari.</p></div><div class="add-phone-step"><span>2</span><p>Choose <b>Add to Home Screen</b>.</p></div><div class="add-phone-step"><span>3</span><p>Tap <b>Add</b>. Dinliminate will sit on your Home Screen like an app.</p></div></div><p class="add-phone-footnote">On Android or supported browsers, this action may install Dinliminate directly.</p></div>');
+}
+async function shareApp(){
+ const url=String(location.href||'').split('#')[0];
+ const shareData={title:'Dinliminate — Dinner Decisions Simplified',text:'Try Dinliminate — swipe until it’s decided.',url};
+ if(typeof navigator.share==='function'){
+  try{await navigator.share(shareData);return;}catch(err){if(err?.name==='AbortError')return;}
+ }
+ if(await copyAppUrl(url)){appToast('App link copied.');return;}
+ openModal('shareAppModal','Share app','<div class="share-app-fallback"><span class="share-app-kicker">SHARE APP</span><h4>Pass it along.</h4><p>Use your device share controls or copy this link.</p><input class="share-app-url" type="text" readonly value="'+esc(url)+'" onclick="this.select()"><button class="detail-web-action share-app-copy" id="shareAppCopy" type="button">Copy link</button></div>');
+ const copy=$('shareAppCopy');
+ if(copy)copy.onclick=async()=>{if(await copyAppUrl(url)){appToast('App link copied.');}else{const field=document.querySelector('.share-app-url');field?.focus();field?.select();appToast('Select the link to copy it.');}};
+}
+
+function shareWinner() {
+if (!S.winnerItem)return;
+const text='Tonight: '+S.winnerItem.name;
+if(navigator.share){navigator.share({title:'Dinliminate',text}).catch(()=>{});}
+else if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>appToast('Decision copied.')).catch(()=>{});
+}
+function resetRound(){
+S.hungryWheelSpinToken++;
+S.hungryWheelSpinning=false;
+S.hungryWheelChoice=null;
+S.hungryWheelRotation=0;
+S.hungryWheelDisplayItems=null;
+S.hungryWheelLandedId=null;
+S.hungryWheelSpinPhase='idle';
+S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
+S.winnerItem=null; S.winnerType='food'; S.foodActions=[]; S.restaurantActions=[];
+S.maybe.clear(); S.foodMaybeRound=false; S.cutCats.clear(); S.foodCuts.clear(); S.restaurantCuts.clear(); S.restaurantMaybeRound=false;
+S.pool=[]; S.restaurantPool=[]; S.restaurantSearchOrigin=null; S.index=0; S.restaurantIndex=0; S.saved=false;
+try{localStorage.removeItem(KEY);}catch{}
+home();
+}
+function resetRestoreView(){
+ document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();
+ removeFoodOverlays();
+ const body='<div class="reset-restore-view"><div class="reset-restore-hero"><span class="manage-kicker">RESET &amp; RESTORE</span><h4>Choose what to return.</h4><p>Restore the original meal catalog without touching your custom meals, or start fresh by clearing all local app data.</p></div><div class="reset-restore-actions"><button class="reset-restore-option restore-action" id="restoreDefaultsOption" type="button"><span class="reset-restore-icon">↺</span><span><b>Restore Defaults</b><small>Return built-in meals to their original state and recover deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, and notes remain.</small></span><span>›</span></button><button class="reset-restore-option reset-action" id="fullResetOption" type="button"><span class="reset-restore-icon">×</span><span><b>Full Reset</b><small>Erase meals, Custom Cuisine Cuts, history, notes, hidden choices, saved state, and device-stored photos.</small></span><span>›</span></button></div></div>';
+ const modal=openModal('resetRestoreModal','Reset & Restore',body);
+ $('restoreDefaultsOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await systemRestoreFlow();};
+ $('fullResetOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await resetAppDataFlow();};
+}
+async function resetAppDataFlow(){
+if(!await appConfirm('Reset all app data?', 'This permanently removes custom meals, history, hidden choices, saved round state, and device-stored app preferences.', 'Reset Everything'))return;
+S.hidden.clear(); S.deleted.clear(); S.deletedCustomMeals=[]; S.customQuickCuts=[]; S.hiddenRestaurants={}; S.cutCats.clear(); S.foodCuts.clear(); S.maybe.clear(); S.foodMaybeRound=false; S.restaurantCuts.clear(); S.restaurantMaybeRound=false;
+S.pool=[]; S.restaurantPool=[]; S.index=0; S.restaurantIndex=0; S.foodActions=[]; S.restaurantActions=[]; S.winnerItem=null; S.winnerType='food'; S.location=null; S.locationSource='none'; S.locationFreshAt=null; S.restaurantSearchOrigin=null; S.restaurantSearchKey=''; S.restaurantQuery=''; S.restaurantSearchDegraded=false; S.storageWarning=false; S.saved=false; S.custom=[];
+try{localStorage.removeItem(KEY);localStorage.removeItem(HISTORY_KEY);localStorage.removeItem(ITEM_NOTES_KEY);}catch{}
+try{const db=await openPhotoDB(); await new Promise(resolve=>{const tx=db.transaction(PHOTO_STORE,'readwrite'); tx.objectStore(PHOTO_STORE).clear(); tx.oncomplete=resolve; tx.onerror=resolve;});}catch{}
+home();
+}
+async function systemRestoreFlow(){
+if(!await appConfirm('Restore built-in defaults?','This returns every built-in meal to its original catalog state and recovers deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, and notes stay on this device.','Restore Defaults'))return;
+ const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
+ const builtInOverrides=S.custom.filter(x=>defaultIds.has(String(x.id)));
+ for(const item of builtInOverrides){
+  if(String(item.image||'').startsWith('idb:')){await deleteStoredPhoto(item.id);storedPhotoIds.delete(item.id);}
+ }
+ S.custom=S.custom.filter(x=>!defaultIds.has(String(x.id)));
+ S.deleted.clear();
+ S.hidden.clear();S.hiddenRestaurants={};S.cutCats.clear();S.foodCuts.clear();S.maybe.clear();S.foodMaybeRound=false;S.restaurantCuts.clear();S.restaurantMaybeRound=false;
+ S.pool=[];S.restaurantPool=[];S.index=0;S.restaurantIndex=0;S.foodActions=[];S.restaurantActions=[];S.winnerItem=null;S.winnerType='food';S.location=null;S.locationSource='none';S.locationFreshAt=null;S.restaurantSearchOrigin=null;S.restaurantSearchKey='';S.restaurantQuery='';S.restaurantSearchDegraded=false;S.storageWarning=false;S.saved=false;
+ buildFood();foodQuick();save();
+ document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();document.querySelector('#resetRestoreModal')?.remove();document.querySelector('#resetRestoreModalBg')?.remove();document.querySelector('#drawer')?.classList.add('hidden');document.querySelector('#drawerBg')?.classList.add('hidden');
+ home();
+}
+const homeActionHandler = (event) => {
+ const button = event.target.closest?.('[data-home-action]');
+ if(!button || button.disabled || !document.body.contains(button)) return;
+ event.preventDefault();
+ event.stopPropagation();
+ const action = button.dataset.homeAction;
+ if(action==='add') addToPhoneFlow();
+ else if(action==='share') shareApp();
+};
+document.addEventListener('click', homeActionHandler, true);
+function bindHomeCardPress(id){
+ const el=$(id);if(!el)return;
+ let timer=0;
+ const down=()=>{clearTimeout(timer);el.classList.add('is-pressed');};
+ const up=()=>{clearTimeout(timer);timer=window.setTimeout(()=>el.classList.remove('is-pressed'),140);};
+ el.addEventListener('pointerdown',down,{passive:true});
+ el.addEventListener('pointerup',up,{passive:true});
+ el.addEventListener('pointercancel',up,{passive:true});
+ el.addEventListener('pointerleave',up,{passive:true});
+}
+
+$('foodStart').onclick = startFood;
+$('restStart').onclick = openRestaurant;
+['#foodStart .home-card-overlay','#foodStart .home-card-copy','#foodStart .arrow','#foodStart .home-photo-img'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();startFood();},{capture:true});});
+['#restStart .home-card-overlay','#restStart .home-card-copy','#restStart .arrow','#restStart .home-photo-img'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();openRestaurant();},{capture:true});});
+bindCardButton('foodCut',()=>foodCut());
+bindCardButton('foodMaybe',()=>foodMaybe());
+bindCardButton('foodBack',foodBack);
+document.querySelectorAll('[data-home]').forEach(btn => btn.onclick = home);
+bindHomeCardPress('foodStart');bindHomeCardPress('restStart');
+let drawerCloseTimer=0;
+const closeDrawer=()=>{
+ clearTimeout(drawerCloseTimer);
+ const drawer=$('drawer'),bg=$('drawerBg');
+ drawer?.classList.remove('is-open');
+ bg?.classList.remove('is-open');
+ ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
+ drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
+};
+const openDrawer=()=>{
+ clearTimeout(drawerCloseTimer);
+ const drawer=$('drawer'),bg=$('drawerBg');
+ drawer?.classList.remove('hidden');
+ bg?.classList.remove('hidden');
+ requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
+ ['#menu','#foodMenu','#restaurantMenu','#winnerMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+};
+const appMenu = $('menu'); if (appMenu) {appMenu.setAttribute('aria-expanded','false');appMenu.onclick = openDrawer;}
+const foodMenu = $('foodMenu'); if (foodMenu) {foodMenu.setAttribute('aria-expanded','false');foodMenu.onclick = openDrawer;}
+const restaurantMenu = $('restaurantMenu'); if (restaurantMenu) {restaurantMenu.setAttribute('aria-expanded','false');restaurantMenu.onclick = openDrawer;}
+const winnerMenu = $('winnerMenu'); if (winnerMenu) {winnerMenu.setAttribute('aria-expanded','false');winnerMenu.onclick = openDrawer;}
+const foodBackTop = $('foodBackTop'); if (foodBackTop) foodBackTop.onclick = home;
+const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaurantBackTop.onclick = home;
+$('drawerClose').onclick = closeDrawer;
+$('drawerBg').onclick = closeDrawer;
+$('manage').onclick = () => { closeDrawer(); window.setTimeout(()=>manageFoodsView(),190); };
+$('settings').onclick = () => { closeDrawer(); window.setTimeout(()=>settingsView(),190); };
+$('backToStart').onclick = () => { closeDrawer(); window.setTimeout(()=>home(),190); };
+$('history').onclick = () => { closeDrawer(); window.setTimeout(()=>historyView(),190); };
+
+async function locationPermissionState(){
+  try{
+    const permission = await navigator.permissions?.query?.({name:'geolocation'});
+    return permission?.state || 'unknown';
+  }catch{
+    return 'unknown';
+  }
+}
+function closeLocationPermissionSheet(){
+  const modal=$('locationPermissionModal'),bg=$('locationPermissionBg');
+  modal?.classList.add('hidden');
+  bg?.classList.add('hidden');
+  modal?.setAttribute('aria-hidden','true');
+}
+function openLocationPermissionSheet(state='prompt'){
+  const modal=$('locationPermissionModal'),bg=$('locationPermissionBg'),title=$('locationPermissionTitle'),copy=$('locationPermissionText'),allow=$('locationPermissionAllow');
+  if(!modal||!bg)return;
+  if(state==='denied'){
+    if(title)title.textContent='Location access is off';
+    if(copy)copy.textContent='Turn on Location for this site in your browser settings, then come back and tap Use My Location again.';
+    if(allow)allow.textContent='Try Again';
+  }else{
+    if(title)title.textContent='Know your location';
+    if(copy)copy.textContent='Use your location to find restaurants around you. Dinliminate uses it only to set your search area.';
+    if(allow)allow.textContent='Allow Location';
+  }
+  modal.classList.remove('hidden');
+  bg.classList.remove('hidden');
+  modal.setAttribute('aria-hidden','false');
+  requestAnimationFrame(()=>allow?.focus());
+}
+async function requestLocationFromPrompt(){
+  const state=await locationPermissionState();
+  if(state==='granted'){
+    useLocation();
+    return;
+  }
+  if(state==='denied'){
+    openLocationPermissionSheet('denied');
+    return;
+  }
+  openLocationPermissionSheet('prompt');
+}
+$('locate').onclick = () => {
+  requestLocationFromPrompt();
+};
+$('locationPermissionCancel')?.addEventListener('click',closeLocationPermissionSheet);
+$('locationPermissionBg')?.addEventListener('click',closeLocationPermissionSheet);
+$('locationPermissionAllow')?.addEventListener('click',async()=>{
+  closeLocationPermissionSheet();
+  await new Promise(resolve=>requestAnimationFrame(resolve));
+  useLocation();
+});
+$('find').onclick = () => {
+  searchRestaurants();
+};
+$('radius').addEventListener('change', () => {
+ const hasLocation=!!S.location || !!$('address')?.value.trim();
+ if(!hasLocation){$('status').textContent='Enter an address or use your location.';renderFindButton();return;}
+ searchRestaurants();
+});
+$('address').addEventListener('input', () => {
+  if(locationRequestActive){
+    locationRequestSeq++;
+    locationRequestActive=false;
+    setLocationBusy(false);
+  }
+  S.location=null;
+  S.locationSource='typed';
+  S.restaurantSearchOrigin=null;
+  renderLocationSource();
+  suggestAddresses();
+});
+$('address').addEventListener('focus', () => {
+  const input=$('address');
+  if(!input)return;
+  if(locationRequestActive){
+    locationRequestSeq++;
+    locationRequestActive=false;
+    setLocationBusy(false);
+  }
+  const current=input.value.trim();
+  if(current){
+    invalidateAddressSuggestions();
+    S.location=null;
+    S.locationSource='typed';
+    S.restaurantSearchOrigin=null;
+    input.value='';
+    renderLocationSource();
+    $('status').textContent='Enter an address to search.';
+  }else if(input.value.trim().length>=2){
+    suggestAddresses();
+  }
+});
+$('address').addEventListener('keydown', e => {
+if(e.key==='ArrowDown'){ if(moveSuggestion(1)){e.preventDefault();return;} }
+if(e.key==='ArrowUp'){ if(moveSuggestion(-1)){e.preventDefault();return;} }
+if(e.key==='Enter'){
+  const opts=[...document.querySelectorAll('#suggestionsBox [data-suggestion]')];
+  if(suggestionIndex>=0&&opts[suggestionIndex]){
+    e.preventDefault();
+    chooseAddressSuggestion(suggestionIndex);
+    return;
+  }
+  if(opts.length&&!addressLooksComplete($('address').value)){
+    e.preventDefault();
+    chooseAddressSuggestion(0);
+    return;
+  }
+  e.preventDefault();
+  invalidateAddressSuggestions();
+  searchRestaurants();
+}
+if(e.key==='Escape'){ e.preventDefault(); invalidateAddressSuggestions(); }
+});
+bindRestaurantTools();
+$('winnerBackTop').onclick = () => home();
+$('hungryWheelSpin').onclick = (event) => {
+ event?.preventDefault?.();
+ event?.stopPropagation?.();
+ spinHungryWheel();
+};
+
+$('hungryWheelChoose').onclick = () => {
+  const choice=S.hungryWheelChoice;
+  if(!choice || S.hungryWheelSpinning)return;
+  winner(choice,'food');
+};
+$('hungryMysteryReveal').onclick = revealHungryRestaurant;
+$('hungryMysteryAgain').onclick = tryAnotherHungryRestaurant;
+$('hungryMysteryChoose').onclick = () => {
+  const choice=S.hungryRestaurantChoice;
+  if(!choice)return;
+  S.hungryRestaurantChoice=null;
+  winner(choice,'restaurant');
+};
+$('details').onclick = () => S.winnerItem && detailsSheet(S.winnerItem, S.winnerType || 'food');
+$('share').onclick = shareWinner;
+$('restart').onclick = resetRound;
+const updateOffline = () => $('offlineIndicator')?.classList.toggle('hidden', navigator.onLine !== false);
+window.addEventListener('online', updateOffline);
+window.addEventListener('offline', updateOffline);
+window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
+updateOffline();
+bindHomeImageFallbacks();
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=841').catch(() => {}));
+if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
+bindPersistentHomeBackground();
+load();
+renderLocationSource();
+renderFindButton();
+updateStorageIndicator();
+hydrateCustomPhotos();
+migrateCustomPhotos();
+if (S.saved && S.screen === 'food' && S.pool.length) {
+show('food'); foodQuick(); drawFood();
+} else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
+show('restaurant'); restaurantQuick(); drawRestaurants();
+} else {
+home();
+}
+if (new URLSearchParams(location.search).get('qa') === '1') {
+window.__DINLIMINATE_QA__ = {
+snapshot: () => ({
+screen:S.screen,
+foodCatalog:allFoods().length,
+foodPool:foodPool().map(x=>x.id),
+restaurantPool:restaurantPoolFiltered().map(x=>x.id),
+custom:S.custom.map(x=>({...x})),
+allRestaurantIds:(S.restaurantPool||[]).map(x=>x.id),
+foodActions:S.foodActions.map(x=>({...x})),
+restaurantActions:S.restaurantActions.map(x=>({...x})),
+hiddenFoods:[...S.hidden],
+hiddenRestaurants:{...S.hiddenRestaurants},
+cutCats:[...S.cutCats],
+maybe:[...S.maybe],
+mealTimeFilters:[...S.mealTimeFilters],
+mealTimeAllSelected:MEAL_TIME_CUTS.every(label=>S.mealTimeFilters?.has(label)),
+foodMaybeRound:!!S.foodMaybeRound,
+restaurantMaybeRound:!!S.restaurantMaybeRound,
+restaurantCuts:[...S.restaurantCuts],
+winner:S.winnerItem ? {...S.winnerItem} : null,
+winnerType:S.winnerType,
+location:S.location ? {...S.location} : null,
+locationSource:S.locationSource,
+restaurantSearchOrigin:S.restaurantSearchOrigin ? {...S.restaurantSearchOrigin} : null
+})
+};
+}
+/* CP808/CP809 — Family Mode client shell */
+const FAMILY_SESSION_KEY = 'dinliminate.family.v1';
+let familyPollTimer = 0;
+let familyPollBusy = false;
+
+function familySessionRead(){
+  try{ const raw=localStorage.getItem(FAMILY_SESSION_KEY); if(!raw)return null; const d=JSON.parse(raw); return d&&typeof d.token==='string'&&d.token?d:null; }catch{return null;}
+}
+function familySessionWrite(value){ try{localStorage.setItem(FAMILY_SESSION_KEY,JSON.stringify(value));}catch{} }
+function familySessionClear(){ try{localStorage.removeItem(FAMILY_SESSION_KEY);}catch{} }
+function familySetStatus(id,message,kind=''){ const el=$(id); if(!el)return; el.textContent=message||''; el.dataset.state=kind; }
+async function familyApi(action,payload={}){
+  const response=await fetch('./api/family',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action,...payload})});
+  let data=null; try{data=await response.json();}catch{}
+  if(!response.ok||!data?.ok){const e=new Error(data?.message||'Family Mode could not complete that request.');e.code=data?.code||'FAMILY_REQUEST_FAILED';e.status=response.status;throw e;}
+  return data;
+}
+function familyShowEntry(){
+  $('familyEntry')?.classList.remove('hidden'); $('familyCreateForm')?.classList.add('hidden'); $('familyJoinForm')?.classList.add('hidden'); $('familyLobby')?.classList.add('hidden');
+  familySetStatus('familyCreateStatus',''); familySetStatus('familyJoinStatus','');
+}
+function familyShowCreate(){ $('familyEntry')?.classList.add('hidden'); $('familyCreateForm')?.classList.remove('hidden'); $('familyJoinForm')?.classList.add('hidden'); $('familyLobby')?.classList.add('hidden'); setTimeout(()=>$('familyCreateName')?.focus(),40); }
+function familyShowJoin(){ $('familyEntry')?.classList.add('hidden'); $('familyCreateForm')?.classList.add('hidden'); $('familyJoinForm')?.classList.remove('hidden'); $('familyLobby')?.classList.add('hidden'); setTimeout(()=>$('familyJoinCode')?.focus(),40); }
+function familyDisplayMemberList(members,me){
+  const box=$('familyMemberList'); if(!box)return; box.innerHTML='';
+  (Array.isArray(members)?members:[]).forEach(m=>{
+    const row=document.createElement('div'); row.className='family-member-row'+(m.role==='host'?' is-host':'');
+    row.innerHTML='<span class="family-member-avatar"></span><span class="family-member-copy"><b></b><small></small></span><span class="family-member-status"></span>';
+    row.querySelector('.family-member-avatar').textContent=(String(m.name||'?').trim().slice(0,1)||'?').toUpperCase();
+    row.querySelector('.family-member-copy b').textContent=String(m.name||'Family member');
+    row.querySelector('.family-member-copy small').textContent=m.role==='host'?'Host':'Member';
+    row.querySelector('.family-member-status').textContent=me&&m.id===me.id?'You':'Here';
+    box.appendChild(row);
+  });
+}
+function familyRenderState(data){
+  const family=data?.family,me=data?.me; if(!family||!me)return;
+  $('familyJoinCodeDisplay').textContent=family.joinCode||'—';
+  $('familyMemberCount').textContent=String(family.memberCount||0)+' of 8 here';
+  familyDisplayMemberList(data.members||[],me);
+  const activeRound=data.activeRound||null;
+  const completed=data.lastCompletedRound||((activeRound&&activeRound.status==='complete')?activeRound:null);
+  const roundMember=activeRound?(data.roundMembers||[]).find(r=>r.memberId===me.id&&r.included):null;
+  const included=!activeRound||!!roundMember;
+  const stageSwipe=activeRound&&['swiping','final_swiping','tiebreak'].includes(activeRound.status)&&included;
+  const setupReady=activeRound&&activeRound.status==='setup';
+  const session=familySessionRead();
+  const dismissedCompleted=!!completed&&session?.dismissedWinnerRoundId===completed.id;
+  const showWinner=!!completed&&!dismissedCompleted&&(!activeRound||activeRound.status==='complete');
+  $('familyLobby')?.classList.toggle('hidden',!!stageSwipe||showWinner);
+  $('familySetup')?.classList.add('hidden');
+  $('familySwipe')?.classList.toggle('hidden',!stageSwipe);
+  $('familyWinner')?.classList.toggle('hidden',!showWinner);
+  $('familyLobbyTitle').textContent=setupReady?'Dinner setup is ready.':stageSwipe?'Dinner is being decided.':activeRound?'A dinner decision is underway.':'Ready when everyone’s here.';
+  $('familyRotateCode')?.classList.toggle('hidden',me.role!=='host');
+  $('familySetupOpen')?.classList.toggle('hidden',me.role!=='host'||!!activeRound);
+  $('familyStartDecision')?.classList.toggle('hidden',me.role!=='host'||!setupReady);
+  const note=$('familyCodeNote'); if(note)note.textContent=me.role==='host'?'Share the code. You can regenerate it any time.':'You’re in. The host will set up dinner.';
+  if(stageSwipe){ familyBeginSwipe(data); return; }
+  if(showWinner){ familyRenderWinner(showWinner?completed:null); return; }
+  if(activeRound&&!included){ familySetStatus('familyLobbyStatus','This dinner decision already started. You’ll join the next one.'); }
+  else if(setupReady){ familySetStatus('familyLobbyStatus',me.role==='host'?'Setup is locked. Start deciding when everyone is ready.':'The host has dinner ready. Waiting for the start.'); }
+  else if(activeRound){ familySetStatus('familyLobbyStatus','A decision is underway. We’ll keep your Family together for the next one.'); }
+  else familySetStatus('familyLobbyStatus',me.role==='host'?'You’re the host. Bring everyone in, then set up dinner.':'You’re in. Waiting for the host.');
+}
+
+async function familyRefreshState(){
+  const session=familySessionRead(); if(!session?.token)return null;
+  try{ const data=await familyApi('state',{token:session.token}); familySessionWrite({...session,family:data.family,member:data.me,lastWinnerItem:data.activeRound?.winnerItem||data.lastCompletedRound?.winnerItem||session.lastWinnerItem||null,lastDecisionType:data.activeRound?.decisionType||data.lastCompletedRound?.decisionType||session.lastDecisionType||'food'}); familyRenderState(data); return data; }
+  catch(err){ if(err.code==='UNAUTHORIZED')familySessionClear(); familySetStatus('familyLobbyStatus',err.message||'Could not reconnect to this Family.','error'); return null; }
+}
+function stopFamilyLobbyPolling(){ if(familyPollTimer){clearInterval(familyPollTimer);familyPollTimer=0;} }
+function startFamilyLobbyPolling(){
+  stopFamilyLobbyPolling();
+  familyPollTimer=setInterval(()=>{
+    if(S.screen==='family'&&!familyPollBusy){ familyPollBusy=true; familyRefreshState().finally(()=>{familyPollBusy=false;}); }
+    else if(S.screen!=='family')stopFamilyLobbyPolling();
+  },4000);
+}
+
+async function familyCreate(){
+  const name=$('familyCreateName')?.value?.trim()||''; familySetStatus('familyCreateStatus','Creating…','busy');
+  try{const data=await familyApi('create',{displayName:name}); familySessionWrite({token:data.token,family:data.family,member:data.member}); $('familyCreateForm')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); familyRenderState(data); familySetStatus('familyLobbyStatus','Family created. Share the code with everyone.'); startFamilyLobbyPolling();}
+  catch(err){familySetStatus('familyCreateStatus',err.message||'Could not create the Family.','error');}
+}
+async function familyJoin(){
+  const codeValue=$('familyJoinCode')?.value?.trim()||'',name=$('familyJoinName')?.value?.trim()||''; familySetStatus('familyJoinStatus','Joining…','busy');
+  try{const data=await familyApi('join',{joinCode:codeValue,displayName:name}); familySessionWrite({token:data.token,family:data.family,member:data.member}); $('familyJoinForm')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); familyRenderState(data); familySetStatus('familyLobbyStatus','You’re in. Waiting for the Family.'); startFamilyLobbyPolling();}
+  catch(err){familySetStatus('familyJoinStatus',err.message||'Could not join that Family.','error');}
+}
+async function familyCopyCode(){
+  const codeText=$('familyJoinCodeDisplay')?.textContent?.trim()||''; if(!codeText||codeText==='—')return;
+  try{await navigator.clipboard.writeText(codeText);familySetStatus('familyLobbyStatus','Family code copied. Share it with everyone.');}catch{familySetStatus('familyLobbyStatus','Code: '+codeText);}
+}
+async function familyRotateCode(){
+  const session=familySessionRead();if(!session?.token)return;const b=$('familyRotateCode');if(b)b.disabled=true;
+  try{const data=await familyApi('rotate-code',{token:session.token});familySessionWrite({...session,family:{...(session.family||{}),joinCode:data.joinCode}});await familyRefreshState();familySetStatus('familyLobbyStatus','New code created. The old code no longer works.');}
+  catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}finally{if(b)b.disabled=false;}
+}
+async function familyOpen(){
+  show('family'); const session=familySessionRead();
+  if(!session?.token){familyShowEntry();stopFamilyLobbyPolling();return;}
+  $('familyEntry')?.classList.add('hidden');$('familyCreateForm')?.classList.add('hidden');$('familyJoinForm')?.classList.add('hidden');$('familyLobby')?.classList.remove('hidden');
+  familyRenderState({family:session.family,me:session.member,members:[],activeRound:null}); await familyRefreshState(); startFamilyLobbyPolling();
+}
+async function familyLeave(){
+  const session=familySessionRead();
+  const active=!!session?.family?.activeRoundId;
+  const message=active?'A Family dinner decision is active. Your saved picks stay on the server, but leaving removes you from this decision. Leave Family Mode?':'Leave this Family on this device?';
+  if(!await appConfirm('Leave Family Mode',message,'Leave'))return;
+  stopFamilyLobbyPolling();
+  if(session?.token){
+    try{await familyApi('leave',{token:session.token});}
+    catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not leave the Family.','error');return;}
+  }
+  familySessionClear();
+  familyShowEntry();
+  show('family');
+}
+async function familyBackFromMode(){
+  const session=familySessionRead();
+  const active=!!session?.family?.activeRoundId;
+  if(active && !await appConfirm('Leave the decision?', 'Your saved choices stay with this Family, and you can return later. The current decision will keep moving without you.', 'Leave decision'))return;
+  stopFamilyLobbyPolling();
+  show('home');
+}
+
+$('familyMode')?.addEventListener('click',()=>{closeDrawer();window.setTimeout(familyOpen,190);});
+$('familyBackTop')?.addEventListener('click',familyBackFromMode);
+$('familyMenu')?.addEventListener('click',openDrawer);
+$('familyCreateChoice')?.addEventListener('click',familyShowCreate);
+$('familyJoinChoice')?.addEventListener('click',familyShowJoin);
+$('familyCreateBack')?.addEventListener('click',familyShowEntry);
+$('familyJoinBack')?.addEventListener('click',familyShowEntry);
+$('familyCreateSubmit')?.addEventListener('click',familyCreate);
+$('familyJoinSubmit')?.addEventListener('click',familyJoin);
+$('familyLeave')?.addEventListener('click',familyLeave);
+$('familyCopyCode')?.addEventListener('click',familyCopyCode);
+$('familyRotateCode')?.addEventListener('click',familyRotateCode);
+$('familyCreateName')?.addEventListener('keydown',e=>{if(e.key==='Enter')familyCreate();});
+$('familyJoinName')?.addEventListener('keydown',e=>{if(e.key==='Enter')familyJoin();});
+$('familyJoinCode')?.addEventListener('input',e=>{const value=e.target.value.replace(/[^a-z0-9]/gi,'').toUpperCase().slice(0,6);e.target.value=value.length>3?value.slice(0,3)+' · '+value.slice(3):value;});
+/* CP810 — Family Mode host setup */
+let familySetupType='meal';
+let familySetupExcluded=new Set();
+let familySetupMealTimes=new Set();
+
+function familyDefaultDinnerTime(){
+  const d=new Date(Date.now()+30*60*1000);
+  const h=String(d.getHours()).padStart(2,'0');
+  const m=String(d.getMinutes()).padStart(2,'0');
+  return h+':'+m;
+}
+function familySetupItems(){
+  if(familySetupType==='meal'){
+    return allFoods().filter(item=>{
+      if(!item||S.hidden.has(item.id)||S.deleted.has(item.id))return false;
+      if(familySetupMealTimes.size && !mealTimesFor(item).some(t=>familySetupMealTimes.has(t)))return false;
+      return true;
+    });
+  }
+  return restaurantPoolBase().filter(row=>row&&!row._hidden&&!row._cut);
+}
+function familySetupRender(){
+  const list=$('familySetupList'),count=$('familySetupCount'),note=$('familySetupNote');
+  const mealTimeControls=$('familyMealTimeControls');
+  if(mealTimeControls){
+    mealTimeControls.classList.toggle('hidden',familySetupType!=='meal');
+    mealTimeControls.querySelectorAll('[data-family-meal-time]').forEach(btn=>{
+      const active=familySetupMealTimes.has(btn.dataset.familyMealTime);
+      btn.classList.toggle('is-active',active);
+      btn.setAttribute('aria-pressed',String(active));
+    });
+  }
+  if(!list)return;
+  const items=familySetupItems();
+  const included=items.filter(item=>!familySetupExcluded.has(String(item.id))).length;
+  if(count)count.textContent=included+' choices'+(familySetupExcluded.size?' · '+familySetupExcluded.size+' cut':'');
+  if(note)note.textContent=familySetupType==='restaurant'&&!S.restaurantPool.length?'Load restaurant results first, then return here.':'Tap a choice to cut it before the Family starts.';
+  list.innerHTML='';
+  items.forEach(item=>{
+    const id=String(item.id),cut=familySetupExcluded.has(id);
+    const row=document.createElement('button');
+    row.type='button'; row.className='family-setup-choice'+(cut?' is-cut':''); row.dataset.familyChoice=id;
+    const image=item.image||item.photo||'';
+    row.innerHTML='<span class="family-choice-thumb"><img alt=""></span><span class="family-choice-copy"><b></b><small></small></span><span class="family-choice-state"></span>';
+    const img=row.querySelector('img');
+    if(image) img.src=imageProxyUrl(image); else img.style.display='none';
+    row.querySelector('.family-choice-copy b').textContent=String(item.name||'Choice');
+    row.querySelector('.family-choice-copy small').textContent=familySetupType==='restaurant' ? (String(item.category||item.cuisine||'Restaurant')+(item.distance!=null?' · '+Number(item.distance).toFixed(1)+' mi':'')) : String(item.category||'Meal');
+    row.querySelector('.family-choice-state').textContent=cut?'Cut':'Keep';
+    row.addEventListener('click',()=>{ if(familySetupExcluded.has(id))familySetupExcluded.delete(id);else familySetupExcluded.add(id); familySetupRender(); });
+    list.appendChild(row);
+  });
+  if(!items.length){
+    const empty=document.createElement('div'); empty.className='family-setup-empty'; empty.textContent=familySetupType==='restaurant'?'No loaded restaurants yet.':'No meal choices are available.'; list.appendChild(empty);
+  }
+}
+function familySetupChooseType(type){
+  if(type!=='meal'&&type!=='restaurant')return;
+  familySetupType=type; familySetupExcluded=new Set(); familySetupMealTimes=new Set();
+  document.querySelectorAll('[data-family-type]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.familyType===type));
+  familySetupRender();
+}
+function familySetupOpen(){
+  const session=familySessionRead();
+  if(!session?.member||session.member.role!=='host')return;
+  const family=session.family;
+  if(family?.activeRoundId){ familySetStatus('familyLobbyStatus','Finish the current dinner decision before starting another.','error'); return; }
+  $('familyLobby')?.classList.add('hidden'); $('familySetup')?.classList.remove('hidden');
+  familySetupType='meal'; familySetupExcluded=new Set(); familySetupMealTimes=new Set();
+  document.querySelectorAll('[data-family-type]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.familyType==='meal'));
+  const time=$('familyDinnerTime'); if(time&&!time.value)time.value=familyDefaultDinnerTime();
+  familySetupRender();
+  setTimeout(()=>time?.focus(),40);
+}
+function familySetupClose(){ $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden'); familyRefreshState(); }
+function familyDinnerTargetIso(value){
+  const parts=String(value||'').split(':').map(Number);
+  if(parts.length!==2||!Number.isFinite(parts[0])||!Number.isFinite(parts[1]))return null;
+  const d=new Date(); d.setHours(parts[0],parts[1],0,0);
+  if(d.getTime()<=Date.now()+120000)d.setDate(d.getDate()+1);
+  return d.toISOString();
+}
+function familyBuildSnapshot(){
+  const items=familySetupItems();
+  const pool=items.map(item=>({
+    id:String(item.id), name:String(item.name||''), category:String(item.category||''), cuisine:String(item.cuisine||''),
+    mealTimes:Array.isArray(item.mealTimes)?item.mealTimes.slice():mealTimesFor(item),
+    image:String(item.image||item.photo||''), address:String(item.address||''), website:String(item.website||''), phone:String(item.phone||''),
+    distance:Number.isFinite(Number(item.distance))?Number(item.distance):null
+  })).filter(item=>item.id&&item.name);
+  return {
+    pool,
+    hostExcluded:Array.from(familySetupExcluded),
+    location:S.location?{lat:Number(S.location.lat),lon:Number(S.location.lon)}:null,
+    radius:Number($('radius')?.value||10),
+    searchTerm:String(S.restaurantQuery||''),
+    openState:'all',
+    quickCuts:familySetupType==='restaurant'?[...S.restaurantCuts]:[],
+    mealTimes:familySetupType==='meal'?[...familySetupMealTimes]:[]
+  };
+}
+async function familyLockSetup(){
+  const session=familySessionRead(); if(!session?.token)return;
+  const items=familySetupItems();
+  if(!items.length){familySetStatus('familySetupStatus',familySetupType==='restaurant'?'Open Find a restaurant and load results first.':'There are no meal choices to use.','error');return;}
+  const dinnerTargetAt=familyDinnerTargetIso($('familyDinnerTime')?.value);
+  if(!dinnerTargetAt){familySetStatus('familySetupStatus','Choose a dinner time.','error');return;}
+  const button=$('familyLockSetup'); if(button){button.disabled=true;button.textContent='Locking…';}
+  familySetStatus('familySetupStatus','Freezing this dinner setup…','busy');
+  try{
+    const data=await familyApi('create-round',{token:session.token,decisionType:familySetupType,snapshot:familyBuildSnapshot(),dinnerTargetAt});
+    familySessionWrite({...session,family:{...(session.family||{}),activeRoundId:data.id}});
+    $('familySetup')?.classList.add('hidden'); $('familyLobby')?.classList.remove('hidden');
+    familySetStatus('familyLobbyStatus','Choices locked. Everyone stays on their own phone; swiping comes next.');
+    await familyRefreshState();
+  }catch(err){ familySetStatus('familySetupStatus',err.message||'Could not lock the dinner setup.','error'); }
+  finally{ if(button){button.disabled=false;button.textContent='Lock choices';} }
+}
+$('familySetupOpen')?.addEventListener('click',familySetupOpen);
+$('familySetupBack')?.addEventListener('click',familySetupClose);
+$('familyTypeMeal')?.addEventListener('click',()=>familySetupChooseType('meal'));
+$('familyTypeRestaurant')?.addEventListener('click',()=>familySetupChooseType('restaurant'));
+$('familySetupAll')?.addEventListener('click',()=>{familySetupExcluded=new Set();familySetupRender();});
+document.querySelectorAll('[data-family-meal-time]').forEach(btn=>btn.addEventListener('click',()=>{
+  const value=String(btn.dataset.familyMealTime||'').trim();
+  if(!MEAL_TIME_CUTS.includes(value)||familySetupType!=='meal')return;
+  if(familySetupMealTimes.has(value))familySetupMealTimes.delete(value);else familySetupMealTimes.add(value);
+  familySetupExcluded=new Set();
+  familySetupRender();
+}));
+$('familyLockSetup')?.addEventListener('click',familyLockSetup);
+/* CP811 — Family Mode shared swipe engine */
+let familySwipeBound=false;
+let familySwipeData=null;
+let familySwipeCurrent=null;
+let familySwipeBusy=false;
+let familySwipeSubmittedRoundId='';
+let familyDeadlineTimer=0;
+
+function familySwipeItems(data){
+  const round=data?.activeRound; if(!round?.snapshot)return [];
+  const stage=Number(round.currentStage)||1;
+  let source;
+  if(stage===2&&Array.isArray(round.snapshot.finalists)) source=(Array.isArray(round.snapshot.pool)?round.snapshot.pool:[]).filter(item=>round.snapshot.finalists.map(String).includes(String(item.id)));
+  else if(stage===3&&Array.isArray(round.snapshot.tiebreakItems)) source=(Array.isArray(round.snapshot.pool)?round.snapshot.pool:[]).filter(item=>round.snapshot.tiebreakItems.map(String).includes(String(item.id)));
+  else source=Array.isArray(round.snapshot.pool)?round.snapshot.pool:[];
+  const excluded=new Set(Array.isArray(round.snapshot.hostExcluded)?round.snapshot.hostExcluded.map(String):[]);
+  const voted=new Set((data.myVotes||[]).filter(v=>(stage===1?'initial':stage===2?'finalist':'tiebreak')===v.stage).map(v=>String(v.itemId)));
+  return source.filter(item=>item&&item.id&&!excluded.has(String(item.id))&&!voted.has(String(item.id)));
+}
+function familyBeginSwipe(data){
+  const round=data?.activeRound; if(!round||!['swiping','final_swiping','tiebreak'].includes(round.status))return;
+  familySwipeData=data;
+  $('familySwipe')?.classList.remove('hidden');
+  $('familyLobby')?.classList.add('hidden');
+  $('familySetup')?.classList.add('hidden');
+  if(!familySwipeBound){
+    familySwipeBound=true;
+    bindSwipeCard('familySwipeCard',null,()=>familySwipeChoose('cut'),()=>familySwipeChoose('maybe'));
+    $('familySwipeCut')?.addEventListener('click',()=>familySwipeChoose('cut'));
+    $('familySwipeMaybe')?.addEventListener('click',()=>familySwipeChoose('maybe'));
+    $('familySwipeChoose')?.addEventListener('click',()=>familySwipeChoose('choose'));
+  }
+  familySwipeRender();
+}
+function familyDeadlineStart(round){
+  if(familyDeadlineTimer)clearInterval(familyDeadlineTimer);
+  familyDeadlineTimer=0;
+  const el=$('familySwipeDeadline');
+  const deadline=round?.stageDeadlineAt?new Date(round.stageDeadlineAt).getTime():0;
+  if(!el||!deadline){if(el)el.textContent='';return;}
+  const tick=()=>{
+    const remaining=Math.max(0,deadline-Date.now()),seconds=Math.ceil(remaining/1000);
+    const minutes=Math.floor(seconds/60),secs=String(seconds%60).padStart(2,'0');
+    const by=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(new Date(deadline));
+    el.textContent=remaining>0?'By '+by+' · '+minutes+':'+secs:'Time’s up · moving on';
+    if(remaining<=0){clearInterval(familyDeadlineTimer);familyDeadlineTimer=0;familyRefreshState();}
+  };
+  tick(); familyDeadlineTimer=setInterval(tick,1000);
+}
+
+function familySwipeRender(){
+  const data=familySwipeData,items=familySwipeItems(data),round=data?.activeRound;
+  if(!data||!round)return;
+  familyDeadlineStart(round);
+  const stage=Number(round.currentStage)||1;
+  const excluded=new Set(Array.isArray(round.snapshot?.hostExcluded)?round.snapshot.hostExcluded.map(String):[]);
+  let sourcePool;
+  if(stage===2&&Array.isArray(round.snapshot?.finalists)) sourcePool=(Array.isArray(round.snapshot?.pool)?round.snapshot.pool:[]).filter(item=>round.snapshot.finalists.map(String).includes(String(item.id)));
+  else if(stage===3&&Array.isArray(round.snapshot?.tiebreakItems)) sourcePool=(Array.isArray(round.snapshot?.pool)?round.snapshot.pool:[]).filter(item=>round.snapshot.tiebreakItems.map(String).includes(String(item.id)));
+  else sourcePool=(Array.isArray(round.snapshot?.pool)?round.snapshot.pool:[]).filter(item=>item&&item.id&&!excluded.has(String(item.id)));
+  const total=sourcePool.length;
+  const voteStage=stage===1?'initial':stage===2?'finalist':'tiebreak';
+  const voted=(data.myVotes||[]).filter(v=>v.stage===voteStage).length;
+  $('familySwipeProgress').textContent=Math.min(voted,total)+' / '+total;
+  if(!items.length){
+    familySwipeCurrent=null; familyDeadlineStart({stageDeadlineAt:null});
+    $('familySwipeCard')?.classList.add('hidden');$('familySwipeWaiting')?.classList.remove('hidden');
+    $('familySwipeCut')?.setAttribute('disabled','disabled');$('familySwipeMaybe')?.setAttribute('disabled','disabled');$('familySwipeChoose')?.setAttribute('disabled','disabled');
+    $('familySwipeStageKicker').textContent=stage===1?'FIRST PICKS':stage===2?'FAMILY FINALISTS':'ONE LAST DECISION';
+    $('familySwipeTitle').textContent=stage===1?'Your picks are in.':stage===2?'Final picks are in.':'One last pick.';
+    $('familyWaitingText').textContent=stage===1?'Your choices are saved. We’ll move everyone forward together.':stage===2?'Your finalist choices are saved. We’ll make the final decision together.':'Your last choice is saved. We’ll settle the tie.';
+    const submissionKey=round.id+':'+voteStage;
+    if(familySwipeSubmittedRoundId!==submissionKey){
+      familySwipeSubmittedRoundId=submissionKey;
+      familyApi('submit-stage',{token:familySessionRead()?.token,roundId:round.id,stage:voteStage}).catch(err=>{familySetStatus('familyLobbyStatus',err.message||'Could not submit your picks.','error');});
+    }
+    return;
+  }
+  $('familySwipeWaiting')?.classList.add('hidden');$('familySwipeCard')?.classList.remove('hidden');
+  $('familySwipeCut')?.removeAttribute('disabled');$('familySwipeMaybe')?.removeAttribute('disabled');$('familySwipeChoose')?.removeAttribute('disabled');
+  const item=items[0]; familySwipeCurrent=String(item.id);
+  $('familySwipeImg').src=item.image?imageProxyUrl(item.image):foodPhotoFallback(item);
+  $('familySwipeName').textContent=String(item.name||'Choice');
+  $('familySwipeCat').textContent=String(item.category||item.cuisine||'');
+  $('familySwipeMeta').textContent=round.decisionType==='restaurant'&&item.distance!=null?Number(item.distance).toFixed(1)+' mi away':'';
+  $('familySwipeTitle').textContent=stage===1?'Make your picks.':stage===2?'Choose the finalists.':'One last pick.';
+  $('familySwipeStageKicker').textContent=stage===1?'FIRST PICKS':stage===2?'FAMILY FINALISTS':'ONE LAST DECISION';
+}
+async function familySwipeChoose(choiceValue){
+  if(familySwipeBusy||!familySwipeCurrent||!familySwipeData?.activeRound)return;
+  familySwipeBusy=true;
+  const round=familySwipeData.activeRound,roundId=round.id,itemId=familySwipeCurrent,token=familySessionRead()?.token;
+  const stage=Number(round.currentStage)||1;
+  const voteStage=stage===1?'initial':stage===2?'finalist':'tiebreak';
+  if(!token){familySwipeBusy=false;return;}
+  try{
+    await familyApi('vote',{token,roundId,stage:voteStage,itemId,choice:choiceValue});
+    const currentVotes=Array.isArray(familySwipeData.myVotes)?familySwipeData.myVotes.slice():[];
+    currentVotes.push({stage:voteStage,itemId,choice:choiceValue});
+    familySwipeData={...familySwipeData,myVotes:currentVotes};
+    familySwipeCurrent=null; familySwipeRender();
+  }catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not save that choice.','error');}
+  finally{familySwipeBusy=false;}
+}
+$('familyStartDecision')?.addEventListener('click',async()=>{
+  const session=familySessionRead();if(!session?.token)return;
+  const button=$('familyStartDecision');if(button){button.disabled=true;button.textContent='Starting…';}
+  try{await familyApi('start-round',{token:session.token});await familyRefreshState();}
+  catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not start the dinner decision.','error');}
+  finally{if(button){button.disabled=false;button.textContent='Start deciding';}}
+});
+const FAMILY_SAVED_ROUNDS_KEY='dinliminate.family.savedRounds.v1';
+function familySavedRoundsRead(){
+  try{const raw=JSON.parse(localStorage.getItem(FAMILY_SAVED_ROUNDS_KEY)||'[]');return Array.isArray(raw)?raw.map(String):[];}catch{return[];}
+}
+function familySavedRound(roundId){return familySavedRoundsRead().includes(String(roundId));}
+function familyMarkRoundSaved(roundId){
+  const id=String(roundId||'').trim();if(!id)return;
+  const rows=familySavedRoundsRead();if(rows.includes(id))return;
+  rows.unshift(id);try{localStorage.setItem(FAMILY_SAVED_ROUNDS_KEY,JSON.stringify(rows.slice(0,120)));}catch{}
+}
+function recordFamilyWinner(round){
+  const item=round?.winnerItem,id=String(round?.id||'');
+  if(!item||!id||familySavedRound(id))return false;
+  const type=round.decisionType==='restaurant'?'restaurant':'food';
+  const didRecord=recordHistory(item,type,{familyRoundId:id,familyMode:true});
+  if(didRecord!==false) familyMarkRoundSaved(id);
+  return didRecord!==false;
+}
+function familyRenderWinner(round){
+  const item=round?.winnerItem;if(!item)return;
+  const nextId=String(round.id||''),changed=familyWinnerRoundId!==nextId;
+  familyWinnerRoundId=nextId;
+  const savedNow=recordFamilyWinner(round);
+  $('familyWinnerName').textContent=String(item.name||'Dinner is decided');
+  $('familyWinnerImg').src=item.image?imageProxyUrl(item.image):HUNGRY_IMAGE;
+  $('familyWinnerImg').alt=String(item.name||'Dinner winner');
+  const savedEl=$('familyWinnerSaved');
+  if(savedEl){
+    clearTimeout(savedEl.__hideTimer);
+    const showSaved=changed&&savedNow;
+    savedEl.classList.toggle('hidden',!showSaved);
+    if(showSaved){
+      savedEl.classList.remove('is-visible');
+      void savedEl.offsetWidth;
+      savedEl.classList.add('is-visible');
+      savedEl.__hideTimer=window.setTimeout(()=>{
+        savedEl.classList.remove('is-visible');
+        window.setTimeout(()=>savedEl.classList.add('hidden'),180);
+      },2200);
+    }
+  }
+  if(changed)familyWinnerCelebrate();
+}
+async function familyShareWinner(){
+  const name=$('familyWinnerName')?.textContent?.trim()||'Tonight’s dinner';
+  const text='Tonight’s dinner: '+name+'. Decided together with Dinliminate Family Mode.';
+  try{
+    if(navigator.share){await navigator.share({title:'Tonight’s Dinner',text});return;}
+    await navigator.clipboard.writeText(text);
+    familySetStatus('familyLobbyStatus','Winner text copied.');
+  }catch{}
+}
+function familyWinnerDetails(){
+  const name=$('familyWinnerName')?.textContent?.trim();
+  const session=familySessionRead();
+  const item=session?.lastWinnerItem;
+  if(item&&name){detailsSheet(item,session.family?.lastDecisionType||'food');}
+}
+async function familyDecideAgain(){
+  const session=familySessionRead();
+  if(session){familySessionWrite({...session,dismissedWinnerRoundId:familyWinnerRoundId,lastWinnerItem:null});}
+  $('familyWinner')?.classList.add('hidden');
+  $('familyLobby')?.classList.remove('hidden');
+  await familyRefreshState();
+  const refreshed=familySessionRead();
+  if(refreshed?.member?.role==='host' && !refreshed?.family?.activeRoundId) familySetupOpen();
+}
+$('familyWinnerShare')?.addEventListener('click',familyShareWinner);
+$('familyWinnerAgain')?.addEventListener('click',familyDecideAgain);
+$('familyWinnerDetails')?.addEventListener('click',familyWinnerDetails);
+})();

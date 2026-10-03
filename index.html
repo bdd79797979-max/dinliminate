@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090909">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dinliminate">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg?v=806" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=806">
+
+<title>Dinliminate — Meal Decisions Simplified</title>
+
+<link rel="preload" as="image" fetchpriority="high" href="./home-background.jpg?v=840">
+<link rel="stylesheet" href="./styles.css?v=841">
+</head>
+<body>
+<main class="app">
+<div class="home-background-layer" id="homeBackgroundLayer" aria-hidden="true"><img id="homeBackgroundImage" alt="" fetchpriority="high" loading="eager" decoding="async" referrerpolicy="no-referrer"></div>
+<div class="offline-indicator hidden" id="offlineIndicator" role="status" aria-live="polite">Offline · saved meal choices still work</div>
+<div class="storage-indicator hidden" id="storageIndicator" role="status" aria-live="polite">Could not save some changes on this device.</div>
+
+<header class="top app-topbar" id="appTopbar"><div class="brand-mark"><div class="brand">Dinliminate</div></div><button id="menu" class="menu" aria-label="Menu"><span></span><span></span><span></span></button></header>
+
+<section class="screen home luxury-home" id="home">
+<div class="luxury-orb orb-one"></div><div class="luxury-orb orb-two"></div>
+<div class="home-intro"><p class="eyebrow">HUNGRY?</p><h1>Meal Decisions Simplified</h1><p class="sub">Swipe. Refine. Enjoy.</p></div>
+<div class="home-actions">
+<button class="home-card home-card-photo food-choice" id="foodStart" style="--home-photo:url('/api/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1564406455859-a7e229c9cc10%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1800%26q%3D88')">
+  <span class="home-card-overlay"></span><span class="home-card-copy"><strong>AT HOME</strong><span>Enter, your meal awaits.</span></span><span class="arrow">›</span>
+</button>
+<button class="home-card home-card-photo restaurant-choice" id="restStart" style="--home-photo:url('/api/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1781184307914-00ea8c9b3f6f%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1800%26q%3D88')">
+  <span class="home-card-overlay"></span><span class="home-card-copy"><strong>RESTAURANT</strong><span>Enter, your table awaits.</span></span><span class="arrow">›</span>
+</button>
+</div>
+<div class="home-foot" aria-label="App tools">
+  <div class="home-foot-actions">
+    <button class="home-foot-action home-icon-action" id="addToPhone" data-home-action="add" type="button" aria-label="How to add Dinliminate to your phone" title="How to add to your phone">
+      <svg class="home-foot-icon phone-plus-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="7.1" y="2.9" width="9.8" height="18.2" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.45"/>
+        <path d="M10 5.5h4" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+        <path d="M12 17.2v4.1M9.95 19.25h4.1" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+      </svg>
+      <span class="home-icon-label">Add to phone</span><span class="sr-only">How to add to your phone</span>
+    </button>
+    <button class="home-foot-action home-icon-action" id="shareApp" data-home-action="share" type="button" aria-label="Share Dinliminate" title="Share app">
+      <svg class="home-foot-icon share-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="6.1" cy="12.2" r="2.1" fill="none" stroke="currentColor" stroke-width="1.45"/>
+        <circle cx="17.9" cy="6.2" r="2.1" fill="none" stroke="currentColor" stroke-width="1.45"/>
+        <circle cx="17.9" cy="18.1" r="2.1" fill="none" stroke="currentColor" stroke-width="1.45"/>
+        <path d="M8 11.2 16 7.1M8 13.2l8 4.1" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+      </svg>
+      <span class="home-icon-label">Share app</span><span class="sr-only">Share app</span>
+    </button>
+  </div>
+</div>
+</section>
+
+
+<section class="screen hidden family-screen" id="family">
+  <div class="decision-bar family-bar">
+    <button id="familyBackTop" class="decision-back" type="button" aria-label="Back to home">‹</button>
+    <div class="decision-brand">Dinliminate</div>
+    <button id="familyMenu" class="menu decision-menu" type="button" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+
+  <div class="family-page" id="familyPage">
+    <div class="family-hero">
+      <span class="family-kicker">FAMILY MODE</span>
+      <h1>Dinner together.<br>Decided together.</h1>
+      <p>No accounts. No passwords. Just create or join and start deciding.</p>
+    </div>
+
+    <div class="family-entry" id="familyEntry">
+      <button class="family-entry-card" id="familyCreateChoice" type="button">
+        <span class="family-entry-icon" aria-hidden="true">＋</span>
+        <span><b>Create</b><small>Start a Family dinner decision</small></span>
+        <span class="family-entry-chevron" aria-hidden="true">›</span>
+      </button>
+      <button class="family-entry-card" id="familyJoinChoice" type="button">
+        <span class="family-entry-icon family-code-icon" aria-hidden="true">⌁</span>
+        <span><b>Join</b><small>Use a Family code from the host</small></span>
+        <span class="family-entry-chevron" aria-hidden="true">›</span>
+      </button>
+    </div>
+
+    <div class="family-form hidden" id="familyCreateForm">
+      <div class="family-form-head"><button class="family-form-back" id="familyCreateBack" type="button">‹</button><div><span>CREATE</span><b>Who’s deciding?</b></div></div>
+      <label for="familyCreateName">Your name</label>
+      <input id="familyCreateName" autocomplete="name" maxlength="40" placeholder="Enter your name">
+      <button class="family-primary" id="familyCreateSubmit" type="button">Create</button>
+      <p class="family-form-status" id="familyCreateStatus" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="family-form hidden" id="familyJoinForm">
+      <div class="family-form-head"><button class="family-form-back" id="familyJoinBack" type="button">‹</button><div><span>JOIN</span><b>Enter the Family code.</b></div></div>
+      <label for="familyJoinCode">Family code</label>
+      <input id="familyJoinCode" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" maxlength="11" placeholder="K7P · 4Q2">
+      <label for="familyJoinName">Your name</label>
+      <input id="familyJoinName" autocomplete="name" maxlength="40" placeholder="Enter your name">
+      <button class="family-primary" id="familyJoinSubmit" type="button">Join</button>
+      <p class="family-form-status" id="familyJoinStatus" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="family-lobby hidden" id="familyLobby">
+      <div class="family-lobby-head">
+        <div><span class="family-kicker">FAMILY</span><h2 id="familyLobbyTitle">Ready when everyone’s here.</h2></div>
+        <button class="family-link-button" id="familyLeave" type="button">Leave</button>
+      </div>
+      <div class="family-code-panel">
+        <span>JOIN CODE</span>
+        <strong id="familyJoinCodeDisplay">—</strong>
+        <small>Share this code with your family.</small>
+      </div>
+      <div class="family-members-panel">
+        <div class="family-panel-title"><b>Family</b><span id="familyMemberCount">0 here</span></div>
+        <div id="familyMemberList" class="family-member-list"></div>
+      </div>
+      <p class="family-lobby-status" id="familyLobbyStatus" role="status" aria-live="polite"></p><div class="family-lobby-pulse" id="familyLobbyPulse"><span></span><b>Live family lobby</b></div><button id="familySetupOpen" class="family-primary family-host-only hidden" type="button">Set up dinner</button><button id="familyStartDecision" class="family-primary family-host-only hidden" type="button">Start deciding</button>
+    </div>
+  
+<div class="family-setup hidden" id="familySetup">
+  <div class="family-setup-head"><button class="family-form-back" id="familySetupBack" type="button">‹</button><div><span>SET UP DINNER</span><b>Make the first cut.</b></div></div>
+  <div class="family-setup-intro">Only the host sees this setup. Everyone else joins after the choices are locked.</div>
+
+  <div class="family-type-toggle" role="group" aria-label="Decision type">
+    <button type="button" class="family-type-option is-active" id="familyTypeMeal" data-family-type="meal"><b>Meals</b><small>Choose from your meal ideas</small></button>
+    <button type="button" class="family-type-option" id="familyTypeRestaurant" data-family-type="restaurant"><b>Restaurants</b><small>Use the exact loaded restaurant results</small></button>
+  </div>
+
+  <div class="family-meal-time-controls" id="familyMealTimeControls" aria-label="Meal Time for Family Mode">
+    <div class="family-meal-time-head"><span>MEAL TIME</span><small>Choose which meal times the family will decide between.</small></div>
+    <div class="family-meal-time-options" role="group" aria-label="Meal time choices">
+      <button type="button" class="family-meal-time-option" data-family-meal-time="Breakfast">Breakfast</button>
+      <button type="button" class="family-meal-time-option" data-family-meal-time="Lunch / Dinner">Lunch / Dinner</button>
+      <button type="button" class="family-meal-time-option" data-family-meal-time="Snacks / Desserts">Snacks / Desserts</button>
+    </div>
+  </div>
+
+  <div class="family-time-card">
+    <div><span>DINNER BY</span><b>Keep us on time.</b><small>Dinliminate divides the decision time automatically.</small></div>
+    <input id="familyDinnerTime" type="time" aria-label="Dinner by time">
+  </div>
+
+  <div class="family-choice-header"><div><span>CHOICES</span><b id="familySetupCount">0 choices</b></div><button id="familySetupAll" class="family-link-button" type="button">Keep all</button></div>
+  <div class="family-choice-note" id="familySetupNote">Tap a choice to cut it before the Family starts.</div>
+  <div class="family-setup-list" id="familySetupList"></div>
+
+  <button id="familyLockSetup" class="family-primary" type="button">Lock choices</button>
+  <p id="familySetupStatus" class="family-form-status" role="status" aria-live="polite"></p>
+</div>
+
+<div class="family-swipe hidden" id="familySwipe">
+  <div class="family-swipe-head"><div><span id="familySwipeStageKicker">FIRST PICKS</span><h2 id="familySwipeTitle">Make your picks.</h2></div><div class="family-swipe-head-meta"><span id="familySwipeProgress">0 / 0</span><small id="familySwipeDeadline"></small></div></div>
+  <p class="family-swipe-note" id="familySwipeNote">Cut what you don’t want. Maybe means you’d be happy with it. Choose means you really want it.</p>
+  <div class="family-swipe-stage">
+    <div class="family-swipe-card" id="familySwipeCard">
+      <img id="familySwipeImg" alt="">
+      <div class="family-swipe-shade"></div>
+      <div class="family-swipe-copy"><small id="familySwipeCat"></small><h3 id="familySwipeName"></h3><span id="familySwipeMeta"></span></div>
+    </div>
+  </div>
+  <div class="family-swipe-actions">
+    <button class="family-round-action family-round-cut" id="familySwipeCut" type="button" aria-label="Cut">✕<small>Cut</small></button>
+    <button class="family-round-action family-round-maybe" id="familySwipeMaybe" type="button" aria-label="Maybe">♥<small>Maybe</small></button>
+    <button class="family-round-action family-round-choose" id="familySwipeChoose" type="button" aria-label="Choose">✓<small>Choose</small></button>
+  </div>
+  <div class="family-waiting hidden" id="familySwipeWaiting">
+    <span>YOUR PICKS ARE IN</span><b>Waiting for the Family.</b><small id="familyWaitingText">Your choices are saved. We’ll move everyone forward together.</small>
+  </div>
+</div>
+<div class="family-winner hidden" id="familyWinner">
+  <div class="family-winner-celebration" id="familyWinnerCelebration" aria-hidden="true"></div>
+  <span class="family-winner-kicker">TONIGHT’S DINNER</span>
+  <h2 id="familyWinnerName"></h2>
+  <p>Decided together with Family Mode.</p>
+  <span class="family-winner-saved hidden" id="familyWinnerSaved" role="status" aria-live="polite">Saved to History</span>
+  <div class="family-winner-image-wrap"><img id="familyWinnerImg" alt=""></div>
+  <div class="family-winner-actions">
+    <button class="cut" id="familyWinnerDetails" type="button">Details</button>
+    <button class="secondary" id="familyWinnerShare" type="button">Share</button>
+    <button class="secondary" id="familyWinnerAgain" type="button">Decide Again</button>
+  </div>
+</div>
+</div>
+</section>
+
+<section class="screen hidden decision-screen" id="food">
+<div class="decision-bar"><button id="foodBackTop" class="decision-back" aria-label="Back to home">‹</button><div class="decision-brand">Dinliminate</div><button id="foodMenu" class="menu decision-menu" aria-label="Menu"><span></span><span></span><span></span></button></div>
+<div class="quick-section"><div class="label-row quick-label"><button class="meal-time-cuts-toggle food-quick-control" id="foodMealTimeToggle" type="button" aria-expanded="false" aria-pressed="false" aria-label="Show Meal Times" title="Show Meal Times">Meal Times</button><button class="quick-cuts-collapse-toggle food-quick-control" id="foodQuickToggle" type="button" aria-expanded="true" aria-label="Show Cuisine Cuts" title="Show Cuisine Cuts">Cuisine Cuts</button><button class="deck-filter-toggle quick-filter-toggle all-maybe-toggle" id="foodMaybeDeck" type="button" data-mode="all" aria-label="Show Maybe choices" title="Show Maybe choices" aria-pressed="false"><span class="deck-filter-label-all" aria-hidden="true">ALL</span><span class="deck-filter-divider" aria-hidden="true">·</span><span class="deck-filter-label-maybe" aria-hidden="true">MAYBES</span></button><span id="foodCount" class="count-inline"></span></div><div class="quick food-quick-rail is-rail-collapsed" id="foodQuick" aria-hidden="true"></div><div class="quick meal-time-quick food-quick-rail is-rail-collapsed" id="mealTimeQuick" aria-hidden="true"></div></div>
+<div class="stage"><div class="swipe-card-stack" id="foodStack"><article class="card next-card hidden" id="foodNextCard" aria-hidden="true"><img id="foodNextImg" alt=""><div class="shade"></div></article><article class="card" id="foodCard"><img id="foodImg" alt=""><div class="shade"></div><div class="card-copy"><div class="card-cuisine-row food-cuisine-row"><small id="foodCat"></small><div class="card-header-actions"><button class="card-details card-card-action card-details-action icon-action" id="foodDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div><h3 id="foodName"></h3></div></article></div></div>
+<div class="swipe-actions unified-swipe-actions" aria-label="Meal decision controls">
+  <button class="round-action round-back secondary" id="foodBack" aria-label="Back"><span>↶</span></button>
+  <button class="round-action round-cut cut" id="foodCut" aria-label="Cut"><span>✕</span></button>
+  <button class="round-action round-maybe maybe" id="foodMaybe" aria-label="Maybe"><span>♥</span></button>
+  <button class="round-action round-choose choose" id="foodChoose" aria-label="Choose this meal"><span>✓</span></button>
+</div>
+</section>
+
+<section class="screen hidden decision-screen restaurant" id="restaurant">
+<div class="decision-bar"><button id="restaurantBackTop" class="decision-back" aria-label="Back to home">‹</button><div class="decision-brand">Dinliminate</div><button id="restaurantMenu" class="menu decision-menu" aria-label="Menu"><span></span><span></span><span></span></button></div>
+<div class="location-strip" aria-label="Restaurant location controls">
+  <div class="location-main">
+    <button class="location-btn" id="locate" type="button" aria-label="Use My Location" title="Use your current location for nearby restaurants">
+      <svg class="location-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="5.1" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><path d="M12 2.7v2.4M12 18.9v2.4M2.7 12h2.4M18.9 12h2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="address-wrap"><input id="address" autocomplete="street-address" placeholder="Enter an address" aria-label="Restaurant address" aria-autocomplete="list" enterkeyhint="search" spellcheck="false" aria-controls="suggestionsBox" aria-expanded="false"><div id="suggestionsBox" role="listbox" aria-label="Address suggestions" hidden></div></div>
+    <button class="find" id="find" type="button" aria-label="Find restaurants" title="Find restaurants near the selected location"><svg class="find-icon find-locator-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.1" fill="currentColor"/><path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sr-only">Find</span></button>
+    <div class="radius-control" aria-label="Restaurant search radius"><select id="radius" class="radius-select" aria-label="Restaurant search radius"><option value="1">1 mi</option><option value="3">3 mi</option><option value="5">5 mi</option><option value="10" selected>10 mi</option><option value="25">25 mi</option><option value="50">50 mi</option><option value="100">100 mi</option></select><span class="radius-chevron" aria-hidden="true">⌄</span></div>
+  </div>
+  <div class="location-status-row">
+    <span id="locationSourceLabel" class="location-source-label">No location selected</span>
+    <p class="status" id="status" role="status" aria-live="polite">Enter an address or use your location.</p>
+  </div>
+</div><div class="quick-section restaurant-quick-section"><div class="label-row quick-label restaurant-choice-management"><div class="restaurant-refine-tabs" role="group" aria-label="Restaurant discovery tools"><button class="quick-cuts-collapse-toggle quick-cuts-collapse-toggle-restaurant restaurant-refine-tab" id="restaurantQuickToggle" type="button" aria-expanded="false" aria-label="Open Cuisine Cuts" title="Open Cuisine Cuts">Cuisine Cuts</button><span class="restaurant-refine-divider" aria-hidden="true">—</span><button class="restaurant-refine-tab" id="restaurantSearchToggle" type="button" aria-expanded="false" aria-label="Open Search" title="Open Search">Search</button></div><button class="deck-filter-toggle quick-filter-toggle all-maybe-toggle" id="restaurantMaybeDeck" type="button" data-mode="all" aria-label="Show Maybe choices" title="Show Maybe choices" aria-pressed="false"><span class="deck-filter-label-all" aria-hidden="true">ALL</span><span class="deck-filter-divider" aria-hidden="true">·</span><span class="deck-filter-label-maybe" aria-hidden="true">MAYBES</span></button><span id="restaurantCount" class="count-inline"></span></div><div class="restaurant-search-box hidden" id="restaurantSearchBox"><input id="restaurantQuery" type="search" autocomplete="off" enterkeyhint="search" spellcheck="false" placeholder="Search restaurants or cuisine" aria-label="Search restaurants or cuisine"></div><div class="quick" id="restQuick"></div></div>
+<div class="rest-stage" id="restStage"><div class="empty"><b>Ready when you are.</b><span>Set a location, then find restaurants.</span></div></div>
+</section>
+
+<section class="screen winner hidden" id="winner"><div class="winner-nav"><button id="winnerBackTop" class="decision-back winner-back" aria-label="Back to home">‹</button><div class="decision-brand winner-brand" style="font-size:20px !important;line-height:1 !important;font-weight:850 !important;letter-spacing:-1px !important;background:linear-gradient(115deg,#fff8e8 8%,#e7c98f 42%,#e28a4f 70%,#fff2d5 96%) !important;-webkit-background-clip:text !important;background-clip:text !important;color:transparent !important;text-shadow:0 0 22px #d5a25b18 !important;">Dinliminate</div><button id="winnerMenu" class="menu winner-menu" aria-label="Menu"><span></span><span></span><span></span></button></div><div id="celebration" class="celebration hidden" aria-hidden="true"></div><p class="eyebrow" id="winnerEyebrow">WINNER</p><h2 id="winName"></h2><p id="hungryNote" class="hungry-note hidden">You eliminated everything. It’s either this or Fish Sticks.</p><div id="hungryWheelPanel" class="hungry-wheel-panel hidden" aria-hidden="true">
+  <div class="hungry-wheel-copy"><span>SECOND CHANCE</span><b>Tap to spin. Tap again to slow.</b><small id="hungryWheelCount">116 meals on the wheel</small></div>
+  <div class="hungry-wheel-stage">
+    <div class="hungry-wheel-pointer" aria-hidden="true"></div>
+    <div class="hungry-wheel-ring"><svg id="hungryWheel" viewBox="0 0 360 360" role="img" aria-label="Dinner wheel"></svg></div>
+  </div>
+  <div id="hungryWheelResult" class="hungry-wheel-result hidden">
+    <div class="hungry-wheel-result-image-wrap"><img id="hungryWheelResultImg" alt=""></div>
+    <div class="hungry-wheel-result-copy"><span>THE WHEEL CHOSE</span><b id="hungryWheelResultName"></b></div>
+  </div>
+  <div class="hungry-wheel-actions"><button class="cut" id="hungryWheelSpin" type="button">Spin the Wheel</button><button class="secondary hidden" id="hungryWheelChoose" type="button">Choose This</button></div>
+</div>
+<div id="hungryRestaurantPanel" class="hungry-restaurant-panel hidden" aria-hidden="true">
+  <div class="hungry-mystery-copy">
+    <span>MYSTERY PICK</span>
+    <b>Let fate choose tonight.</b>
+    <small id="hungryRestaurantCount"></small>
+  </div>
+  <div class="hungry-mystery-stage">
+    <div class="hungry-mystery-card" id="hungryMysteryCard">
+      <div class="hungry-mystery-blur"></div>
+      <img id="hungryMysteryImg" alt="" aria-hidden="true">
+      <div class="hungry-mystery-cover">
+        <span class="hungry-mystery-seal" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M24 9v6M24 33v6M9 24h6M33 24h6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="m24 16 2.4 5.1L32 24l-5.6 2.9L24 32l-2.4-5.1L16 24l5.6-2.9L24 16Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        </span>
+        <b>MYSTERY</b><small>Tap to reveal</small>
+      </div>
+    </div>
+  </div>
+  <div id="hungryMysteryResult" class="hungry-mystery-result hidden">
+    <div class="hungry-mystery-result-image-wrap"><img id="hungryMysteryResultImg" alt=""></div>
+    <div class="hungry-mystery-result-copy"><span>YOUR MYSTERY RESTAURANT</span><b id="hungryMysteryResultName"></b><small id="hungryMysteryResultMeta"></small></div>
+  </div>
+  <div class="hungry-mystery-actions"><button class="cut" id="hungryMysteryReveal" type="button">Reveal Restaurant</button><button class="secondary hidden" id="hungryMysteryChoose" type="button">Choose This</button><button class="secondary hidden" id="hungryMysteryAgain" type="button">Try Another</button></div>
+</div></div><img id="winImg" alt=""><div class="winner-actions"><button class="cut" id="details">Details</button><button class="secondary" id="share">Share</button><button class="secondary" id="restart">Start over</button></div></section>
+
+<div class="location-permission-bg hidden" id="locationPermissionBg" aria-hidden="true"></div>
+<div class="location-permission-modal hidden" id="locationPermissionModal" role="dialog" aria-modal="true" aria-labelledby="locationPermissionTitle" aria-describedby="locationPermissionText">
+  <div class="location-permission-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="24" cy="24" r="3.2" fill="currentColor"/><path d="M24 5.5v6M24 36.5v6M5.5 24h6M36.5 24h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </div>
+  <div class="location-permission-kicker">NEARBY RESTAURANTS</div>
+  <h3 id="locationPermissionTitle">Know your location</h3>
+  <p id="locationPermissionText">Use your location to find restaurants around you. Dinliminate uses it only to set your search area.</p>
+  <div class="location-permission-actions">
+    <button class="location-permission-secondary" id="locationPermissionCancel" type="button">Not now</button>
+    <button class="location-permission-primary" id="locationPermissionAllow" type="button">Allow Location</button>
+  </div>
+</div>
+
+<div class="drawer-bg hidden" id="drawerBg"></div><aside class="drawer hidden" id="drawer" aria-label="Main menu">
+  <div class="drawer-head">
+    <div class="drawer-brand">
+      <span class="drawer-kicker">DINLIMINATE</span>
+      <strong>Meal Decisions Simplified</strong>
+      <span>Your dinner, beautifully decided.</span>
+    </div>
+    <button class="drawer-close" id="drawerClose" type="button" aria-label="Close menu">×</button>
+  </div>
+  <div class="drawer-section-label">NAVIGATION</div>
+  <nav class="drawer-nav" aria-label="App navigation">
+    <button class="drawer-row" id="manage" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 5.5h12M6 9.5h8M6 14.5h12M6 18.5h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span><b>Manage Meals</b><small>Add, edit, hide, delete, or restore</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+    <button class="drawer-row" id="history" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4l2.8 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span><b>History</b><small>See your previous decisions</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+    <button class="drawer-row" id="settings" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 7h12M6 12h12M6 17h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="7" r="1.9" fill="#171716" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="12" r="1.9" fill="#171716" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="17" r="1.9" fill="#171716" stroke="currentColor" stroke-width="1.5"/></svg></span><span><b>Settings</b><small>Tools, data, privacy, and app details</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+    <button class="drawer-row" id="familyMode" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8.2" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15.8" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.8 18c.4-3 2-4.5 4.4-4.5s4 1.5 4.4 4.5M11.4 18c.4-2.2 1.8-3.4 4.2-3.4 2.2 0 3.7 1.2 4.1 3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><span><b>Family Mode</b><small>Decide dinner together</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+  </nav>
+  <div class="drawer-footer">
+    <div class="drawer-footer-rule"><span>DINLIMINATE</span><span>BUILD</span></div>
+    <button class="drawer-start" id="backToStart" type="button"><span class="drawer-start-icon" aria-hidden="true">←</span><span><b>Back to Start</b><small>Return to the home screen</small></span></button>
+  </div>
+</aside>
+
+
+
+<script src="./data/foods.js"></script>
+<script src="./data/restaurant-taxonomy.js"></script>
+<script src="./app.js?v=841"></script>
+</main>
+</body>
+</html>

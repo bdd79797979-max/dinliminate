@@ -1,0 +1,18 @@
+const assert=require('assert/strict');
+const rail=C.slice(C.lastIndexOf('/* CP684 — fix Restaurant swipe-rail specificity conflict.'));
+new Function(A);
+assert.match(A,/id="restaurantMaybeDeck"/,'Restaurant A/heart toggle must exist in rendered rail');
+assert.match(A,/bindCardButton\('restBack', restaurantBack\)/,'Restaurant Back must be wired');
+assert.match(A,/bindCardButton\('restCut', \(\) => restaurantCut\(current\)\)/,'Restaurant Cut must be wired');
+assert.match(A,/bindCardButton\('restMaybe', \(\) => restaurantMaybe\(current\)\)/,'Restaurant Maybe must be wired');
+assert.match(A,/bindMaybeDeckToggle\('restaurant'\)/,'Restaurant A/heart toggle must be wired');
+assert.match(rail,/#restaurant \.unified-swipe-actions\{[\s\S]*?width:100%!important[\s\S]*?max-width:100%!important/,'Restaurant rail must use full available width');
+assert.match(rail,/#restaurant \.unified-swipe-actions\{[\s\S]*?justify-content:center!important[\s\S]*?gap:10px!important/,'Restaurant rail must be centered with spacing');
+assert.match(rail,/#restaurant \.unified-swipe-actions \.round-back\{[\s\S]*?width:44px!important[\s\S]*?height:44px!important/,'Restaurant Back must be 44px');
+assert.match(rail,/#restaurant \.unified-swipe-actions \.round-cut,[\s\S]*?\.round-maybe\{[\s\S]*?width:60px!important[\s\S]*?height:60px!important/,'Restaurant Cut/Maybe must be 60px');
+assert.match(rail,/#restaurant \.unified-swipe-actions \.round-show-maybe\{[\s\S]*?width:44px!important[\s\S]*?height:44px!important/,'Restaurant A/heart must be 44px');
+assert.match(rail,/#restaurant \.unified-swipe-actions \.round-show-maybe\{[\s\S]*?position:static!important/,'Restaurant A/heart must not be absolutely positioned');
+assert.match(rail,/\.round-show-maybe\{[\s\S]*?border-radius:50%!important/,'A/heart control must remain circular');
+assert.match(C,/\.unified-swipe-actions \.round-show-maybe\{[\s\S]*?background:linear-gradient\(180deg,#71aecb,#4e839f\)!important/,'A/heart control must remain blue');
+assert.match(C,/\.unified-swipe-actions \.round-show-maybe span\{[\s\S]*?color:#050607!important/,'A/heart glyph must remain black');
+console.log('CP684 restaurant swipe rail QA: PASS');

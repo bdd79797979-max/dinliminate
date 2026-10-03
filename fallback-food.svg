@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1611"/><stop offset="1" stop-color="#0d0c0b"/></linearGradient>
+ <radialGradient id="plate"><stop offset="0" stop-color="#f4ead8"/><stop offset=".78" stop-color="#d7c7ae"/><stop offset="1" stop-color="#b9a487"/></radialGradient>
+ <linearGradient id="food" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a76532"/><stop offset="1" stop-color="#63331f"/></linearGradient>
+</defs>
+<rect width="1200" height="900" fill="url(#bg)"/>
+<ellipse cx="600" cy="505" rx="360" ry="245" fill="#0a0908" opacity=".7"/>
+<ellipse cx="600" cy="470" rx="350" ry="225" fill="url(#plate)" stroke="#bfa16b" stroke-width="10"/>
+<ellipse cx="600" cy="470" rx="265" ry="160" fill="#17120f" stroke="#8e7650" stroke-width="6"/>
+<path d="M420 470c40-110 125-133 168-36 31-108 115-100 158-18 48-95 107-57 123 27 17 87-39 134-113 128-63-5-84-58-129-49-60 13-77 53-147 30-58-19-83-44-60-82z" fill="url(#food)"/>
+<path d="M455 430c62 11 105 9 156-15M530 530c66 20 112 15 173-13M710 418c22 21 38 42 47 66" fill="none" stroke="#c88b55" stroke-width="12" stroke-linecap="round" opacity=".8"/>
+<path d="M340 400c-44-70-53-144-33-210M827 607c45 67 57 138 39 212" fill="none" stroke="#bfa16b" stroke-width="18" stroke-linecap="round"/>
+<path d="M302 188h58M288 214h72M294 240h64" stroke="#ead9b8" stroke-width="11" stroke-linecap="round"/>
+<path d="M861 806h58M846 780h72M853 754h63" stroke="#ead9b8" stroke-width="11" stroke-linecap="round"/>
+<text x="600" y="118" text-anchor="middle" fill="#ead9b8" font-family="Arial,sans-serif" font-size="42" font-weight="700" letter-spacing="8">DINLIMINATE</text>
+<text x="600" y="790" text-anchor="middle" fill="#bfa16b" font-family="Arial,sans-serif" font-size="30" font-weight="700" letter-spacing="6">ADD YOUR MEAL</text>
+</svg>
