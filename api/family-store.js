@@ -8,6 +8,38 @@ const FAMILY_INACTIVITY_MS = 30 * 24 * 60 * 60 * 1000;
 const FAMILY_MEMBER_STALE_MS = 15 * 60 * 1000;
 const FAMILY_HOST_RECOVERY_MS = 15 * 60 * 1000;
 
+// CP847: One-time, non-destructive Family schema bootstrap for the database
+// actually used by this deployment. Every statement is CREATE IF NOT EXISTS.
+let familySchemaPromise = null;
+const FAMILY_SCHEMA_BOOTSTRAP = [
+  "create extension if not exists pgcrypto",
+  "create table if not exists family_rooms (\n  family_id uuid primary key default gen_random_uuid(),\n  join_code varchar(6) not null unique,\n  join_code_rotated_at timestamptz not null default now(),\n  member_count integer not null default 0 check (member_count between 0 and 8),\n  host_member_id uuid,\n  active_round_id uuid,\n  schema_version integer not null default 1,\n  created_at timestamptz not null default now(),\n  updated_at timestamptz not null default now(),\n  last_activity_at timestamptz not null default now()\n)",
+  "create table if not exists family_members (\n  member_id uuid primary key default gen_random_uuid(),\n  family_id uuid not null references family_rooms(family_id) on delete cascade,\n  display_name varchar(40) not null,\n  token_hash varchar(64) not null unique,\n  role varchar(10) not null check (role in ('host','member')),\n  active boolean not null default true,\n  joined_at timestamptz not null default now(),\n  last_seen_at timestamptz not null default now()\n)",
+  "create table if not exists family_rounds (\n  round_id uuid primary key default gen_random_uuid(),\n  family_id uuid not null references family_rooms(family_id) on delete cascade,\n  created_by_member_id uuid not null references family_members(member_id),\n  status varchar(20) not null check (status in ('setup','swiping','finalists','final_swiping','tiebreak','complete','ended')),\n  decision_type varchar(12) not null check (decision_type in ('meal','restaurant')),\n  snapshot jsonb not null default '{}'::jsonb,\n  dinner_target_at timestamptz,\n  stage_started_at timestamptz,\n  stage_deadline_at timestamptz,\n  current_stage smallint not null default 1 check (current_stage between 1 and 3),\n  winner_item jsonb,\n  winner_saved boolean not null default false,\n  expires_at timestamptz not null,\n  created_at timestamptz not null default now(),\n  updated_at timestamptz not null default now(),\n  completed_at timestamptz\n)",
+  "create table if not exists family_round_members (\n  round_id uuid not null references family_rounds(round_id) on delete cascade,\n  member_id uuid not null references family_members(member_id) on delete cascade,\n  included boolean not null default true,\n  joined_at timestamptz not null default now(),\n  submitted_stage1_at timestamptz,\n  submitted_stage2_at timestamptz,\n  submitted_tiebreak_at timestamptz,\n  last_seen_at timestamptz not null default now(),\n  primary key (round_id, member_id)\n)",
+  "create table if not exists family_votes (\n  round_id uuid not null references family_rounds(round_id) on delete cascade,\n  stage varchar(12) not null check (stage in ('initial','finalist','tiebreak')),\n  member_id uuid not null references family_members(member_id) on delete cascade,\n  item_id varchar(160) not null,\n  choice varchar(8) not null check (choice in ('cut','maybe','choose')),\n  created_at timestamptz not null default now(),\n  updated_at timestamptz not null default now(),\n  primary key (round_id, stage, member_id, item_id)\n)",
+  "create table if not exists family_events (\n  event_id uuid primary key default gen_random_uuid(),\n  family_id uuid not null references family_rooms(family_id) on delete cascade,\n  round_id uuid references family_rounds(round_id) on delete set null,\n  member_id uuid references family_members(member_id) on delete set null,\n  event_type varchar(40) not null,\n  payload jsonb not null default '{}'::jsonb,\n  created_at timestamptz not null default now()\n)",
+  "create index if not exists idx_family_members_family on family_members(family_id, active)",
+  "create index if not exists idx_family_rounds_family on family_rounds(family_id, created_at desc)",
+  "create index if not exists idx_family_round_members_round on family_round_members(round_id, member_id)",
+  "create index if not exists idx_family_votes_round_stage on family_votes(round_id, stage)",
+  "create index if not exists idx_family_events_family_time on family_events(family_id, created_at desc)"
+];
+
+async function readyDb() {
+  const sql = db();
+  if (!familySchemaPromise) {
+    familySchemaPromise = (async () => {
+      for (const statement of FAMILY_SCHEMA_BOOTSTRAP) await sql.query(statement);
+    })().catch(err => {
+      familySchemaPromise = null;
+      throw err;
+    });
+  }
+  await familySchemaPromise;
+  return sql;
+}
+
 function db() {
   if (!DATABASE_URL) {
     const e = new Error('Family Mode database is not configured.');
@@ -140,7 +172,7 @@ async function event(sql, familyId, roundId, memberId, eventType, payload) {
   );
 }
 async function createFamily(nameValue) {
-  const sql = db();
+  const sql = await readyDb();
   const name = cleanName(nameValue);
   const memberId = crypto.randomUUID();
   const sessionToken = token();
@@ -166,7 +198,7 @@ async function createFamily(nameValue) {
   fail('CODE_UNAVAILABLE', 'Could not create a Family Mode room. Please try again.', 503);
 }
 async function joinFamily(codeValue, nameValue) {
-  const sql = db();
+  const sql = await readyDb();
   const joinCode = normalizeCode(codeValue);
   if (!/^[A-Z0-9]{6}$/.test(joinCode)) fail('INVALID_CODE', 'Enter the 6-character Family code.');
   const name = cleanName(nameValue);
@@ -418,7 +450,7 @@ async function pruneStaleMembers(sql,family){
   return next;
 }
 async function getFamilyState(sessionToken) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   await sql.query('update family_members set last_seen_at=now() where member_id=$1', [me.member_id]);
   await sql.query('update family_rooms set last_activity_at=now() where family_id=$1', [me.family_id]);
@@ -482,7 +514,7 @@ async function getFamilyState(sessionToken) {
   };
 }
 async function createRound(sessionToken, payload) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   const family = (await sql.query('select * from family_rooms where family_id=$1', [me.family_id]))[0];
   if (!family || family.host_member_id !== me.member_id) fail('HOST_REQUIRED', 'Only the host can create the dinner decision.', 403);
@@ -502,7 +534,7 @@ async function createRound(sessionToken, payload) {
   return publicRound(round);
 }
 async function startRound(sessionToken) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   const family = (await sql.query('select * from family_rooms where family_id=$1', [me.family_id]))[0];
   if (!family || family.host_member_id !== me.member_id) fail('HOST_REQUIRED', 'Only the host can start the dinner decision.', 403);
@@ -526,7 +558,7 @@ async function startRound(sessionToken) {
   return publicRound(updated);
 }
 async function submitVote(sessionToken, payload) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   const roundId = itemId(payload && payload.roundId);
   const currentStage = stage(payload && payload.stage);
@@ -559,7 +591,7 @@ async function submitVote(sessionToken, payload) {
   return {ok:true,roundId,stage:currentStage,itemId:item,choice:currentChoice,round:publicRound(nextRound)};
 }
 async function markStageSubmitted(sessionToken, payload) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   const roundId = itemId(payload && payload.roundId);
   const currentStage = stage(payload && payload.stage);
@@ -643,7 +675,7 @@ async function leaveRound(sessionToken,payload={}) {
   return {ok:true,removed:true,family:publicFamily(nextFamily),round:publicRound(round)};
 }
 async function rotateCode(sessionToken) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   const family = (await sql.query('select * from family_rooms where family_id=$1', [me.family_id]))[0];
   if (!family || family.host_member_id !== me.member_id) fail('HOST_REQUIRED', 'Only the host can regenerate the Family code.', 403);
@@ -662,7 +694,7 @@ async function rotateCode(sessionToken) {
   fail('CODE_UNAVAILABLE','Could not regenerate the Family code.',503);
 }
 async function endRound(sessionToken) {
-  const sql = db();
+  const sql = await readyDb();
   const me = await auth(sql, sessionToken);
   const family = (await sql.query('select * from family_rooms where family_id=$1', [me.family_id]))[0];
   if (!family || family.host_member_id !== me.member_id) fail('HOST_REQUIRED', 'Only the host can end the dinner decision.', 403);

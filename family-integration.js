@@ -22,6 +22,7 @@ let lastStage = 0;
 let lastWinnerId = '';
 let pointerState = null;
 let pollTimer = 0;
+let refreshBusy = false;
 let observer = null;
 
 function sessionRecord() {
@@ -237,6 +238,7 @@ async function submitStageIfNeeded(round,info) {
     await familyApi('submit-stage',{roundId:round.id,stage:info.voteStage});
     await refresh();
   } catch (error) {
+    currentRoundId = '';
     toast(error.message || 'Could not finish your picks.');
   }
 }
@@ -599,17 +601,21 @@ function renderState(data) {
     showWinner(completed);
     return;
   }
-  currentItems=[];currentItem=null;currentType='';removeContext();cleanupNormalOverlay();showScreen('family');renderCoordinator(data);
+  currentItems=[];currentItem=null;currentType='';removeContext();cleanupNormalOverlay();renderCoordinator(data);
 }
 
 async function refresh() {
+  if (refreshBusy) return;
   const session=sessionRecord();
   if(!session?.value?.token)return;
+  refreshBusy=true;
   try {
     const data=await familyApi('state');
     renderState(data);
   } catch (error) {
     if(/session|active|unauthorized/i.test(String(error?.message||'')))toast(error.message||'Dinner Together session unavailable.');
+  } finally {
+    refreshBusy=false;
   }
 }
 
