@@ -51,3 +51,13 @@ Milestones:
 - Base recovery: cp703-dine-in-out-copy
 - Current release candidate stays off main until the exact release commit is fully verified.
 - Vercel is the official runtime for the release candidate; Netlify remains legacy/backup. Vercel deployment is currently blocked by the connected account build-rate limit.
+
+
+## CP844 Family Mode polish
+- Simplified Dinner Mode entry, lobby, setup, swipe, waiting, and winner language.
+- Reduced technical wording and made user-facing stage language more natural.
+- Added a two-choice minimum before a Family dinner can be locked.
+- Increased host recovery grace to 15 minutes to avoid unnecessary host changes when a phone backgrounds.
+- Added a persistent first-use swipe lesson that disappears after the first meaningful choice.
+- Clarified waiting progress so participants can see how many people have finished.
+- Bumped application/service-worker cache assets to CP844.
