@@ -4010,19 +4010,16 @@ async function familyLeaveDecision(roundId){
   }
 }
 async function familyBackFromMode(){
+  // Top-left Back is navigation only. It must not make the user leave an active
+  // Family dinner; explicit leaving remains on the Leave control.
   const session=familySessionRead();
-  const activeRoundId=session?.family?.activeRoundId;
-  if(activeRoundId){
-    if(!await appConfirm('Leave this dinner?', 'Your choices are saved, but you’ll miss this one. The Family will keep going.', 'Leave dinner'))return;
-    const left=await familyLeaveDecision(activeRoundId);
-    if(!left)return;
-  }else if(familyWinnerRoundId){
+  if(familyWinnerRoundId){
     familySessionWrite({...session,dismissedWinnerRoundId:familyWinnerRoundId,lastWinnerItem:null});
   }
   familySetupViewOpen=false;
   familyReturnToSetup=false;
   stopFamilyLobbyPolling();
-  show('home');
+  home();
 }
 
 $('familyMode')?.addEventListener('click',()=>{closeDrawer();window.setTimeout(familyOpen,190);});
