@@ -121,70 +121,7 @@
       <p class="family-lobby-status" id="familyLobbyStatus" role="status" aria-live="polite"></p><div class="family-lobby-pulse" id="familyLobbyPulse"><span></span><b>Live family lobby</b></div><button id="familySetupOpen" class="family-primary family-host-only hidden" type="button">Set up dinner</button><button id="familyStartDecision" class="family-primary family-host-only hidden" type="button">Start deciding</button>
     </div>
   
-<div class="family-setup hidden" id="familySetup">
-  <div class="family-setup-head"><button class="family-form-back" id="familySetupBack" type="button">‹</button><div><span>SET UP DINNER</span><b>Make the first cut.</b></div></div>
-  <div class="family-setup-intro">Only the host sees this setup. Everyone else joins after the choices are locked.</div>
 
-  <div class="family-type-toggle" role="group" aria-label="Decision type">
-    <button type="button" class="family-type-option is-active" id="familyTypeMeal" data-family-type="meal"><b>Meals</b><small>Choose from your meal ideas</small></button>
-    <button type="button" class="family-type-option" id="familyTypeRestaurant" data-family-type="restaurant"><b>Restaurants</b><small>Use the exact loaded restaurant results</small></button>
-  </div>
-
-  <div class="family-meal-time-controls" id="familyMealTimeControls" aria-label="Meal Time for Family Mode">
-    <div class="family-meal-time-head"><span>MEAL TIME</span><small>Choose which meal times the family will decide between.</small></div>
-    <div class="family-meal-time-options" role="group" aria-label="Meal time choices">
-      <button type="button" class="family-meal-time-option" data-family-meal-time="Breakfast">Breakfast</button>
-      <button type="button" class="family-meal-time-option" data-family-meal-time="Lunch / Dinner">Lunch / Dinner</button>
-      <button type="button" class="family-meal-time-option" data-family-meal-time="Snacks / Desserts">Snacks / Desserts</button>
-    </div>
-  </div>
-
-  <div class="family-time-card">
-    <div><span>DINNER BY</span><b>Keep us on time.</b><small>Dinliminate divides the decision time automatically.</small></div>
-    <input id="familyDinnerTime" type="time" aria-label="Dinner by time">
-  </div>
-
-  <div class="family-choice-header"><div><span>CHOICES</span><b id="familySetupCount">0 choices</b></div><button id="familySetupAll" class="family-link-button" type="button">Keep all</button></div>
-  <div class="family-choice-note" id="familySetupNote">Tap a choice to cut it before the Family starts.</div>
-  <div class="family-setup-list" id="familySetupList"></div>
-
-  <button id="familyLockSetup" class="family-primary" type="button">Lock choices</button>
-  <p id="familySetupStatus" class="family-form-status" role="status" aria-live="polite"></p>
-</div>
-
-<div class="family-swipe hidden" id="familySwipe">
-  <div class="family-swipe-head"><div><span id="familySwipeStageKicker">FIRST PICKS</span><h2 id="familySwipeTitle">Make your picks.</h2></div><div class="family-swipe-head-meta"><span id="familySwipeProgress">0 / 0</span><small id="familySwipeDeadline"></small></div></div>
-  <p class="family-swipe-note" id="familySwipeNote">Everyone sees the same choices. Cut what you don’t want. Maybe means you’d be happy with it. Choose means you really want it.</p>
-  <div class="family-swipe-stage">
-    <div class="family-swipe-card" id="familySwipeCard">
-      <img id="familySwipeImg" alt="">
-      <div class="family-swipe-shade"></div>
-      <div class="family-swipe-copy"><small id="familySwipeCat"></small><h3 id="familySwipeName"></h3><span id="familySwipeMeta"></span></div>
-    </div>
-  </div>
-  <div class="family-swipe-actions">
-    <button class="family-round-action family-round-cut" id="familySwipeCut" type="button" aria-label="Cut">✕<small>Cut</small></button>
-    <button class="family-round-action family-round-maybe" id="familySwipeMaybe" type="button" aria-label="Maybe">♥<small>Maybe</small></button>
-    <button class="family-round-action family-round-choose" id="familySwipeChoose" type="button" aria-label="Choose">✓<small>Choose</small></button>
-  </div>
-  <div class="family-waiting hidden" id="familySwipeWaiting">
-    <span>YOUR PICKS ARE IN</span><b>Waiting for the Family.</b><small id="familyWaitingText">Your choices are saved. We’ll move everyone forward together.</small>
-  </div>
-</div>
-<div class="family-winner hidden" id="familyWinner">
-  <div class="family-winner-celebration" id="familyWinnerCelebration" aria-hidden="true"></div>
-  <span class="family-winner-kicker">TONIGHT’S DINNER</span>
-  <h2 id="familyWinnerName"></h2>
-  <p>Decided together with Family Mode.</p>
-  <span class="family-winner-saved hidden" id="familyWinnerSaved" role="status" aria-live="polite">Saved to History</span>
-  <div class="family-winner-image-wrap"><img id="familyWinnerImg" alt=""></div>
-  <div class="family-winner-actions">
-    <button class="cut" id="familyWinnerDetails" type="button">Details</button>
-    <button class="secondary" id="familyWinnerShare" type="button">Share</button>
-    <button class="secondary" id="familyWinnerAgain" type="button">Decide Again</button>
-  </div>
-</div>
-</div>
 </section>
 
 <section class="screen hidden decision-screen" id="food">

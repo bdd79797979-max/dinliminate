@@ -420,6 +420,8 @@ async function createRound(sessionToken, payload) {
   const family = (await sql.query('select * from family_rooms where family_id=$1', [me.family_id]))[0];
   if (!family || family.host_member_id !== me.member_id) fail('HOST_REQUIRED', 'Only the host can create the dinner decision.', 403);
   if (family.active_round_id) fail('ROUND_ACTIVE', 'Finish or end the current dinner decision first.', 409);
+  const activeMembers = await sql.query('select member_id from family_members where family_id=$1 and active=true', [family.family_id]);
+  if (activeMembers.length < 2) fail('FAMILY_TOO_SMALL','Family Mode needs at least 2 active members to start.',409);
 
   const type = decisionType(payload && payload.decisionType);
   const snapshot = sanitizeSnapshot(payload && payload.snapshot, type);
