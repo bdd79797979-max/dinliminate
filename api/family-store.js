@@ -6,7 +6,7 @@ const MAX_FAMILY_SIZE = 8;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const FAMILY_INACTIVITY_MS = 30 * 24 * 60 * 60 * 1000;
 const FAMILY_MEMBER_STALE_MS = 15 * 60 * 1000;
-const FAMILY_HOST_RECOVERY_MS = 4 * 60 * 1000;
+const FAMILY_HOST_RECOVERY_MS = 15 * 60 * 1000;
 
 function db() {
   if (!DATABASE_URL) {
@@ -99,8 +99,8 @@ function sanitizeSnapshot(input, type) {
   const hostExcluded = Array.isArray(raw.hostExcluded)
     ? Array.from(new Set(raw.hostExcluded.map(function(v){ return String(v).slice(0,160); }).filter(Boolean)))
     : [];
-  const remaining = cleanPool.some(function(item){ return !hostExcluded.includes(String(item.id)); });
-  if (!remaining) fail('INVALID_SNAPSHOT', 'Keep at least one choice for the Family.');
+  const remainingCount = cleanPool.filter(function(item){ return !hostExcluded.includes(String(item.id)); }).length;
+  if (remainingCount < 2) fail('INVALID_SNAPSHOT', 'Keep at least 2 choices for the Family.');
 
   return {
     version: 1,
