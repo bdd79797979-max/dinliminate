@@ -7789,3 +7789,32 @@ button,input,select,textarea{
 }
 
 /* CP841 release trigger — preserve final synchronized header CSS. */
+
+
+/* CP844 — Dinner Mode user-friendliness polish */
+.family-entry-card,
+.family-type-option,
+.family-primary,
+.family-waiting,
+.family-code-panel,
+.family-members-panel,
+.family-time-card{
+  background:linear-gradient(145deg,rgba(24,24,22,.72),rgba(11,11,11,.76));
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.family-hero p{max-width:360px}
+.family-entry-card span:nth-child(2) b{letter-spacing:-.015em}
+.family-code-panel{text-align:center;border-color:rgba(198,164,106,.28)}
+.family-code-panel strong{text-shadow:0 0 22px rgba(198,164,106,.12)}
+.family-panel-title b{font-size:10px;letter-spacing:.14em;color:#aaa}
+.family-lobby-pulse{justify-content:flex-start;margin-top:6px}
+.family-swipe-note{text-align:center;letter-spacing:.1em;color:#b7b0a4;min-height:14px}
+.family-swipe-note.hidden{display:none}
+.family-waiting b{line-height:1.05}
+.family-waiting small{min-height:16px}
+#familySetupCount[data-ready="false"]{color:#c69b8d}
+@media(max-width:390px){
+  .family-hero p{font-size:10px}
+  .family-code-panel{padding:15px}
+}
