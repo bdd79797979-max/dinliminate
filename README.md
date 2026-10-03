@@ -37,6 +37,15 @@ Milestones:
 - Home entry cards now read **Dine In — Reveal Your Meal** and **Dine Out — Reveal Your Restaurant**.
 - Existing entry-button IDs and behavior are preserved.
 
+## CP843 Family Mode hardening
+- Active Family decisions now support a clean participant exit without blocking everyone else.
+- Family code sharing uses the native share sheet with clipboard fallback.
+- Family decision time is simplified to 15, 30, 45, or 60 minutes.
+- Family voting is server-validated for stage/item completeness and returns the updated round state immediately.
+- Stale family members are cleaned up; host recovery uses a longer mobile-friendly grace period.
+- Completed Family winners are shown only to participants, and restaurant winners use restaurant-specific photo fallbacks.
+- App and service-worker asset versions are bumped to prevent stale cached Family UI.
+
 ## Current release hardening
 - Working branch: cp704-hero-food-photos
 - Base recovery: cp703-dine-in-out-copy
