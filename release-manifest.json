@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 844,
-  "sourceBranch": "cp844-family-mode-polish",
+  "build": 845,
+  "sourceBranch": "cp845-dinner-together-integration",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminates1",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP844",
-  "deploymentTrigger": "CP843-family-mode-hardening-2026-10-03"
+  "checkpoint": "CP845",
+  "deploymentTrigger": "CP845-dinner-together-integration-2026-10-03"
 }

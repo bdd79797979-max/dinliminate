@@ -2,7 +2,7 @@
 
 Dinliminate is a phone-first dinner decision app built around fast food and restaurant elimination.
 
-Current build: Version 1.0, Build 709.
+Current build: Version 1.0, Build 845.
 
 Clean recovery baseline: `clean-cp704-2026-10-02`.
 
@@ -53,11 +53,10 @@ Milestones:
 - Vercel is the official runtime for the release candidate; Netlify remains legacy/backup. Vercel deployment is currently blocked by the connected account build-rate limit.
 
 
-## CP844 Family Mode polish
-- Simplified Dinner Mode entry, lobby, setup, swipe, waiting, and winner language.
-- Reduced technical wording and made user-facing stage language more natural.
-- Added a two-choice minimum before a Family dinner can be locked.
-- Increased host recovery grace to 15 minutes to avoid unnecessary host changes when a phone backgrounds.
-- Added a persistent first-use swipe lesson that disappears after the first meaningful choice.
-- Clarified waiting progress so participants can see how many people have finished.
-- Bumped application/service-worker cache assets to CP844.
+## CP845 Dinner Together integration
+- Dinner Together is presented as a native Dinliminate choice rather than a separate decision experience.
+- Shared decisions use the normal Dinliminate Meals/Restaurant swipe presentation and the normal winner surface.
+- Create/Join instructions are condensed into a simple five-step explanation.
+- The prior Family-specific swipe and winner presentation is hidden from the user-facing flow while its proven room/vote compatibility layer remains available.
+- Family winners use the normal History data shape with Family metadata for deduplication; normal Stats remain the source of truth.
+- Release and service-worker cache metadata are aligned to CP845.
