@@ -45,6 +45,7 @@ module.exports = async function handler(req, res) {
     else if (action === 'end-round') result = await family.endRound(body.token);
     else if (action === 'transfer-host') result = await family.transferHost(body.token, body.targetMemberId);
     else if (action === 'leave') result = await family.leaveFamily(body.token);
+    else if (action === 'leave-round') result = await family.leaveRound(body.token, body);
     else return send(res, 400, {ok:false,code:'UNKNOWN_ACTION',message:'Unknown Family Mode action.'});
 
     return send(res, 200, {ok:true,...result});
