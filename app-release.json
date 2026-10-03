@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 841,
-  "sourceBranch": "cp841-all-maybe-right",
-  "checkpoint": "CP841",
-  "deploymentTrigger": "CP841-all-maybe-right-2026-10-03",
+  "build": 842,
+  "sourceBranch": "cp842-family-mode-audit",
+  "checkpoint": "CP842",
+  "deploymentTrigger": "CP842-family-mode-audit-2026-10-03",
   "vercelProductionVerified": false
 }
