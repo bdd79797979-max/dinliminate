@@ -68,20 +68,20 @@
 
   <div class="family-page" id="familyPage">
     <div class="family-hero">
-      <span class="family-kicker">FAMILY MODE</span>
-      <h1>Dinner together.<br>Decided together.</h1>
-      <p>No accounts. No passwords. Just create or join and start deciding.</p>
+      <span class="family-kicker">DINNER TOGETHER</span>
+      <h1>Dinner decisions.<br>Made together.</h1>
+      <p>Decided together. No group chat required.</p>
     </div>
 
     <div class="family-entry" id="familyEntry">
       <button class="family-entry-card" id="familyCreateChoice" type="button">
         <span class="family-entry-icon" aria-hidden="true">＋</span>
-        <span><b>Create</b><small>Start a Family dinner decision</small></span>
+        <span><b>Create a Dinner</b><small>Start a decision and invite everyone.</small></span>
         <span class="family-entry-chevron" aria-hidden="true">›</span>
       </button>
       <button class="family-entry-card" id="familyJoinChoice" type="button">
         <span class="family-entry-icon family-code-icon" aria-hidden="true">⌁</span>
-        <span><b>Join</b><small>Use a Family code from the host</small></span>
+        <span><b>Join a Dinner</b><small>Enter the host’s Family code.</small></span>
         <span class="family-entry-chevron" aria-hidden="true">›</span>
       </button>
     </div>
@@ -112,7 +112,7 @@
       <div class="family-code-panel">
         <span>JOIN CODE</span>
         <strong id="familyJoinCodeDisplay">—</strong>
-        <small>Share this code with your family.</small>
+        <small id="familyCodeNote">Share this code with everyone.</small><div class="family-code-actions" aria-label="Family code actions"><button class="family-mini-button" id="familyCopyCode" type="button">Copy</button><button class="family-mini-button" id="familyShareCode" type="button">Share</button></div>
       </div>
       <div class="family-members-panel">
         <div class="family-panel-title"><b>Family</b><span id="familyMemberCount">0 here</span></div>
@@ -154,7 +154,7 @@
 
 <div class="family-swipe hidden" id="familySwipe">
   <div class="family-swipe-head"><div><span id="familySwipeStageKicker">FIRST PICKS</span><h2 id="familySwipeTitle">Make your picks.</h2></div><div class="family-swipe-head-meta"><span id="familySwipeProgress">0 / 0</span><small id="familySwipeDeadline"></small></div></div>
-  <p class="family-swipe-note" id="familySwipeNote">Cut what you don’t want. Maybe means you’d be happy with it. Choose means you really want it.</p>
+  <p class="family-swipe-note" id="familySwipeNote">Everyone sees the same choices. Cut what you don’t want. Maybe means you’d be happy with it. Choose means you really want it.</p>
   <div class="family-swipe-stage">
     <div class="family-swipe-card" id="familySwipeCard">
       <img id="familySwipeImg" alt="">
