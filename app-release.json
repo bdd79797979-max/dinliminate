@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 932,
+  "build": 933,
   "sourceBranch": "main",
-  "checkpoint": "CP932",
-  "deploymentTrigger": "CP932-menu-lines-only",
+  "checkpoint": "CP933",
+  "deploymentTrigger": "CP933-maximize-decision-cards",
   "vercelProductionVerified": false
 }
