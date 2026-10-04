@@ -1,18 +1,12 @@
-# CURRENT RELEASE — BUILD 938 / CP938
+# CURRENT RELEASE — BUILD 939 / CP939
 
-## CP938 — Meals Search/Cuisine divider parity
-- Added the same compact separator treatment used by Restaurant between Meal Times and Cuisine.
-- Preserved the existing four-control Meals order: Meal Times — Cuisine — All/Maybes count — Menu.
-- Preserved all existing handlers, card layout, Maybe filtering, and swipe behavior.
-
-
-## CP938 — Meals ALL / MAYBES deck-count parity
-- Meals now explicitly renders ALL · count in ALL mode and MAYBES · count in Maybe mode.
-- ALL mode uses the complete active Meal pool, including meals already marked Maybe.
-- MAYBES mode uses only the active Maybe Meal pool and its filtered count.
-- Kept the Restaurant filter behavior intact and matched the Meals count treatment to its restrained neutral language.
-- Preserved the existing Meal swipe handoff, card geometry, Menu, Meal Times, Cuisine, and Restaurant work.
-
+## CP939 — Canonical Meals + Restaurant decision layer
+- Unified Meals and Restaurant decision controls around one canonical visual/DOM contract.
+- Meals uses shared decision classes for Meal Times, Cuisine, ALL/MAYBES, live count, and Menu.
+- Restaurant uses the same Search — Cuisine — ALL/MAYBES count — Menu decision row beneath its dedicated location controls.
+- ALL/MAYBES renders identical markup in both screens and the visible count comes from the exact filtered pool currently presented by the deck.
+- Consolidated Cuisine open/close binding so both screens resolve their canonical Cuisine control directly.
+- Removed superseded decision-layer override blocks while preserving the working card, swipe, search, location, photo, and Meal Time systems.
 
 
 ## CP937 — final mobile polish / Meal swipe handoff
