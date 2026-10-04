@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 934,
+  "build": 932,
   "sourceBranch": "main",
-  "checkpoint": "CP934",
-  "deploymentTrigger": "CP934-restaurant-search-field",
+  "checkpoint": "CP932",
+  "deploymentTrigger": "CP932-meals-maybe-count",
   "vercelProductionVerified": false
 }
