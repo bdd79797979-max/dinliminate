@@ -155,9 +155,8 @@ function mediaQuality(media){
 function chooseBetterPhoto(a,b){
   if(!a)return b;
   if(!b)return a;
-  const as=(PHOTO_SOURCE_TIER[a.source]||70)+mediaQuality(a.media);
-  const bs=(PHOTO_SOURCE_TIER[b.source]||70)+mediaQuality(b.media);
-  return bs>as?b:a;
+  const score=(x)=>(PHOTO_SOURCE_TIER[x.source]||70)+Math.min(18,Math.max(0,Number(x.candidateScore)||Number(x.score)||0)/6)+mediaQuality(x.media);
+  return score(b)>score(a)?b:a;
 }
 async function normalizeRestaurantImage(bytes){
   if(!sharp)throw new Error('Image normalization is unavailable.');
@@ -306,12 +305,13 @@ function significantNameTokens(name){
   return normalizeMatchText(name).split(' ').filter(t=>t.length>=3&&!stop.has(t));
 }
 
-function structuredRestaurantMatches(html,name,address){
+function structuredRestaurantMatches(html,name,address,phone=''){
   const tokens=significantNameTokens(name);
   if(!tokens.length)return false;
   const addrNorm=normalizeMatchText(address);
   const addrNumber=(String(address||'').match(/\b\d{1,6}\b/)||[])[0];
   const zip=(String(address||'').match(/\b\d{5}(?:-\d{4})?\b/)||[])[0];
+  const phoneDigits=String(phone||'').replace(/\D/g,'').slice(-10);
   const city=(addrNorm.split(' ').findIndex(x=>x==='clarksville')>=0)?'clarksville':'';
   const blocks=[];
   const re=/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/ig;
@@ -327,6 +327,8 @@ function structuredRestaurantMatches(html,name,address){
     const nameHits=tokens.filter(t=>itemName.includes(t)).length;
     if(business&&nameHits/tokens.length>=0.8){
       const a=value.address;
+      const itemPhone=String(value.telephone||value.phone||'').replace(/\D/g,'').slice(-10);
+      if(phoneDigits&&itemPhone&&itemPhone===phoneDigits)return true;
       const addressText=normalizeMatchText(typeof a==='string'?a:[a?.streetAddress,a?.addressLocality,a?.addressRegion,a?.postalCode].filter(Boolean).join(' '));
       const numberOk=!!addrNumber&&addressText.includes(normalizeMatchText(addrNumber));
       const zipOk=!!zip&&addressText.includes(normalizeMatchText(zip));
@@ -346,13 +348,16 @@ function structuredRestaurantMatches(html,name,address){
   return false;
 }
 
-function strictPageMatchesRestaurant(html,name,address){
+function strictPageMatchesRestaurant(html,name,address,phone=''){
   const source=String(html||'');
   const hay=normalizeMatchText(source.slice(0,1400000));
+  const phoneDigits=String(phone||'').replace(/\D/g,'').slice(-10);
+  const digitHay=source.replace(/\D/g,'');
   const tokens=significantNameTokens(name);
   if(!tokens.length)return false;
   const nameHitCount=tokens.filter(t=>hay.includes(t)).length;
   if(nameHitCount/tokens.length<0.9)return false;
+  if(phoneDigits&&digitHay.includes(phoneDigits))return true;
   const rawAddress=String(address||'');
   const normAddress=normalizeMatchText(rawAddress);
   const number=(rawAddress.match(/\\b\\d{1,6}\\b/)||[])[0];
@@ -366,26 +371,28 @@ function strictPageMatchesRestaurant(html,name,address){
   return cityHits>=2;
 }
 
-function pageMatchesRestaurant(html,name,address){
+function pageMatchesRestaurant(html,name,address,phone=''){
   const source=String(html||'');
-  if(structuredRestaurantMatches(source,name,address))return true;
+  if(structuredRestaurantMatches(source,name,address,phone))return true;
   const hay=normalizeMatchText(source.slice(0,1400000));
   const tokens=significantNameTokens(name);
   if(!tokens.length)return false;
   const hits=tokens.filter(t=>hay.includes(t)).length;
   if(hits/tokens.length<0.8)return false;
+  const phoneDigits=String(phone||'').replace(/\D/g,'').slice(-10);
+  if(phoneDigits&&source.replace(/\D/g,'').includes(phoneDigits))return true;
   const number=(String(address||'').match(/\b\d{1,6}\b/)||[])[0];
   if(number&&hay.includes(normalizeMatchText(number)))return true;
   const loc=normalizeMatchText(address).split(' ').filter(t=>t.length>=3).slice(-5);
   return loc.filter(t=>hay.includes(t)).length>=2;
 }
 
-async function verifiedRestaurantPage(url,name,address){
+async function verifiedRestaurantPage(url,name,address,phone=''){
   const page=absoluteHttpsUrl(url);
   if(!page||isBlockedHost(page))return null;
   try{
     const html=await fetchText(page,{},6000,1800000);
-    return strictPageMatchesRestaurant(html,name,address)?html:null;
+    return strictPageMatchesRestaurant(html,name,address,phone)?html:null;
   }catch{return null}
 }
 
@@ -466,9 +473,10 @@ function extractBingImageCandidates(html){
   return candidates;
 }
 
-function scoreImage(candidate,name,address,website){
-  return venueScore({url:candidate?.contentUrl||'',context:[candidate?.title,candidate?.description,candidate?.hostPageUrl,candidate?.query].filter(Boolean).join(' '),source:'bing'},name,address,website)
-      + (candidate?.hostPageUrl?12:0);
+function scoreImage(candidate,name,address,website,phone=''){
+  return venueScore({url:candidate?.contentUrl||'',context:[candidate?.title,candidate?.description,candidate?.hostPageUrl].filter(Boolean).join(' '),source:'bing'},name,address,website)
+      + (candidate?.hostPageUrl?12:0)
+      + (phone&&String(candidate?.title||'').includes(String(phone))?18:0);
 }
 
 function extractBingWebResultUrls(html){
@@ -482,9 +490,9 @@ function extractBingWebResultUrls(html){
   return [...new Set(out)];
 }
 
-async function fetchVerifiedPages(urls,name,address){
+async function fetchVerifiedPages(urls,name,address,phone=''){
   const results=await Promise.allSettled(urls.map(async url=>{
-    const html=await verifiedRestaurantPage(url,name,address);
+    const html=await verifiedRestaurantPage(url,name,address,phone);
     return html?{url,html}:null;
   }));
   return results.filter(x=>x.status==='fulfilled'&&x.value).map(x=>x.value);
@@ -526,12 +534,12 @@ async function officialRestaurantPages(name,address,website){
     return pages.slice(0,12);
   }catch{return []}
 }
-async function fastOfficialVenuePhoto(name,address,website){
+async function fastOfficialVenuePhoto(name,address,website,phone=''){
  const official=absoluteHttpsUrl(website);
  if(!official||isBlockedHost(official))return null;
  try{
   const html=await fetchText(official,{},2200,1800000);
-  if(!html)return null;
+  if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
   const candidates=extractVenueImageCandidates(html,official,name,address,official)
     .filter(item=>item.score>=45&&item.score>0&&hasVenueSignal(item))
     .slice(0,6);
@@ -643,7 +651,7 @@ async function findVerifiedRestaurantPages(name,address,website){
   return {official:officialMerged,public:publicPages.slice(0,8)};
 }
 
-async function bingExactImageCandidates(name,address,website){
+async function bingExactImageCandidates(name,address,website,phone=''){
   const safeName=String(name||'').replace(/"/g,''),safeAddress=String(address||'').replace(/"/g,''),websiteHost=hostOf(website);
   if(!safeName||!safeAddress)return [];
   const queries=['"'+safeName+'" "'+safeAddress+'" restaurant exterior'];
@@ -659,18 +667,19 @@ async function bingExactImageCandidates(name,address,website){
     if(seen.has(x.contentUrl))return false;
     seen.add(x.contentUrl);
     return !!x.contentUrl;
-  }).map(x=>({...x,score:scoreImage(x,name,address,website)})).filter(x=>x.score>=55);
+  }).map(x=>({...x,score:scoreImage(x,name,address,website,phone)})).filter(x=>x.score>=55);
   return candidates.sort((a,b)=>b.score-a.score).slice(0,20);
 }
 
-async function exactImageFromBing(name,address,website){
-  const candidates=await bingExactImageCandidates(name,address,website);
+async function exactImageFromBing(name,address,website,phone=''){
+  const candidates=await bingExactImageCandidates(name,address,website,phone);
   const checks=await Promise.allSettled(candidates.slice(0,6).map(async candidate=>{
     const hostPage=candidate.hostPageUrl;
     if(hostPage){
-      const verified=await verifiedRestaurantPage(hostPage,name,address);
+      const verified=await verifiedRestaurantPage(hostPage,name,address,phone);
       if(!verified)return null;
     }
+    if(!hostPage&&Number(candidate.score||0)<110)return null;
     try{
       const media=await fetchImage(candidate.contentUrl,{'Referer':hostPage||undefined},4000);
       return {media,source:'exact-public-venue-image',sourceUrl:hostPage||candidate.contentUrl,sourceName:hostOf(hostPage||candidate.contentUrl)};
@@ -700,6 +709,7 @@ module.exports=async function handler(req,res){
   const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
   const name=String(q.name||'').trim().slice(0,160);
   const address=String(q.address||'').trim().slice(0,240);
+  const phone=String(q.phone||'').trim().slice(0,80);
   const website=String(q.website||'').trim().slice(0,700);
   const officialWebsite=String(q.officialWebsite||website).trim().slice(0,700);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
@@ -719,7 +729,7 @@ module.exports=async function handler(req,res){
     // homepage first and try its strongest venue images immediately. This
     // avoids waiting for broader search/verification work in the common case.
     if(officialWebsite){
-      const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite);
+      const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
     }
 
@@ -729,7 +739,7 @@ module.exports=async function handler(req,res){
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite);
     if(fastKnown)return sendMedia(res,fastKnown);
 
-    const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
+    const pages=await findVerifiedRestaurantPages(name,address,officialWebsite,phone);
 
     // Tier 1: exact restaurant/location images from the restaurant's own website.
     for(const entry of pages.official){
@@ -745,7 +755,7 @@ module.exports=async function handler(req,res){
 
     // Tier 3: exact-location image discovered by Bing Images, but only when
     // the image's host page verifies this exact restaurant and address.
-    const bingImage=await exactImageFromBing(name,address,officialWebsite);
+    const bingImage=await exactImageFromBing(name,address,officialWebsite,phone);
     if(bingImage)return sendMedia(res,bingImage);
 
     // Tier 4: the image already attached to the exact OSM POI.
@@ -785,6 +795,7 @@ module.exports._test={
   extractVenueImageCandidates,
   pageMatchesRestaurant,
   venueScore,
+  scoreImage,
   hasVenueSignal,
   extractInternalLinks,
   sameHost,
