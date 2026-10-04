@@ -611,8 +611,8 @@ async function fastKnownRestaurantPhoto(name,address){
  }catch{}
  return null;
 }
-async function fastKnownPublicPhoto(name,address,website){
- const hint=knownPublicPhotoPage(name,address);
+async function fastKnownPublicPhoto(name,address,website,phone=''){
+ const hint=knownPublicPhotoPage(name,address,phone);
  if(!hint)return null;
  try{
   const html=await fetchText(hint,{},2200,1500000);
@@ -751,7 +751,7 @@ module.exports=async function handler(req,res){
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
     if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
 
-    const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite);
+    const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
 
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite,phone);
