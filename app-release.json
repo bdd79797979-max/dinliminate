@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 932,
+  "build": 935,
   "sourceBranch": "main",
-  "checkpoint": "CP932",
-  "deploymentTrigger": "CP932-meals-maybe-count",
+  "checkpoint": "CP935",
+  "deploymentTrigger": "CP935-meal-swipe-handoff",
   "vercelProductionVerified": false
 }
