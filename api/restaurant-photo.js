@@ -236,6 +236,24 @@ function extractImgCandidates(html,pageUrl){
   return candidates;
 }
 
+function extractLinkedImageCandidates(html,pageUrl){
+  const candidates=[],seen=new Set(),re=/<a\b[^>]*href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/ig;
+  let m;
+  while((m=re.exec(String(html||'')))&&candidates.length<80){
+    const raw=m[1]??m[2]??m[3]??'';
+    const url=absoluteHttpsUrl(raw,pageUrl);
+    if(!url||seen.has(url)||isBlockedHost(url)||BLOCKED_IMAGE_HINTS.test(url))continue;
+    const text=String(m[4]||'').replace(/<[^>]+>/g,' ');
+    const nearby=String(html||'').slice(Math.max(0,m.index-260),Math.min(String(html||'').length,m.index+m[0].length+360));
+    const imageUrl=/\.(?:jpe?g|png|webp|avif)(?:[?#].*)?$/i.test(url);
+    const imageText=/image|photo|gallery|picture/i.test(text+' '+nearby);
+    if(!imageUrl&&!imageText)continue;
+    seen.add(url);
+    candidates.push({url,context:[text,nearby,url].filter(Boolean).join(' '),source:'linked-image'});
+  }
+  return candidates;
+}
+
 function extractStyleImageCandidates(html,pageUrl){
   const candidates=[],seen=new Set(),re=/background-image\s*:\s*url\(\s*['"]?([^'")\s]+)['"]?\s*\)/ig;
   let m;
@@ -427,6 +445,9 @@ function hasVenueSignal(candidate){
   // sufficient; forcing venue words into the image tag context rejects many
   // legitimate restaurant hero photos.
   if(candidate?.source==='meta'||candidate?.source==='jsonld')return true;
+  // Exact verified venue pages may expose their photo as an anchor to a
+  // standalone image (common in older local-news articles).
+  if(candidate?.source==='linked-image'&&Number(candidate?.score||0)>=45)return true;
   const hay=normalizeMatchText(context);
   const venueHits=(hay.match(/exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|sign|signage|location|drive thru|parking lot|parking|street view|patio|terrace/g)||[]).length;
   const foodHits=(hay.match(/menu|food|dish|meal|burger|pizza|salad|steak|wings|tacos|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine/g)||[]).length;
@@ -438,6 +459,7 @@ function hasVenueSignal(candidate){
 function extractVenueImageCandidates(html,pageUrl,name,address,website){
   const raw=[
     ...extractImgCandidates(html,pageUrl),
+    ...extractLinkedImageCandidates(html,pageUrl),
     ...extractStyleImageCandidates(html,pageUrl),
     ...extractJsonLdImageCandidates(html,pageUrl)
   ];
@@ -802,6 +824,7 @@ module.exports._test={
   extractBingWebResultUrls,
   extractJsonLdImageCandidates,
   extractImgCandidates,
+  extractLinkedImageCandidates,
   extractVenueImageCandidates,
   pageMatchesRestaurant,
   venueScore,
