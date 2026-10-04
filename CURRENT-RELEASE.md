@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 948 / CP948
+# CURRENT RELEASE — BUILD 949 / CP949
+
+## CP949 — Meals / Restaurants visual parity
+- Restaurant ALL · MAYBES count is explicitly locked to the same green count treatment used by Meals.
+- Meals Meal Times — Cuisine now uses the same restrained divider treatment as Restaurant Search — Cuisine.
+- No Maybe logic, cuisine sets, meal-time filtering, or swipe behavior changed.
+- Cache/version references were bumped so mobile clients receive the new visual layer.
+
+## CP948 — Restore agreed no-Google Restaurant photo policy
 
 ## CP948 — Restore agreed no-Google Restaurant photo policy
 - Removed Google Places photo metadata from Restaurant search rows; Google may still provide restaurant discovery/contact data, but never restaurant photography.
