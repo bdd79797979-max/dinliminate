@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 924,
+  "build": 925,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP924",
-  "deploymentTrigger": "CP924-consolidated-home-restaurant-pass-2026-10-04"
+  "checkpoint": "CP925",
+  "deploymentTrigger": "CP925-swipe-direction-positioning-2026-10-04"
 }
