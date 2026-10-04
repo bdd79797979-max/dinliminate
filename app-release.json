@@ -4,6 +4,6 @@
   "build": 938,
   "sourceBranch": "main",
   "checkpoint": "CP938",
-  "deploymentTrigger": "CP938-all-maybes-count-logic",
+  "deploymentTrigger": "CP938-meals-divider",
   "vercelProductionVerified": false
 }
