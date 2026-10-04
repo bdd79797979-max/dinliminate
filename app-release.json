@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 924,
+  "build": 925,
   "sourceBranch": "main",
-  "checkpoint": "CP924",
-  "deploymentTrigger": "CP924-consolidated-home-restaurant-pass",
+  "checkpoint": "CP925",
+  "deploymentTrigger": "CP925-swipe-direction-positioning",
   "vercelProductionVerified": false
 }
