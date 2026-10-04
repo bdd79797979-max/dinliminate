@@ -1,16 +1,14 @@
-# CURRENT RELEASE — BUILD 895 / CP895
+# CURRENT RELEASE — BUILD 896 / CP896
 
-## CP895 — remove legacy Home photo sources
-- Deleted the obsolete local `home-background.jpg` asset and all runtime/CSS/service-worker references to it.
-- Removed the retired persistent Home background image layer from the document and runtime.
-- Removed obsolete front-page photo-rail bindings and legacy `home-photo-img` fallback/listener code.
-- Removed the old AT HOME / RESTAURANT inline photo URLs so those controls remain clean window panels over the new Home background.
-- Home now has one visual background source: the current double-door photo delivered through the existing `/api/image` proxy.
-- Service-worker registration and cache versions are bumped to prevent stale Home assets from resurfacing.
-- Release metadata is synchronized to CP895.
+## CP896 — restore Home imagery correctly
+- Kept the obsolete front-page background/photo system deleted.
+- Restored the new double-door image directly on the canonical Home surface.
+- Restored two separate replacement photos inside the AT HOME and RESTAURANT window panels.
+- Removed all dependency on the deleted `home-background.jpg` asset and the retired persistent image layer.
+- Bumped stylesheet, runtime, and service-worker cache versions to prevent the blank cached Home from persisting.
+- Release metadata is synchronized to CP896.
 
 ## Verification
-- No `home-background.jpg` references remain in the active Home files.
-- No `home-photo-img` bindings remain in the Home runtime.
-- No old inline front-page photo URLs remain on the Home buttons.
-- AT HOME / RESTAURANT controls remain present.
+- The deleted `home-background.jpg` file remains removed.
+- The old `home-photo-img` / persistent background layer remains removed.
+- Home has one full-page door image plus two independent window-panel photos.
