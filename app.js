@@ -426,7 +426,7 @@ const RESTAURANT_NEUTRAL_IMAGE='./fallback-restaurant.svg';
 const RESTAURANT_PHOTO_HANDOFF_WAIT=950;
 let restaurantPhotoStoragePromise=null;
 function restaurantPhotoCacheRequest(row){
- const identity=normKey([row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
+ const identity=normKey(['v'+RESTAURANT_PHOTO_RESOLVER_VERSION,row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
  let hash=2166136261;
  for(let i=0;i<identity.length;i++){hash^=identity.charCodeAt(i);hash=Math.imul(hash,16777619);}
  return new Request('/__dinliminate_restaurant_photo_cache__/'+(hash>>>0).toString(36));
