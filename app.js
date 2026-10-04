@@ -3663,19 +3663,12 @@ function manageFoodsView() {
   const deleteAction=deleted?'':'<button class="manage-row-action manage-delete" data-food-delete="'+esc(id)+'">Delete</button>';
   return '<div class="food-row manage-food-row"><span class="manage-food-name"><b>'+esc(item.name)+'</b><small class="row-state '+(deleted?'is-deleted':(hidden?'is-hidden':'is-active'))+'">'+esc(stateLabel)+'</small><small class="row-meal-time">'+esc(mealTimeLabel)+'</small></span><span class="food-row-actions">'+extra+primary+deleteAction+'</span></div>';
  };
- const body='<div class="manage-meals-view"><div class="manage-hero"><span class="manage-kicker">MEAL LIBRARY</span><h4>Shape your choices.</h4><p>Edit any meal, replace its photo, hide it from decisions, or delete it. Deleted meals stay recoverable on this device.</p></div>'+mealTimeManagerMarkup()+
+ const body='<div class="manage-meals-view"><div class="manage-hero"><span class="manage-kicker">MEAL LIBRARY</span><h4>Shape your choices.</h4><p>Edit any meal, replace its photo, hide it from decisions, or delete it. Deleted meals stay recoverable on this device.</p></div>'+
  '<button class="manage-add-action" id="openFoodEditor" type="button"><span class="manage-add-icon" aria-hidden="true">＋</span><span>Add Meal</span></button>'+
  '<div class="food-list">'+rows.map(x=>rowMarkup(x)).join('')+'</div>'+
  (deletedRows.length?'<section class="deleted-meals-section"><div class="deleted-meals-heading"><span class="manage-kicker">RECOVERY</span><h5>Deleted Meals</h5><p>Restore a deleted meal without changing the rest of your library.</p></div><div class="food-list">'+deletedRows.map(x=>rowMarkup(x,true)).join('')+'</div></section>':'')+
  '</div>';
  const modal=openModal('manageFoodsModal','Manage Meals',body);
- const addMealTimeForm=$('addMealTimeForm');
- addMealTimeForm?.addEventListener('submit',e=>{e.preventDefault();const input=$('newMealTimeName');if(addMealTime(input?.value)){if(input)input.value='';}});
- modal.querySelectorAll('[data-meal-time-edit]').forEach(btn=>btn.onclick=()=>renameMealTime(btn.dataset.mealTimeEdit));
- modal.querySelectorAll('[data-meal-time-delete]').forEach(btn=>btn.onclick=()=>deleteMealTime(btn.dataset.mealTimeDelete));
- modal.querySelectorAll('[data-meal-time-up]').forEach(btn=>btn.onclick=()=>moveMealTime(btn.dataset.mealTimeUp,-1));
- modal.querySelectorAll('[data-meal-time-down]').forEach(btn=>btn.onclick=()=>moveMealTime(btn.dataset.mealTimeDown,1));
- modal.querySelectorAll('[data-meal-time-toggle]').forEach(btn=>btn.onclick=()=>toggleMealTime(btn.dataset.mealTimeToggle));
  $('openFoodEditor').onclick=()=>foodEditor();
  modal.querySelectorAll('[data-food-restore]').forEach(btn=>btn.onclick=()=>{S.hidden.delete(btn.dataset.foodRestore);buildFood();save();manageFoodsView();});
  modal.querySelectorAll('[data-food-hide]').forEach(btn=>btn.onclick=()=>{S.hidden.add(btn.dataset.foodHide);buildFood();save();manageFoodsView();});
