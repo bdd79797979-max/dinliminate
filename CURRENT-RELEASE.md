@@ -1,3 +1,9 @@
+## CP910 — Surgical cleanup and runtime synchronization
+- Removed confirmed dead/no-op runtime fragments without changing the application architecture.
+- Simplified the fresh restaurant result pool construction by removing the always-empty previous-row array.
+- Synchronized HTML, runtime, service-worker shell, and release metadata to build 910.
+- Refreshed README recovery/release documentation to the current main branch.
+
 ## CP909 — Runtime entry / PWA version synchronization
 - Synchronized the HTML, app runtime, service-worker registration, and release metadata to the same build.
 - Fixed App Diagnosis so its interaction checks no longer reference an undefined source variable.
@@ -40,7 +46,7 @@
 - Changed swipe completion so the new card/state renders before the detached outgoing card is reset, eliminating the visible reset frame at handoff.
 - Bumped the service-worker shell cache and release metadata to CP901.
 
-# CURRENT RELEASE — BUILD 909 / CP909
+# CURRENT RELEASE — BUILD 910 / CP910
 
 ## CP900 — Meal Time editing lives with the meal
 - Removed the standalone Meal Time management section from Manage Meals.
