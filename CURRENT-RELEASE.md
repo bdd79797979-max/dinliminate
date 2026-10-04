@@ -1,4 +1,11 @@
-# CURRENT RELEASE — BUILD 932 / CP932
+# CURRENT RELEASE — BUILD 935 / CP935
+
+## CP935 — Meal swipe handoff correction
+- Removed the visible promoted-next-card reset during Meal swipe completion.
+- The incoming Meal layer is hidden before the Meal deck redraws, so the new Meal card is revealed once without a quick jump-back frame.
+- Restaurant swipe behavior remains unchanged.
+- Preserved the existing Meal image load/decode handoff and CP933 card sizing.
+
 
 ## CP932 — restore Meals All Maybes count treatment
 - Restored the Meals All Maybes live count to the same restrained green used by the Restaurant live count.
