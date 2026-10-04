@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 910,
+  "build": 911,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP910",
-  "deploymentTrigger": "CP910-surgical-cleanup-and-runtime-version-sync-2026-10-04"
+  "checkpoint": "CP911",
+  "deploymentTrigger": "CP911-luxury-metallic-gold-brand-polish-2026-10-04"
 }
