@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 921,
+  "build": 922,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP921",
-  "deploymentTrigger": "CP921-remove-location-container-2026-10-04"
+  "checkpoint": "CP922",
+  "deploymentTrigger": "CP922-quiet-refresh-busy-state-2026-10-04"
 }
