@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 912,
+  "build": 913,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP912",
-  "deploymentTrigger": "CP912-startup-syntax-repair-and-luxury-brand-polish-2026-10-04"
+  "checkpoint": "CP913",
+  "deploymentTrigger": "CP913-luxury-home-utility-controls-2026-10-04"
 }
