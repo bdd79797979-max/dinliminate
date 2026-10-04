@@ -8223,3 +8223,23 @@ button,input,select,textarea{
 @media(prefers-reduced-motion:reduce){
   .luxury-home .home-icon-action{transition:none!important}
 }
+
+/* CP915 — iPhone Home card gesture hardening. Allow vertical page scrolling, never treat the choice window as a horizontal swipe surface. */
+.app:has(#home:not(.hidden)) #home .home-card-photo{
+  touch-action:pan-y!important;
+  overscroll-behavior-x:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+.app:has(#home:not(.hidden)) #home .home-card-photo,
+.app:has(#home:not(.hidden)) #home .home-card-photo:active,
+.app:has(#home:not(.hidden)) #home .home-card-photo.is-pressed{
+  -webkit-tap-highlight-color:transparent!important;
+}
+.app:has(#home:not(.hidden)) #home .home-card-photo:active{
+  transform:none!important;
+}
+.app:has(#home:not(.hidden)) #home .home-card-photo.is-pressed{
+  transform:scale(.985)!important;
+}
