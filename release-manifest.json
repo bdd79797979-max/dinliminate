@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 943,
+  "build": 946,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP943",
-  "deploymentTrigger": "CP943-deterministic-swipe-preview-handoff"
+  "checkpoint": "CP946",
+  "deploymentTrigger": "CP946-google-photos-normalized-image-delivery"
 }
