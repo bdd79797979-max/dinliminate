@@ -143,8 +143,28 @@ if(!item)return HUNGRY_IMAGE;
 const src=String(item.image||'');
 if(src && !src.startsWith('idb:'))return imageProxyUrl(src);
 const groups=Array.isArray(item.quickCuts)&&item.quickCuts.length?item.quickCuts:[item.category];
-for(const label of groups){if(QUICK_IMAGES[label])return QUICK_IMAGES[label];}
+for(const label of groups){if(QUICK_IMAGES[label])return imageProxyUrl(QUICK_IMAGES[label]);}
 return QUICK_IMAGES.American;
+}
+async function resolveMealPhotoRef(ref,item=null){
+ const value=normalizeMealPhotoRef(ref);if(!value)return '';
+ if(value.startsWith('idb:')){const data=await getStoredPhoto(value.slice(4));return data||foodPhoto(item);}
+ return imageProxyUrl(value);
+}
+async function hydrateMealPhotoGallery(item){
+ const refs=mealPhotoList(item);if(!refs.length)return [foodPhoto(item)];
+ const loaded=[];for(const ref of refs){try{const src=await resolveMealPhotoRef(ref,item);if(src)loaded.push(src);}catch{}}
+ return loaded.length?loaded:[foodPhoto(item)];
+}
+function ensureMealCardPhotoPager(card,count,index){
+ if(!card)return;
+ let pager=card.querySelector('.meal-card-photo-pager');
+ if(count<=1){pager?.remove();return;}
+ if(!pager){
+  pager=document.createElement('span');pager.className='meal-card-photo-pager';pager.setAttribute('aria-hidden','true');
+  card.appendChild(pager);
+ }
+ pager.textContent=(index+1)+' / '+count;
 }
 function customQuickCutByName(label){
  const key=normKey(label);
@@ -1096,11 +1116,11 @@ function foodChoiceIndex(rows,start,keepState=false){
 function drawFood(){
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
  if(!S.foodMaybeRound){const ni=foodChoiceIndex(S.pool,S.index,false);if(ni>=0)S.index=ni;else if(S.maybe.size)S.foodMaybeRound=true;}
- const item=S.pool[S.index],img=$('foodImg');if(!img)return;
+ const item=S.pool[S.index],img=$('foodImg');if(!img)return;const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1;item._mealPhotoIndex=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),photoCount-1));const initialPhotoIndex=item._mealPhotoIndex;
  img.src=foodPhoto(item);img.dataset.fallback=foodPhotoFallback(item);img.dataset.finalFallback=FINAL_FOOD_IMAGE;img.alt=item.name;img.referrerPolicy='no-referrer';img.loading='eager';
  img.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};
- const foodCard=$('foodCard');if(foodCard){foodCard.querySelector('.maybe-stamp')?.remove();if(S.maybe.has(item.id)){const stamp=document.createElement('span');stamp.className='maybe-stamp';stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';foodCard.appendChild(stamp);}}
-$('foodName').textContent=item.name;$('foodCat').textContent=item.category;setChoiceCount($('foodCount'),S.pool.length);
+ const foodCard=$('foodCard');if(foodCard){foodCard.querySelector('.maybe-stamp')?.remove();ensureMealCardPhotoPager(foodCard,photoCount,initialPhotoIndex);img.onclick=()=>{if(photoCount>1){item._mealPhotoIndex=(Number(item._mealPhotoIndex||0)+1)%photoCount;hydrateMealPhotoGallery(item).then(photos=>{if(S.pool[S.index]!==item)return;const idx=((Number(item._mealPhotoIndex||0)%photos.length)+photos.length)%photos.length;item._mealPhotoIndex=idx;img.src=photos[idx]||foodPhoto(item);ensureMealCardPhotoPager(foodCard,photos.length,idx);});}};const stamp=document.createElement('span');stamp.className='maybe-stamp';stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';foodCard.appendChild(stamp);}}
+$('foodName').textContent=item.name;$('foodCat').textContent=item.category;setChoiceCount($('foodCount'),S.pool.length);if(photoCount>1){hydrateMealPhotoGallery(item).then(photos=>{if(S.pool[S.index]!==item)return;const idx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),photos.length-1));item._mealPhotoIndex=idx;img.src=photos[idx]||foodPhoto(item);ensureMealCardPhotoPager(foodCard,photos.length,idx);});}
 const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
 renderMaybeDeckToggle('food');
  const nextCard=$('foodNextCard');
@@ -2795,9 +2815,16 @@ function detailsSheet(item,type){
      '<div><b>'+esc(nut.sodium||'—')+' mg</b><span>Sodium</span></div>'+
      '</div><p class="detail-note">'+esc(item.nutritionNote||'Typical estimate per serving.')+'</p></section>' : '';
    const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHide" type="button" aria-label="Hide this meal"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Meal</span></button></div>';
-   const body='<div class="detail-unified detail-meal"><div class="detail-hero detail-meal-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-final-fallback="'+FINAL_FOOD_IMAGE+'" alt="'+esc(item.name)+'"></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">MEAL</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+' · Meal</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+detailRows+'</section>'+nutrition+notesSection+hide+'</div>';
+   const detailPhotos=mealPhotoList(item),detailHero=detailPhotos.length>1?'<div class="detail-photo-gallery"><img class="history-detail-photo" src="'+esc(image)+'" data-final-fallback="'+FINAL_FOOD_IMAGE+'" alt="'+esc(item.name)+'"><div class="detail-photo-gallery-controls"><button type="button" class="detail-photo-gallery-button" data-detail-photo-prev aria-label="Previous meal photo">‹</button><span class="detail-photo-gallery-count" data-detail-photo-count>1 / '+detailPhotos.length+'</span><button type="button" class="detail-photo-gallery-button" data-detail-photo-next aria-label="Next meal photo">›</button></div></div>':'<div class="detail-hero detail-meal-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-final-fallback="'+FINAL_FOOD_IMAGE+'" alt="'+esc(item.name)+'"></div>';
+const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="detail-title-block detail-unified-title"><span class="detail-kicker">MEAL</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+' · Meal</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+detailRows+'</section>'+nutrition+notesSection+hide+'</div>';
    const modal=openModal('detailsModal','Details',body);
    bindImageFallback('#detailsModal img',foodPhoto(item),FINAL_FOOD_IMAGE);
+   if(detailPhotos.length>1){
+    const gallery=modal.querySelector('.detail-photo-gallery'),gimg=gallery?.querySelector('.history-detail-photo'),gcount=gallery?.querySelector('[data-detail-photo-count]');let gidx=0;
+    const renderGallery=()=>hydrateMealPhotoGallery({...item,images:detailPhotos}).then(photos=>{const total=photos.length||detailPhotos.length;gidx=((gidx%total)+total)%total;if(gimg)gimg.src=photos[gidx]||image;if(gcount)gcount.textContent=(gidx+1)+' / '+total;});
+    gallery?.querySelector('[data-detail-photo-prev]')?.addEventListener('click',()=>{gidx--;renderGallery();});
+    gallery?.querySelector('[data-detail-photo-next]')?.addEventListener('click',()=>{gidx++;renderGallery();});
+   }
    bindDetailNotes(modal,item,'food');
    const detailHide=$('detailHide');
    if(detailHide)detailHide.onclick=async()=>{const hidden=await foodHideItem(item);if(hidden){modal.remove();$('detailsModalBg')?.remove();}};

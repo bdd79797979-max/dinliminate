@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 863,
+  "build": 864,
   "sourceBranch": "main",
-  "checkpoint": "CP863",
-  "deploymentTrigger": "CP863-meal-photo-polish-dedupe-and-hydration-2026-10-04",
+  "checkpoint": "CP864",
+  "deploymentTrigger": "CP864-meal-card-photo-viewer-2026-10-04",
   "vercelProductionVerified": false
 }
