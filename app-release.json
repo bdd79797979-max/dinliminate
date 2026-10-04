@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 902,
+  "build": 903,
   "sourceBranch": "main",
-  "checkpoint": "CP902",
-  "deploymentTrigger": "CP902-restaurant-discovery-layer-over-card",
+  "checkpoint": "CP903",
+  "deploymentTrigger": "CP903-details-photo-no-flash",
   "vercelProductionVerified": false
 }
