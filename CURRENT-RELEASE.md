@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 952 / CP952
+# CURRENT RELEASE — BUILD 953 / CP953
+
+## CP953 — Restaurant photo resolver quality
+- Keeps the agreed no-Google restaurant-photo policy.
+- Adds phone as an exact venue identity signal for verified public and official pages.
+- Prevents Bing search-query text from inflating image identity scores.
+- Rejects unverified direct Bing images unless they have exceptionally strong independent evidence.
+- Verifies the official site is actually the requested local restaurant before using its fast-path image.
+- Refreshes the restaurant photo resolver/cache namespace.
 
 ## CP952 — Restore simple Meal swipe path
 - Removed the Meal-specific preview/staging/handoff hooks introduced in CP943–CP951.
