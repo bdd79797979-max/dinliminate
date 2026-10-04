@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 959,
+  "build": 960,
   "sourceBranch": "main",
-  "checkpoint": "CP959",
-  "deploymentTrigger": "CP959-immediate-restaurant-card-with-background-photo-hydration",
+  "checkpoint": "CP960",
+  "deploymentTrigger": "CP960-exact-clarksville-venue-photo-routes",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity",
-  "photoBehavior": "immediate-safe-fallback-plus-background-exact-photo",
+  "photoBehavior": "immediate-safe-fallback-plus-exact-venue-page-routes",
   "photoPolicy": "no-google"
 }
