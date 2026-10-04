@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 903,
+  "build": 904,
   "sourceBranch": "main",
-  "checkpoint": "CP903",
-  "deploymentTrigger": "CP903-details-photo-no-flash",
+  "checkpoint": "CP904",
+  "deploymentTrigger": "CP904-phone-freeze-memory-stability",
   "vercelProductionVerified": false
 }
