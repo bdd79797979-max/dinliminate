@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '878';
+let APP_BUILD = '899';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -98,6 +98,7 @@ restaurantSearchKey:'',
 quickCutsCollapsed:{food:true,restaurant:true},
 mealTimeCutsCollapsed:true,
 mealTimeFilters:new Set(['Breakfast','Lunch / Dinner','Snacks / Desserts']),
+mealTimeSettings:{custom:[],names:{},order:[],disabled:new Set()},
 familyNormalMode:'idle',familyDecisionType:'',familyNormalRoundId:'',familyNormalStage:0,familyNormalAutoResume:false,familyNormalVoteBusy:false,familyActiveData:null,familyVotedIds:new Set(),familyPollTimer:0,familyPollBusy:false,familyCompareBothMode:'',familyCompareBothGroupId:'',familyCompareBothMealWinner:null,familyBrowseHistory:[]
 };
 const IMAGE_PROXY_HOSTS=new Set(['images.pexels.com','images.unsplash.com','commons.wikimedia.org','upload.wikimedia.org','static.wixstatic.com','static.spotapps.co','www.goodnes.com','hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','www.southernliving.com','southernbite.com','snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com','slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com','kookycrunch.com','cdn.apartmenttherapy.info','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.africanbites.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','www.sugardale.com','myhomemaderecipe.com','www.finedininglovers.com']);
@@ -601,7 +602,8 @@ const allFoods = () => {
  const customOnly=S.custom.filter(x=>!defaultIds.has(String(x.id))&&!deletedIds.has(String(x.id))).map(x=>Object.assign({},x,{quickCuts:Array.isArray(x.quickCuts)&&x.quickCuts.length?x.quickCuts:[x.category||'American'],mealTimes:mealTimesFor(x)}));
  return merged.concat(customOnly);
 };
-const STORAGE_VERSION = 5;
+const STORAGE_VERSION = 6;
+function namesToMealTimeCustom(list){return Array.isArray(list)?list:[];}
 const ITEM_NOTES_KEY = 'dinliminate.item.notes.v1';
 function loadItemNotes(){
  try{
@@ -746,6 +748,7 @@ restaurantCuts:[...S.restaurantCuts], restaurantActions:S.restaurantActions,
 restaurantQuery:S.restaurantQuery, location:S.location, locationSource:S.locationSource,
 saved:S.saved, winnerItem:S.winnerItem, winnerType:S.winnerType, schemaVersion:STORAGE_VERSION, deleted:[...(S.deleted||[])], deletedCustomMeals:S.deletedCustomMeals||[],
 restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
+mealTimeSettings:{custom:(S.mealTimeSettings?.custom||[]).map(x=>({id:String(x.id),name:String(x.name||'').trim()})).filter(x=>x.name),names:{...(S.mealTimeSettings?.names||{})},order:[...(S.mealTimeSettings?.order||[])],disabled:[...((S.mealTimeSettings?.disabled instanceof Set)?S.mealTimeSettings.disabled:new Set())]},
 custom:S.custom.map(x=>{
  const photos=dedupeMealPhotos(mealPhotoList(x),8);
  const images=photos.map((photo,i)=>{
@@ -807,7 +810,10 @@ S.locationSource = String(d.locationSource||'none');
 S.locationFreshAt = Number.isFinite(Number(d.locationFreshAt)) ? Number(d.locationFreshAt) : null;
 S.quickCutsCollapsed = {food:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'food') ? !!d.quickCutsCollapsed.food : true,restaurant:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'restaurant') ? !!d.quickCutsCollapsed.restaurant : true};
 S.mealTimeCutsCollapsed = Object.prototype.hasOwnProperty.call(d,'mealTimeCutsCollapsed') ? !!d.mealTimeCutsCollapsed : true;
-S.mealTimeFilters = new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).filter(x=>MEAL_TIME_CUTS.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(MEAL_TIME_CUTS);
+S.mealTimeSettings={custom:Array.isArray(d.mealTimeSettings?.custom)?d.mealTimeSettings.custom:namesToMealTimeCustom([]),names:d.mealTimeSettings?.names&&typeof d.mealTimeSettings.names==='object'?d.mealTimeSettings.names:{},order:Array.isArray(d.mealTimeSettings?.order)?d.mealTimeSettings.order:[],disabled:new Set(Array.isArray(d.mealTimeSettings?.disabled)?d.mealTimeSettings.disabled:[])};
+ensureMealTimeSettings();
+const availableMealTimeNames=mealTimeNames();
+S.mealTimeFilters=new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).map(currentMealTimeName).filter(x=>availableMealTimeNames.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(availableMealTimeNames);
 if(S.locationSource==='device' && S.location)S.locationSource='last';
 S.restaurantSearchDegraded = !!d.restaurantSearchDegraded;
 S.schemaVersion = STORAGE_VERSION;
@@ -849,18 +855,68 @@ function maybeShowHomeNudge(){
  window.setTimeout(()=>nudge.classList.add('is-faded'),4200);
  window.setTimeout(()=>nudge.remove(),4700);
 }
-const MEAL_TIME_CUTS=['Breakfast','Lunch / Dinner','Snacks / Desserts'];
+const DEFAULT_MEAL_TIME_DEFS=[
+ {id:'breakfast',name:'Breakfast'},
+ {id:'lunch-dinner',name:'Lunch / Dinner'},
+ {id:'snacks-desserts',name:'Snacks / Desserts'}
+];
+const MEAL_TIME_CUTS=DEFAULT_MEAL_TIME_DEFS.map(x=>x.name);
+function ensureMealTimeSettings(){
+ const current=S.mealTimeSettings&&typeof S.mealTimeSettings==='object'&&!Array.isArray(S.mealTimeSettings)?S.mealTimeSettings:{};
+ if(!current.names||typeof current.names!=='object'||Array.isArray(current.names))current.names={};
+ if(!Array.isArray(current.custom))current.custom=[];
+ if(!Array.isArray(current.order))current.order=[];
+ if(!(current.disabled instanceof Set))current.disabled=new Set(Array.isArray(current.disabled)?current.disabled:[]);
+ current.custom=current.custom.map(x=>({id:String(x?.id||('custom-meal-time-'+Math.random().toString(36).slice(2,9))),name:String(x?.name||'').trim()})).filter(x=>x.name);
+ const validIds=new Set([...DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),...current.custom.map(x=>x.id)]);
+ current.order=[...current.order.map(String).filter(id=>validIds.has(id)),...DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),...current.custom.map(x=>x.id)].filter((id,i,a)=>a.indexOf(id)===i);
+ current.disabled=new Set([...current.disabled].map(String).filter(id=>validIds.has(id)));
+ DEFAULT_MEAL_TIME_DEFS.forEach(def=>{if(!String(current.names[def.id]||'').trim())current.names[def.id]=def.name;});
+ S.mealTimeSettings=current;
+ return current;
+}
+function mealTimeCatalog(){
+ const cfg=ensureMealTimeSettings();
+ const defaults=DEFAULT_MEAL_TIME_DEFS.map(def=>({id:def.id,defaultName:def.name,name:String(cfg.names[def.id]||def.name).trim()||def.name,custom:false}));
+ const customs=(cfg.custom||[]).map(x=>({id:String(x.id),defaultName:'',name:String(x.name||'').trim(),custom:true})).filter(x=>x.name);
+ const byId=new Map([...defaults,...customs].map(x=>[x.id,x]));
+ return cfg.order.map(String).map(id=>byId.get(id)).filter(Boolean).concat([...byId.values()].filter(x=>!cfg.order.includes(x.id)));
+}
+function mealTimeOptions(){return mealTimeCatalog().map(x=>({...x,enabled:!S.mealTimeSettings.disabled.has(x.id)}));}
+function mealTimeNames(){return mealTimeOptions().filter(x=>x.enabled).map(x=>x.name);}
+function mealTimeDefinition(value){
+ const key=normKey(value);
+ if(!key)return null;
+ return mealTimeCatalog().find(x=>normKey(x.name)===key || (x.defaultName&&normKey(x.defaultName)===key))||null;
+}
+function currentMealTimeName(value){
+ const found=mealTimeDefinition(value);
+ return found?.name||String(value||'').trim();
+}
+function syncMealTimeReferences(oldName,newName,id){
+ const replaceIn=item=>{
+  if(!item||!Array.isArray(item.mealTimes))return;
+  item.mealTimes=[...new Set(item.mealTimes.map(value=>String(value||'').trim()===oldName?newName:value).filter(Boolean))];
+  if(!item.mealTimes.length)item.mealTimes=[newName];
+ };
+ S.custom.forEach(replaceIn);
+ S.deletedCustomMeals?.forEach(replaceIn);
+ S.mealTimeFilters=new Set([...S.mealTimeFilters||[]].map(value=>value===oldName?newName:value));
+}
 function mealTimesFor(item){
  const raw=Array.isArray(item?.mealTimes)?item.mealTimes:(item?.mealTime?[item.mealTime]:[]);
- const explicit=raw.map(x=>String(x||'').trim()).filter(x=>MEAL_TIME_CUTS.includes(x));
+ const explicit=raw.map(currentMealTimeName).filter(Boolean);
  if(explicit.length)return [...new Set(explicit)];
  const category=String(item?.category||'').trim().toLowerCase();
  const cuts=(Array.isArray(item?.quickCuts)?item.quickCuts:[item?.category]).map(x=>String(x||'').trim().toLowerCase());
- if(category==='breakfast' || cuts.includes('breakfast')) return ['Breakfast'];
- if(category==='snack' || category==='dessert' || category==='desserts' || cuts.some(x=>x==='snack'||x==='dessert'||x==='desserts')) return ['Snacks / Desserts'];
- return ['Lunch / Dinner'];
+ const fallbackId=category==='breakfast'||cuts.includes('breakfast')
+   ?'breakfast'
+   :(category==='snack'||category==='dessert'||category==='desserts'||cuts.some(x=>x==='snack'||x==='dessert'||x==='desserts')
+     ?'snacks-desserts':'lunch-dinner');
+ const found=mealTimeCatalog().find(x=>x.id===fallbackId);
+ return [found?.name||'Lunch / Dinner'];
 }
-function mealTimeFor(item){ return mealTimesFor(item)[0]||'Lunch / Dinner'; }
+function mealTimeFor(item){ return mealTimesFor(item)[0]||mealTimeNames()[0]||'Lunch / Dinner'; }
 function foodBasePool(){
  return allFoods().filter(item=>{
   if(S.hidden.has(item.id)||S.foodCuts.has(item.id))return false;
@@ -973,17 +1029,18 @@ function renderMealTimeCuts(){
  toggle.setAttribute('aria-expanded',String(!collapsed));
  toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times');
  toggle.title=collapsed?'Show Meal Times':'Hide Meal Times';
- const allMealTimesSelected=MEAL_TIME_CUTS.every(label=>S.mealTimeFilters?.has(label));
+ const availableMealTimes=mealTimeOptions().filter(x=>x.enabled);
+ const allMealTimesSelected=availableMealTimes.length>0&&availableMealTimes.every(x=>S.mealTimeFilters?.has(x.name));
  toggle.classList.toggle('is-active',allMealTimesSelected);
  toggle.setAttribute('aria-pressed',allMealTimesSelected?'true':'false');
  toggle.setAttribute('data-all-selected',allMealTimesSelected?'true':'false');
- chips.innerHTML=MEAL_TIME_CUTS.map(label=>'<button class="chip meal-time-chip'+(S.mealTimeFilters?.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(S.mealTimeFilters?.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
+ chips.innerHTML=availableMealTimes.map(def=>def.name).map(label=>'<button class="chip meal-time-chip'+(S.mealTimeFilters?.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(S.mealTimeFilters?.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
  chips.querySelectorAll('[data-meal-time]').forEach(btn=>{
   btn.onclick=()=>{
    const label=btn.dataset.mealTime;
    if(S.mealTimeFilters.has(label)){
     if(S.mealTimeFilters.size===1){
-     S.mealTimeFilters = new Set(MEAL_TIME_CUTS);
+     S.mealTimeFilters = new Set(mealTimeNames());
     }else{
      S.mealTimeFilters.delete(label);
     }
@@ -1071,7 +1128,7 @@ S.maybeDeck = false;
 S.foodMaybeRound = false;
 S.cutCats.clear();
 S.foodCuts.clear();
-S.mealTimeFilters = new Set(MEAL_TIME_CUTS);
+S.mealTimeFilters = new Set(mealTimeNames());
 S.index = 0;
 S.winnerItem = null;
 buildFood();
@@ -3137,7 +3194,7 @@ let editorPhotos=dedupeMealPhotos(mealPhotoList(item),8);
 let editorPhotosReady=Promise.resolve();
 const body='<form class="add" id="foodEditorForm">'+
 '<input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'">'+
-'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><legend>Meal Times</legend><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid">'+MEAL_TIME_CUTS.map(label=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(label)+'" '+(existingMealTimes.has(label)?'checked':'')+'><span>'+esc(label)+'</span></label>').join('')+'</div></fieldset>'+
+'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><legend>Meal Times</legend><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid">'+mealTimeOptions().map(def=>def.name).map(label=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(label)+'" '+(existingMealTimes.has(label)?'checked':'')+'><span>'+esc(label)+'</span></label>').join('')+'</div></fieldset>'+
 '<div class="meal-editor-section"><div class="meal-editor-section-title">Nutrition per serving</div><p class="meal-editor-helper">Fill in the five numbers that will appear in the meal Details screen.</p><div class="meal-nutrition-editor-grid">'+
 '<label>Calories<input id="editFoodCalories" type="number" required min="0" step="1" inputmode="numeric" placeholder="520" value="'+esc(nut.calories??'')+'"><span>kcal</span></label>'+
 '<label>Protein<input id="editFoodProtein" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="27" value="'+esc(nut.protein??'')+'"><span>g</span></label>'+
@@ -3386,7 +3443,7 @@ renderEditorQuickCuts();
 $('foodEditorForm').onsubmit=async e=>{
 e.preventDefault();
 const name=$('editFoodName').value.trim();
-const mealTimes=[...document.querySelectorAll('input[name="editMealTime"]:checked')].map(x=>String(x.value||'').trim()).filter(x=>MEAL_TIME_CUTS.includes(x));
+const mealTimes=[...document.querySelectorAll('input[name="editMealTime"]:checked')].map(x=>String(x.value||'').trim()).filter(x=>mealTimeOptions().some(def=>def.name===x));
 if(!mealTimes.length){appToast('Choose at least one Meal Time.');return;}
 let quickCuts=[...document.querySelectorAll('input[name="editQuickCut"]:checked')].map(x=>x.value);
 if(!quickCuts.length){appToast('Choose at least one Cuisine Cut.');return;}
@@ -3490,6 +3547,86 @@ function restoreDeletedMeal(id){
  }
  buildFood();foodQuick();save();manageFoodsView();
 }
+function mealTimeManagerRows(){
+ const options=mealTimeOptions(),enabledCount=options.filter(x=>x.enabled).length;
+ return options.map((item,index)=>{
+  const isFirst=index===0,isLast=index===options.length-1;
+  return '<div class="manage-meal-time-row" data-meal-time-id="'+esc(item.id)+'">'+
+    '<div class="manage-meal-time-main"><b>'+esc(item.name)+'</b><small>'+esc(item.custom?'CUSTOM':'DEFAULT')+(item.enabled?'':' · OFF')+'</small></div>'+
+    '<div class="manage-meal-time-actions">'+
+      '<button type="button" class="manage-meal-time-icon" data-meal-time-up="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' up" '+(isFirst?'disabled':'')+'>↑</button>'+
+      '<button type="button" class="manage-meal-time-icon" data-meal-time-down="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' down" '+(isLast?'disabled':'')+'>↓</button>'+
+      '<button type="button" class="manage-meal-time-action" data-meal-time-edit="'+esc(item.id)+'">Edit</button>'+
+      '<button type="button" class="manage-meal-time-toggle '+(item.enabled?'is-on':'')+'" data-meal-time-toggle="'+esc(item.id)+'" aria-pressed="'+(item.enabled?'true':'false')+'">'+(item.enabled?'On':'Off')+'</button>'+
+      (item.custom?'<button type="button" class="manage-meal-time-delete" data-meal-time-delete="'+esc(item.id)+'" aria-label="Delete '+esc(item.name)+'">×</button>':'')+
+    '</div></div>';
+ }).join('');
+}
+function mealTimeManagerMarkup(){
+ const options=mealTimeOptions(),enabled=options.filter(x=>x.enabled).length;
+ return '<section class="manage-meal-time-section">'+
+   '<div class="manage-section-heading"><div><span class="manage-kicker">MEAL TIMES</span><h5>Shape your day.</h5><p>Rename the defaults, add your own, reorder them, or turn one off. Your meals keep their assignments.</p></div><small>'+enabled+' active</small></div>'+
+   '<div class="manage-meal-time-list">'+mealTimeManagerRows()+'</div>'+
+   '<form class="manage-meal-time-add" id="addMealTimeForm"><input id="newMealTimeName" maxlength="28" placeholder="New Meal Time" autocomplete="off"><button type="submit">＋ Add</button></form>'+
+ '</section>';
+}
+function renameMealTime(id){
+ const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item)return;
+ const row=document.querySelector('[data-meal-time-id="'+CSS.escape(String(id))+'"]');if(!row)return;
+ const main=row.querySelector('.manage-meal-time-main');if(!main||main.querySelector('input'))return;
+ const old=item.name;
+ main.innerHTML='<input class="manage-meal-time-edit" maxlength="28" value="'+esc(old)+'" aria-label="Rename Meal Time">';
+ const input=main.querySelector('input');
+ const finish=commit=>{
+  const next=String(input.value||'').trim();
+  if(commit){
+   if(!next){appToast('Give the Meal Time a name.');input.focus();return;}
+   const conflict=mealTimeCatalog().some(x=>x.id!==item.id&&normKey(x.name)===normKey(next));
+   if(conflict){appToast('That Meal Time name is already in use.');input.focus();input.select();return;}
+   if(item.custom){
+    const cfg=ensureMealTimeSettings(),custom=cfg.custom.find(x=>String(x.id)===String(id));if(custom)custom.name=next;
+   }else{
+    const cfg=ensureMealTimeSettings(),oldCurrent=cfg.names[item.id]||item.defaultName;cfg.names[item.id]=next;syncMealTimeReferences(oldCurrent,next,item.id);
+   }
+   save();buildFood();foodQuick();renderMealTimeCuts();manageFoodsView();return;
+  }
+  manageFoodsView();
+ };
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();finish(true)}else if(e.key==='Escape'){e.preventDefault();finish(false)}});
+ input.addEventListener('blur',()=>window.setTimeout(()=>{if(document.body.contains(input))finish(true)},80));
+ input.focus();input.select();
+}
+function addMealTime(name){
+ const next=String(name||'').trim();
+ if(!next){appToast('Give the new Meal Time a name.');return false;}
+ if(mealTimeCatalog().some(x=>normKey(x.name)===normKey(next))){appToast('That Meal Time name is already in use.');return false;}
+ const cfg=ensureMealTimeSettings(),id='meal-time-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+ cfg.custom.push({id,name:next});cfg.order.push(id);cfg.order=[...new Set(cfg.order)];save();manageFoodsView();appToast(next+' added.');return true;
+}
+async function deleteMealTime(id){
+ const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item||!item.custom)return;
+ if(!await appConfirm('Delete '+item.name+'?','Meals assigned only to this custom Meal Time will move to '+(mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner')+'.','Delete Meal Time'))return;
+ const fallback=mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner';
+ const replace=item.name;
+ S.custom.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
+ S.deletedCustomMeals?.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
+ const cfg=ensureMealTimeSettings();cfg.custom=cfg.custom.filter(x=>String(x.id)!==String(id));cfg.order=cfg.order.filter(x=>String(x)!==String(id));cfg.disabled.delete(String(id));S.mealTimeFilters.delete(replace);
+ if(!S.mealTimeFilters.size)S.mealTimeFilters=new Set(mealTimeNames());
+ save();buildFood();foodQuick();renderMealTimeCuts();manageFoodsView();appToast(item.name+' deleted.');
+}
+function moveMealTime(id,direction){
+ const cfg=ensureMealTimeSettings(),key=String(id),idx=cfg.order.findIndex(x=>String(x)===key),to=idx+direction;
+ if(idx<0||to<0||to>=cfg.order.length)return;
+ [cfg.order[idx],cfg.order[to]]=[cfg.order[to],cfg.order[idx]];
+ save();manageFoodsView();
+}
+function toggleMealTime(id){
+ const cfg=ensureMealTimeSettings(),key=String(id),currentlyOff=cfg.disabled.has(key);
+ if(!currentlyOff && mealTimeOptions().filter(x=>x.enabled).length<=1){appToast('Keep at least one Meal Time active.');return;}
+ if(currentlyOff)cfg.disabled.delete(key);else{cfg.disabled.add(key);const item=mealTimeCatalog().find(x=>x.id===key);if(item)S.mealTimeFilters.delete(item.name);}
+ if(!S.mealTimeFilters.size)S.mealTimeFilters=new Set(mealTimeNames());
+ save();buildFood();foodQuick();renderMealTimeCuts();manageFoodsView();
+}
 function manageFoodsView() {
  const rows=allFoods(),deletedRows=deletedFoodRows();
  const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
@@ -3507,12 +3644,19 @@ function manageFoodsView() {
   const deleteAction=deleted?'':'<button class="manage-row-action manage-delete" data-food-delete="'+esc(id)+'">Delete</button>';
   return '<div class="food-row manage-food-row"><span class="manage-food-name"><b>'+esc(item.name)+'</b><small class="row-state '+(deleted?'is-deleted':(hidden?'is-hidden':'is-active'))+'">'+esc(stateLabel)+'</small><small class="row-meal-time">'+esc(mealTimeLabel)+'</small></span><span class="food-row-actions">'+extra+primary+deleteAction+'</span></div>';
  };
- const body='<div class="manage-meals-view"><div class="manage-hero"><span class="manage-kicker">MEAL LIBRARY</span><h4>Shape your choices.</h4><p>Edit any meal, replace its photo, hide it from decisions, or delete it. Deleted meals stay recoverable on this device.</p></div>'+
+ const body='<div class="manage-meals-view"><div class="manage-hero"><span class="manage-kicker">MEAL LIBRARY</span><h4>Shape your choices.</h4><p>Edit any meal, replace its photo, hide it from decisions, or delete it. Deleted meals stay recoverable on this device.</p></div>'+mealTimeManagerMarkup()+
  '<button class="manage-add-action" id="openFoodEditor" type="button"><span class="manage-add-icon" aria-hidden="true">＋</span><span>Add Meal</span></button>'+
  '<div class="food-list">'+rows.map(x=>rowMarkup(x)).join('')+'</div>'+
  (deletedRows.length?'<section class="deleted-meals-section"><div class="deleted-meals-heading"><span class="manage-kicker">RECOVERY</span><h5>Deleted Meals</h5><p>Restore a deleted meal without changing the rest of your library.</p></div><div class="food-list">'+deletedRows.map(x=>rowMarkup(x,true)).join('')+'</div></section>':'')+
  '</div>';
  const modal=openModal('manageFoodsModal','Manage Meals',body);
+ const addMealTimeForm=$('addMealTimeForm');
+ addMealTimeForm?.addEventListener('submit',e=>{e.preventDefault();const input=$('newMealTimeName');if(addMealTime(input?.value)){if(input)input.value='';}});
+ modal.querySelectorAll('[data-meal-time-edit]').forEach(btn=>btn.onclick=()=>renameMealTime(btn.dataset.mealTimeEdit));
+ modal.querySelectorAll('[data-meal-time-delete]').forEach(btn=>btn.onclick=()=>deleteMealTime(btn.dataset.mealTimeDelete));
+ modal.querySelectorAll('[data-meal-time-up]').forEach(btn=>btn.onclick=()=>moveMealTime(btn.dataset.mealTimeUp,-1));
+ modal.querySelectorAll('[data-meal-time-down]').forEach(btn=>btn.onclick=()=>moveMealTime(btn.dataset.mealTimeDown,1));
+ modal.querySelectorAll('[data-meal-time-toggle]').forEach(btn=>btn.onclick=()=>toggleMealTime(btn.dataset.mealTimeToggle));
  $('openFoodEditor').onclick=()=>foodEditor();
  modal.querySelectorAll('[data-food-restore]').forEach(btn=>btn.onclick=()=>{S.hidden.delete(btn.dataset.foodRestore);buildFood();save();manageFoodsView();});
  modal.querySelectorAll('[data-food-hide]').forEach(btn=>btn.onclick=()=>{S.hidden.add(btn.dataset.foodHide);buildFood();save();manageFoodsView();});
@@ -3891,6 +4035,7 @@ function resetRestoreView(){
 async function resetAppDataFlow(){
 if(!await appConfirm('Reset all app data?', 'This permanently removes custom meals, history, hidden choices, saved round state, and device-stored app preferences.', 'Reset Everything'))return;
 S.hidden.clear(); S.deleted.clear(); S.deletedCustomMeals=[]; S.customQuickCuts=[]; S.hiddenRestaurants={}; S.cutCats.clear(); S.foodCuts.clear(); S.maybe.clear(); S.foodMaybeRound=false; S.restaurantCuts.clear(); S.restaurantMaybeRound=false;
+S.mealTimeSettings={custom:[],names:{},order:DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),disabled:new Set()};S.mealTimeFilters=new Set(mealTimeNames());
 S.pool=[]; S.restaurantPool=[]; S.index=0; S.restaurantIndex=0; S.foodActions=[]; S.restaurantActions=[]; S.winnerItem=null; S.winnerType='food'; S.location=null; S.locationSource='none'; S.locationFreshAt=null; S.restaurantSearchOrigin=null; S.restaurantSearchKey=''; S.restaurantQuery=''; S.restaurantSearchDegraded=false; S.storageWarning=false; S.saved=false; S.custom=[];
 try{localStorage.removeItem(KEY);localStorage.removeItem(HISTORY_KEY);localStorage.removeItem(ITEM_NOTES_KEY);}catch{}
 try{const db=await openPhotoDB(); await new Promise(resolve=>{const tx=db.transaction(PHOTO_STORE,'readwrite'); tx.objectStore(PHOTO_STORE).clear(); tx.oncomplete=resolve; tx.onerror=resolve;});}catch{}
