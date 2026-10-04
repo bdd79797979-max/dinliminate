@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 896,
+  "build": 897,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP896",
-  "deploymentTrigger": "CP896-restore-home-window-imagery-2026-10-04"
+  "checkpoint": "CP897",
+  "deploymentTrigger": "CP897-solid-double-wood-door-background-2026-10-04"
 }
