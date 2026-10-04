@@ -8225,20 +8225,6 @@ button,input,select,textarea{
 }
 
 
-/* CP916 — Meal swipe iPhone compositor hardening only. Restaurant swipe behavior is intentionally unchanged. */
-#food .swipe-card-stack>.card{
-  contain:layout!important;
-  -webkit-backface-visibility:hidden!important;
-  backface-visibility:hidden!important;
-  transform:translate3d(0,0,0);
-  -webkit-transform:translate3d(0,0,0);
-}
-#food .swipe-card-stack>.card.swipe-active{
-  contain:layout!important;
-  -webkit-backface-visibility:hidden!important;
-  backface-visibility:hidden!important;
-}
-
 /* CP917 — guaranteed-first Restaurant photography. Exact venue images can replace this asynchronously. */
 #restaurant .restaurant-card-stack img[data-restaurant-photo-key]{
   background:#171615;
@@ -8473,4 +8459,16 @@ button,input,select,textarea{
     top:-18px!important;
     font-size:7.6px!important;
   }
+}
+
+/* CP926 — Meal swipe handoff stability. Wait for the incoming meal image before restoring the card. */
+#food .swipe-card-stack>.card{
+  -webkit-backface-visibility:hidden!important;
+  backface-visibility:hidden!important;
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
+}
+#food .swipe-card-stack>.card.swipe-active{
+  -webkit-backface-visibility:hidden!important;
+  backface-visibility:hidden!important;
 }
