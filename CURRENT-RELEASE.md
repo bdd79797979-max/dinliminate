@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 929 / CP929
+# CURRENT RELEASE — BUILD 930 / CP930
+
+## CP930 — iPhone Meals layout hardening
+- Hardened the Meals top navigation for narrow phone widths so Meal Times, Cuisine, All Maybes/count, and Menu remain on one line.
+- Fixed Cuisine state binding after moving its control from the lower discovery row into the Meals top navigation.
+- Preserved the existing Meal Times rail, Cuisine rail, Maybe deck, Menu action, and Meal swipe behavior.
+
 
 ## CP929 — Meals top navigation
 - Moved Meal Times and Cuisine into the Meals top navigation row.
