@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 947,
+  "build": 948,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP947",
-  "deploymentTrigger": "CP947-zero-geometry-delta-swipe"
+  "checkpoint": "CP948",
+  "deploymentTrigger": "CP948-restore-no-google-restaurant-photos"
 }
