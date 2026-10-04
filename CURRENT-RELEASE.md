@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 931 / CP931
+# CURRENT RELEASE — BUILD 932 / CP932
+
+## CP932 — Menu lines only
+- Removed the remaining decorative box/enclosure around the Menu control.
+- Menu now presents only the three metallic-gold lines while retaining its full invisible touch target and far-right placement.
+
 
 ## CP931 — Restaurant iPhone fit pass
 - Hardened the Restaurant location row for narrow phones through 340px widths without changing its control order or behavior.
