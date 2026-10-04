@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 900,
+  "build": 901,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP900",
-  "deploymentTrigger": "CP900-move-meal-time-editing-into-add-edit-meal-2026-10-04"
+  "checkpoint": "CP901",
+  "deploymentTrigger": "CP901-eliminate-swipe-card-handoff-flash-2026-10-04"
 }
