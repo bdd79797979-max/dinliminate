@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 900 / CP900
+## CP901 — eliminate swipe card handoff flash
+- Removed the CSS `!important` transform that was overriding the live pointer-driven card transform during active swipes.
+- Changed swipe completion so the new card/state renders before the detached outgoing card is reset, eliminating the visible reset frame at handoff.
+- Bumped the service-worker shell cache and release metadata to CP901.
+
+# CURRENT RELEASE — BUILD 901 / CP901
 
 ## CP900 — Meal Time editing lives with the meal
 - Removed the standalone Meal Time management section from Manage Meals.
