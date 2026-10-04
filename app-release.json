@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 891,
+  "build": 892,
   "sourceBranch": "main",
-  "checkpoint": "CP891",
-  "deploymentTrigger": "CP891-source-cleanup-cache-bust",
+  "checkpoint": "CP892",
+  "deploymentTrigger": "CP892-fix-complete-address-autofill",
   "vercelProductionVerified": false
 }
