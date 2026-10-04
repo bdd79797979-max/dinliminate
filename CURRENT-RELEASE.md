@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 934 / CP934
+# CURRENT RELEASE — BUILD 932 / CP932
+
+## CP932 — restore Meals All Maybes count treatment
+- Restored the Meals All Maybes live count to the same restrained green used by the Restaurant live count.
+- Preserved the new Meals top-row order, live count behavior, and all existing controls.
+
 
 ## CP934 — Restaurant Search field correction
 - Corrected the Restaurant Search input box so its border, field surface, and text remain fully visible on iPhone Safari.
