@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 916,
+  "build": 917,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP916",
-  "deploymentTrigger": "CP916-meal-swipe-iphone-hardening-2026-10-04"
+  "checkpoint": "CP917",
+  "deploymentTrigger": "CP917-restaurant-photo-first-render-2026-10-04"
 }
