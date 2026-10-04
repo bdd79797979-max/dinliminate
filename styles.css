@@ -8140,3 +8140,86 @@ button,input,select,textarea{
   .app #family .decision-brand,
   .drawer-brand strong{animation:none!important}
 }
+
+
+/* CP913 — luxury Home utility controls.
+   Keep the existing compact icon behavior, but give Add to phone and Share a
+   refined concierge-level finish with brushed-gold detailing and restrained depth. */
+.luxury-home .home-foot-actions{
+  gap:14px!important;
+}
+.luxury-home .home-icon-action{
+  width:58px!important;
+  min-width:58px!important;
+  height:52px!important;
+  min-height:52px!important;
+  padding:6px 4px 5px!important;
+  gap:3px!important;
+  border-radius:17px!important;
+  background:
+    linear-gradient(145deg,rgba(34,31,26,.96),rgba(13,13,12,.98))!important;
+  border:1px solid rgba(198,164,106,.42)!important;
+  color:#d7bc7f!important;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.52),
+    inset 0 1px 0 rgba(255,248,220,.11),
+    inset 0 0 0 1px rgba(0,0,0,.62),
+    0 0 0 1px rgba(198,164,106,.04)!important;
+}
+.luxury-home .home-icon-action::before{
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  top:5px;
+  height:1px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,#fff3c9aa 32%,#cda65e 52%,transparent 82%);
+  opacity:.72;
+  pointer-events:none;
+}
+.luxury-home .home-icon-action::after{
+  inset:3px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(255,247,218,.07)!important;
+}
+.luxury-home .home-icon-action:hover{
+  color:#f2dfad!important;
+  border-color:rgba(226,193,117,.7)!important;
+  background:linear-gradient(145deg,rgba(42,37,29,.98),rgba(16,15,13,.99))!important;
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.58),
+    inset 0 1px 0 rgba(255,248,220,.14),
+    0 0 0 3px rgba(198,164,106,.08),
+    0 0 18px rgba(198,164,106,.10)!important;
+}
+.luxury-home .home-icon-action:active{
+  transform:translateY(1px) scale(.965)!important;
+}
+.luxury-home .home-foot-icon{
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.7));
+}
+.luxury-home .home-icon-label{
+  font-size:7px!important;
+  font-weight:900!important;
+  letter-spacing:.105em!important;
+  color:#e0d2b5!important;
+  text-transform:uppercase!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.7)!important;
+}
+.luxury-home #addToPhone .home-icon-label,
+.luxury-home #shareApp .home-icon-label{
+  opacity:.94;
+}
+@media(max-width:390px){
+  .luxury-home .home-foot-actions{gap:10px!important}
+  .luxury-home .home-icon-action{
+    width:56px!important;
+    min-width:56px!important;
+    height:50px!important;
+    min-height:50px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .luxury-home .home-icon-action{transition:none!important}
+}
