@@ -8238,3 +8238,9 @@ button,input,select,textarea{
   -webkit-backface-visibility:hidden!important;
   backface-visibility:hidden!important;
 }
+
+/* CP917 — guaranteed-first Restaurant photography. Exact venue images can replace this asynchronously. */
+#restaurant .restaurant-card-stack img[data-restaurant-photo-key]{
+  background:#171615;
+  object-fit:cover;
+}
