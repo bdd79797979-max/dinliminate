@@ -1587,13 +1587,8 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   hapticTriggered=false;
   cleanup();
   suppressClickUntil=Date.now()+450;
-   if(next&&cardId==='restaurantCard'&&next.__restaurantCanonicalPhotoPromise){
-   await Promise.race([
-    next.__restaurantCanonicalPhotoPromise.catch(()=>null),
-    new Promise(resolve=>window.setTimeout(resolve,RESTAURANT_PHOTO_HANDOFF_WAIT))
-   ]);
-   await ensureSwipePreviewReady(next);
-  }
+   // Restaurant photo resolution continues in the background. Never block the
+   // swipe gesture or outgoing animation on network/photo readiness.
   if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
   const width=cardWidth();
   const distance=Math.max(520,Math.round(width*1.35));
