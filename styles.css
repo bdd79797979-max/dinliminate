@@ -344,7 +344,7 @@
 /* CP108 — luxury home */
 .luxury-home{position:relative;overflow:hidden;text-align:center;background:
   linear-gradient(180deg,rgba(6,6,6,.34),rgba(6,6,6,.58)),
-  url("/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F14778623%2Fpexels-photo-14778623.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1800") center/cover no-repeat,
+  url("https://s.alicdn.com/%40sc04/kf/Hd2f0226eec3e43d7a5ff5d87b57b9552G/Luxury-Modern-Villa-Entry-Door-with-Carved-Cast-Armor-Design-Anti-Theft-Password-Lock-Postmodern-Exterior-Front-Door.jpg") center/cover no-repeat,
   linear-gradient(180deg,#0c0c0c,#11100e 66%,#0c0c0c)}
 .luxury-home::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#ffffff05,transparent 35%,#e2a75d09 78%,transparent)}
 .luxury-orb{position:absolute;border-radius:50%;filter:blur(18px);pointer-events:none}
@@ -7832,7 +7832,7 @@ button,input,select,textarea{
 .app:has(#home:not(.hidden)) #home{
   background:
     linear-gradient(180deg,rgba(5,4,3,.30),rgba(5,4,3,.56)),
-    url("/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F14778623%2Fpexels-photo-14778623.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1800")
+    url("https://s.alicdn.com/%40sc04/kf/Hd2f0226eec3e43d7a5ff5d87b57b9552G/Luxury-Modern-Villa-Entry-Door-with-Carved-Cast-Armor-Design-Anti-Theft-Password-Lock-Postmodern-Exterior-Front-Door.jpg")
     center center / cover no-repeat !important;
 }
 .app:has(#home:not(.hidden)) #home .home-card-photo{
