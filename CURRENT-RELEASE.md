@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 913 / CP914
+# CURRENT RELEASE — BUILD 915 / CP915
+
+## CP915 — iPhone Home card gesture hardening
+- Removed the Home choice cards from generic touch manipulation behavior.
+- Home cards now allow vertical page movement while blocking horizontal overscroll.
+- Press feedback cancels once a real finger move begins, preventing the card from visually sticking, shifting, or fighting iPhone swipe gestures.
+- Preserved the existing tap actions for AT HOME and RESTAURANT.
 
 ## CP914 — Premium Home choice photography
 - Replaced the Home AT HOME and RESTAURANT card photography with stronger, more luxurious Pexels imagery selected for the existing wide mobile card crop.
