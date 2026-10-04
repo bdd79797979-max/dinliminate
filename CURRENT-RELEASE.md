@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 936 / CP936
+# CURRENT RELEASE — BUILD 937 / CP937
+
+## CP937 — final mobile polish / Meal swipe handoff
+- Reworked the Meal swipe handoff so the promoted next card stays visible while the newly rendered Meal becomes ready, eliminating the old quick jump-back frame.
+- Added Meal-card identity tracking to keep the two-layer handoff deterministic.
+- Matched Meals Meal Times and Cuisine to the Restaurant Search/Cuisine control geometry and restored the restrained Restaurant-style All Maybes/count treatment.
+- Reasserted Menu as lines-only and hardened the Restaurant search field to remain fully inside the viewport.
+- Preserved the maximized phone card stages and Restaurant swipe behavior.
+
 
 ## CP936 — Meals control parity
 - Matched Meals Meal Times and Cuisine to the Restaurant Search/Cuisine control size, weight, spacing language, and interaction treatment.
