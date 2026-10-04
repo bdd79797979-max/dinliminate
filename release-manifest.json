@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 909,
+  "build": 910,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP909",
-  "deploymentTrigger": "CP909-runtime-entry-and-pwa-version-sync-2026-10-04"
+  "checkpoint": "CP910",
+  "deploymentTrigger": "CP910-surgical-cleanup-and-runtime-version-sync-2026-10-04"
 }
