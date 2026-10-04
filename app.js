@@ -1643,7 +1643,26 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
        if(promotedImg.alt)recycledImg.alt=promotedImg.alt;
        recycledImg.style.transform='none';
       }
-      reset();
+
+      // Do not call reset(): reset() also mutates the visible waiting card.
+      // Switch the hidden/recycled layer into the current-card state first,
+      // then hide the promoted layer without changing its geometry.
+      card.classList.remove('swipe-active');
+      card.style.transition='none';
+      card.style.transform='none';
+      card.style.opacity='1';
+      card.style.visibility='visible';
+      card.style.removeProperty('--swipe-tint-alpha');
+      card.dataset.swipe='';
+      if(next){
+       next.style.transition='none';
+       next.style.transform='none';
+       next.style.opacity='0';
+       next.style.visibility='hidden';
+       next.dataset.swipePromoted='';
+       const promotedCurrentImg=next.querySelector('img');
+       if(promotedCurrentImg)promotedCurrentImg.style.transform='none';
+      }
      }
      if($('foodNextCard')?.isConnected)prepareFoodNextCard();
      foodSwipeHandoff=false;
