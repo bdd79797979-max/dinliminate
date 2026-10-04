@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 952,
+  "build": 953,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP952",
-  "deploymentTrigger": "CP952-restore-simple-meal-swipe"
+  "checkpoint": "CP953",
+  "deploymentTrigger": "CP953-restaurant-photo-resolver-quality"
 }
