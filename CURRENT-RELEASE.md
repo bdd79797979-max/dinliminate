@@ -1,12 +1,10 @@
-# CURRENT RELEASE — BUILD 947 / CP947
+# CURRENT RELEASE — BUILD 948 / CP948
 
-## CP947 — Zero-geometry-delta swipe
-- Removed waiting-card scale interpolation from both Meals and Restaurants.
-- The waiting card remains exactly `scale(1)` throughout idle, drag, threshold crossing, and handoff; only opacity/filter reveal changes.
-- Removed the waiting-card image zoom as well, so neither the card nor its photo subtly expands during a swipe.
-- Preserved the current-card finger tracking, translation, rotation, action threshold, haptic behavior, and existing Meal/Restaurant handoff logic.
-- Added QA guards preventing reintroduction of `scaleLift` or a separate Meal-only waiting-card geometry path.
-- Bumped application and service-worker assets to CP947.
+## CP948 — Restore agreed no-Google Restaurant photo policy
+- Removed Google Places photo metadata from Restaurant search rows; Google may still provide restaurant discovery/contact data, but never restaurant photography.
+- Removed the Google photo branch from the Restaurant photo resolver and client loader.
+- Kept CP946 image normalization/Sharp delivery and CP947 zero-geometry-delta swipe behavior intact.
+- Restaurant photo sourcing remains OSM exact POI, official/verified public venue pages, known exact venue sources, and the established generic fallback hierarchy.
 
 ## CP939 — Canonical Meals + Restaurant decision layer
 - Unified Meals and Restaurant decision controls around one canonical visual/DOM contract.
