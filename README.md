@@ -1,44 +1,60 @@
 # Dinliminate
 
-Dinliminate is a phone-first dinner decision app built around fast food and restaurant elimination.
+Dinliminate is a phone-first dinner decision app built around fast, stable meal and restaurant elimination.
 
-Current build: Version 1.0, Build 709.
+## Current release
 
-Clean recovery baseline: `clean-cp704-2026-10-02`.
+- **Version:** 1.0
+- **Build:** 910
+- **Checkpoint:** CP910
+- **Branch:** `main`
+- **Release state:** candidate source; Vercel production verification pending the account deployment-rate reset.
+- **Architecture:** root-level HTML/CSS/JS PWA with Vercel API routes; Netlify files remain as legacy/backup hosting configuration.
 
-CP708 keeps Restaurant Search and Open/All hidden for now while the rest of the app is hardened; Meal and Restaurant decision-button behavior is unified.
+## CP910 — Surgical cleanup
 
-The deployable app lives at the repository root.
+- Removed confirmed unused/no-op runtime variables and the stale CP693 verification marker.
+- Simplified Restaurant Search pool construction so fresh provider rows are deduped directly without an always-empty intermediate array.
+- Synchronized `index.html`, `app.js`, `sw.js`, and release metadata to build 910.
+- Kept the existing single-file runtime architecture intact; no broad refactor or file split was introduced.
 
-Milestones:
-1. Home + Food decision engine
-2. Live restaurant location/search pipeline
-3. Restaurant elimination + details
-4. History/settings
-5. Pass Around
-6. Launch QA
+## Recent stability fixes
 
+- **CP909:** synchronized runtime entry, service-worker registration, and release metadata; fixed the App Diagnosis undefined-source bug.
+- **CP908:** expanded App Diagnosis with interaction-stability checks for search, swipe coaching, wheel repeat spins, restaurant photography, prefetching, and PWA versioning.
+- **CP907:** fixed Restaurant Search keyboard Enter/card-flash behavior by keeping typing state-only and preserving the active card while search runs.
+- **CP906:** isolated Hungry wheel repeat spins from stale celebration and stop callbacks.
+- **CP904:** bounded restaurant photo memory and throttled prefetch to reduce phone memory pressure.
+- **CP903:** removed Details-photo source-change flashing through preloaded image swaps.
+- **CP902:** corrected Restaurant Search/Cuisine stacking above the restaurant card stage.
+- **CP901:** removed swipe-card handoff flashing at completion.
 
-## CP709 decision-button motion
-- Meal and Restaurant Back / Cut / Maybe share an explicit tap jump animation.
-- Reduced-motion users receive a non-animated press state.
+## Project structure
 
-## CP708 hero photos + button parity
-- Dine In hero refreshed with Pexels 37140465.
-- Dine Out hero refreshed with Pexels 36850066.
-- Meal Back / Cut / Maybe now use the same activation helper as Restaurant controls.
+The deployable app lives at the repository root. Key runtime files are:
 
-## CP704 Home hero photography
-- Dine In now uses a vibrant overhead dinner spread.
-- Dine Out now uses a close-up grilled steak with colorful vegetables.
-- Existing entry behavior and CP703 copy are preserved.
+- `index.html` — app shell and entry points
+- `styles.css` — UI system and responsive/iPhone styling
+- `app.js` — application runtime
+- `sw.js` — PWA service worker/cache
+- `api/` — Vercel serverless API routes
+- `data/` — meal and restaurant taxonomy data
+- `qa/` — retained checkpoint/verification scripts
 
-## CP703 front-page naming
-- Home entry cards now read **Dine In — Reveal Your Meal** and **Dine Out — Reveal Your Restaurant**.
-- Existing entry-button IDs and behavior are preserved.
+## Verification
 
-## Current release hardening
-- Working branch: cp704-hero-food-photos
-- Base recovery: cp703-dine-in-out-copy
-- Current release candidate stays off main until the exact release commit is fully verified.
-- Vercel is the official runtime for the release candidate; Netlify remains legacy/backup. Vercel deployment is currently blocked by the connected account build-rate limit.
+Repository checks for CP910 cover:
+
+- JavaScript syntax and source integrity
+- matching 910 asset/cache references
+- no confirmed dead cleanup targets
+- Restaurant Search preserving the active card during submit/loading
+- wheel repeat-spin reset/token isolation
+- bounded restaurant-photo caching and throttled prefetch
+- release metadata consistency
+
+Physical iPhone Safari/PWA behavior still requires a device run; repository checks cannot certify real touch, keyboard, GPS, install, or memory behavior.
+
+## Deployment
+
+Vercel is the official runtime target. The current connected Vercel account has exhausted its Hobby 24-hour deployment allowance, so the CP910 source is committed to `main` but cannot be newly deployed until that limit resets. Netlify remains available as legacy/backup configuration.
