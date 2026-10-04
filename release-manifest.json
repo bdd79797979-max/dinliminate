@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 927,
+  "build": 928,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP927",
-  "deploymentTrigger": "CP927-headerless-interior-navigation-2026-10-04"
+  "checkpoint": "CP928",
+  "deploymentTrigger": "CP928-tight-radius-menu-2026-10-04"
 }
