@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 973,
+  "build": 974,
   "sourceBranch": "main",
-  "checkpoint": "CP973",
-  "deploymentTrigger": "CP973-restaurant-photo-pipeline",
+  "checkpoint": "CP974",
+  "deploymentTrigger": "CP974-freeze-meal-waiting-card",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity",
