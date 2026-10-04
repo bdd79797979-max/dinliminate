@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 855,
+  "build": 856,
   "sourceBranch": "main",
-  "checkpoint": "CP855",
-  "deploymentTrigger": "CP855-dinner-together-final-consensus-2026-10-03",
+  "checkpoint": "CP856",
+  "deploymentTrigger": "CP856-dinner-together-browse-and-recovery-2026-10-03",
   "vercelProductionVerified": false
 }
