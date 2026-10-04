@@ -1,3 +1,13 @@
+# CURRENT RELEASE — BUILD 958 / CP958
+
+## CP958 — Restaurant photo first paint + warmer prefetch
+- Keeps CP957’s no-Google, exact-venue photo resolver and strict image validation.
+- Primes the current Restaurant card’s venue photo before the first Restaurant deck paint, capped so a missing photo cannot stall the app indefinitely.
+- Warms the next three Restaurant cards in parallel so swiping is more likely to show the resolved venue photo immediately.
+- Removes the old 450 ms prefetch delay.
+- Keeps the trusted immediate fallback hierarchy: known exact venue photo → resolved session/persistent photo → exact OSM/Photon venue photo → restaurant-category fallback.
+- Refreshes the HTML/service-worker cache markers to force CP958 onto phones and PWAs.
+
 # CURRENT RELEASE — BUILD 957 / CP957
 
 ## CP957 — Meals menu right + static waiting card
