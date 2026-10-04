@@ -16,6 +16,14 @@ const WIDE_DISCOVERY_TIMEBOX_MS=6500;
 const OVERPASS_HTTP_TIMEOUT_MS=5200;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
+function googlePhotoMeta(photo){
+  const p=photo||{},name=String(p.name||'').trim();
+  const authorAttributions=Array.isArray(p.authorAttributions)?p.authorAttributions.map(x=>({
+    displayName:String(x?.displayName||'').trim(),
+    uri:String(x?.uri||'').trim()
+  })).filter(x=>x.displayName||x.uri).slice(0,5):[];
+  return {googlePhotoName:name,googlePhotoAttributions:authorAttributions};
+}
 async function withinBudget(promise,ms,label){
  const wait=Math.max(250,ms);
  return Promise.race([promise,new Promise(resolve=>setTimeout(()=>resolve({__timeout:true,label}),wait))]);
@@ -746,7 +754,7 @@ async function googleSearchPlaces(lat,lon,radius,searchTerm){
     if(businessStatus==='CLOSED_PERMANENTLY')continue;
     const distance=miles(lat,lon,plat,plon);
     if(distance>radius)continue;
-    rows.push({id:p.id?'google-search-'+p.id:'google-search-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:'',openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat:plat,lon:plon,distance,photo:'',menuItems:[],brand:'',source:'Google Places Search',googlePlaceId:p.id||'',googlePhotoName:String(p?.photos?.[0]?.name||'')});
+    rows.push({id:p.id?'google-search-'+p.id:'google-search-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:'',openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat:plat,lon:plon,distance,photo:'',menuItems:[],brand:'',source:'Google Places Search',googlePlaceId:p.id||'',...googlePhotoMeta(p?.photos?.[0])});
    }
  }
  return{rows:dedupe(rows),errors};
@@ -773,7 +781,7 @@ async function googlePlaces(lat,lon,radius){
    const openNow=typeof p?.currentOpeningHours?.openNow==='boolean'?p.currentOpeningHours.openNow:undefined;
    const businessStatus=String(p?.businessStatus||'');
    if(businessStatus==='CLOSED_PERMANENTLY')continue;
-   rows.push({id:p.id?'google-'+p.id:'google-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',primaryType:String(p.primaryType||''),types,providerType:types.join(' '),address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:'',openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat:plat,lon:plon,distance:miles(lat,lon,plat,plon),photo:'',menuItems:[],brand:'',source:'Google Places',googlePlaceId:p.id||'',googlePhotoName:String(p?.photos?.[0]?.name||'')});
+   rows.push({id:p.id?'google-'+p.id:'google-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',primaryType:String(p.primaryType||''),types,providerType:types.join(' '),address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:'',openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat:plat,lon:plon,distance:miles(lat,lon,plat,plon),photo:'',menuItems:[],brand:'',source:'Google Places',googlePlaceId:p.id||'',...googlePhotoMeta(p?.photos?.[0])});
   }
  }catch(e){errors.push(String(e?.message||e||'Google Places failed'));}
  return{rows,errors};
@@ -813,7 +821,7 @@ async function googleContactEnrichment(rows,originLat,originLon){
     const distance=Number.isFinite(baseLat)&&Number.isFinite(baseLon)?miles(baseLat,baseLon,lat,lon):miles(originLat,originLon,lat,lon);
     const target=norm(r.name),candidate=norm(name);
     const nameMatch=target===candidate||candidate.includes(target)||target.includes(candidate);
-    return !nameMatch||distance>1.5?null:{id:p.id?'google-contact-'+p.id:'google-contact-'+norm(name),name,address:String(p?.formattedAddress||r.address||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||r.website||''),openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat,lon,distance:miles(originLat,originLon,lat,lon),category:types.includes('fast_food_restaurant')||types.includes('fast_food')?'Fast Food':(r.category||'Restaurant'),primaryType:String(p.primaryType||''),types,providerType:types.join(' '),fastFood:types.includes('fast_food_restaurant')||types.includes('fast_food')||!!r.fastFood,cuisine:r.cuisine||'',opening_hours:r.opening_hours||'',photo:'',menuItems:r.menuItems||[],brand:r.brand||'',source:'Google Places Search',googlePlaceId:p.id||'',googlePhotoName:String(p?.photos?.[0]?.name||'')};
+    return !nameMatch||distance>1.5?null:{id:p.id?'google-contact-'+p.id:'google-contact-'+norm(name),name,address:String(p?.formattedAddress||r.address||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||r.website||''),openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat,lon,distance:miles(originLat,originLon,lat,lon),category:types.includes('fast_food_restaurant')||types.includes('fast_food')?'Fast Food':(r.category||'Restaurant'),primaryType:String(p.primaryType||''),types,providerType:types.join(' '),fastFood:types.includes('fast_food_restaurant')||types.includes('fast_food')||!!r.fastFood,cuisine:r.cuisine||'',opening_hours:r.opening_hours||'',photo:'',menuItems:r.menuItems||[],brand:r.brand||'',source:'Google Places Search',googlePlaceId:p.id||'',...googlePhotoMeta(p?.photos?.[0])};
    }).filter(Boolean).sort((a,b)=>Number(a.distance)-Number(b.distance))[0];
    if(best)out.push({...best,_targetId:r.id});
   }catch(e){errors.push(String(e?.message||e||'Google contact lookup failed'));}
@@ -1012,6 +1020,7 @@ function dedupe(rows){
       for(const f of ['address','phone','website','opening_hours','photo','cuisine','brand','operator'])if(!x[f]&&r[f])x[f]=r[f];
       if(!x.googlePlaceId&&r.googlePlaceId)x.googlePlaceId=r.googlePlaceId;
       if(!x.googlePhotoName&&r.googlePhotoName)x.googlePhotoName=r.googlePhotoName;
+       if((!Array.isArray(x.googlePhotoAttributions)||!x.googlePhotoAttributions.length)&&Array.isArray(r.googlePhotoAttributions)&&r.googlePhotoAttributions.length)x.googlePhotoAttributions=r.googlePhotoAttributions.slice(0,5);
       x.menuItems=[...new Set([...(x.menuItems||[]),...(r.menuItems||[])])].slice(0,10);
       if(!x.hoursSource&&r.hoursSource)x.hoursSource=r.hoursSource;
     }
