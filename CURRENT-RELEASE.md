@@ -1,3 +1,9 @@
+## CP903 — Details photo flash fix
+- Removed the independent Details photo fade/scale animation; the modal alone handles opening motion.
+- Hydrated restaurant/detail photos through a preloaded image before swapping the visible source, preventing a source-change repaint flash.
+- Applied the same ready-to-swap behavior to the meal Details gallery.
+- Refreshed the service-worker cache and release metadata to CP903.
+
 ## CP902 — Restaurant Search/Cuisine stacking fix
 - Elevated the Restaurant discovery rail above the card stage so Search, Cuisine, and the expanded search field cannot be painted underneath the card.
 - Kept the card geometry unchanged; the fix is isolated to the intended layout stacking hierarchy.
@@ -8,7 +14,7 @@
 - Changed swipe completion so the new card/state renders before the detached outgoing card is reset, eliminating the visible reset frame at handoff.
 - Bumped the service-worker shell cache and release metadata to CP901.
 
-# CURRENT RELEASE — BUILD 902 / CP902
+# CURRENT RELEASE — BUILD 903 / CP903
 
 ## CP900 — Meal Time editing lives with the meal
 - Removed the standalone Meal Time management section from Manage Meals.
