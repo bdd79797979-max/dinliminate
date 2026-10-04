@@ -557,7 +557,8 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
 const KNOWN_PUBLIC_PHOTO_PAGES=[
  {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
  {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
- {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'}
+ {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'},
+ {names:['thirsty goat'],addressTokens:['4044 madison st','4044 madison street','madison street 4044'],phone:'9313434628',url:'https://www.restaurantji.com/tn/clarksville/the-thirsty-goat-/'}
 ];
 function normalizePhoneDigits(value){return String(value||'').replace(/\D/g,'').slice(-10);}
 function knownPublicPhotoPage(name,address='',phone=''){
