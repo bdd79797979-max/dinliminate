@@ -1,12 +1,13 @@
-# CURRENT RELEASE — BUILD 946 / CP946
+# CURRENT RELEASE — BUILD 947 / CP947
 
-## CP946 — Google Place photos + normalized restaurant images
-- Wired the existing Google Places photo resource metadata into the canonical Restaurant resolver, including required author attributions.
-- Google Place photos are requested on demand only; Google photo resource names and photo bytes are excluded from Dinliminate's persistent restaurant-photo cache and background prefetch path.
-- Google Place Photo requests use Google's server-side resize parameters before delivery, then the server normalizes returned imagery into bounded WebP card assets.
-- Non-Google restaurant images are now normalized through Sharp to a maximum 1400×1050 card asset, reducing oversized source downloads while preserving aspect ratio.
-- Added decoded-image limits and normalization QA, and bumped the application/service-worker cache generation to CP946.
-- Google Places remains optional: production currently has no Google Places API key configured, so the new Google branch is dormant until that existing environment variable is added.
+## CP947 — Zero-geometry-delta swipe
+- Removed waiting-card scale interpolation from both Meals and Restaurants.
+- The waiting card remains exactly `scale(1)` throughout idle, drag, threshold crossing, and handoff; only opacity/filter reveal changes.
+- Removed the waiting-card image zoom as well, so neither the card nor its photo subtly expands during a swipe.
+- Preserved the current-card finger tracking, translation, rotation, action threshold, haptic behavior, and existing Meal/Restaurant handoff logic.
+- Added QA guards preventing reintroduction of `scaleLift` or a separate Meal-only waiting-card geometry path.
+- Bumped application and service-worker assets to CP947.
+
 ## CP939 — Canonical Meals + Restaurant decision layer
 - Unified Meals and Restaurant decision controls around one canonical visual/DOM contract.
 - Meals uses shared decision classes for Meal Times, Cuisine, ALL/MAYBES, live count, and Menu.
