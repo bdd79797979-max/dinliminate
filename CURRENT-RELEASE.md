@@ -1,13 +1,16 @@
-# CURRENT RELEASE — BUILD 893 / CP893
+# CURRENT RELEASE — BUILD 895 / CP895
 
-## CP893 — Home background source cleanup
-- Replaced the legacy home background asset with the generated double wooden doors image.
-- Removed the remote home-door image source from the runtime.
-- Home now has one local global background source: `home-background.jpg`.
-- Service-worker shell/image cache versions are synchronized to build 893.
-- Existing AT HOME / RESTAURANT card imagery remains separate from the global home background.
+## CP895 — remove legacy Home photo sources
+- Deleted the obsolete local `home-background.jpg` asset and all runtime/CSS/service-worker references to it.
+- Removed the retired persistent Home background image layer from the document and runtime.
+- Removed obsolete front-page photo-rail bindings and legacy `home-photo-img` fallback/listener code.
+- Removed the old AT HOME / RESTAURANT inline photo URLs so those controls remain clean window panels over the new Home background.
+- Home now has one visual background source: the current double-door photo delivered through the existing `/api/image` proxy.
+- Service-worker registration and cache versions are bumped to prevent stale Home assets from resurfacing.
+- Release metadata is synchronized to CP895.
 
 ## Verification
-- `home-background.jpg?v=893` is the sole global home background asset.
-- Remote `HOME_DOOR_SOURCE` binding removed.
-- Service-worker cache version synchronized to v893.
+- No `home-background.jpg` references remain in the active Home files.
+- No `home-photo-img` bindings remain in the Home runtime.
+- No old inline front-page photo URLs remain on the Home buttons.
+- AT HOME / RESTAURANT controls remain present.
