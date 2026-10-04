@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 871,
+  "build": 872,
   "sourceBranch": "main",
-  "checkpoint": "CP871",
-  "deploymentTrigger": "CP871-iphone-safe-placeholder-touch-drag-2026-10-04",
+  "checkpoint": "CP872",
+  "deploymentTrigger": "CP872-count-pill-only-photo-navigation-2026-10-04",
   "vercelProductionVerified": false
 }

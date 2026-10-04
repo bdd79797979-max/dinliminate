@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '871';
+let APP_BUILD = '872';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1197,10 +1197,10 @@ function triggerSwipeHaptic(){
  return false;
 }
 
-function bindSwipeCard(cardId,nextId,onCut,onMaybe,onTap) {
+function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
- let downX=0,lastX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null,downTarget=null;
+ let downX=0,lastX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
  card.style.touchAction='none';
  card.style.userSelect='none';
  card.style.webkitUserSelect='none';
@@ -1301,7 +1301,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,onTap) {
    active=false;
    cleanup();
    settleBack();
-   if(Math.abs(dx)<=8 && tapTarget && !tapTarget.closest?.('button,a,input,select,textarea')) onTap?.(tapTarget,e);
+   // Plain card taps intentionally do nothing. Photo navigation is owned only by the top-right count pill.
   }
  };
  card.onpointerdown=e=>{
@@ -1310,7 +1310,6 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,onTap) {
   if(e.target.closest?.('button,a,input,select'))return;
   downX=e.clientX;
   lastX=e.clientX;
-  downTarget=e.target;
   active=true;
   committed=false;
   hapticTriggered=false;
@@ -1364,7 +1363,7 @@ function cycleFoodPhotoFromTap(target){
  return true;
 }
 
-function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(),target=>{cycleFoodPhotoFromTap(target);})}
+function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe())}
 function appToast(message){
 document.querySelector('#appToast')?.remove();
 const el=document.createElement('div'); el.id='appToast'; el.className='app-toast'; el.textContent=message;
