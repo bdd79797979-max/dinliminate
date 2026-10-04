@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 927 / CP927
+# CURRENT RELEASE — BUILD 928 / CP928
+
+## CP928 — tighter Radius + smaller interior Menu
+- Shrunk the interior metallic-gold Menu control on Meals and Restaurant screens while preserving its far-right placement and touch target.
+- Reduced the Restaurant Radius footprint so the value sits closer to Refresh and leaves a cleaner far-right Menu position.
+- Preserved the Restaurant location row order, address field, search behavior, and Radius functionality.
+- Preserved CP927 headerless navigation and CP926 Meal swipe stability.
 
 ## CP927 — headerless luxury interior navigation
 - Removed the repeated Dinliminate wordmark and persistent top Back arrow from the main interior screens; the Front Page remains the branded entrance.
