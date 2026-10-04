@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 920,
+  "build": 921,
   "sourceBranch": "main",
-  "checkpoint": "CP920",
-  "deploymentTrigger": "CP920-minimal-radius-control",
+  "checkpoint": "CP921",
+  "deploymentTrigger": "CP921-remove-location-container",
   "vercelProductionVerified": false
 }
