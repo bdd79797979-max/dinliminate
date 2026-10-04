@@ -1,14 +1,14 @@
-# CURRENT RELEASE — BUILD 896 / CP896
+# CURRENT RELEASE — BUILD 897 / CP897
 
-## CP896 — restore Home imagery correctly
-- Kept the obsolete front-page background/photo system deleted.
-- Restored the new double-door image directly on the canonical Home surface.
-- Restored two separate replacement photos inside the AT HOME and RESTAURANT window panels.
-- Removed all dependency on the deleted `home-background.jpg` asset and the retired persistent image layer.
-- Bumped stylesheet, runtime, and service-worker cache versions to prevent the blank cached Home from persisting.
-- Release metadata is synchronized to CP896.
+## CP897 — solid double wooden door Home background
+- Replaced the previous Home background with a solid double wooden door entrance.
+- The new door design has solid wood panels with no glass/windows in the visible entrance.
+- Kept the AT HOME and RESTAURANT window-panel photos separate from the full-page background.
+- Kept the obsolete `home-background.jpg` and persistent legacy image layer deleted.
+- Bumped runtime, stylesheet, and service-worker cache versions.
+- Release metadata is synchronized to CP897.
 
 ## Verification
-- The deleted `home-background.jpg` file remains removed.
-- The old `home-photo-img` / persistent background layer remains removed.
-- Home has one full-page door image plus two independent window-panel photos.
+- No deleted local Home background asset is referenced.
+- No legacy persistent Home photo layer is referenced.
+- Home background is now the solid double wooden door source.
