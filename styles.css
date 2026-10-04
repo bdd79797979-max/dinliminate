@@ -9788,3 +9788,26 @@ button,input,select,textarea{
   color:#fff!important;
   text-shadow:0 1px 4px #000,0 0 8px rgba(255,255,255,.16);
 }
+
+/* CP968 — extend the preferred satin-gold resting / white-touch treatment
+   to Meal Times so all discovery chips share one visual language. */
+#food .meal-time-quick .meal-time-chip{
+  border-color:rgba(214,183,120,.62)!important;
+  background:linear-gradient(145deg,#191816,#121211)!important;
+  color:#d9bd7b!important;
+}
+#food .meal-time-quick .meal-time-chip:hover,
+#food .meal-time-quick .meal-time-chip:active,
+#food .meal-time-quick .meal-time-chip.is-active:hover,
+#food .meal-time-quick .meal-time-chip.is-active:active{
+  border-color:#f4f0e7!important;
+  background:linear-gradient(145deg,#1e1d1a,#151514)!important;
+  color:#fff!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.20),0 0 12px rgba(255,255,255,.08)!important;
+}
+#food .meal-time-quick .meal-time-chip:active{
+  transform:translateY(1px) scale(.985)!important;
+}
+#food .meal-time-quick .meal-time-chip span{
+  color:inherit!important;
+}
