@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 938,
+  "build": 939,
   "sourceBranch": "main",
-  "checkpoint": "CP938",
-  "deploymentTrigger": "CP938-meals-divider",
+  "checkpoint": "CP939",
+  "deploymentTrigger": "CP939-canonical-decision-layer",
   "vercelProductionVerified": false
 }
