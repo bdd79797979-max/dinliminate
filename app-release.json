@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 873,
+  "build": 874,
   "sourceBranch": "main",
-  "checkpoint": "CP873",
-  "deploymentTrigger": "CP873-add-take-photo-meal-editor-2026-10-04",
+  "checkpoint": "CP874",
+  "deploymentTrigger": "CP874-native-add-photos-picker",
   "vercelProductionVerified": false
 }
