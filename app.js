@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '901';
+let APP_BUILD = '902';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -366,6 +366,19 @@ function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAG
   });
  });
 }
+function swapImageWhenReady(img,url){
+ if(!img||!url||!img.isConnected)return;
+ const nextUrl=String(url);
+ const current=img.currentSrc||img.src||'';
+ if(current===nextUrl)return;
+ const probe=new Image();
+ probe.decoding='async';
+ probe.onload=()=>{
+  if(img.isConnected)img.src=nextUrl;
+ };
+ probe.onerror=()=>{};
+ probe.src=nextUrl;
+}
 const restaurantPhotoInflight=new Map();
 const restaurantPhotoCache=new Map();
 const restaurantPhotoMissCache=new Map();
@@ -547,7 +560,7 @@ async function hydrateRestaurantPhoto(row,scope){
  if(!data?.url)return;
  imgs.forEach(img=>{
   if(!img.isConnected)return;
-  img.src=data.url;
+  swapImageWhenReady(img,data.url);
   img.dataset.restaurantPhotoLoaded='true';
   setRestaurantPhotoCredit(img.closest('.card,.restaurant-detail-hero')||img.parentElement,data.attributions);
  });
@@ -2937,7 +2950,7 @@ const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="de
    bindImageFallback('#detailsModal img',foodPhoto(item),FINAL_FOOD_IMAGE);
    if(detailPhotos.length>1){
     const gallery=modal.querySelector('.detail-photo-gallery'),gimg=gallery?.querySelector('.history-detail-photo'),gcount=gallery?.querySelector('[data-detail-photo-count]');let gidx=0;
-    const renderGallery=()=>hydrateMealPhotoGallery({...item,images:detailPhotos}).then(photos=>{const total=photos.length||detailPhotos.length;gidx=((gidx%total)+total)%total;if(gimg)gimg.src=photos[gidx]||image;if(gcount)gcount.textContent=(gidx+1)+' / '+total;});
+    const renderGallery=()=>hydrateMealPhotoGallery({...item,images:detailPhotos}).then(photos=>{const total=photos.length||detailPhotos.length;gidx=((gidx%total)+total)%total;if(gimg)swapImageWhenReady(gimg,photos[gidx]||image);if(gcount)gcount.textContent=(gidx+1)+' / '+total;});
     gcount?.addEventListener('click',e=>{e.preventDefault();gidx++;renderGallery();});
    }
    bindDetailNotes(modal,item,'food');
