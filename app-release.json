@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 895,
+  "build": 896,
   "sourceBranch": "main",
-  "checkpoint": "CP895",
-  "deploymentTrigger": "CP895-delete-legacy-home-photos",
+  "checkpoint": "CP896",
+  "deploymentTrigger": "CP896-restore-home-window-imagery",
   "vercelProductionVerified": false
 }
