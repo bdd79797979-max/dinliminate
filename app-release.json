@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 875,
+  "build": 876,
   "sourceBranch": "main",
-  "checkpoint": "CP875",
-  "deploymentTrigger": "CP875-faster-decision-buttons-180ms",
+  "checkpoint": "CP876",
+  "deploymentTrigger": "CP876-velocity-spring-next-card-swipe-polish",
   "vercelProductionVerified": false
 }

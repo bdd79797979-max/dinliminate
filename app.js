@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '875';
+let APP_BUILD = '876';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1200,7 +1200,7 @@ function triggerSwipeHaptic(){
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
- let downX=0,lastX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
+ let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null,swipeThreshold=90;
  card.style.touchAction='none';
  card.style.userSelect='none';
  card.style.webkitUserSelect='none';
@@ -1209,34 +1209,42 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   img.draggable=false;
   img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
  });
+ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
  const cancelMoveFrame=()=>{
   if(moveFrame!=null){
    try{cancelAnimationFrame(moveFrame);}catch{}
    moveFrame=null;
   }
  };
+ const cardWidth=()=>Math.max(280,Number(card.clientWidth)||430);
  const reset=()=>{
   cancelMoveFrame();
   card.classList.remove('swipe-active');
   card.style.transition='';
   card.style.transform='';
   card.style.opacity='1';
+  card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
-  if(next)next.style.transform='scale(.96)';
+  if(next){
+   next.style.transform='scale(.96)';
+   next.style.opacity='.62';
+   next.style.filter='saturate(.82) brightness(.76)';
+  }
  };
  const settleBack=()=>{
   cancelMoveFrame();
   card.classList.remove('swipe-active');
-  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1)';
-  card.style.transform='translate3d(0,0,0)';
+  card.style.transition='transform .22s cubic-bezier(.22,1,.36,1),opacity .22s ease';
+  card.style.transform='translate3d(0,0,0) rotate(0deg)';
   card.style.opacity='1';
+  card.style.setProperty('--swipe-tint-alpha','0');
   card.dataset.swipe='';
   window.setTimeout(()=>{
    if(!active&&!committed){
     card.style.transition='';
     card.style.transform='';
    }
-  },190);
+  },225);
  };
  const cleanup=()=>{
   try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}
@@ -1247,10 +1255,11 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   active=false;
   committed=false;
   hapticTriggered=false;
+  velocityX=0;
   cleanup();
   settleBack();
  };
- const commit=(dx)=>{
+ const commit=(dx,speed=0)=>{
   if(committed||!active)return;
   cancelMoveFrame();
   committed=true;
@@ -1258,33 +1267,48 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   hapticTriggered=false;
   cleanup();
   suppressClickUntil=Date.now()+450;
+  const width=cardWidth();
+  const distance=Math.max(520,Math.round(width*1.35));
+  const magnitude=clamp(Math.abs(speed),0,.0001+2.2);
+  const duration=Math.round(clamp(205-(magnitude*45),118,205));
+  const direction=dx<0?-1:1;
   card.classList.remove('swipe-active');
-  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1)';
+  card.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1),opacity '+duration+'ms ease';
   card.style.opacity='1';
-  card.style.transform='translate3d('+(dx<0?-520:520)+'px,0,0) rotate('+(dx<0?-10:10)+'deg)';
+  card.style.transform='translate3d('+(direction*distance)+'px,0,0) rotate('+(direction*10)+'deg)';
+  if(next){
+   next.style.transition='transform '+Math.max(duration-10,110)+'ms cubic-bezier(.22,1,.36,1),opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease';
+   next.style.transform='scale(1)';
+   next.style.opacity='1';
+   next.style.filter='saturate(1) brightness(1)';
+  }
   dismissSwipeHint();
-  const action=dx<0?onCut:onMaybe;
-  window.setTimeout(()=>{reset();action();},185);
+  const action=direction<0?onCut:onMaybe;
+  window.setTimeout(()=>{reset();action();},duration);
  };
  const paintMove=()=>{
   moveFrame=null;
   if(!active||committed)return;
   const dx=lastX-downX;
-  if(Math.abs(dx)<=8)return;
-  const absX=Math.abs(dx);
-  if(absX>=90&&!hapticTriggered){
+  if(Math.abs(dx)<=4)return;
+  const absX=Math.abs(dx),width=cardWidth();
+  swipeThreshold=clamp(Math.round(width*.23),76,118);
+  const progress=clamp(absX/swipeThreshold,0,1.45);
+  const rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
+  const scaleLift=.96+(Math.min(1,progress)*.04);
+  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
+  card.style.opacity='1';
+  card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*3.1),0,.24)));
+  card.dataset.swipe=dx<0?'cut':'maybe';
+  if(next){
+   next.style.transform='scale('+scaleLift.toFixed(4)+')';
+   next.style.opacity=String(clamp(.62+Math.min(1,progress)*.38,.62,1));
+   next.style.filter='saturate('+clamp(.82+Math.min(1,progress)*.18,.82,1).toFixed(3)+') brightness('+clamp(.76+Math.min(1,progress)*.24,.76,1).toFixed(3)+')';
+  }
+  if(absX>=swipeThreshold&&!hapticTriggered){
    hapticTriggered=true;
    triggerSwipeHaptic();
   }
-  const rotationStart=42;
-  const eased=Math.min(1,Math.max(0,(absX-rotationStart)/95));
-  const rotation=(dx<0?-1:1)*Math.min(10,eased*(3+absX*.045));
-  card.style.transform=rotation===0
-    ? 'translate3d('+dx+'px,0,0)'
-    : 'translate3d('+dx+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
-  card.style.opacity='1';
-  card.style.setProperty('--swipe-tint-alpha',String(Math.min(.18,absX/700)));
-  card.dataset.swipe=dx<0?'cut':'maybe';
  };
  const scheduleMove=()=>{
   if(moveFrame!=null)return;
@@ -1295,13 +1319,16 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   if(e?.clientX!=null)lastX=e.clientX;
   cancelMoveFrame();
   const dx=lastX-downX;
-  if(Math.abs(dx)>=90)commit(dx);
+  const speed=Number.isFinite(velocityX)?velocityX/1000:0;
+  swipeThreshold=clamp(Math.round(cardWidth()*.23),76,118);
+  const distanceCommit=Math.abs(dx)>=swipeThreshold;
+  const flickCommit=Math.abs(dx)>=48&&Math.abs(speed)>=.62;
+  if(distanceCommit||flickCommit)commit(dx,speed);
   else{
-   const tapTarget=downTarget;
    active=false;
+   velocityX=0;
    cleanup();
    settleBack();
-   // Plain card taps intentionally do nothing. Photo navigation is owned only by the top-right count pill.
   }
  };
  card.onpointerdown=e=>{
@@ -1310,6 +1337,10 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   if(e.target.closest?.('button,a,input,select'))return;
   downX=e.clientX;
   lastX=e.clientX;
+  lastMoveX=e.clientX;
+  lastMoveTime=performance.now();
+  velocityX=0;
+  swipeThreshold=clamp(Math.round(cardWidth()*.23),76,118);
   active=true;
   committed=false;
   hapticTriggered=false;
@@ -1322,8 +1353,14 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  };
  card.onpointermove=e=>{
   if(!active||e.isPrimary===false||e.pointerId!==pointerId)return;
-  if(e.clientX!=null)lastX=e.clientX;
-  if(Math.abs(lastX-downX)>8){
+  const now=performance.now();
+  const x=e.clientX;
+  const dt=Math.max(1,now-lastMoveTime);
+  velocityX=((x-lastMoveX)/dt)*1000;
+  lastMoveX=x;
+  lastMoveTime=now;
+  lastX=x;
+  if(Math.abs(lastX-downX)>4){
    if(e.cancelable)e.preventDefault();
    scheduleMove();
   }
