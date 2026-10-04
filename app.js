@@ -611,11 +611,17 @@ async function hydrateRestaurantPhoto(row,scope){
  if(!imgs.length)return;
  const data=await loadRestaurantPhoto(row);
  if(!data?.url)return;
- imgs.forEach(img=>{
+ imgs.forEach(async img=>{
   if(!img.isConnected)return;
-  swapImageWhenReady(img,data.url);
-  img.dataset.restaurantPhotoLoaded='true';
-  setRestaurantPhotoCredit(img.closest('.card,.restaurant-detail-hero')||img.parentElement,data.attributions);
+  const card=img.closest('.next-card');
+  // A promoted Restaurant layer owns its current photo identity until handoff finishes.
+  if(card?.dataset.swipePromoted==='1'&&card.dataset.restaurantPhotoCanonical!=='1')return;
+  const swapped=await swapImageWhenReady(img,data.url);
+  if(swapped){
+   img.dataset.restaurantPhotoLoaded='true';
+   if(card)card.dataset.restaurantPhotoCanonical='1';
+   setRestaurantPhotoCredit(img.closest('.card,.restaurant-detail-hero')||img.parentElement,data.attributions);
+  }
  });
 }
 
@@ -1545,6 +1551,12 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   cleanup();
   suppressClickUntil=Date.now()+450;
   if(next){
+   if(cardId==='restaurantCard'&&next.__restaurantCanonicalPhotoPromise){
+    await Promise.race([
+     next.__restaurantCanonicalPhotoPromise.catch(()=>null),
+     new Promise(resolve=>window.setTimeout(resolve,RESTAURANT_PHOTO_HANDOFF_WAIT))
+    ]);
+   }
    await ensureSwipePreviewReady(next);
    if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
   }
@@ -2573,10 +2585,23 @@ bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
 bindImageFallback('#restStage img',restaurantFallback(row),restaurantFallbackImage(row));
+const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
-if(nextRow&&restaurantNextImageEl){
+if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
-  stageSwipePreview($('restaurantNextCard'),restaurantNextImageEl,nextImage,nextRow.id);
+  stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
+  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
+   if(!data?.url)return null;
+   if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
+   if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
+   const swapped=await swapImageWhenReady(restaurantNextImageEl,data.url);
+   if(swapped){
+    restaurantNextImageEl.dataset.restaurantPhotoLoaded='true';
+    restaurantNextCard.dataset.restaurantPhotoCanonical='1';
+    setRestaurantPhotoCredit(restaurantNextCard,data.attributions);
+   }
+   return data.url;
+  }).catch(()=>null);
 }
 hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
 if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
