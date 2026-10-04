@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 954,
+  "build": 955,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP954",
-  "deploymentTrigger": "CP954-restaurant-first-paint"
+  "checkpoint": "CP955",
+  "deploymentTrigger": "CP955-double-wooden-doors-home-background"
 }
