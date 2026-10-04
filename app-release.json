@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 882,
+  "build": 883,
   "sourceBranch": "main",
-  "checkpoint": "CP882",
-  "deploymentTrigger": "CP882-translucent-gold-menu-controls",
+  "checkpoint": "CP883",
+  "deploymentTrigger": "CP883-meal-time-selected-gold-outline",
   "vercelProductionVerified": false
 }

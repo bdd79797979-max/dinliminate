@@ -7720,10 +7720,10 @@ button,input,select,textarea{
   transform:translateY(1px) scale(.985)!important;
 }
 #food .meal-time-quick .meal-time-chip.is-active{
-  border-color:#292929!important;
+  border-color:#f0e2bf!important;
   background:#171717!important;
   color:#ddd!important;
-  box-shadow:none!important;
+  box-shadow:0 0 0 1px rgba(214,183,120,.42),0 0 12px rgba(214,183,120,.10)!important;
 }
 #foodEditorForm .meal-time-editor{
   border:1px solid #332f2a!important;
