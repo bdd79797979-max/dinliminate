@@ -8946,3 +8946,43 @@ button,input,select,textarea{
   #food .food-interior-nav .food-top-maybe{font-size:8px!important;gap:4px!important;letter-spacing:.11em!important}
   #food .food-interior-nav .food-top-maybe .top-maybe-count{font-size:9px!important}
 }
+
+
+/* CP930 — iPhone fit hardening for the Meals top row.
+   Keep all four controls on one line at common narrow phone widths. */
+#food .food-interior-nav{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+#food .food-interior-nav .food-top-refine,
+#food .food-interior-nav .food-top-maybe,
+#food .food-interior-nav .interior-menu{
+  min-width:0!important;
+}
+#food .food-interior-nav .food-top-refine{
+  overflow:hidden!important;
+  text-overflow:clip!important;
+}
+#food .food-interior-nav .food-top-maybe{
+  overflow:hidden!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-label,
+#food .food-interior-nav .food-top-maybe .top-maybe-count{
+  flex:0 0 auto!important;
+}
+@media(max-width:360px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content max-content minmax(0,1fr) 34px!important;
+    column-gap:5px!important;
+  }
+  #food .food-interior-nav .food-top-refine{font-size:8px!important}
+  #food .food-interior-nav .food-top-maybe{
+    font-size:7.7px!important;
+    letter-spacing:.095em!important;
+    gap:3px!important;
+  }
+  #food .food-interior-nav .food-top-maybe .top-maybe-count{font-size:8.5px!important}
+}
