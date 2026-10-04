@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 929,
+  "build": 930,
   "sourceBranch": "main",
-  "checkpoint": "CP929",
-  "deploymentTrigger": "CP929-meals-top-nav",
+  "checkpoint": "CP930",
+  "deploymentTrigger": "CP930-phone-fit",
   "vercelProductionVerified": false
 }
