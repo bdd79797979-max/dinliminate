@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 941,
+  "build": 942,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP941",
-  "deploymentTrigger": "CP941-restore-immediate-restaurant-photos"
+  "checkpoint": "CP942",
+  "deploymentTrigger": "CP942-canonical-maybe-control"
 }
