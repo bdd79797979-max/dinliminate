@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 918,
+  "build": 919,
   "sourceBranch": "main",
-  "checkpoint": "CP918",
-  "deploymentTrigger": "CP918-remove-radius-pill",
+  "checkpoint": "CP919",
+  "deploymentTrigger": "CP919-minimal-restaurant-location-controls",
   "vercelProductionVerified": false
 }
