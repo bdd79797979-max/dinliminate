@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 915,
+  "build": 916,
   "sourceBranch": "main",
-  "checkpoint": "CP915",
-  "deploymentTrigger": "CP915-home-card-gesture-hardening",
+  "checkpoint": "CP916",
+  "deploymentTrigger": "CP916-meal-swipe-iphone-hardening",
   "vercelProductionVerified": false
 }
