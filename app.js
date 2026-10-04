@@ -1244,13 +1244,7 @@ function drawFood(){
  if(photoCount>1){hydrateMealPhotoGallery(item).then(photos=>{if(S.pool[S.index]!==item)return;const total=photos.length||1;const idx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),total-1));item._mealPhotoIndex=idx;img.src=photos[idx]||foodPhoto(item);ensureMealCardPhotoPager(foodCard,total,idx);});}
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
- const nextCard=$('foodNextCard');
- if(nextCard){
-  let ni=S.pool.length>1?(S.maybeDeck?((S.index+1)%S.pool.length):(S.foodMaybeRound?foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true):foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,false))):-1;
-  if(ni<0&&S.pool.length>1)ni=(S.index+1)%S.pool.length;
-  const next=ni>=0?S.pool[ni]:null;nextCard.classList.toggle('hidden',!next);nextCard.style.display=next?'block':'none';
-  if(next){nextCard.dataset.mealId=next.id;const nimg=$('foodNextImg');nimg.src=foodPhoto(next);nimg.dataset.fallback=foodPhotoFallback(next);nimg.dataset.finalFallback=FINAL_FOOD_IMAGE;nimg.alt=next.name;nimg.referrerPolicy='no-referrer';nimg.loading='eager';nimg.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};nextCard.style.transform='scale(.96)';}
- }
+ if(activeFoodSwipeHandoffCard!==$('foodNextCard'))prepareFoodNextCard();
  maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
@@ -1303,6 +1297,153 @@ function triggerSwipeHaptic(){
  return false;
 }
 
+/* CP943 — deterministic swipe-preview staging and handoff locking.
+   A waiting card is never promoted until its image is ready, and a promoted
+   Food preview is never repurposed while it is still the visible layer. */
+let activeFoodSwipeHandoffCard=null;
+
+function waitForSwipeImage(img,card,key,timeoutMs=1400){
+ if(!img||!card)return Promise.resolve(false);
+ const token=String(card.dataset.swipePreviewToken||'');
+ const expectedKey=String(key??'');
+ const sameTarget=()=>card.isConnected
+   && String(card.dataset.swipePreviewToken||'')===token
+   && String(card.dataset.swipePreviewKey||'')===expectedKey
+   && card.querySelector('img')===img;
+ let previousCleanup=img.__swipePreviewCleanup;
+ if(typeof previousCleanup==='function'){try{previousCleanup();}catch{}}
+ return new Promise(resolve=>{
+  let done=false,timer=0;
+  const cleanup=()=>{
+   img.removeEventListener('load',onLoad);
+   img.removeEventListener('error',onError);
+   clearTimeout(timer);
+   if(img.__swipePreviewCleanup===cleanup)img.__swipePreviewCleanup=null;
+  };
+  const finish=ok=>{
+   if(done)return;
+   done=true;
+   cleanup();
+   resolve(!!ok);
+  };
+  const decodeThenFinish=()=>{
+   if(!sameTarget()){finish(false);return;}
+   if(!img.complete||img.naturalWidth===0)return;
+   const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
+   Promise.resolve(decoded).catch(()=>{}).then(()=>{
+    if(!sameTarget()){finish(false);return;}
+    finish(img.naturalWidth>0);
+   });
+  };
+  const onLoad=()=>decodeThenFinish();
+  const onError=()=>{
+   // An img.onerror fallback may replace src in the same event turn.
+   window.setTimeout(()=>{
+    if(!sameTarget()){finish(false);return;}
+    if(img.complete&&img.naturalWidth>0){decodeThenFinish();return;}
+    const current=String(img.currentSrc||img.src||'');
+    const candidate=(()=>{try{return new URL(String(img.dataset.swipePreviewSrc||''),location.href).href;}catch{return String(img.dataset.swipePreviewSrc||'');}})();
+    if(candidate && current!==candidate)return;
+    finish(false);
+   },0);
+  };
+  img.__swipePreviewCleanup=cleanup;
+  img.addEventListener('load',onLoad);
+  img.addEventListener('error',onError);
+  timer=window.setTimeout(()=>{
+   if(img.complete&&img.naturalWidth>0){decodeThenFinish();return;}
+   finish(false);
+  },timeoutMs);
+  decodeThenFinish();
+ });
+}
+
+function stageSwipePreview(card,img,src,key){
+ if(!card||!img||!src)return Promise.resolve(false);
+ const nextToken=String((Number(card.dataset.swipePreviewToken||0)+1));
+ const previewKey=String(key??'');
+ card.dataset.swipePreviewToken=nextToken;
+ card.dataset.swipePreviewKey=previewKey;
+ card.dataset.swipePreviewReady='0';
+ card.__swipePreviewReadyPromise=null;
+ card.style.transition='none';
+ card.style.transform='scale(.96)';
+ card.style.opacity='.62';
+ card.style.filter='saturate(.82) brightness(.76)';
+ card.style.visibility='hidden';
+ img.decoding='async';
+ img.dataset.swipePreviewSrc=String(src);
+ img.src=String(src);
+ const ready=waitForSwipeImage(img,card,previewKey);
+ card.__swipePreviewReadyPromise=ready;
+ ready.then(ok=>{
+  if(String(card.dataset.swipePreviewToken||'')!==nextToken)return;
+  if(String(card.dataset.swipePreviewKey||'')!==previewKey)return;
+  if(!card.isConnected||card.querySelector('img')!==img)return;
+  card.dataset.swipePreviewReady=ok?'1':'0';
+  if(ok&&!card.dataset.swipePromoted){
+   card.style.visibility='visible';
+   card.style.transition='';
+  }
+ });
+ return ready;
+}
+
+async function ensureSwipePreviewReady(card){
+ if(!card)return false;
+ const pending=card.__swipePreviewReadyPromise;
+ if(pending){
+  const ok=await pending;
+  if(ok)return true;
+ }
+ const img=card.querySelector('img');
+ const fallback=String(img?.dataset?.fallback||'').trim();
+ if(!img||!fallback)return false;
+ let current='';
+ try{current=String(new URL(img.currentSrc||img.src||'',location.href).href);}catch{current=String(img.currentSrc||img.src||'');}
+ let fallbackUrl='';
+ try{fallbackUrl=String(new URL(fallback,location.href).href);}catch{fallbackUrl=fallback;}
+ if(fallbackUrl&&current===fallbackUrl)return false;
+ const retry=stageSwipePreview(card,img,fallback,card.dataset.swipePreviewKey||'');
+ return await retry;
+}
+
+function prepareFoodNextCard(){
+ const nextCard=$('foodNextCard'),pool=Array.isArray(S.pool)?S.pool:[];
+ if(!nextCard)return;
+ if(activeFoodSwipeHandoffCard===nextCard)return;
+ const currentIndex=Math.max(0,Math.min(Number(S.index)||0,Math.max(0,pool.length-1)));
+ let ni=pool.length>1
+   ?(S.maybeDeck?((currentIndex+1)%pool.length):(S.foodMaybeRound?foodChoiceIndex(pool,(currentIndex+1)%pool.length,true):foodChoiceIndex(pool,(currentIndex+1)%pool.length,false)))
+   :-1;
+ if(ni<0&&pool.length>1)ni=(currentIndex+1)%pool.length;
+ const next=ni>=0?pool[ni]:null;
+ nextCard.classList.toggle('hidden',!next);
+ nextCard.style.display=next?'block':'none';
+ if(!next){
+  nextCard.dataset.mealId='';
+  nextCard.dataset.swipePreviewReady='0';
+  const oldCleanup=nextCard.querySelector('img')?.__swipePreviewCleanup;
+  if(typeof oldCleanup==='function'){try{oldCleanup();}catch{}}
+  nextCard.__swipePreviewReadyPromise=null;
+  return;
+ }
+ const nimg=$('foodNextImg'); if(!nimg)return;
+ nextCard.dataset.mealId=next.id;
+ nimg.alt=next.name;
+ nimg.referrerPolicy='no-referrer';
+ nimg.loading='eager';
+ nimg.draggable=false;
+ nimg.onerror=function(){
+  const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;
+  if(fb&&current!==fb){this.src=fb;return;}
+  if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}
+ };
+ nimg.dataset.fallback=foodPhotoFallback(next);
+ nimg.dataset.finalFallback=FINAL_FOOD_IMAGE;
+ stageSwipePreview(nextCard,nimg,foodPhoto(next),next.id);
+}
+
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
@@ -1313,6 +1454,8 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  card.style.webkitTouchCallout='none';
  card.querySelectorAll('img').forEach(img=>{
   img.draggable=false;
+  if(img.dataset.swipeDragBound==='1')return;
+  img.dataset.swipeDragBound='1';
   img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
  });
  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -1367,7 +1510,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   cleanup();
   settleBack();
  };
- const commit=(dx,speed=0)=>{
+ const commit=async(dx,speed=0)=>{
   if(committed||!active)return;
   cancelMoveFrame();
   committed=true;
@@ -1375,6 +1518,9 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   hapticTriggered=false;
   cleanup();
   suppressClickUntil=Date.now()+450;
+  if(next){
+   await ensureSwipePreviewReady(next);
+  }
   const width=cardWidth();
   const distance=Math.max(520,Math.round(width*1.35));
   const magnitude=clamp(Math.abs(speed),0,.0001+2.2);
@@ -1385,21 +1531,29 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.opacity='1';
   card.style.transform='translate3d('+(direction*distance)+'px,0,0) rotate('+(direction*10)+'deg)';
   if(next){
+   next.dataset.swipePromoted='1';
    next.style.transition='transform '+Math.max(duration-10,110)+'ms cubic-bezier(.22,1,.36,1),opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease';
    next.style.transform='scale(1)';
    next.style.opacity='1';
    next.style.filter='saturate(1) brightness(1)';
+   const promotedImg=next.querySelector('img');
+   if(promotedImg)promotedImg.style.transform='scale(1)';
   }
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
   window.setTimeout(async()=>{
    if(cardId==='foodCard'&&next){
-    // Keep the promoted layer visible while the new current Meal is rendered.
-    // The old current layer is hidden, so it can never flash back at handoff.
+    // Keep the promoted layer visible while the hidden current layer is prepared.
+    // drawFood() is locked out from repurposing this exact DOM layer until handoff.
+    activeFoodSwipeHandoffCard=next;
     next.style.transition='none';
     next.style.transform='scale(1)';
     next.style.opacity='1';
     next.style.filter='saturate(1) brightness(1)';
+    next.style.visibility='visible';
+    next.dataset.swipePromoted='1';
+    const promotedImg=next.querySelector('img');
+    if(promotedImg)promotedImg.style.transform='scale(1)';
     card.style.transition='none';
     card.style.visibility='hidden';
    }
@@ -1427,12 +1581,20 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
     }
     if(next){
      next.style.transition='none';
-     next.style.opacity='0';
      next.style.transform='scale(.96)';
+     next.style.opacity='.62';
      next.style.filter='saturate(.82) brightness(.76)';
+     next.style.visibility='visible';
+     next.dataset.swipePromoted='';
+     const promotedImg=next.querySelector('img');
+     if(promotedImg)promotedImg.style.transform='';
+    }
+    if(card.isConnected)reset();
+    if(cardId==='foodCard'&&next&&activeFoodSwipeHandoffCard===next){
+     activeFoodSwipeHandoffCard=null;
+     prepareFoodNextCard();
     }
    }
-   if(card.isConnected)reset();
   },duration);
  };
  const paintMove=()=>{
@@ -2377,6 +2539,11 @@ bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
 bindImageFallback('#restStage img',restaurantFallback(row),restaurantFallbackImage(row));
+const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
+if(nextRow&&restaurantNextImageEl){
+  restaurantNextImageEl.decoding='async';
+  stageSwipePreview($('restaurantNextCard'),restaurantNextImageEl,nextImage,nextRow.id);
+}
 hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
 if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
 prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
