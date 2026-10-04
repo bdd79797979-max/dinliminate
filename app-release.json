@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 958,
+  "build": 959,
   "sourceBranch": "main",
-  "checkpoint": "CP958",
-  "deploymentTrigger": "CP958-eager-restaurant-photo-first-paint",
+  "checkpoint": "CP959",
+  "deploymentTrigger": "CP959-immediate-restaurant-card-with-background-photo-hydration",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity",
-  "photoBehavior": "first-card-photo-prime-plus-3-card-prefetch",
+  "photoBehavior": "immediate-safe-fallback-plus-background-exact-photo",
   "photoPolicy": "no-google"
 }
