@@ -5,6 +5,8 @@ const BLOCKED_IMAGE_HINTS=/\b(?:logo|favicon|sprite|icon|avatar|placeholder|defa
 const VENUE_IMAGE_HINTS=/\b(?:exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|façade|sign|signage|location|drive[- ]?thru|drive through|parking lot|parking|street view|patio|terrace)\b/i;
 const FOOD_IMAGE_HINTS=/\b(?:menu|food|dish|meal|burger|pizza|salad|steak|wings|tacos?|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entrée|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine)\b/i;
 const LOW_QUALITY_IMAGE_HINTS=/\b(?:thumbnail|thumb|tiny|small|lowres|low[-_ ]?res|preview|sprite|tile)\b/i;
+const MAX_RESTAURANT_IMAGE_DIMENSION=6000;
+const MAX_RESTAURANT_IMAGE_PIXELS=12000000;
 const PHOTO_SOURCE_TIER={
   'known-restaurant-photo':100,
   'official-fast-path':96,
@@ -171,7 +173,12 @@ async function fetchImage(url,headers={},timeout=7000){
     const bytes=Buffer.from(await r.arrayBuffer());
     if(bytes.length<4000)throw new Error('Image response was too small.');
     if(bytes.length>10*1024*1024)throw new Error('Image is too large.');
-    return {type,bytes};
+    const dimensions=imageDimensions(bytes,type);
+    const width=Number(dimensions.width)||0,height=Number(dimensions.height)||0;
+    if(width>MAX_RESTAURANT_IMAGE_DIMENSION||height>MAX_RESTAURANT_IMAGE_DIMENSION)throw new Error('Image dimensions are too large.');
+    if(width&&height&&(width*height)>MAX_RESTAURANT_IMAGE_PIXELS)throw new Error('Image pixel count is too large.');
+    if(width&&height&&mediaQuality(dimensions)<0)throw new Error('Image dimensions are not suitable for a restaurant card.');
+    return {type,bytes,width,height};
   }finally{clearTimeout(timer)}
 }
 
@@ -664,6 +671,7 @@ function sendMedia(res,found){
   res.setHeader?.('Cache-Control','public, max-age=604800, stale-while-revalidate=2592000');
   res.setHeader?.('X-Content-Type-Options','nosniff');
   res.setHeader?.('X-Restaurant-Photo-Source',found.source);
+  if(found.media.width&&found.media.height)res.setHeader?.('X-Restaurant-Photo-Dimensions',found.media.width+'x'+found.media.height);
   if(found.sourceUrl)res.setHeader?.('X-Restaurant-Photo-Source-URL',found.sourceUrl);
   if(found.sourceName&&found.sourceUrl){
     res.setHeader?.('X-Restaurant-Photo-Attributions',Buffer.from(JSON.stringify([{displayName:found.sourceName,uri:found.sourceUrl}])).toString('base64url'));
@@ -772,5 +780,8 @@ module.exports._test={
   knownRestaurantPhoto,
   fastKnownRestaurantPhoto,
   knownPublicPhotoPage,
-  fastKnownPublicPhoto
+  fastKnownPublicPhoto,
+  imageDimensions,
+  mediaQuality,
+  fetchImage
 };
