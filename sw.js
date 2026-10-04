@@ -1,6 +1,6 @@
-const CACHE='dinliminate-shell-v921';
+const CACHE='dinliminate-shell-v922';
 const IMAGE_CACHE='dinliminate-images-v4';
-const SHELL=['./','./index.html','./styles.css?v=921','./app.js?v=921','./data/foods.js','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./styles.css?v=922','./app.js?v=922','./data/foods.js','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([caches.open(CACHE).then(c=>c.addAll(SHELL)),caches.open(IMAGE_CACHE)]).then(()=>self.skipWaiting()));
 });
