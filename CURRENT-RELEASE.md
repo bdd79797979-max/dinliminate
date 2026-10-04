@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 953 / CP953
+# CURRENT RELEASE — BUILD 954 / CP954
+
+## CP954 — Restore Restaurant first-paint venue photos
+- Restores the older direct-first card philosophy: known exact venue photo → resolved in-session photo cache → direct OSM/Photon venue photo → restaurant-category fallback.
+- Keeps the CP953 canonical resolver, image validation, persistent photo cache, and no-Google photo policy unchanged.
+- Prevents generic restaurant imagery from unnecessarily replacing an already-attached venue photo on initial card paint.
+- Refreshes the application/service-worker cache markers so the CP954 client is deployable immediately.
 
 ## CP953 — Restaurant photo resolver quality
 - Keeps the agreed no-Google restaurant-photo policy.
