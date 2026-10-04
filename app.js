@@ -1,6 +1,7 @@
 
 (() => {
 'use strict';
+// CP945 photo-pipeline release sync: canonical Restaurant photo handoff + cache revision.
 const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.DINLIMINATE_FOODS : [];
 const DEFAULT_FOOD_IMAGE = 'https://images.pexels.com/photos/16365767/pexels-photo-16365767.jpeg?auto=compress&cs=tinysrgb&w=1800';
 const $ = (id) => document.getElementById(id);
