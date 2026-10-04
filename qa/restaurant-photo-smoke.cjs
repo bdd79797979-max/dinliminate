@@ -19,6 +19,9 @@ assert.ok(typeof pt.fetchGooglePhoto==='function','fetchGooglePhoto export missi
 
 const appSource=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
 assert.match(appSource,/function restaurantImmediatePhoto\(row\)/,'Restaurant cards should have one canonical immediate photo decision');
+assert.equal(appSource.includes("scaleLift"),false,'Swipe code must not interpolate the waiting-card scale');
+assert.equal(appSource.includes("fixedMealPreview"),false,'Swipe code must use one geometry contract for Meals and Restaurants');
+assert.match(appSource,/next\.style\.transform='scale\(1\)'/,'Waiting card must remain at fixed scale during swipe');
 assert.match(appSource,/__restaurantCanonicalPhotoPromise/,'Restaurant next card should pre-resolve its canonical photo before handoff');
 assert.match(appSource,/RESTAURANT_PHOTO_HANDOFF_WAIT=950/,'Restaurant swipe handoff should have a bounded canonical-photo wait');
 assert.match(appSource,/RESTAURANT_PHOTO_CACHE_NAME='dinliminate\.restaurant\.photos\.v3'/,'Restaurant photo cache should be invalidated with the resolver revision');
