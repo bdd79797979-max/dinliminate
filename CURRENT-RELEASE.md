@@ -1,16 +1,17 @@
-# CURRENT RELEASE — BUILD 898 / CP898
+# CURRENT RELEASE — BUILD 899 / CP899
 
-## CP898 — Home front-page cleanup
-- Home now uses a single canonical full-page solid double-wood door background with no glass/window panels in the door.
-- AT HOME and RESTAURANT keep their own independent photo panels.
-- Removed the obsolete Home decorative orb layer.
-- Removed remaining retired Home photo-rail and legacy image-element selectors.
-- Fixed the Home card image CSS-variable markup so the replacement photos load through valid HTML/CSS.
-- Kept the deleted legacy `home-background.jpg` asset and persistent image layer out of the build.
-- Bumped cache versions to keep stale Home styling/assets from resurfacing.
-- Release metadata is synchronized to CP898.
+## CP899 — customizable Meal Times in Manage Meals
+- Added a native Meal Times manager inside Manage Meals.
+- Users can rename default Meal Times, add custom Meal Times, reorder them, and turn individual Meal Times on or off.
+- Custom Meal Time configuration is stored on-device and survives app reloads.
+- Meal editing now reads the same configurable Meal Time catalog, so new and renamed times appear automatically in each meal editor.
+- Removing a custom Meal Time safely moves its assigned meals to Lunch / Dinner.
+- The main Meal Times filter remains a simple filter and uses the configured active Meal Time list.
+- Styled the manager to match the existing Manage Meals library cards, typography, dark surfaces, and gold/green status treatment.
+- Release and service-worker versions are synchronized to CP899.
 
 ## Verification
-- No `home-background.jpg`, `home-background-layer`, `homeBackgroundImage`, or `home-photo-img` references remain.
-- Home contains the solid double-door background plus two independent choice-panel images.
-- Home decorative orbs are removed from the DOM and stylesheet.
+- Saved Meal Time configuration is serialized with app state.
+- Legacy saved data without Meal Time configuration migrates to the three default Meal Times.
+- At least one Meal Time must remain active.
+- Default Meal Times remain recoverable and cannot be deleted.
