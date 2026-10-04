@@ -10,6 +10,8 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
+// CP966 — keep the promoted Meal preview intact until the new current card is visible.
+let foodSwipeHandoff=false;
 let APP_BUILD = '964';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1295,7 +1297,7 @@ function drawFood(){
  if(photoCount>1){hydrateMealPhotoGallery(item).then(photos=>{if(S.pool[S.index]!==item)return;const total=photos.length||1;const idx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),total-1));item._mealPhotoIndex=idx;img.src=photos[idx]||foodPhoto(item);ensureMealCardPhotoPager(foodCard,total,idx);});}
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
- prepareFoodNextCard();
+ if(!foodSwipeHandoff)prepareFoodNextCard();
  maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
@@ -1606,18 +1608,31 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   const action=direction<0?onCut:onMaybe;
   window.setTimeout(()=>{
    if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
-   action();
-   if(next){
-    next.style.transition='none';
-    if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
-    next.style.opacity='.62';
-    next.style.filter='saturate(.82) brightness(.76)';
-    next.style.visibility='visible';
-    next.dataset.swipePromoted='';
-    const promotedImg=next.querySelector('img');
-    if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
+   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
+   if(foodHandoff)foodSwipeHandoff=true;
+   try{
+    action();
+   }finally{
+    if(foodHandoff){
+     // drawFood() has updated the old/current DOM card to the promoted meal,
+     // but must not repurpose the visible waiting card until that handoff is complete.
+     if(card.isConnected)reset();
+     if($('foodNextCard')?.isConnected)prepareFoodNextCard();
+     foodSwipeHandoff=false;
+    }else{
+     if(next){
+      next.style.transition='none';
+      if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
+      next.style.opacity='.62';
+      next.style.filter='saturate(.82) brightness(.76)';
+      next.style.visibility='visible';
+      next.dataset.swipePromoted='';
+      const promotedImg=next.querySelector('img');
+      if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
+     }
+     if(card.isConnected)reset();
+    }
    }
-   if(card.isConnected)reset();
   },duration);
  };
  const paintMove=()=>{
