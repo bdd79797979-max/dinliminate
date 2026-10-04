@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 933 / CP933
+# CURRENT RELEASE — BUILD 934 / CP934
+
+## CP934 — Restaurant Search field correction
+- Corrected the Restaurant Search input box so its border, field surface, and text remain fully visible on iPhone Safari.
+- Replaced the conflicting older narrow-height rule with one stable box-sized input height.
+- Preserved Restaurant Search behavior, keyboard submit, Cuisine controls, and card geometry.
+
 
 ## CP933 — Maximize Meals + Restaurant decision cards
 - Made the Meal and Restaurant card stages flex to the exact space between their top controls and bottom swipe controls on phone widths.
