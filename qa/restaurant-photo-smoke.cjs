@@ -1,5 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 const restaurants=require('../api/restaurants.js');
 const photoApi=require('../api/restaurant-photo.js');
 const rt=restaurants._test;
@@ -9,6 +11,16 @@ assert.ok(typeof rt.restaurantPhotoMeta==='function','restaurantPhotoMeta export
 assert.ok(typeof pt.extractInternalLinks==='function','extractInternalLinks export missing');
 assert.ok(typeof pt.extractVenueImageCandidates==='function','extractVenueImageCandidates export missing');
 assert.ok(typeof pt.structuredRestaurantMatches==='function','structuredRestaurantMatches export missing');
+assert.ok(typeof pt.imageDimensions==='function','imageDimensions export missing');
+assert.ok(typeof pt.mediaQuality==='function','mediaQuality export missing');
+assert.ok(typeof pt.fetchImage==='function','fetchImage export missing');
+
+const appSource=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+assert.match(appSource,/function restaurantImmediatePhoto\(row\)/,'Restaurant cards should have one canonical immediate photo decision');
+assert.match(appSource,/__restaurantCanonicalPhotoPromise/,'Restaurant next card should pre-resolve its canonical photo before handoff');
+assert.match(appSource,/RESTAURANT_PHOTO_HANDOFF_WAIT=950/,'Restaurant swipe handoff should have a bounded canonical-photo wait');
+assert.match(appSource,/RESTAURANT_PHOTO_CACHE_NAME='dinliminate\.restaurant\.photos\.v3'/,'Restaurant photo cache should be invalidated with the resolver revision');
+assert.equal(/const restaurantFallback = \(r\) => imageProxyUrl\(r\?\.photo/.test(appSource),false,'Restaurant first paint must not trust arbitrary provider photo URLs');
 const structured=pt.structuredRestaurantMatches(`
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Restaurant","name":"Structured Bistro","address":{"@type":"PostalAddress","streetAddress":"456 Main Street","addressLocality":"Clarksville","addressRegion":"TN","postalCode":"37040"}}
@@ -32,7 +44,16 @@ const provider=rt.restaurantPhotoMeta({
 });
 assert.equal(provider.photo,'https://example.com/venue.jpg');
 assert.equal(provider.photoSource,'provider');
+assert.equal(provider.photoConfidence,0.6);
 assert.equal(provider.photoIsGeneric,false);
+
+const photon=rt.restaurantPhotoMeta({
+  name:'Photon OSM Venue',
+  photo:'https://example.com/photon.jpg',
+  source:'Photon POI'
+});
+assert.equal(photon.photoSource,'osm-poi');
+assert.equal(photon.photoConfidence,0.95);
 
 const empty=rt.restaurantPhotoMeta({name:'Unknown Neighborhood Restaurant',category:'Restaurant'});
 assert.equal(empty.photo,'');
@@ -69,7 +90,14 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
 (async()=>{
   const originalFetch=global.fetch;
   const osmUrl='https://example.com/osm-venue.jpg';
+  const badDimensionsUrl='https://example.com/bad-dimensions.png';
   let fetchCalls=0;
+  const pngWithDimensions=(width,height,size=5000)=>{
+    const bytes=Buffer.alloc(size,0);
+    bytes[0]=0x89;bytes[1]=0x50;bytes[2]=0x4e;bytes[3]=0x47;
+    bytes.writeUInt32BE(width,16);bytes.writeUInt32BE(height,20);
+    return bytes;
+  };
   global.fetch=async function(url){
     fetchCalls++;
     const u=String(url);
@@ -78,6 +106,14 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
         ok:true,status:200,
         headers:{get(name){return name.toLowerCase()==='content-type'?'image/jpeg':null}},
         async arrayBuffer(){return Uint8Array.from({length:5000},()=>7).buffer}
+      };
+    }
+    if(u===badDimensionsUrl){
+      const bytes=pngWithDimensions(100,100);
+      return {
+        ok:true,status:200,
+        headers:{get(name){return name.toLowerCase()==='content-type'?'image/png':null}},
+        async arrayBuffer(){return bytes.buffer}
       };
     }
     throw new Error('network disabled for deterministic test');
@@ -93,12 +129,20 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
     assert.equal(headers['X-Restaurant-Photo-Source'],'osm-exact-poi');
     assert.equal(body.length,5000);
     assert.equal(fetchCalls,1,'Exact OSM photo should return before any web discovery requests');
+
+    assert.deepEqual(pt.imageDimensions(pngWithDimensions(1200,800)),{width:1200,height:800});
+    assert.ok(pt.mediaQuality({width:1200,height:800})>0,'Usable restaurant-photo dimensions should score positively');
+    await assert.rejects(
+      () => pt.fetchImage(badDimensionsUrl,{},1000),
+      /dimensions are not suitable/,
+      'Very small decoded images must be rejected before reaching the phone card pipeline'
+    );
   }finally{
     global.fetch=originalFetch;
   }
   console.log(JSON.stringify({
     ok:true,
-    cases:11,
+    cases:16,
     verified:[
       'no generic restaurant photo fallback',
       'provider venue photo metadata',
@@ -109,7 +153,12 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
       'credential-free OSM photo tier',
       'restaurant-photo API no Google API dependency',
       'structured exact restaurant/address verification',
-      'non-photo badge and tiny-asset rejection'
+      'non-photo badge and tiny-asset rejection',
+      'unverified provider-photo confidence downgrade',
+      'Photon OSM photo trust classification',
+      'canonical Restaurant first-paint source',
+      'canonical next-card photo handoff',
+      'decoded image-dimension validation'
     ]
   },null,2));
 })().catch(err=>{console.error(err);process.exitCode=1});
