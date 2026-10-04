@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 925,
+  "build": 926,
   "sourceBranch": "main",
-  "checkpoint": "CP925",
-  "deploymentTrigger": "CP925-swipe-direction-positioning",
+  "checkpoint": "CP926",
+  "deploymentTrigger": "CP926-meal-swipe-image-handoff",
   "vercelProductionVerified": false
 }
