@@ -554,10 +554,14 @@ async function loadRestaurantPhoto(row){
  if(!row)return null;
  const rowKey=String(row.id||row.canonicalId||'').trim();
  if(!rowKey)return null;
- const cacheHit=restaurantPhotoCache.get(rowKey);
- if(cacheHit?.url)return touchRestaurantPhotoMemoryCache(rowKey,cacheHit);
- const missAt=Number(restaurantPhotoMissCache.get(rowKey)||0);
- if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
+ const hasGooglePhoto=!!String(row.googlePhotoName||'').trim();
+ // Google Places photos/resources are session-only; never put them in our cache.
+ if(!hasGooglePhoto){
+  const cacheHit=restaurantPhotoCache.get(rowKey);
+  if(cacheHit?.url)return touchRestaurantPhotoMemoryCache(rowKey,cacheHit);
+  const missAt=Number(restaurantPhotoMissCache.get(rowKey)||0);
+  if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
+ }
  let pending=restaurantPhotoInflight.get(rowKey);
  if(!pending){
   const params=new URLSearchParams();
@@ -575,28 +579,38 @@ async function loadRestaurantPhoto(row){
   }
   if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
   if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
+  const googlePhotoName=String(row.googlePhotoName||'').trim();
+  if(googlePhotoName){
+   params.set('googlePhotoName',googlePhotoName);
+   const attrs=Array.isArray(row.googlePhotoAttributions)?row.googlePhotoAttributions.filter(x=>x&&typeof x==='object').slice(0,5):[];
+   if(attrs.length)params.set('googlePhotoAttributions',JSON.stringify(attrs));
+  }
   params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
   const requestUrl='/api/restaurant-photo?'+params.toString();
   pending=(async()=>{
-   const stored=await getPersistentRestaurantPhoto(row);
-   if(stored)return stored;
-   const res=await fetch(requestUrl,{cache:'force-cache'});
+   if(!hasGooglePhoto){
+    const stored=await getPersistentRestaurantPhoto(row);
+    if(stored)return stored;
+   }
+   const res=await fetch(requestUrl,{cache:hasGooglePhoto?'no-store':'force-cache'});
    if(!res.ok){
-    restaurantPhotoMissCache.set(rowKey,Date.now());
+    if(!hasGooglePhoto)restaurantPhotoMissCache.set(rowKey,Date.now());
     throw new Error('Restaurant photo unavailable');
    }
    const blob=await res.blob();
    if(!blob.type.startsWith('image/')){
-    restaurantPhotoMissCache.set(rowKey,Date.now());
+    if(!hasGooglePhoto)restaurantPhotoMissCache.set(rowKey,Date.now());
     throw new Error('Restaurant photo response was not an image');
    }
    const attributions=decodePhotoAttributions(res.headers.get('X-Restaurant-Photo-Attributions'));
    const sourceName=String(res.headers.get('X-Restaurant-Photo-Source')||'').trim();
-   await putPersistentRestaurantPhoto(row,blob,attributions,sourceName);
+   if(!hasGooglePhoto)await putPersistentRestaurantPhoto(row,blob,attributions,sourceName);
    return {url:URL.createObjectURL(blob),attributions,source:sourceName};
   })().then(data=>{
-   touchRestaurantPhotoMemoryCache(rowKey,data);
-   restaurantPhotoMissCache.delete(rowKey);
+   if(!hasGooglePhoto){
+    touchRestaurantPhotoMemoryCache(rowKey,data);
+    restaurantPhotoMissCache.delete(rowKey);
+   }
    if(data.source)row.photoSource=data.source;
    return data;
   }).finally(()=>restaurantPhotoInflight.delete(rowKey));
