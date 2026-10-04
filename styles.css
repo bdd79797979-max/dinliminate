@@ -344,7 +344,7 @@
 /* CP108 — luxury home */
 .luxury-home{position:relative;overflow:hidden;text-align:center;background:
   linear-gradient(180deg,rgba(6,6,6,.34),rgba(6,6,6,.58)),
-  url("/api/image?url=https%3A%2F%2Fimg.staticmb.com%2Fmbcontent%2Fimages%2Fuploads%2F2025%2F7%2FRegular-Inspection.jpg") center/cover no-repeat,
+  url("/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F18851531%2Fpexels-photo-18851531.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1600") center/cover no-repeat,
   linear-gradient(180deg,#0c0c0c,#11100e 66%,#0c0c0c)}
 .luxury-home::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#ffffff05,transparent 35%,#e2a75d09 78%,transparent)}
 .luxury-home .eyebrow{color:#bfa16b;letter-spacing:.24em}
