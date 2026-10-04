@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 937,
+  "build": 938,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP937",
-  "deploymentTrigger": "CP937-final-mobile-polish-2026-10-04"
+  "checkpoint": "CP938",
+  "deploymentTrigger": "CP938-all-maybes-count-logic-2026-10-04"
 }
