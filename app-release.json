@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 936,
+  "build": 937,
   "sourceBranch": "main",
-  "checkpoint": "CP936",
-  "deploymentTrigger": "CP936-meals-control-parity",
+  "checkpoint": "CP937",
+  "deploymentTrigger": "CP937-final-mobile-polish",
   "vercelProductionVerified": false
 }
