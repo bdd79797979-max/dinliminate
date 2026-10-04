@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 922,
+  "build": 923,
   "sourceBranch": "main",
-  "checkpoint": "CP922",
-  "deploymentTrigger": "CP922-quiet-refresh-busy-state",
+  "checkpoint": "CP923",
+  "deploymentTrigger": "CP923-reclaim-restaurant-location-space",
   "vercelProductionVerified": false
 }
