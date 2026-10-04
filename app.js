@@ -1227,9 +1227,9 @@ function drawFood(){
  if(!S.foodMaybeRound){const ni=foodChoiceIndex(S.pool,S.index,false);if(ni>=0)S.index=ni;else if(S.maybe.size)S.foodMaybeRound=true;}
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1,photoIndex=0;item._mealPhotoIndex=0;
+ const foodCard=$('foodCard'); if(foodCard)foodCard.dataset.mealId=item.id;
  img.src=foodPhoto(item);img.dataset.fallback=foodPhotoFallback(item);img.dataset.finalFallback=FINAL_FOOD_IMAGE;img.alt=item.name;img.referrerPolicy='no-referrer';img.loading='eager';
  img.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};
- const foodCard=$('foodCard');
  if(foodCard){
   foodCard.querySelector('.maybe-stamp')?.remove();
   const photoPager=ensureMealCardPhotoPager(foodCard,photoCount,photoIndex);
@@ -1245,7 +1245,7 @@ function drawFood(){
   let ni=S.pool.length>1?(S.foodMaybeRound?foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true):foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,false)):-1;
   if(ni<0&&S.pool.length>1)ni=(S.index+1)%S.pool.length;
   const next=ni>=0?S.pool[ni]:null;nextCard.classList.toggle('hidden',!next);nextCard.style.display=next?'block':'none';
-  if(next){const nimg=$('foodNextImg');nimg.src=foodPhoto(next);nimg.dataset.fallback=foodPhotoFallback(next);nimg.dataset.finalFallback=FINAL_FOOD_IMAGE;nimg.alt=next.name;nimg.referrerPolicy='no-referrer';nimg.loading='eager';nimg.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};nextCard.style.transform='scale(.96)';}
+  if(next){nextCard.dataset.mealId=next.id;const nimg=$('foodNextImg');nimg.src=foodPhoto(next);nimg.dataset.fallback=foodPhotoFallback(next);nimg.dataset.finalFallback=FINAL_FOOD_IMAGE;nimg.alt=next.name;nimg.referrerPolicy='no-referrer';nimg.loading='eager';nimg.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};nextCard.style.transform='scale(.96)';}
  }
  maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
@@ -1325,6 +1325,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.transition='';
   card.style.transform='';
   card.style.opacity='1';
+  card.style.visibility='visible';
   card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
   if(next){
@@ -1339,6 +1340,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.transition='transform .22s cubic-bezier(.22,1,.36,1),opacity .22s ease';
   card.style.transform='translate3d(0,0,0) rotate(0deg)';
   card.style.opacity='1';
+  card.style.visibility='visible';
   card.style.setProperty('--swipe-tint-alpha','0');
   card.dataset.swipe='';
   window.setTimeout(()=>{
@@ -1387,24 +1389,29 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
   window.setTimeout(async()=>{
-   // Meal-only handoff: the promoted next layer must leave the stage before
-   // drawFood() repopulates the stack, otherwise it visibly snaps back.
    if(cardId==='foodCard'&&next){
+    // Keep the promoted layer visible while the new current Meal is rendered.
+    // The old current layer is hidden, so it can never flash back at handoff.
     next.style.transition='none';
-    next.style.opacity='0';
-    next.style.transform='scale(.96)';
-    next.style.filter='saturate(.82) brightness(.76)';
+    next.style.transform='scale(1)';
+    next.style.opacity='1';
+    next.style.filter='saturate(1) brightness(1)';
+    card.style.transition='none';
+    card.style.visibility='hidden';
    }
+   const beforeSrc=cardId==='foodCard'?(card.querySelector('#foodImg')?.currentSrc||card.querySelector('#foodImg')?.src||''):'';
    action();
    if(cardId==='foodCard'&&card.isConnected){
     const img=card.querySelector('#foodImg');
     if(img){
      try{
-      if(!img.complete||img.naturalWidth===0){
+      const targetSrc=img.currentSrc||img.src||'';
+      const needsWait=!img.complete||img.naturalWidth===0||targetSrc!==beforeSrc;
+      if(needsWait){
        await new Promise(resolve=>{
         let settled=false;
         const finish=()=>{if(settled)return;settled=true;clearTimeout(timer);img.removeEventListener('load',finish);img.removeEventListener('error',finish);resolve();};
-        const timer=window.setTimeout(finish,450);
+        const timer=window.setTimeout(finish,500);
         img.addEventListener('load',finish,{once:true});
         img.addEventListener('error',finish,{once:true});
        });
@@ -1413,6 +1420,12 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
        try{await img.decode();}catch{}
       }
      }catch{}
+    }
+    if(next){
+     next.style.transition='none';
+     next.style.opacity='0';
+     next.style.transform='scale(.96)';
+     next.style.filter='saturate(.82) brightness(.76)';
     }
    }
    if(card.isConnected)reset();
@@ -4482,7 +4495,7 @@ window.addEventListener('offline', updateOffline);
 window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=936').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=937').catch(() => {}));
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindMealPhotoCountControls();
 load();
