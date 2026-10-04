@@ -2935,7 +2935,7 @@ $(id)?.remove();
 $(id+'Bg')?.remove();
 const bg=document.createElement('div');
 bg.id=id+'Bg';
-bg.className='modal-bg modal-bg-opening';
+bg.className='modal-bg modal-bg-opening'+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
 const modal=document.createElement('section');
 modal.id=id;
 modal.className='modal modal-opening';
