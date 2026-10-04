@@ -1,4 +1,8 @@
-# CURRENT RELEASE — BUILD 912 / CP912
+# CURRENT RELEASE — BUILD 913 / CP913
+
+## CP913 — Luxury Home utility controls
+- Elevated the Home Add to phone and Share app controls with a discreet concierge-style metallic-gold finish, improved depth, brushed-gold edge detailing, and refined typography.
+- Preserved the existing actions, IDs, hit targets, and interaction routing.
 
 ## CP912 — Startup syntax repair + luxury metallic-gold brand polish
 - Replaced the canonical Dinliminate wordmark treatment with a restrained polished-metal gold finish.
