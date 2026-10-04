@@ -3925,12 +3925,31 @@ function familyBuildNormalSnapshot(type){
 async function familyStartRoundFromNormal(type){
  const s=familySessionRead();if(!s?.token||s.member?.role!=='host')return;
  const status=type==='meal'?'foodFamilyNormalStatus':'restaurantFamilyNormalStatus',btn=type==='meal'?'foodFamilyNormalStart':'restaurantFamilyNormalStart',time=type==='meal'?'foodFamilyNormalTime':'restaurantFamilyNormalTime';
- if(s.family?.activeRoundId){familySetStatus(status,'A Family dinner is already underway.','error');return;}
+ const existing=S.familyActiveData?.activeRound||null;
+ if(s.family?.activeRoundId){
+  if(existing&&['swiping','final_swiping','tiebreak'].includes(existing.status)){familyBeginNormalDecision(S.familyActiveData);return;}
+  if(existing&&existing.status==='complete'){familyShowWinner(existing);return;}
+  if(existing&&existing.status==='ended'){familySetStatus(status,'That Family dinner ended. Return to the Family lobby to start another.','error');return;}
+ }
  const snapshot=familyBuildNormalSnapshot(type);if(!snapshot.pool.length){familySetStatus(status,type==='meal'?'There are no Meal choices left after your filters.':'Load at least one restaurant before starting the Family dinner.','error');return;}
  const target=familyDinnerTargetIso($(time)?.value);if(!target){familySetStatus(status,'Choose a dinner time.','error');return;}
  const b=$(btn);if(b){b.disabled=true;b.textContent='Starting…';}
- try{familySetStatus(status,'Locking your normal '+(type==='meal'?'Meal':'Restaurant')+' choices for everyone…','busy');const created=await familyApi('create-round',{token:s.token,decisionType:type,snapshot,dinnerTargetAt:target});familySessionWrite({...s,family:{...(s.family||{}),activeRoundId:created.id}});await familyApi('start-round',{token:s.token});S.familyNormalMode='decision';S.familyNormalRoundId=String(created.id);S.familyNormalAutoResume=true;await familyRefreshState();}
- catch(err){familySetStatus(status,err.message||'Could not start the Family dinner.','error');}
+ try{
+  familySetStatus(status,'Locking your normal '+(type==='meal'?'Meal':'Restaurant')+' choices for everyone…','busy');
+  let roundId=String(s.family?.activeRoundId||'');
+  if(!roundId){
+   const created=await familyApi('create-round',{token:s.token,decisionType:type,snapshot,dinnerTargetAt:target});
+   roundId=String(created.id);
+   familySessionWrite({...s,family:{...(s.family||{}),activeRoundId:roundId}});
+  }else{
+   familySetStatus(status,'Starting the Family dinner…','busy');
+  }
+  await familyApi('start-round',{token:s.token});
+  S.familyNormalMode='decision';S.familyNormalRoundId=roundId;S.familyNormalAutoResume=true;S.familyNormalStage=1;await familyRefreshState();
+ }catch(err){
+  if(err.code==='ROUND_ALREADY_STARTED'){const fresh=await familyRefreshState();if(fresh?.activeRound&&['swiping','final_swiping','tiebreak'].includes(fresh.activeRound.status)){familyBeginNormalDecision(fresh);return;}}
+  familySetStatus(status,err.message||'Could not start the Family dinner.','error');
+ }
  finally{if(b){b.disabled=false;b.textContent='Start Family Dinner';}}
 }
 
