@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 953,
+  "build": 954,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP953",
-  "deploymentTrigger": "CP953-restaurant-photo-resolver-quality"
+  "checkpoint": "CP954",
+  "deploymentTrigger": "CP954-restaurant-first-paint"
 }
