@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 950,
+  "build": 951,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP950",
-  "deploymentTrigger": "CP950-meal-swipe-no-image-gate"
+  "checkpoint": "CP951",
+  "deploymentTrigger": "CP951-meal-swipe-staged-preview-handoff"
 }
