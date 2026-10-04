@@ -344,18 +344,14 @@
 /* CP108 — luxury home */
 .luxury-home{position:relative;overflow:hidden;text-align:center;background:
   linear-gradient(180deg,rgba(6,6,6,.34),rgba(6,6,6,.58)),
-  url("https://s.alicdn.com/%40sc04/kf/Hd2f0226eec3e43d7a5ff5d87b57b9552G/Luxury-Modern-Villa-Entry-Door-with-Carved-Cast-Armor-Design-Anti-Theft-Password-Lock-Postmodern-Exterior-Front-Door.jpg") center/cover no-repeat,
+  url("/api/image?url=https%3A%2F%2Fimg.staticmb.com%2Fmbcontent%2Fimages%2Fuploads%2F2025%2F7%2FRegular-Inspection.jpg") center/cover no-repeat,
   linear-gradient(180deg,#0c0c0c,#11100e 66%,#0c0c0c)}
 .luxury-home::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#ffffff05,transparent 35%,#e2a75d09 78%,transparent)}
-.luxury-orb{position:absolute;border-radius:50%;filter:blur(18px);pointer-events:none}
-.orb-one{width:190px;height:190px;right:-90px;top:80px;background:#d49b4e10}
-.orb-two{width:150px;height:150px;left:-80px;bottom:80px;background:#ef704e0d}
 .luxury-home .eyebrow{color:#bfa16b;letter-spacing:.24em}
 .luxury-home h1{max-width:calc(100% - 16px);width:100%;margin:16px auto 0;padding:0 4px;box-sizing:border-box;font-size:clamp(2rem,8.1vw,6.2rem);letter-spacing:-.05em;line-height:.98;overflow:visible;background:linear-gradient(120deg,#fff 12%,#e8d5ae 44%,#d98f54 70%,#fff 94%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 .luxury-home .sub{color:#aaa39a;max-width:620px}
 .luxury-home .home-actions{position:relative;z-index:2;gap:11px}
 .luxury-home .home-card{min-height:73px;background:linear-gradient(145deg,#171615,#11100f);border:1px solid #3b3428;color:#eee;box-shadow:0 16px 40px #0008}
-.luxury-home .home-icon{background:#201d18;border:1px solid #4b4132}
 .luxury-home .home-card strong{color:#f6ead4}
 .luxury-home .home-card span span{color:#8e877d}
 .luxury-home .home-card .arrow{color:#bfa16b}
@@ -434,7 +430,6 @@
 .luxury-home .home-foot{margin-top:12px;flex:0 0 auto}
 .luxury-home .home-foot .tiny.made-by{color:#c8a565;letter-spacing:.015em;font-size:8px}
 .luxury-home .home-foot .text-btn{font-size:8px;padding:2px 4px}
-.luxury-home .luxury-orb{opacity:.7}
 
 @media(max-width:390px){
   .luxury-home{height:calc(100svh - 58px);padding-bottom:2px}
@@ -5722,7 +5717,6 @@ button,input,select,textarea{
   justify-content:center!important;
   overflow:hidden!important;
 }
-.app:has(#home:not(.hidden)) #home .luxury-orb,
 .app:has(#home:not(.hidden)) #home .home-intro,
 .app:has(#home:not(.hidden)) #home .home-actions,
 .app:has(#home:not(.hidden)) #home .home-foot{
@@ -5830,9 +5824,7 @@ button,input,select,textarea{
   justify-content:center!important;
   overflow:hidden!important;
 }
-.app:has(#home:not(.hidden)) #home .luxury-orb{
-  display:none!important;
-}
+
 .app:has(#home:not(.hidden)) #home .home-intro,
 .app:has(#home:not(.hidden)) #home .home-actions,
 .app:has(#home:not(.hidden)) #home .home-foot{
@@ -7832,7 +7824,7 @@ button,input,select,textarea{
 .app:has(#home:not(.hidden)) #home{
   background:
     linear-gradient(180deg,rgba(5,4,3,.30),rgba(5,4,3,.56)),
-    url("https://s.alicdn.com/%40sc04/kf/Hd2f0226eec3e43d7a5ff5d87b57b9552G/Luxury-Modern-Villa-Entry-Door-with-Carved-Cast-Armor-Design-Anti-Theft-Password-Lock-Postmodern-Exterior-Front-Door.jpg")
+    url("/api/image?url=https%3A%2F%2Fimg.staticmb.com%2Fmbcontent%2Fimages%2Fuploads%2F2025%2F7%2FRegular-Inspection.jpg")
     center center / cover no-repeat !important;
 }
 .app:has(#home:not(.hidden)) #home .home-card-photo{
