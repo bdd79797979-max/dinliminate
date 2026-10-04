@@ -8986,3 +8986,118 @@ button,input,select,textarea{
   }
   #food .food-interior-nav .food-top-maybe .top-maybe-count{font-size:8.5px!important}
 }
+
+
+/* CP931 — Restaurant iPhone fit pass.
+   Keep the location/search controls on one stable row and prevent Safari
+   focus zoom on address/search inputs while preserving the compact visual scale. */
+#restaurant .location-strip,
+#restaurant .location-main,
+#restaurant .restaurant-quick-section,
+#restaurant .restaurant-choice-management{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+#restaurant .location-main .address-wrap,
+#restaurant #address,
+#restaurant .restaurant-search-box,
+#restaurant #restaurantQuery{
+  min-width:0!important;
+  max-width:100%!important;
+}
+#restaurant #address,
+#restaurant #restaurantQuery{
+  font-size:16px!important;
+  line-height:1.15!important;
+}
+#restaurant #address{
+  height:34px!important;
+  min-height:34px!important;
+}
+#restaurant #restaurantQuery{
+  height:34px!important;
+  min-height:34px!important;
+}
+#restaurant .location-main .location-btn,
+#restaurant .location-main .find,
+#restaurant .location-main .location-menu{
+  flex:0 0 auto!important;
+}
+#restaurant .location-main .radius-control,
+#restaurant .location-main .radius-select{
+  justify-self:start!important;
+  width:max-content!important;
+  overflow:hidden!important;
+}
+#restaurant .location-main .radius-select{
+  text-overflow:clip!important;
+}
+#restaurant .restaurant-choice-management{
+  grid-template-columns:minmax(0,1fr) auto auto!important;
+}
+#restaurant .restaurant-refine-tabs{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+#restaurant .restaurant-refine-tab{
+  flex:0 0 auto!important;
+}
+#restaurant .restaurant-choice-management #restaurantMaybeDeck,
+#restaurant .restaurant-choice-management #restaurantCount{
+  flex:0 0 auto!important;
+  white-space:nowrap!important;
+}
+@media(max-width:360px){
+  #restaurant .location-main{
+    grid-template-columns:36px minmax(0,1fr) 34px max-content 34px!important;
+    column-gap:2px!important;
+  }
+  #restaurant .location-main .radius-control{
+    min-width:30px!important;
+    max-width:38px!important;
+  }
+  #restaurant .location-main .radius-select{
+    min-width:30px!important;
+    max-width:38px!important;
+    font-size:9px!important;
+  }
+  #restaurant .restaurant-choice-management{
+    gap:4px!important;
+  }
+  #restaurant .restaurant-refine-tabs{
+    gap:8px!important;
+  }
+  #restaurant .restaurant-refine-tab{
+    font-size:9.5px!important;
+  }
+  #restaurant .restaurant-choice-management #restaurantCount{
+    font-size:9px!important;
+  }
+}
+@media(max-width:340px){
+  #restaurant .location-main{
+    grid-template-columns:34px minmax(0,1fr) 32px max-content 32px!important;
+    column-gap:2px!important;
+  }
+  #restaurant .location-main .location-btn,
+  #restaurant .location-main .find,
+  #restaurant .location-main .location-menu{
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+  }
+  #restaurant .location-main .radius-control,
+  #restaurant .location-main .radius-select{
+    min-width:28px!important;
+    max-width:36px!important;
+    height:30px!important;
+    min-height:30px!important;
+  }
+  #restaurant .location-main .radius-select{
+    font-size:8.5px!important;
+  }
+}
