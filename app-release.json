@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 862,
+  "build": 863,
   "sourceBranch": "main",
-  "checkpoint": "CP862",
-  "deploymentTrigger": "CP862-fix-meal-multi-photo-upload-2026-10-04",
+  "checkpoint": "CP863",
+  "deploymentTrigger": "CP863-meal-photo-polish-dedupe-and-hydration-2026-10-04",
   "vercelProductionVerified": false
 }

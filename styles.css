@@ -7854,3 +7854,10 @@ button,input,select,textarea{
 .meal-photo-main,.meal-photo-remove{border:0;background:transparent;color:#c7a56b;font-size:8px;font-weight:800;padding:4px}
 .meal-photo-remove{color:#a39a8d}
 @media(max-width:390px){.meal-photo-editor-grid{gap:6px}.meal-photo-editor-card-tools{padding:5px}}
+
+/* CP863 — Meal photo upload polish */
+.meal-photo-editor-count{display:block;grid-column:1 / -1;margin-top:2px;color:#746d63;font-size:8px;font-weight:800;letter-spacing:.04em;text-align:right}
+.meal-editor-photo-section{align-items:start}
+.meal-editor-photo-section .file-label{align-self:start}
+.meal-editor-photo-section .file-label input{cursor:pointer}
+@media(max-width:600px){.meal-photo-editor-count{font-size:8px;text-align:left}.meal-editor-photo-copy small{max-width:none}}

@@ -123,10 +123,19 @@ function bindPersistentHomeBackground(){
    if(img.src!==fallback){img.src=fallback;}
  });
 }
+function normalizeMealPhotoRef(value){return String(value??'').trim();}
+function dedupeMealPhotos(photos,max=8){
+ const out=[],seen=new Set();
+ for(const raw of Array.isArray(photos)?photos:[]){
+  const ref=normalizeMealPhotoRef(raw);if(!ref||seen.has(ref))continue;
+  seen.add(ref);out.push(ref);if(out.length>=max)break;
+ }
+ return out;
+}
 function mealPhotoList(item){
- const list=Array.isArray(item?.images)?item.images.map(x=>String(x||'').trim()).filter(Boolean):[];
+ const list=dedupeMealPhotos(item?.images,8);
  if(list.length)return list;
- const single=String(item?.image||'').trim();
+ const single=normalizeMealPhotoRef(item?.image);
  return single?[single]:[];
 }
 function foodPhoto(item){
@@ -673,7 +682,7 @@ async function pruneMealPhotoKeys(id,keepCount){
  }catch{}
 }
 async function storeMealPhotoSet(id,photos){
- const list=Array.isArray(photos)?photos.map(x=>String(x||'').trim()).filter(Boolean).slice(0,8):[],refs=[];
+ const list=dedupeMealPhotos(photos,8),refs=[];
  for(let i=0;i<list.length;i++){
   const photo=list[i],key=mealPhotoStorageKey(id,i);
   if(photo.startsWith('data:image/')){
@@ -694,7 +703,7 @@ async function hydrateCustomPhotos(){
  let changed=false;
  for(const item of S.custom){
   const refs=mealPhotoList(item),loaded=await hydrateStoredMealPhotoList(item);
-  if(loaded.length){item.images=loaded;item.image=loaded[0];if(loaded.length!==refs.length)changed=true;}
+  if(loaded.length){const clean=dedupeMealPhotos(loaded,8);item.images=clean;item.image=clean[0];if(clean.length!==refs.length)changed=true;}
   else if(refs.some(x=>String(x).startsWith('idb:'))){item.images=[];item.image=DEFAULT_FOOD_IMAGE;changed=true;}
  }
  for(const item of (S.customQuickCuts||[])){
@@ -718,7 +727,7 @@ el.classList.toggle('hidden', !S.storageWarning);
 async function migrateCustomPhotos(){
  let changed=false;
  for(const item of S.custom){
-  const photos=mealPhotoList(item);if(!photos.length)continue;
+  const photos=dedupeMealPhotos(mealPhotoList(item),8);if(!photos.length||!photos.some(x=>String(x).startsWith('data:image/')))continue;
   const refs=await storeMealPhotoSet(item.id,photos);
   item.images=refs;item.image=refs[0]||DEFAULT_FOOD_IMAGE;changed=true;
  }
@@ -735,7 +744,7 @@ restaurantQuery:S.restaurantQuery, location:S.location, locationSource:S.locatio
 saved:S.saved, winnerItem:S.winnerItem, winnerType:S.winnerType, schemaVersion:STORAGE_VERSION, deleted:[...(S.deleted||[])], deletedCustomMeals:S.deletedCustomMeals||[],
 restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
 custom:S.custom.map(x=>{
- const photos=mealPhotoList(x);
+ const photos=dedupeMealPhotos(mealPhotoList(x),8);
  const images=photos.map((photo,i)=>{
   const key=mealPhotoStorageKey(x.id,i);
   return String(photo).startsWith('data:image/')&&storedPhotoIds.has(key)?'idb:'+key:photo;
@@ -3038,7 +3047,7 @@ const existingMealTimes=isEdit?new Set(mealTimesFor(item)):new Set();
 const nut=item?.nutrition||{};
 const ingredientsText=Array.isArray(item?.ingredients)?item.ingredients.join('\n'):'';
 const descriptionText=String(item?.description||'').trim();
-let editorPhotos=String(item?.image||'').trim()?[String(item.image)]:[];
+let editorPhotos=dedupeMealPhotos(mealPhotoList(item),8);
 let editorPhotosReady=Promise.resolve();
 const body='<form class="add" id="foodEditorForm">'+
 '<input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'">'+
@@ -3063,7 +3072,9 @@ if(mealPhotoFile){
  if(label)label.textContent='Add photos';
  const photoSection=mealPhotoFile.closest('.meal-editor-photo-section');
  const grid=document.createElement('div');grid.id='mealPhotoEditorGrid';grid.className='meal-photo-editor-grid';photoSection?.appendChild(grid);
+ const count=document.createElement('small');count.id='mealPhotoEditorCount';count.className='meal-photo-editor-count';photoSection?.appendChild(count);
  const renderMealPhotos=()=>{
+  count.textContent=editorPhotos.length+' / 8 photos · first is Main';
   grid.innerHTML=editorPhotos.map((src,i)=>'<div class="meal-photo-editor-card '+(i===0?'is-main':'')+'"><img src="'+esc(imageProxyUrl(src||FINAL_FOOD_IMAGE))+'" alt="Meal photo '+(i+1)+'" draggable="false"><div class="meal-photo-editor-card-tools"><span>'+(i===0?'MAIN':'PHOTO '+(i+1))+'</span><div>'+(i?'<button type="button" class="meal-photo-main" data-meal-photo-main="'+i+'">Main</button>':'')+'<button type="button" class="meal-photo-remove" data-meal-photo-remove="'+i+'" aria-label="Remove meal photo '+(i+1)+'">×</button></div></div></div>').join('');
   grid.querySelectorAll('[data-meal-photo-remove]').forEach(btn=>btn.onclick=()=>{editorPhotos.splice(Number(btn.dataset.mealPhotoRemove),1);renderMealPhotos();});
   grid.querySelectorAll('[data-meal-photo-main]').forEach(btn=>btn.onclick=()=>{const picked=editorPhotos.splice(Number(btn.dataset.mealPhotoMain),1)[0];if(picked){editorPhotos.unshift(picked);renderMealPhotos();}});
@@ -3077,8 +3088,12 @@ if(mealPhotoFile){
    const room=Math.max(0,8-editorPhotos.length);
    if(!room){mealPhotoFile.value='';appToast('You already have 8 meal photos. Remove one before adding another.');return;}
    const added=await Promise.all(selected.slice(0,room).map(readImageFile));
-   const unique=added.filter(Boolean).filter(src=>!editorPhotos.includes(src));
-   editorPhotos.push(...unique);mealPhotoFile.value='';renderMealPhotos();
+   const seen=new Set(dedupeMealPhotos(editorPhotos,8)),unique=[];
+   for(const raw of added.filter(Boolean)){
+    const ref=normalizeMealPhotoRef(raw);if(!ref||seen.has(ref))continue;
+    seen.add(ref);unique.push(ref);if(editorPhotos.length+unique.length>=8)break;
+   }
+   editorPhotos=dedupeMealPhotos([...editorPhotos,...unique],8);mealPhotoFile.value='';renderMealPhotos();
    appToast(unique.length===1?'Photo added.':unique.length>1?unique.length+' photos added.':'No new photos added.');
   }catch(e){mealPhotoFile.value='';appToast(e.message);}
  };
@@ -3171,8 +3186,9 @@ const description=String($('editFoodDescription').value||'').trim();
 const ingredients=String($('editFoodIngredients').value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 const editorNote=isEdit?String($('editFoodNote')?.value||'').trim():'';
 await editorPhotosReady;
-const photoInput=$('editFoodPhoto').value.trim();
-if(photoInput){editorPhotos=editorPhotos.filter((_,i)=>i!==0);editorPhotos.unshift(photoInput);}
+const photoInput=normalizeMealPhotoRef($('editFoodPhoto').value);
+if(photoInput){editorPhotos=dedupeMealPhotos([photoInput,...editorPhotos.filter((_,i)=>i!==0)],8);}
+else editorPhotos=dedupeMealPhotos(editorPhotos,8);
 let photo=editorPhotos[0]||'';
 if(!photo&&!isEdit){
  const saveButton=document.querySelector('#foodEditorForm button.cut');
@@ -3875,8 +3891,7 @@ load();
 renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
-hydrateCustomPhotos();
-migrateCustomPhotos();
+hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
 if (S.saved && S.screen === 'food' && S.pool.length) {
 show('food'); foodQuick(); drawFood();
 } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {

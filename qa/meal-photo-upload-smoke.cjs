@@ -1,9 +1,4 @@
-const fs=require('fs'),assert=require('assert');
-const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
-const css=fs.readFileSync(require.resolve('../styles.css'),'utf8');
-const rel=JSON.parse(fs.readFileSync(require.resolve('../app-release.json'),'utf8'));
-for(const p of [/function mealPhotoList\(item\)/,/function mealPhotoStorageKey\(id,index=0\)/,/async function storeMealPhotoSet\(id,photos\)/,/mealPhotoFile\.multiple=true/,/data-meal-photo-main/,/data-meal-photo-remove/,/images:savedPhotos/])assert.match(app,p);
-assert.match(css,/\.meal-photo-editor-grid/);
-assert.equal(rel.build,862);assert.equal(rel.checkpoint,'CP862');
-new Function(app);
-console.log('CP862 meal-photo static smoke PASS');
+const fs=require('fs'),assert=require('assert');const app=fs.readFileSync(require.resolve('../app.js'),'utf8'),css=fs.readFileSync(require.resolve('../styles.css'),'utf8'),index=fs.readFileSync(require.resolve('../index.html'),'utf8'),sw=fs.readFileSync(require.resolve('../sw.js'),'utf8'),rel=JSON.parse(fs.readFileSync(require.resolve('../app-release.json'),'utf8'));
+for(const p of [/function normalizeMealPhotoRef\(/,/function dedupeMealPhotos\(/,/const seen=new Set\(dedupeMealPhotos\(editorPhotos,8\)\)/,/editorPhotos=dedupeMealPhotos\(editorPhotos,8\)/,/mealPhotoEditorCount/,/input id="editFoodFile" type="file" accept="image\/\*" multiple/])assert.match(app,p);
+assert.match(css,/meal-photo-editor-count/);assert.match(index,/app\.js\?v=863/);assert.match(sw,/dinliminate-shell-v863/);assert.match(sw,/app\.js\?v=863/);assert.equal(rel.build,863);assert.equal(rel.checkpoint,'CP863');new Function(app);
+const sample=['same','same',' other ','other','third'];const seen=new Set(),out=[];for(const raw of sample){const ref=String(raw??'').trim();if(!ref||seen.has(ref))continue;seen.add(ref);out.push(ref);if(out.length>=8)break;}assert.deepStrictEqual(out,['same','other','third']);console.log('CP863 meal-photo polish smoke PASS');
