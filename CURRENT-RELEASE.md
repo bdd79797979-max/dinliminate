@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 924 / CP924
+# CURRENT RELEASE — BUILD 925 / CP925
+
+## CP925 — Swipe direction positioning
+- Moved the Meal and Restaurant CUT / SWIPE / MAYBE guidance out of the card and anchored it to the shared swipe-control rail.
+- The guidance now sits just above the bottom swipe controls on both screens.
+- Preserved Meal swipe logic, Restaurant swipe behavior, and all decision controls.
 
 ## CP924 — Consolidated Home + Restaurant polish pass
 - Synchronized the HTML shell, JavaScript, stylesheet, service-worker cache, and release metadata to one release version.
