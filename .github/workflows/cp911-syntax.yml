@@ -1,0 +1,14 @@
+name: CP911 JavaScript Syntax Check
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check app.js
+        run: node --check app.js
