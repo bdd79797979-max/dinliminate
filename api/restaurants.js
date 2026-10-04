@@ -1,19 +1,19 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r28';
+const API_VERSION='r29';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
 const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chick-fil-A","Popeyes","Subway","Sonic","Arby's","Whataburger","Five Guys","Raising Cane's","Wingstop","Bojangles","Cook Out","Dairy Queen","Zaxby's","Church's Chicken","Captain D's","Long John Silver's","Jimmy John's","Jersey Mike's","Firehouse Subs","Little Caesars","Domino's","Papa John's","Pizza Hut","Marco's Pizza","Krystal","Steak 'n Shake","White Castle","Freddy's","In-N-Out","Carl's Jr.","Panda Express","Jack in the Box","Hardee's","Del Taco","Checkers","Rally's"];
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
-const SEARCH_BUDGET_MS=12000;
+const SEARCH_BUDGET_MS=4500;
 const WIDE_DISCOVERY_RESERVE_MS=700;
 const WIDE_RADIUS_THRESHOLD=50;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=8500;
-const WIDE_DISCOVERY_TIMEBOX_MS=6500;
-const OVERPASS_HTTP_TIMEOUT_MS=5200;
+const WIDE_PRIMARY_TIMEBOX_MS=3000;
+const WIDE_DISCOVERY_TIMEBOX_MS=3500;
+const OVERPASS_HTTP_TIMEOUT_MS=2500;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 async function withinBudget(promise,ms,label){
@@ -27,7 +27,7 @@ function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').r
 function normalizeSearchQuery(s){return RESTAURANT_TAXONOMY.normalizeRestaurantSearch(s)}
 function classifySearchTerm(s){return RESTAURANT_TAXONOMY.restaurantSearchClassification(s)}
 function providerSearchTerms(s){
- const terms=RESTAURANT_TAXONOMY.searchAliasesFor(s).slice(0,3);
+ const terms=RESTAURANT_TAXONOMY.searchAliasesFor(s).slice(0,2);
  const classification=RESTAURANT_TAXONOMY.restaurantSearchClassification(s);
  if(classification.kind==='category'&&classification.tag==='Burgers'&&!terms.includes('fast food'))terms.push('fast food');
  return terms.slice(0,4);
@@ -110,7 +110,7 @@ async function photonPlaces(lat,lon,radius,searchTerm=''){
  }
  const rows=[],errors=[];
  const consume=(result)=>{if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));return}for(const feature of result.value?.features||[]){const pv=feature?.properties||{},ov=String(pv.osm_value||'').toLowerCase(),ok=String(pv.osm_key||'').toLowerCase();if(ok==='amenity'&&!DINING_AMENITIES.split('|').includes(ov)&&!FAST.test(String(pv.name||pv.brand||pv.operator||'')))continue;const row=photonRow(feature,{lat,lon});if(row&&row.distance<=radius&&!isClearlyNonDiningBusiness(row))rows.push(row)}};
- for(const result of await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},6500))))consume(result);
+ for(const result of await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},2200))))consume(result);
  const primaryFastCount=rows.filter(r=>r.fastFood).length;
  const missingKnown=!term && radius<=25 && primaryFastCount<3 ? TARGETED_FAST.filter(name=>!rows.some(r=>norm(r.name)===norm(name)||norm(r.name).includes(norm(name)))).slice(0,4) : [];
  if(missingKnown.length){
@@ -120,7 +120,7 @@ async function photonPlaces(lat,lon,radius,searchTerm=''){
  return {rows,errors};
 }
 
-async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=7000){
+async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=2400){
  const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  const extent=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
  const terms=providerSearchTerms(searchTerm),categories=['Restaurant','Fast Food'],rows=[],errors=[];
@@ -146,7 +146,7 @@ async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=7000){
 
 const WIDE_PHOTON_RING_MILES=60;
 const WIDE_PHOTON_RING_POINTS=9;
-const WIDE_PHOTON_QUERY_TIMEOUT_MS=2800;
+const WIDE_PHOTON_QUERY_TIMEOUT_MS=1700;
 function widePhotonCenters(lat,lon,radius){
  const ring=Math.min(WIDE_PHOTON_RING_MILES,Math.max(55,Number(radius)||100));
  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
@@ -1155,7 +1155,7 @@ if(mode==='search'){
  if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');
  const wideSearch=radius>WIDE_RADIUS_THRESHOLD;
  const discoveryPlan=radiusDiscoveryPlan(lat,lon,radius);
- const primaryBudget=Math.max(9000,SEARCH_BUDGET_MS-(wideSearch?discoveryPlan.reserveMs:0));
+ const primaryBudget=Math.max(2800,SEARCH_BUDGET_MS-(wideSearch?discoveryPlan.reserveMs:0));
  // For 100-mile searches, keep the primary providers anchored to their proven
  // 50-mile operating envelope. The wide geographic expansion comes from the
  // redundant Overpass discovery pass. This prevents 100-mile provider result
@@ -1163,7 +1163,7 @@ if(mode==='search'){
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
  const discoveryPromise=wideSearch
   ? wideRadiusOverpass(lat,lon,radius,searchTerm)
-  : (searchTerm ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : null);
+  : null;
  const primaryPromise=wideSearch
   ? Promise.allSettled([
     photonPlaces(lat,lon,50,searchTerm),
@@ -1198,7 +1198,7 @@ if(mode==='search'){
  const preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  const preliminaryFast=preliminary.filter(r=>r.fastFood).length;
  let osmOut={rows:[],errors:[]};
- const needsOverpass=!!searchTerm||radius>WIDE_RADIUS_THRESHOLD||!preliminary.length||preliminaryFast===0;
+ const needsOverpass=radius>WIDE_RADIUS_THRESHOLD||!preliminary.length||preliminaryFast===0;
  if(discoveryPromise){
    if(wideSearch){
      const got=parallelWide;
@@ -1215,10 +1215,10 @@ if(mode==='search'){
    }
  }else if(needsOverpass&&!wideSearch){
    const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
-   if(remaining>1200){
-     const got=await withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(5000,remaining),'Overpass expansion timed out');
+   if(remaining>700){
+     const got=await withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(2200,remaining),'Overpass expansion timed out');
      if(got&&!got.__timeout){osmOut.rows.push(...(got.rows||[]));osmOut.errors.push(...(got.errors||[]))}
-     else osmOut.errors.push('Overpass expansion timed out');
+     else osmOut.errors.push('Restaurant discovery expansion timed out');
    }else osmOut.errors.push('Search budget reached before restaurant discovery expansion.');
  }
  let contactOut={rows:[],errors:[]};
@@ -1232,15 +1232,15 @@ if(mode==='search'){
    .filter((name,i,a)=>a.findIndex(x=>norm(x)===norm(name))===i)
    .slice(0,12);
  const contactRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
- if(contactAllowed&&missingContactNames.length&&contactRemaining>2600){
-   const expandedNames=[...new Set(contactCandidates.filter(r=>missingContactNames.some(n=>norm(n)===norm(r.name))).flatMap(r=>[r.name,r.brand,r.operator]).filter(Boolean))].slice(0,24);
-   const got=await withinBudget(contactEnrichment(lat,lon,Math.min(radius,25),expandedNames),contactRemaining,'Restaurant contact enrichment timed out');
+ if(contactAllowed&&missingContactNames.length&&contactRemaining>1900&&preliminary.length<12){
+   const expandedNames=[...new Set(contactCandidates.filter(r=>missingContactNames.some(n=>norm(n)===norm(r.name))).flatMap(r=>[r.name,r.brand,r.operator]).filter(Boolean))].slice(0,12);
+   const got=await withinBudget(contactEnrichment(lat,lon,Math.min(radius,25),expandedNames),Math.min(1900,contactRemaining),'Restaurant contact enrichment timed out');
    if(got&&!got.__timeout)contactOut=got; else contactOut.errors.push('Contact enrichment timed out');
   }
  let googleContactOut={rows:[],errors:[]};
  const contactRemaining2=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
- if(contactAllowed&&GOOGLE_KEY&&contactRemaining2>3600){
-   const got=await withinBudget(googleContactEnrichment(dedupe([...contactCandidates,...contactOut.rows]),lat,lon),contactRemaining2,'Google contact enrichment timed out');
+ if(contactAllowed&&GOOGLE_KEY&&contactRemaining2>2200&&preliminary.length<12){
+   const got=await withinBudget(googleContactEnrichment(dedupe([...contactCandidates,...contactOut.rows]),lat,lon),Math.min(2100,contactRemaining2),'Google contact enrichment timed out');
    if(got&&!got.__timeout){googleContactOut=got;applyGoogleContactPatches(contactCandidates,googleContactOut.rows)} else googleContactOut.errors.push('Google contact enrichment timed out');
  }
  const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
