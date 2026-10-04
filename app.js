@@ -2189,7 +2189,8 @@ const signal=restaurantSearchController.signal;
 let timedOut=false;
 const deadline=setTimeout(()=>{timedOut=true;restaurantSearchController.abort()},14500);
 clearSuggestions(); setFindBusy(true); $('status').textContent = 'Searching restaurants…';
-$('restStage').innerHTML='';
+$('restStage')?.setAttribute('aria-busy','true');
+$('restStage')?.classList.add('is-searching');
 try {
 let loc = S.location;
 if (!loc) {
@@ -2236,12 +2237,14 @@ restaurantQuick(); drawRestaurants(); save();
 } catch (err) {
 if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
 S.restaurantSearchDegraded=true;
-S.restaurantPool=[]; S.restaurantIndex=0; S.restaurantActions=[]; S.restaurantCuts.clear();
-drawRestaurants();
 $('status').textContent = timedOut ? 'The restaurant search took too long. Please try again.' : (err?.message || 'Could not complete the search.');
 } finally {
 clearTimeout(deadline);
-if(searchSeq===restaurantSearchSeq) setFindBusy(false);
+if(searchSeq===restaurantSearchSeq){
+  $('restStage')?.removeAttribute('aria-busy');
+  $('restStage')?.classList.remove('is-searching');
+  setFindBusy(false);
+}
 }
 }
 function openRestaurant() {
@@ -2457,22 +2460,27 @@ function bindRestaurantTools(){
  };
 $('restaurantQuery').oninput=()=>{
    const previousQuery=String(S.restaurantQuery||'').trim();
-   S.restaurantQuery=$('restaurantQuery').value;
+   S.restaurantQuery=String($('restaurantQuery').value||'').trim().slice(0,100);
    S.restaurantIndex=0;
-   drawRestaurants();
    save();
-   if(!String(S.restaurantQuery||'').trim() && previousQuery){
+   if(!S.restaurantQuery && previousQuery){
      clearTimeout(restaurantQueryTimer);
+     restaurantQueryTimer=0;
      searchRestaurants();
      return;
    }
    scheduleRestaurantProviderSearch();
 };
- $('restaurantQuery').onkeydown=e=>{
+$('restaurantQuery').onkeydown=e=>{
    if(e.key==='Enter'){
      e.preventDefault();
+     e.stopPropagation();
      clearTimeout(restaurantQueryTimer);
-     if(String(S.restaurantQuery||'').trim())searchRestaurants();
+     restaurantQueryTimer=0;
+     const input=e.currentTarget;
+     S.restaurantQuery=String(input?.value||'').trim().slice(0,100);
+     S.restaurantIndex=0;
+     if(S.restaurantQuery)searchRestaurants();
    }
  };
  renderRestaurantSearchControl();
