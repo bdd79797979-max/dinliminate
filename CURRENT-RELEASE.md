@@ -1,12 +1,16 @@
-# CURRENT RELEASE — BUILD 860 / CP860
+# CURRENT RELEASE — BUILD 861 / CP861
 
 Date: 2026-10-04
 
-## CP860 — Final Family Mode audit hardening
-- Family Back now uses the dedicated Round 2/Tiebreak browse history before normal decision history.
-- Compare Both state is explicitly cleared when a Family dinner is ended or the user leaves Family Mode.
-- Added regression contract coverage for Round 2 swipe/back browsing, Enter routing, immediate winner handling, Compare Both routing, and release/cache identity.
-- App/service-worker identity advanced to v860.
+## CP861 — Family round navigation and finalist resolution
+- Fixed the missing Family normal Back controller used by the top-left Back buttons.
+- Family card Back works throughout Round 2 and Tiebreak, even before a browse-history entry exists.
+- Round-start popups stay on screen until LET’S GO is tapped.
+- Family ENTER control is centered, text-only, and hides the previous symbol.
+- Hardened finalist/tiebreak reconciliation with fresh reads and a second finalize pass to catch simultaneous two-person submissions.
+- Existing Compare Both flow is preserved.
 
 ## Verification
-Static parsing and contract checks pass on the CP860 source. Vercel deployment identity and runtime error health are checked after deployment. Live two-device swipe/Enter testing remains a physical/browser gate while TinyFish browser automation is unavailable.
+- Source syntax/static smoke checked before commit.
+- Vercel deployment verification required after the single CP861 commit.
+- Exact two-device interactive browser test remains blocked while TinyFish wallet credits are negative.
