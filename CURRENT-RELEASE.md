@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 919 / CP919
+# CURRENT RELEASE — BUILD 920 / CP920
+
+## CP920 — Final minimalist Radius treatment
+- Removed the remaining gold border/box around Radius.
+- Removed native white focus/selection chrome from the Radius dropdown.
+- Kept Radius as a quiet text-only selector with its existing values and functionality.
 
 ## CP919 — Minimal Restaurant location controls
 - Removed the circular/pill chrome from Current Location and Refresh while preserving their full tap targets and actions.
