@@ -1020,13 +1020,15 @@ function dedupe(rows){
 }
 function restaurantPhotoMeta(r){
   const raw=String(r?.photo||'').trim();
+  const source=String(r?.source||'');
+  const osmBacked=source.startsWith('OpenStreetMap')||source.startsWith('Photon POI');
   if(/^https:\/\//i.test(raw)){
     return {
       photo:raw,
       photoFallback:'',
-      photoSource:String(r?.source||'').startsWith('OpenStreetMap')?'osm-poi':'provider',
+      photoSource:osmBacked?'osm-poi':'provider',
       photoIsGeneric:false,
-      photoConfidence:0.95
+      photoConfidence:osmBacked?0.95:0.6
     };
   }
   return {
