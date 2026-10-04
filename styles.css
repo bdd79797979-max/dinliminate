@@ -353,12 +353,6 @@
 .luxury-home .eyebrow{color:#bfa16b;letter-spacing:.24em}
 .luxury-home h1{max-width:calc(100% - 16px);width:100%;margin:16px auto 0;padding:0 4px;box-sizing:border-box;font-size:clamp(2rem,8.1vw,6.2rem);letter-spacing:-.05em;line-height:.98;overflow:visible;background:linear-gradient(120deg,#fff 12%,#e8d5ae 44%,#d98f54 70%,#fff 94%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 .luxury-home .sub{color:#aaa39a;max-width:620px}
-.home-photo-rail{height:215px;max-width:700px;margin:25px auto 26px;display:flex;align-items:center;justify-content:center;gap:12px}
-.home-photo{width:27%;height:174px;border-radius:24px;overflow:hidden;border:1px solid #ffffff1a;box-shadow:0 20px 55px #000b;background:#161616}
-.home-photo.hero{width:41%;height:210px;box-shadow:0 30px 70px #000d}
-.home-photo.tilt-left{transform:translateY(10px) rotate(-7deg)}
-.home-photo.tilt-right{transform:translateY(8px) rotate(7deg)}
-.home-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .luxury-home .home-actions{position:relative;z-index:2;gap:11px}
 .luxury-home .home-card{min-height:73px;background:linear-gradient(145deg,#171615,#11100f);border:1px solid #3b3428;color:#eee;box-shadow:0 16px 40px #0008}
 .luxury-home .home-icon{background:#201d18;border:1px solid #4b4132}
@@ -5730,7 +5724,6 @@ button,input,select,textarea{
   overflow:hidden!important;
 }
 .app:has(#home:not(.hidden)) #home .luxury-orb,
-.app:has(#home:not(.hidden)) #home .home-photo-rail{display:none!important}
 .app:has(#home:not(.hidden)) #home .home-intro,
 .app:has(#home:not(.hidden)) #home .home-actions,
 .app:has(#home:not(.hidden)) #home .home-foot{
