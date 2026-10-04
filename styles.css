@@ -5388,7 +5388,7 @@ button,input,select,textarea{
 .swipe-card-coach{
   position:absolute!important;
   left:50%!important;
-  bottom:18px!important;
+  bottom:6px!important;
   transform:translateX(-50%)!important;
   z-index:35!important;
   display:flex!important;
@@ -5554,7 +5554,7 @@ button,input,select,textarea{
 }
 
 @media(max-width:390px){
-  .swipe-card-coach{bottom:14px!important;width:calc(100% - 18px)!important;font-size:7.6px!important}
+  .swipe-card-coach{bottom:4px!important;width:calc(100% - 18px)!important;font-size:7.6px!important}
   .luxury-home .home-first-nudge{bottom:52px;font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){
