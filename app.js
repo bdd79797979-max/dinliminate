@@ -1379,7 +1379,29 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   }
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
-  window.setTimeout(()=>{action();reset();},duration);
+  window.setTimeout(async()=>{
+   action();
+   if(cardId==='foodCard'&&card.isConnected){
+    const img=card.querySelector('#foodImg');
+    if(img){
+     try{
+      if(!img.complete||img.naturalWidth===0){
+       await new Promise(resolve=>{
+        let settled=false;
+        const finish=()=>{if(settled)return;settled=true;clearTimeout(timer);img.removeEventListener('load',finish);img.removeEventListener('error',finish);resolve();};
+        const timer=window.setTimeout(finish,450);
+        img.addEventListener('load',finish,{once:true});
+        img.addEventListener('error',finish,{once:true});
+       });
+      }
+      if(typeof img.decode==='function'){
+       try{await img.decode();}catch{}
+      }
+     }catch{}
+    }
+   }
+   if(card.isConnected)reset();
+  },duration);
  };
  const paintMove=()=>{
   moveFrame=null;
