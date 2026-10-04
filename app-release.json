@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 913,
+  "build": 915,
   "sourceBranch": "main",
-  "checkpoint": "CP914",
-  "deploymentTrigger": "CP914-home-choice-photography",
+  "checkpoint": "CP915",
+  "deploymentTrigger": "CP915-home-card-gesture-hardening",
   "vercelProductionVerified": false
 }
