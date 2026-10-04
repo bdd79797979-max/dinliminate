@@ -1297,7 +1297,7 @@ function triggerSwipeHaptic(){
  return false;
 }
 
-/* CP943 — deterministic swipe-preview staging and handoff locking.
+/* CP944 — fixed-size Meal swipe preview.
    A waiting card is never promoted until its image is ready, and a promoted
    Food preview is never repurposed while it is still the visible layer. */
 let activeFoodSwipeHandoffCard=null;
@@ -1367,7 +1367,7 @@ function stageSwipePreview(card,img,src,key){
  card.dataset.swipePreviewReady='0';
  card.__swipePreviewReadyPromise=null;
  card.style.transition='none';
- card.style.transform='scale(.96)';
+ card.style.transform='scale(1)';
  card.style.opacity='.62';
  card.style.filter='saturate(.82) brightness(.76)';
  card.style.visibility='hidden';
@@ -1432,7 +1432,7 @@ function prepareFoodNextCard(){
  const nimg=$('foodNextImg'); if(!nimg)return;
  nextCard.dataset.mealId=next.id;
  nimg.alt=next.name;
- nimg.style.transform='';
+ nimg.style.transform='scale(1)';
  nimg.referrerPolicy='no-referrer';
  nimg.loading='eager';
  nimg.draggable=false;
@@ -1480,13 +1480,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
   if(next){
-   next.style.transform='scale(.96)';
+   next.style.transform='scale(1)';
    next.style.opacity='.62';
    next.style.filter='saturate(.82) brightness(.76)';
    next.style.visibility=next.dataset.swipePreviewReady==='1'?'visible':'hidden';
    next.dataset.swipePromoted='';
    const nextImg=next.querySelector('img');
-   if(nextImg)nextImg.style.transform='';
+   if(nextImg)nextImg.style.transform='scale(1)';
   }
  };
  const settleBack=()=>{
@@ -1593,13 +1593,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
     }
     if(next){
      next.style.transition='none';
-     next.style.transform='scale(.96)';
+     next.style.transform='scale(1)';
      next.style.opacity='.62';
      next.style.filter='saturate(.82) brightness(.76)';
      next.style.visibility='visible';
      next.dataset.swipePromoted='';
      const promotedImg=next.querySelector('img');
-     if(promotedImg)promotedImg.style.transform='';
+     if(promotedImg)promotedImg.style.transform='scale(1)';
     }
     if(card.isConnected)reset();
     if(cardId==='foodCard'&&next&&activeFoodSwipeHandoffCard===next){
@@ -1618,13 +1618,12 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   swipeThreshold=clamp(Math.round(width*.23),76,118);
   const progress=clamp(absX/swipeThreshold,0,1.45);
   const rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
-  const scaleLift=.96+(Math.min(1,progress)*.04);
-  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
+   card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
   card.style.opacity='1';
   card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*3.1),0,.24)));
   card.dataset.swipe=dx<0?'cut':'maybe';
   if(next){
-   next.style.transform='scale('+scaleLift.toFixed(4)+')';
+   next.style.transform='scale(1)';
    next.style.opacity=String(clamp(.62+Math.min(1,progress)*.38,.62,1));
    next.style.filter='saturate('+clamp(.82+Math.min(1,progress)*.18,.82,1).toFixed(3)+') brightness('+clamp(.76+Math.min(1,progress)*.24,.76,1).toFixed(3)+')';
   }
