@@ -506,6 +506,18 @@ function restaurantFallbackImage(row){
  }
  return imageProxyUrl(REST_QUICK_IMAGES.American);
 }
+function restaurantCardFallbackImage(row){
+ const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
+ const map=REST_QUICK_IMAGES;
+ for(const label of labels){
+  if(map[label])return imageProxyUrl(map[label]);
+  const normalized=String(label).trim().toLowerCase();
+  const found=Object.keys(map).find(key=>key.toLowerCase()===normalized);
+  if(found)return imageProxyUrl(map[found]);
+ }
+ return imageProxyUrl(REST_QUICK_IMAGES.American);
+}
+
 function decodePhotoAttributions(raw){
  const value=String(raw||'').trim();if(!value)return[];
  try{
@@ -2290,7 +2302,7 @@ S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
 const row = rows[S.restaurantIndex];
 const category = restaurantCategory(row);
-const restaurantFallback = (r) => imageProxyUrl(r?.photo || r?.photoFallback || r?.image || restaurantFallbackImage(r));
+const restaurantFallback = (r) => restaurantCardFallbackImage(r);
 const image = restaurantFallback(row);
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
