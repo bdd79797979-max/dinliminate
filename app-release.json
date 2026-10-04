@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 954,
+  "build": 955,
   "sourceBranch": "main",
-  "checkpoint": "CP954",
-  "deploymentTrigger": "CP954-restaurant-first-paint",
+  "checkpoint": "CP955",
+  "deploymentTrigger": "CP955-double-wooden-doors-home-background",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity"
