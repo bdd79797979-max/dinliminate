@@ -554,14 +554,10 @@ async function loadRestaurantPhoto(row){
  if(!row)return null;
  const rowKey=String(row.id||row.canonicalId||'').trim();
  if(!rowKey)return null;
- const hasGooglePhoto=!!String(row.googlePhotoName||'').trim();
- // Google Places photos/resources are session-only; never put them in our cache.
- if(!hasGooglePhoto){
-  const cacheHit=restaurantPhotoCache.get(rowKey);
-  if(cacheHit?.url)return touchRestaurantPhotoMemoryCache(rowKey,cacheHit);
-  const missAt=Number(restaurantPhotoMissCache.get(rowKey)||0);
-  if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
- }
+ const cacheHit=restaurantPhotoCache.get(rowKey);
+ if(cacheHit?.url)return touchRestaurantPhotoMemoryCache(rowKey,cacheHit);
+ const missAt=Number(restaurantPhotoMissCache.get(rowKey)||0);
+ if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
  let pending=restaurantPhotoInflight.get(rowKey);
  if(!pending){
   const params=new URLSearchParams();
@@ -579,38 +575,28 @@ async function loadRestaurantPhoto(row){
   }
   if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
   if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
-  const googlePhotoName=String(row.googlePhotoName||'').trim();
-  if(googlePhotoName){
-   params.set('googlePhotoName',googlePhotoName);
-   const attrs=Array.isArray(row.googlePhotoAttributions)?row.googlePhotoAttributions.filter(x=>x&&typeof x==='object').slice(0,5):[];
-   if(attrs.length)params.set('googlePhotoAttributions',JSON.stringify(attrs));
-  }
   params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
   const requestUrl='/api/restaurant-photo?'+params.toString();
   pending=(async()=>{
-   if(!hasGooglePhoto){
-    const stored=await getPersistentRestaurantPhoto(row);
-    if(stored)return stored;
-   }
-   const res=await fetch(requestUrl,{cache:hasGooglePhoto?'no-store':'force-cache'});
+   const stored=await getPersistentRestaurantPhoto(row);
+   if(stored)return stored;
+   const res=await fetch(requestUrl,{cache:'force-cache'});
    if(!res.ok){
-    if(!hasGooglePhoto)restaurantPhotoMissCache.set(rowKey,Date.now());
+    restaurantPhotoMissCache.set(rowKey,Date.now());
     throw new Error('Restaurant photo unavailable');
    }
    const blob=await res.blob();
    if(!blob.type.startsWith('image/')){
-    if(!hasGooglePhoto)restaurantPhotoMissCache.set(rowKey,Date.now());
+    restaurantPhotoMissCache.set(rowKey,Date.now());
     throw new Error('Restaurant photo response was not an image');
    }
    const attributions=decodePhotoAttributions(res.headers.get('X-Restaurant-Photo-Attributions'));
    const sourceName=String(res.headers.get('X-Restaurant-Photo-Source')||'').trim();
-   if(!hasGooglePhoto)await putPersistentRestaurantPhoto(row,blob,attributions,sourceName);
+   await putPersistentRestaurantPhoto(row,blob,attributions,sourceName);
    return {url:URL.createObjectURL(blob),attributions,source:sourceName};
   })().then(data=>{
-   if(!hasGooglePhoto){
-    touchRestaurantPhotoMemoryCache(rowKey,data);
-    restaurantPhotoMissCache.delete(rowKey);
-   }
+   touchRestaurantPhotoMemoryCache(rowKey,data);
+   restaurantPhotoMissCache.delete(rowKey);
    if(data.source)row.photoSource=data.source;
    return data;
   }).finally(()=>restaurantPhotoInflight.delete(rowKey));
@@ -648,8 +634,7 @@ function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETC
  const targets=[];
  for(let offset=1;offset<=count;offset++){
   const row=pool[startIndex+offset];
-  // Google explicitly recommends on-demand photo loading.
-  if(row&&!String(row.googlePhotoName||'').trim())targets.push(row);
+  if(row)targets.push(row);
  }
  if(!targets.length)return;
  const token=++restaurantPhotoPrefetchToken;
@@ -2599,7 +2584,7 @@ const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
   stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=String(nextRow.googlePhotoName||'').trim()?null:loadRestaurantPhoto(nextRow).then(async data=>{
+  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
    if(!data?.url)return null;
    if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
    if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
