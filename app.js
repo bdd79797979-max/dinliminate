@@ -1172,13 +1172,15 @@ document.addEventListener('pointerdown',event=>{
 function maybeShowInCardSwipeCoach(){
  try{if(localStorage.getItem('dinliminate.swipeHint.v5')||localStorage.getItem('dinliminate.swipeHint.v4')){clearLegacySwipeInstructions();return;}}catch{}
  const card=S.screen==='restaurant' ? $('restaurantCard') : $('foodCard');
- if(!card || card.querySelector('.swipe-card-coach'))return;
+ const screenId=S.screen==='restaurant' ? 'restaurant' : 'food';
+ const host=document.querySelector('#'+screenId+' .unified-swipe-actions');
+ if(!card || !host || host.querySelector('.swipe-card-coach'))return;
  const coach=document.createElement('div');
  coach.className='swipe-card-coach';
  coach.setAttribute('role','note');
  coach.setAttribute('aria-label','Swipe left to Cut or right for Maybe. This lesson disappears after your first meaningful interaction.');
  coach.innerHTML='<span class="swipe-card-coach-cut">← CUT</span><span class="swipe-card-coach-mid">· SWIPE ·</span><span class="swipe-card-coach-maybe">MAYBE →</span>';
- card.appendChild(coach);
+ host.appendChild(coach);
 }
 function startFood() {
 S.foodActions = [];
