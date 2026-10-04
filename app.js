@@ -634,7 +634,8 @@ function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETC
  const targets=[];
  for(let offset=1;offset<=count;offset++){
   const row=pool[startIndex+offset];
-  if(row)targets.push(row);
+  // Google explicitly recommends on-demand photo loading.
+  if(row&&!String(row.googlePhotoName||'').trim())targets.push(row);
  }
  if(!targets.length)return;
  const token=++restaurantPhotoPrefetchToken;
