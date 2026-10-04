@@ -10,6 +10,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
+// CP975 — unified Restaurant two-card swipe handoff, matching Meals.
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
 let restaurantSwipeHandoff=false;
@@ -1634,7 +1635,33 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
    try{
     action();
    }finally{
-    if(foodHandoff){
+    if(restaurantHandoff){
+     if(card.isConnected&&next?.isConnected&&S.screen==='restaurant'){
+      const promotedImg=next.querySelector('img');
+      const recycledImg=card.querySelector('img');
+      const promotedCredit=next.querySelector('.restaurant-photo-credit');
+      const recycledCredit=card.querySelector('.restaurant-photo-credit');
+      if(promotedImg&&recycledImg){
+       const promotedSrc=String(promotedImg.currentSrc||promotedImg.src||'');
+       if(promotedSrc)recycledImg.src=promotedSrc;
+       recycledImg.alt=promotedImg.alt||'';
+       recycledImg.dataset.restaurantPhotoKey=String(promotedImg.dataset.restaurantPhotoKey||'');
+       recycledImg.dataset.fallback=promotedImg.dataset.fallback||RESTAURANT_NEUTRAL_IMAGE;
+       recycledImg.dataset.finalFallback=promotedImg.dataset.finalFallback||RESTAURANT_NEUTRAL_IMAGE;
+       recycledImg.style.transform='none';
+      }
+      if(promotedCredit&&recycledCredit){
+       recycledCredit.innerHTML=promotedCredit.innerHTML;
+       recycledCredit.classList.toggle('is-visible',promotedCredit.classList.contains('is-visible'));
+      }
+      const rows=restaurantPoolFiltered();
+      if(rows.length){
+       S.restaurantIndex=Math.max(0,Math.min(S.restaurantIndex,rows.length-1));
+       paintRestaurantCardsAfterHandoff(rows[S.restaurantIndex],rows[S.restaurantIndex+1]||null);
+      }
+     }
+     restaurantSwipeHandoff=false;
+    }else if(foodHandoff){
      // Reuse the already-visible promoted image for the recycled card. This
      // makes the handoff visually atomic even when the new card image is remote.
      if(card.isConnected){
@@ -2654,6 +2681,100 @@ prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT)
 maybeShowInCardSwipeCoach();
 if(S.familyNormalMode==='setup'&&S.familyDecisionType==='restaurant')familyNormalBar('restaurant','setup',S.familyActiveData);
 }
+function paintRestaurantCardsAfterHandoff(row,nextRow){
+ const card=$('restaurantCard'),next=$('restaurantNextCard');
+ if(!card||!next||!row)return;
+ const currentImg=card.querySelector('img');
+ const currentUi=card.querySelector('.restaurant-card-photo-ui');
+ const currentMeta=card.querySelector('.restaurant-card-meta');
+ const currentName=card.querySelector('.card-copy h3');
+ const currentLocation=card.querySelector('.restaurant-card-location-distance');
+ const category=restaurantCategory(row);
+ const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
+ const shortAddress=row.address ? String(row.address).split(',').slice(0,2).join(', ') : '';
+ if(currentImg){
+  currentImg.dataset.restaurantPhotoKey=String(row.id||'');
+  currentImg.dataset.fallback=RESTAURANT_NEUTRAL_IMAGE;
+  currentImg.dataset.finalFallback=RESTAURANT_NEUTRAL_IMAGE;
+  currentImg.alt=String(row.name||'');
+  currentImg.style.transform='none';
+ }
+ if(currentUi)currentUi.innerHTML=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
+ if(currentMeta)currentMeta.textContent=category;
+ if(currentName)currentName.textContent=String(row.name||'');
+ const locationText=[shortAddress,distanceLabel].filter(Boolean).join(' • ');
+ if(currentLocation){
+  currentLocation.textContent=locationText;
+  currentLocation.title=String(row.address||'');
+ }
+ const backButton=$('restBack');
+ if(backButton){
+  const familyBack=familyIsBrowseStage('restaurant')&&!familyBrowseSubmitted();
+  backButton.disabled=!familyBack&&S.restaurantActions.length===0;
+  backButton.setAttribute('aria-disabled',String(!familyBack&&S.restaurantActions.length===0));
+ }
+ bindCardButton('restBack',restaurantBack);
+ bindCardButton('restCut',()=>restaurantCut(row));
+ bindCardButton('restMaybe',()=>restaurantMaybe(row));
+ bindCardButton('restChoose',()=>{
+  dismissSwipeHint();
+  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){
+   familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');
+  }else winner(row);
+ });
+ bindCardButton('restDetails',()=>detailsSheet(row,'restaurant'));
+ bindRestaurantSwipe(row);
+ bindMaybeDeckToggle('restaurant');
+ const nextImg=next.querySelector('img');
+ next.style.transition='none';
+ next.style.transform='none';
+ next.style.opacity=nextRow?'.62':'0';
+ next.style.filter='saturate(.82) brightness(.76)';
+ next.style.visibility=nextRow?'visible':'hidden';
+ next.classList.toggle('hidden',!nextRow);
+ next.dataset.swipePromoted='';
+ next.setAttribute('aria-hidden','true');
+ if(!nextImg)return;
+ nextImg.style.transform='none';
+ if(!nextRow){
+  nextImg.removeAttribute('src');
+  nextImg.alt='';
+  delete next.__restaurantCanonicalPhotoPromise;
+  return;
+ }
+ const nextKey=String(nextRow.id||nextRow.canonicalId||'');
+ const immediate=restaurantImmediatePhoto(nextRow);
+ nextImg.alt=String(nextRow.name||'');
+ nextImg.referrerPolicy='no-referrer';
+ nextImg.loading='eager';
+ nextImg.decoding='async';
+ nextImg.draggable=false;
+ nextImg.dataset.restaurantPhotoKey=nextKey;
+ nextImg.dataset.fallback=RESTAURANT_NEUTRAL_IMAGE;
+ nextImg.dataset.finalFallback=RESTAURANT_NEUTRAL_IMAGE;
+ nextImg.src=immediate;
+ nextImg.onerror=function(){
+  const fb=this.dataset.fallback||RESTAURANT_NEUTRAL_IMAGE,current=this.currentSrc||this.src;
+  if(fb&&current!==fb){this.src=fb;return;}
+  const final=this.dataset.finalFallback||RESTAURANT_NEUTRAL_IMAGE;
+  if(final&&current!==final)this.src=final;
+ };
+ next.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
+  if(!data?.url)return null;
+  if(!next.isConnected||next.dataset.swipePromoted==='1')return data.url;
+  if(String(nextImg.dataset.restaurantPhotoKey||'')!==nextKey)return data.url;
+  const swapped=await swapImageWhenReady(nextImg,data.url);
+  if(swapped){
+   nextImg.dataset.restaurantPhotoLoaded='true';
+   next.dataset.restaurantPhotoCanonical='1';
+   setRestaurantPhotoCredit(next,data.attributions);
+  }
+  return data.url;
+ }).catch(()=>null);
+ hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
+ prefetchRestaurantPhotos(restaurantPoolFiltered(),S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
+ maybeShowInCardSwipeCoach();
+}
 function restaurantCut(row){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowsePrevious('restaurant');return;}
@@ -2662,7 +2783,11 @@ function restaurantCut(row){
  S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
  row._cut=true;
  const remaining=restaurantPoolFiltered();
- if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);drawRestaurants();}
+ if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});
+ else{
+  S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);
+  if(!restaurantSwipeHandoff)drawRestaurants();
+ }
  save();
 }
 
@@ -2673,7 +2798,8 @@ function restaurantMaybe(row){
  const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
  if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
- drawRestaurants();save();
+ if(!restaurantSwipeHandoff)drawRestaurants();
+ save();
 }
 
 function restaurantBack(){
