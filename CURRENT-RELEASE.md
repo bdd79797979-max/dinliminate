@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 917 / CP917
+# CURRENT RELEASE — BUILD 918 / CP918
+
+## CP918 — Remove Radius pill
+- Removed the rounded pill container around the Restaurant Radius selector.
+- Kept the existing radius values, selector behavior, chevron, and location-row layout intact.
+- Restyled Radius as a quiet text control to better match the premium Restaurant interface.
 
 ## CP917 — Restaurant photo first-render hardening
 - Restaurant cards now start with a guaranteed proxied restaurant-category image instead of an unverified raw venue URL.
