@@ -1,4 +1,11 @@
-# CURRENT RELEASE — BUILD 932 / CP932
+# CURRENT RELEASE — BUILD 933 / CP933
+
+## CP933 — Maximize Meals + Restaurant decision cards
+- Made the Meal and Restaurant card stages flex to the exact space between their top controls and bottom swipe controls on phone widths.
+- Removed the fixed mobile card height caps so short/tall iPhones and expanded discovery rails adapt naturally.
+- Maximized card width with a controlled phone-safe negative gutter while preventing horizontal page overflow.
+- Preserved card content, swipe behavior, Restaurant search/Cuisine layers, and the CP932 Menu-lines-only treatment.
+
 
 ## CP932 — Menu lines only
 - Removed the remaining decorative box/enclosure around the Menu control.
