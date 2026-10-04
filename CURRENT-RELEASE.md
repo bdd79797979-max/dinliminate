@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 916 / CP916
+# CURRENT RELEASE — BUILD 917 / CP917
+
+## CP917 — Restaurant photo first-render hardening
+- Restaurant cards now start with a guaranteed proxied restaurant-category image instead of an unverified raw venue URL.
+- The verified restaurant-photo resolver still runs immediately afterward and replaces the fallback when a venue-specific image is found.
+- Preserved Restaurant swipe behavior and card layout.
 
 ## CP916 — Meal swipe iPhone hardening
 - Corrected CP915 scope: Restaurant swipe behavior remains unchanged.
