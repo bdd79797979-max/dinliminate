@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '908';
+let APP_BUILD = '909';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3956,14 +3956,19 @@ async function appDiagnosisView(existingModal){
    const wheelStable=wheelStartSource.includes('hideCelebration()')&&wheelStartSource.includes('S.hungryWheelSpinToken++')&&wheelFinishSource.includes('triggerCelebration(true)');
    wheelStable?pass('runtime','Hungry wheel repeat-spin isolation','A new wheel spin clears prior celebration state and advances the spin token before motion starts.','Old stop callbacks cannot resolve into a later spin.'):fail('runtime','Hungry wheel repeat-spin isolation','Repeat-spin state isolation is incomplete.','Reset celebration and invalidate prior wheel callbacks at spin start.');
    const photoCacheSource=typeof loadRestaurantPhoto==='function'?String(loadRestaurantPhoto):'';
-   const cacheBound=photoCacheSource.includes('touchRestaurantPhotoMemoryCache')&&src.includes('RESTAURANT_PHOTO_MEMORY_CACHE_MAX=18')&&src.includes('URL.revokeObjectURL');
+   const cacheBound=photoCacheSource.includes('touchRestaurantPhotoMemoryCache')&&typeof trimRestaurantPhotoMemoryCache==='function'&&String(trimRestaurantPhotoMemoryCache).includes('URL.revokeObjectURL');
    const photoSwapSource=typeof swapImageWhenReady==='function'?String(swapImageWhenReady):'';
    cacheBound&&photoSwapSource.includes('new Image()')&&photoSwapSource.includes('probe.onload')?pass('runtime','Restaurant photo memory/flash protection','Restaurant photo memory is bounded and replacements are preloaded before the visible source changes.','This reduces iPhone memory pressure and photo source-change flashes.'):warn('runtime','Restaurant photo memory/flash protection','The bounded photo-cache or preloaded image swap safeguards could not be fully verified.','Repeat restaurant browsing on an iPhone remains an important stress test.');
    const prefetchSource=typeof prefetchRestaurantPhotos==='function'?String(prefetchRestaurantPhotos):'';
    prefetchSource.includes('restaurantPhotoPrefetchTimer')&&prefetchSource.includes('clearTimeout(restaurantPhotoPrefetchTimer)')?pass('runtime','Restaurant photo prefetch throttling','Rapid card movement coalesces background photo prefetch work instead of stacking loads.','This limits network and memory pressure during fast browsing.'):warn('runtime','Restaurant photo prefetch throttling','Photo prefetch throttling could not be fully verified.','Rapid swiping can otherwise increase network and memory pressure.');
    const appRuntimeVersion=String(APP_BUILD||'');
-   const swVersionSynchronized=src.includes("navigator.serviceWorker.register('./sw.js?v=908')");
-   appRuntimeVersion==='908'&&swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker registration are synchronized to CP907.','A cache-query change helps the phone pick up the current shell.'):warn('runtime','PWA runtime versioning','The browser runtime is not fully synchronized to CP907.','A stale service worker can make an older interaction bug appear to persist.');
+   let swVersionSynchronized=false;
+   try{
+    const swCheck=await fetch('./sw.js?diagnosis='+Date.now(),{cache:'no-store'});
+    const swText=await swCheck.text();
+    swVersionSynchronized=swCheck.ok&&swText.includes('dinliminate-shell-v909')&&swText.includes("'./app.js?v=909'");
+   }catch{}
+   appRuntimeVersion==='909'&&swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker registration are synchronized to CP909.','The cache-query and service-worker shell now point to the same release.'):warn('runtime','PWA runtime versioning','The browser runtime is not fully synchronized to CP909.','A stale service worker or asset reference can make an older interaction bug appear to persist.');
    /* iPhone / PWA */
    const metaViewport=document.querySelector('meta[name="viewport"]')?.getAttribute('content')||'';
    metaViewport.includes('viewport-fit=cover')?pass('runtime','iPhone viewport','Safe-area-aware viewport settings are present.'):warn('runtime','iPhone viewport','The expected viewport-fit setting is missing.');
@@ -4384,7 +4389,7 @@ window.addEventListener('offline', updateOffline);
 window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=907').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=909').catch(() => {}));
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindMealPhotoCountControls();
 load();
