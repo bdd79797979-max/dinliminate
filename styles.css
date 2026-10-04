@@ -7869,16 +7869,13 @@ button,input,select,textarea{
 
 /* CP864 — Meal multi-photo viewing polish */
 .meal-card-photo-pager{
- position:absolute;top:10px;right:10px;z-index:8;min-width:48px;height:27px;padding:0 9px;
+ position:absolute;top:10px;right:10px;z-index:12;min-width:48px;height:27px;padding:0 9px;
  display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.24);border-radius:999px;
  background:rgba(0,0,0,.56);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
- color:#fff;font:800 10px/1 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none;box-shadow:0 3px 12px rgba(0,0,0,.2)
+ color:#fff;font:800 10px/1 system-ui,sans-serif;letter-spacing:.04em;pointer-events:auto;
+ box-shadow:0 3px 12px rgba(0,0,0,.2);cursor:pointer;appearance:none;-webkit-appearance:none;
 }
-.food-card img[alt]:where(#foodImg){cursor:pointer}
+.meal-card-photo-pager:active{transform:scale(.96)}
 .detail-photo-gallery{position:relative;width:100%;border-radius:18px;overflow:hidden;background:#111}
 .detail-photo-gallery .history-detail-photo{display:block;width:100%;height:auto;max-height:58vh;object-fit:cover}
-.detail-photo-gallery-controls{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.detail-photo-gallery-count{min-width:54px;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-align:center;font:800 10px/1 system-ui,sans-serif}
-.detail-photo-gallery-button{width:36px;height:36px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(0,0,0,.58);color:#fff;font-size:22px;line-height:1}
-.detail-photo-gallery-button:active{transform:scale(.95)}
-@media(max-width:390px){.meal-card-photo-pager{top:8px;right:8px;height:25px;min-width:44px;padding:0 8px;font-size:9px}.detail-photo-gallery-count{font-size:9px}}
+@media(max-width:390px){.meal-card-photo-pager{top:8px;right:8px;height:25px;min-width:44px;padding:0 8px;font-size:9px}}

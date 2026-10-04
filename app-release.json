@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 867,
+  "build": 868,
   "sourceBranch": "main",
-  "checkpoint": "CP867",
-  "deploymentTrigger": "CP867-meal-photo-reorder-cover-ordering-2026-10-04",
+  "checkpoint": "CP868",
+  "deploymentTrigger": "CP868-uniform-photo-count-control-2026-10-04",
   "vercelProductionVerified": false
 }
