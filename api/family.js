@@ -40,6 +40,9 @@ module.exports = async function handler(req, res) {
     else if (action === 'create-round') result = await family.createRound(body.token, body);
     else if (action === 'start-round') result = await family.startRound(body.token);
     else if (action === 'vote') result = await family.submitVote(body.token, body);
+     else if (action === 'enter-maybes') result = await family.enterMaybes(body.token, body);
+     else if (action === 'enter-choice') result = await family.enterChoice(body.token, body);
+     else if (action === 'create-compare-final') result = await family.createCompareFinal(body.token, body);
     else if (action === 'submit-stage') result = await family.markStageSubmitted(body.token, body);
     else if (action === 'rotate-code') result = await family.rotateCode(body.token);
     else if (action === 'end-round') result = await family.endRound(body.token);
