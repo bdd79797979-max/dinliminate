@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 954 / CP954
+# CURRENT RELEASE — BUILD 955 / CP955
+
+## CP955 — Full double wooden doors Home background
+- Replaces the luxury Home screen background with a full-frame double wooden doors photograph while preserving the existing Home layout and controls.
+- Keeps the change isolated to the existing `.luxury-home` background layer and refreshes CSS/app/service-worker cache markers.
+- No restaurant, meal, swipe, or navigation wiring changed.
 
 ## CP954 — Restore Restaurant first-paint venue photos
 - Restores the older direct-first card philosophy: known exact venue photo → resolved in-session photo cache → direct OSM/Photon venue photo → restaurant-category fallback.
