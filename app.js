@@ -1488,7 +1488,6 @@ function prepareFoodNextCard(){
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
- const fixedMealPreview=cardId==='foodCard';
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null,swipeThreshold=90;
@@ -1520,13 +1519,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
   if(next){
-   next.style.transform=fixedMealPreview?'scale(1)':'scale(.96)';
+   next.style.transform='scale(1)';
    next.style.opacity='.62';
    next.style.filter='saturate(.82) brightness(.76)';
    next.style.visibility=next.dataset.swipePreviewReady==='1'?'visible':'hidden';
    next.dataset.swipePromoted='';
    const nextImg=next.querySelector('img');
-   if(nextImg)nextImg.style.transform=fixedMealPreview?'scale(1)':'';
+   if(nextImg)nextImg.style.transform='scale(1)';
   }
  };
  const settleBack=()=>{
@@ -1639,13 +1638,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
     }
     if(next){
      next.style.transition='none';
-     next.style.transform=fixedMealPreview?'scale(1)':'scale(.96)';
+     next.style.transform='scale(1)';
      next.style.opacity='.62';
      next.style.filter='saturate(.82) brightness(.76)';
      next.style.visibility='visible';
      next.dataset.swipePromoted='';
      const promotedImg=next.querySelector('img');
-     if(promotedImg)promotedImg.style.transform=fixedMealPreview?'scale(1)':'';
+     if(promotedImg)promotedImg.style.transform='scale(1)';
     }
     if(card.isConnected)reset();
     if(cardId==='foodCard'&&next&&activeFoodSwipeHandoffCard===next){
@@ -1669,12 +1668,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*3.1),0,.24)));
   card.dataset.swipe=dx<0?'cut':'maybe';
   if(next){
-   if(fixedMealPreview){
-    next.style.transform='scale(1)';
-   }else{
-    const scaleLift=.96+(Math.min(1,progress)*.04);
-    next.style.transform='scale('+scaleLift.toFixed(4)+')';
-   }
+   next.style.transform='scale(1)';
    next.style.opacity=String(clamp(.62+Math.min(1,progress)*.38,.62,1));
    next.style.filter='saturate('+clamp(.82+Math.min(1,progress)*.18,.82,1).toFixed(3)+') brightness('+clamp(.76+Math.min(1,progress)*.24,.76,1).toFixed(3)+')';
   }
