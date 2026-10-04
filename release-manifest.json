@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 905,
+  "build": 906,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP905",
-  "deploymentTrigger": "CP905-lower-swipe-lesson-2026-10-04"
+  "checkpoint": "CP906",
+  "deploymentTrigger": "CP906-wheel-second-spin-reset-2026-10-04"
 }
