@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 935 / CP935
+# CURRENT RELEASE — BUILD 936 / CP936
+
+## CP936 — Meals control parity
+- Matched Meals Meal Times and Cuisine to the Restaurant Search/Cuisine control size, weight, spacing language, and interaction treatment.
+- Matched the Meals All Maybes label/count to the restrained Restaurant All/Maybes/count visual language while preserving the live Maybe count.
+- Preserved CP935 Meal swipe handoff correction, card sizing, Restaurant Search correction, and Menu-lines-only treatment.
+
 
 ## CP935 — Meal swipe handoff correction
 - Removed the visible promoted-next-card reset during Meal swipe completion.
