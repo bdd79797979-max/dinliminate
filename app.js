@@ -2,6 +2,7 @@
 
 (() => {
 'use strict';
+// CP954 restaurant first-paint restoration: exact/direct venue photos win before generic fallback.
 // CP945 photo-pipeline release sync: canonical Restaurant photo handoff + cache revision.
 const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.DINLIMINATE_FOODS : [];
 const DEFAULT_FOOD_IMAGE = 'https://images.pexels.com/photos/16365767/pexels-photo-16365767.jpeg?auto=compress&cs=tinysrgb&w=1800';
@@ -9,7 +10,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '953';
+let APP_BUILD = '954';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -514,10 +515,16 @@ function restaurantFallbackImage(row){
 }
 function restaurantImmediatePhoto(row){
  if(!row)return imageProxyUrl(REST_QUICK_IMAGES.American);
+ // First paint should prefer an exact venue photo already known to the app.
+ const known=knownRestaurantPhotoFallback(row);
+ if(known)return known;
+ // A successfully resolved photo from this session should win immediately on re-render.
+ const rowKey=String(row?.id||row?.canonicalId||'').trim();
+ const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
+ if(cached?.url)return touchRestaurantPhotoMemoryCache(rowKey,cached).url;
+ // Restore the older direct-first behavior for provider-attached OSM/Photon venue photos.
  const raw=String(row?.photo||row?.image||'').trim();
  const source=String(row?.source||'');
- // Only trust provider-attached venue photos when their provenance is tied to OSM.
- // Other provider photos stay out of the first paint and let the canonical resolver decide.
  if(/^https:\/\//i.test(raw)&&(source.startsWith('OpenStreetMap')||source.startsWith('Photon POI'))){
   return imageProxyUrl(raw);
  }
