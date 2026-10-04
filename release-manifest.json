@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 932,
+  "build": 933,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP932",
-  "deploymentTrigger": "CP932-menu-lines-only-2026-10-04"
+  "checkpoint": "CP933",
+  "deploymentTrigger": "CP933-maximize-decision-cards-2026-10-04"
 }
