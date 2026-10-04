@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 943,
+  "build": 944,
   "sourceBranch": "main",
-  "checkpoint": "CP943",
-  "deploymentTrigger": "CP943-deterministic-swipe-preview-handoff",
+  "checkpoint": "CP944",
+  "deploymentTrigger": "CP944-fixed-size-meal-swipe-preview",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP943-deterministic-preview-handoff"
+  "swipeAudit": "CP944-fixed-size-meal-swipe-preview"
 }
