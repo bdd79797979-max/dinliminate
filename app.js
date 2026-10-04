@@ -2606,7 +2606,7 @@ const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
   stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
+  restaurantNextCard.__restaurantCanonicalPhotoPromise=String(nextRow.googlePhotoName||'').trim()?null:loadRestaurantPhoto(nextRow).then(async data=>{
    if(!data?.url)return null;
    if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
    if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
