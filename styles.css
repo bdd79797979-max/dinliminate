@@ -9614,3 +9614,43 @@ button,input,select,textarea{
 #restaurant .restaurant-card-stack>.next-card img{
   transform:scale(1)!important;
 }
+
+
+/* CP949 — Meals / Restaurants discovery visual parity.
+   Keep the canonical Maybe markup shared; only harden the final presentation. */
+#restaurant .restaurant-choice-management .canonical-maybe-control .maybe-control-count{
+  color:#55d88a!important;
+  font-weight:900!important;
+  text-shadow:0 0 10px rgba(85,216,138,.18)!important;
+}
+
+/* Meal Times — Cuisine uses the same restrained divider treatment as Restaurant Search — Cuisine. */
+#food .food-interior-nav .food-top-refine-divider{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:0!important;
+  height:27px!important;
+  min-height:27px!important;
+  padding:0!important;
+  margin:0!important;
+  color:rgba(198,164,106,.52)!important;
+  font-size:11px!important;
+  font-weight:500!important;
+  line-height:1!important;
+  transform:translateY(-.5px)!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  pointer-events:none!important;
+}
+@media(max-width:390px){
+  #food .food-interior-nav .food-top-refine-divider{
+    font-size:10px!important;
+  }
+}
+@media(max-width:340px){
+  #food .food-interior-nav .food-top-refine-divider{
+    font-size:10px!important;
+  }
+}
