@@ -1,3 +1,8 @@
+## CP908 — App Diagnosis expansion
+- Added Interaction Stability diagnostics for Restaurant Search keyboard Enter, search card preservation, Swipe/Cut/Maybe lesson placement, Hungry wheel repeat-spin isolation, restaurant-photo memory/flash protection, photo prefetch throttling, and PWA runtime versioning.
+- Diagnosis now flags the exact client-side regressions that were identified from recent iPhone testing instead of treating them only as manual checks.
+- Release metadata and service-worker/app asset versions synchronized to CP908.
+
 ## CP907 — Restaurant search keyboard submit stability
 - Enter/search now reads the current field value directly and performs one submit without an extra card redraw.
 - Restaurant search typing no longer redraws the active card on every keystroke; provider search remains debounced.
