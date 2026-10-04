@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 874,
+  "build": 875,
   "sourceBranch": "main",
-  "checkpoint": "CP874",
-  "deploymentTrigger": "CP874-native-add-photos-picker",
+  "checkpoint": "CP875",
+  "deploymentTrigger": "CP875-faster-decision-buttons-180ms",
   "vercelProductionVerified": false
 }
