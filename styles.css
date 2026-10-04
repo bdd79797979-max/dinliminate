@@ -9403,3 +9403,13 @@ button,input,select,textarea{
   display:block!important;
   overflow:hidden!important;
 }
+
+
+/* CP932 — prevent the Meal card from flashing through the Manage Meals opening frame. */
+.manage-foods-modal-bg.modal-bg-opening{
+  opacity:1!important;
+  background:rgba(0,0,0,.82)!important;
+}
+.manage-foods-modal-bg.modal-bg-open{
+  opacity:1!important;
+}
