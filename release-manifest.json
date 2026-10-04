@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 931,
+  "build": 932,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP931",
-  "deploymentTrigger": "CP931-restaurant-phone-fit-2026-10-04"
+  "checkpoint": "CP932",
+  "deploymentTrigger": "CP932-menu-lines-only-2026-10-04"
 }
