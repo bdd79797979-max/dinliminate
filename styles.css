@@ -9165,3 +9165,44 @@ button,input,select,textarea{
     margin-right:-8px!important;
   }
 }
+
+
+/* CP934 — Restaurant Search field edge/clip correction.
+   Give the searchable restaurant input a stable box model so its border and
+   text remain fully visible on iPhone Safari at deployed viewport sizes. */
+#restaurant .restaurant-search-box{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+#restaurant .restaurant-search-box input{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  box-sizing:border-box!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  border-width:1px!important;
+  line-height:1.2!important;
+}
+@media(max-width:390px){
+  #restaurant .restaurant-search-box input{
+    height:38px!important;
+    min-height:38px!important;
+    padding-left:11px!important;
+    padding-right:11px!important;
+  }
+}
+@media(max-width:360px){
+  #restaurant .restaurant-search-box input{
+    height:37px!important;
+    min-height:37px!important;
+  }
+}
