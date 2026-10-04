@@ -8420,9 +8420,17 @@ button,input,select,textarea{
 }
 
 /* CP923 — reclaim unused Restaurant location-status space.
-   Status messaging remains available to assistive technology, but no visual row is reserved for it. */
+   Status messaging remains available to assistive technology without reserving visual layout space. */
 #restaurant .location-status-row{
-  display:none!important;
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
 }
 #restaurant .location-strip{
   padding:2px 0 0!important;
