@@ -2051,7 +2051,8 @@ box.querySelectorAll('[data-suggestion]').forEach((btn, i) => {
     const row = rows[i];
     suggestionIndex = -1;
     invalidateAddressSuggestions();
-    setLocation(row.lat, row.lon, displayRestaurantLocationLabel(row.display,$('address').value),'address');
+    /* CP892 — autocomplete selection commits the full resolved address returned by the provider. */
+    setLocation(row.lat, row.lon, String(row.display||'').trim(),'address');
     $('status').textContent = 'Location selected. Searching restaurants…';
     await searchRestaurants();
   };
