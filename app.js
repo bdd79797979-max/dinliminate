@@ -123,6 +123,12 @@ function bindPersistentHomeBackground(){
    if(img.src!==fallback){img.src=fallback;}
  });
 }
+function mealPhotoList(item){
+ const list=Array.isArray(item?.images)?item.images.map(x=>String(x||'').trim()).filter(Boolean):[];
+ if(list.length)return list;
+ const single=String(item?.image||'').trim();
+ return single?[single]:[];
+}
 function foodPhoto(item){
 if(!item)return HUNGRY_IMAGE;
 const src=String(item.image||'');
@@ -654,43 +660,69 @@ const db=await openPhotoDB();
 await new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('Could not delete photo'));});
 } catch {}
 }
-async function hydrateCustomPhotos() {
-let changed=false;
-for (const item of S.custom) {
-if (String(item.image||'').startsWith('idb:')) {
-const data=await getStoredPhoto(item.id);
-if (data) { item.image=data; storedPhotoIds.add(item.id); changed=true; }
-else item.image=DEFAULT_FOOD_IMAGE;
+function mealPhotoStorageKey(id,index=0){return index===0?String(id):String(id)+':photo:'+String(index);}
+async function pruneMealPhotoKeys(id,keepCount){
+ try{
+  const db=await openPhotoDB();
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction(PHOTO_STORE,'readwrite'),store=tx.objectStore(PHOTO_STORE),req=store.getAllKeys();
+   req.onsuccess=()=>{for(const key of req.result||[]){const k=String(key),prefix=String(id)+':photo:';if(k.startsWith(prefix)){const idx=Number(k.slice(prefix.length));if(!Number.isFinite(idx)||idx>=keepCount)store.delete(key);}}};
+   req.onerror=()=>reject(req.error||new Error('Could not inspect meal photos'));
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('Could not prune meal photos'));
+  });
+ }catch{}
 }
-}
-for (const item of (S.customQuickCuts||[])) {
- const key='quickcut:'+String(item.id);
- if(String(item.image||'').startsWith('idb:')){
-  const data=await getStoredPhoto(key);
-  if(data){item.image=data;storedPhotoIds.add(key);changed=true;}else item.image='';
+async function storeMealPhotoSet(id,photos){
+ const list=Array.isArray(photos)?photos.map(x=>String(x||'').trim()).filter(Boolean).slice(0,8):[],refs=[];
+ for(let i=0;i<list.length;i++){
+  const photo=list[i],key=mealPhotoStorageKey(id,i);
+  if(photo.startsWith('data:image/')){
+   const ok=await putStoredPhoto(key,photo);if(!ok)throw new Error('Could not save that meal photo on this device.');
+   storedPhotoIds.add(key);refs.push('idb:'+key);
+  }else refs.push(photo);
  }
+ if(!String(list[0]||'').startsWith('data:image/'))await deleteStoredPhoto(id);
+ await pruneMealPhotoKeys(id,refs.length);
+ return refs;
 }
-for (const item of (S.deletedCustomMeals||[])) {
- if(String(item.image||'').startsWith('idb:')){
-  const data=await getStoredPhoto(item.id);
-  if(data){item.image=data;storedPhotoIds.add(item.id);}else item.image=DEFAULT_FOOD_IMAGE;
+async function hydrateStoredMealPhotoList(item){
+ const refs=mealPhotoList(item),loaded=[];
+ for(const ref of refs){if(String(ref).startsWith('idb:')){const data=await getStoredPhoto(String(ref).slice(4));if(data)loaded.push(data);}else loaded.push(ref);}
+ return loaded;
+}
+async function hydrateCustomPhotos(){
+ let changed=false;
+ for(const item of S.custom){
+  const refs=mealPhotoList(item),loaded=await hydrateStoredMealPhotoList(item);
+  if(loaded.length){item.images=loaded;item.image=loaded[0];if(loaded.length!==refs.length)changed=true;}
+  else if(refs.some(x=>String(x).startsWith('idb:'))){item.images=[];item.image=DEFAULT_FOOD_IMAGE;changed=true;}
  }
-}
-if(changed && S.screen==='food'){ buildFood(); foodQuick(); drawFood(); }
+ for(const item of (S.customQuickCuts||[])){
+  const key='quickcut:'+String(item.id);
+  if(String(item.image||'').startsWith('idb:')){
+   const data=await getStoredPhoto(key);
+   if(data){item.image=data;storedPhotoIds.add(key);changed=true;}else item.image='';
+  }
+ }
+ for(const item of (S.deletedCustomMeals||[])){
+  const refs=mealPhotoList(item),loaded=await hydrateStoredMealPhotoList(item);
+  if(loaded.length){item.images=loaded;item.image=loaded[0];}
+  else if(refs.some(x=>String(x).startsWith('idb:'))){item.images=[];item.image=DEFAULT_FOOD_IMAGE;}
+ }
+ if(changed)save();
 }
 function updateStorageIndicator() {
 const el=$('storageIndicator'); if(!el)return;
 el.classList.toggle('hidden', !S.storageWarning);
 }
-async function migrateCustomPhotos() {
-let changed=false;
-for(const item of S.custom){
-if(typeof item.image==='string' && item.image.startsWith('data:image/')){
-const ok=await putStoredPhoto(item.id,item.image);
-if(ok){ item.image='idb:'+item.id; changed=true; }
-}
-}
-if(changed){ save(); if(S.screen==='food'){ buildFood(); foodQuick(); drawFood(); } }
+async function migrateCustomPhotos(){
+ let changed=false;
+ for(const item of S.custom){
+  const photos=mealPhotoList(item);if(!photos.length)continue;
+  const refs=await storeMealPhotoSet(item.id,photos);
+  item.images=refs;item.image=refs[0]||DEFAULT_FOOD_IMAGE;changed=true;
+ }
+ if(changed)save();
 }
 function save() {
 const data = {
@@ -702,7 +734,14 @@ restaurantCuts:[...S.restaurantCuts], restaurantActions:S.restaurantActions,
 restaurantQuery:S.restaurantQuery, location:S.location, locationSource:S.locationSource,
 saved:S.saved, winnerItem:S.winnerItem, winnerType:S.winnerType, schemaVersion:STORAGE_VERSION, deleted:[...(S.deleted||[])], deletedCustomMeals:S.deletedCustomMeals||[],
 restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
-custom:S.custom.map(x=>({...x,image:(String(x.image||'').startsWith('data:image/') && storedPhotoIds.has(x.id))?'idb:'+x.id:x.image})),
+custom:S.custom.map(x=>{
+ const photos=mealPhotoList(x);
+ const images=photos.map((photo,i)=>{
+  const key=mealPhotoStorageKey(x.id,i);
+  return String(photo).startsWith('data:image/')&&storedPhotoIds.has(key)?'idb:'+key:photo;
+ });
+ return {...x,images,image:images[0]||x.image||''};
+}),
 customQuickCuts:(S.customQuickCuts||[]).map(x=>({...x,image:(String(x.image||'').startsWith('data:image/') && storedPhotoIds.has('quickcut:'+x.id))?'idb:quickcut:'+x.id:x.image}))
 };
 try {
@@ -746,9 +785,9 @@ S.foodActions = Array.isArray(d.foodActions) ? d.foodActions : [];
 S.restaurantActions = Array.isArray(d.restaurantActions) ? d.restaurantActions : [];
 S.restaurantMaybeRound = !!d.restaurantMaybeRound;
 S.restaurantPool = Array.isArray(d.restaurantPool) ? d.restaurantPool : [];
-S.custom = Array.isArray(d.custom) ? d.custom : [];
+S.custom = Array.isArray(d.custom) ? d.custom.map(item=>({...item,images:mealPhotoList(item)})) : [];
 S.customQuickCuts = Array.isArray(d.customQuickCuts) ? d.customQuickCuts : [];
-S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals : [];
+S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals.map(item=>({...item,images:mealPhotoList(item)})) : [];
 S.winnerType = d.winnerType || 'food';
 S.restaurantSearchOrigin = d.restaurantSearchOrigin && Number.isFinite(Number(d.restaurantSearchOrigin.lat)) && Number.isFinite(Number(d.restaurantSearchOrigin.lon)) ? {lat:Number(d.restaurantSearchOrigin.lat),lon:Number(d.restaurantSearchOrigin.lon)} : null;
 S.restaurantSearchKey = String(d.restaurantSearchKey||'');
@@ -2999,6 +3038,8 @@ const existingMealTimes=isEdit?new Set(mealTimesFor(item)):new Set();
 const nut=item?.nutrition||{};
 const ingredientsText=Array.isArray(item?.ingredients)?item.ingredients.join('\n'):'';
 const descriptionText=String(item?.description||'').trim();
+let editorPhotos=String(item?.image||'').trim()?[String(item.image)]:[];
+let editorPhotosReady=Promise.resolve();
 const body='<form class="add" id="foodEditorForm">'+
 '<input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'">'+
 '<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><legend>Meal Times</legend><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid">'+MEAL_TIME_CUTS.map(label=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(label)+'" '+(existingMealTimes.has(label)?'checked':'')+'><span>'+esc(label)+'</span></label>').join('')+'</div></fieldset>'+
@@ -3015,6 +3056,33 @@ const body='<form class="add" id="foodEditorForm">'+
 '<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Choose a new image to replace the current photo, or leave it unchanged.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Choose image</span><input id="editFoodFile" type="file" accept="image/*"></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
 const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
+const mealPhotoFile=$('editFoodFile');
+if(mealPhotoFile){
+ mealPhotoFile.multiple=true;
+ const label=mealPhotoFile.closest('.file-label')?.querySelector('span');
+ if(label)label.textContent='Add photos';
+ const photoSection=mealPhotoFile.closest('.meal-editor-photo-section');
+ const grid=document.createElement('div');grid.id='mealPhotoEditorGrid';grid.className='meal-photo-editor-grid';photoSection?.appendChild(grid);
+ const renderMealPhotos=()=>{
+  grid.innerHTML=editorPhotos.map((src,i)=>'<div class="meal-photo-editor-card '+(i===0?'is-main':'')+'"><img src="'+esc(imageProxyUrl(src||FINAL_FOOD_IMAGE))+'" alt="Meal photo '+(i+1)+'" draggable="false"><div class="meal-photo-editor-card-tools"><span>'+(i===0?'MAIN':'PHOTO '+(i+1))+'</span><div>'+(i?'<button type="button" class="meal-photo-main" data-meal-photo-main="'+i+'">Main</button>':'')+'<button type="button" class="meal-photo-remove" data-meal-photo-remove="'+i+'" aria-label="Remove meal photo '+(i+1)+'">×</button></div></div></div>').join('');
+  grid.querySelectorAll('[data-meal-photo-remove]').forEach(btn=>btn.onclick=()=>{editorPhotos.splice(Number(btn.dataset.mealPhotoRemove),1);renderMealPhotos();});
+  grid.querySelectorAll('[data-meal-photo-main]').forEach(btn=>btn.onclick=()=>{const picked=editorPhotos.splice(Number(btn.dataset.mealPhotoMain),1)[0];if(picked){editorPhotos.unshift(picked);renderMealPhotos();}});
+ };
+ editorPhotosReady=hydrateStoredMealPhotoList(item).then(photos=>{editorPhotos=photos.slice(0,8);renderMealPhotos();}).catch(()=>renderMealPhotos());
+ renderMealPhotos();
+ mealPhotoFile.onchange=async()=>{
+  try{
+   await editorPhotosReady;
+   const selected=[...(mealPhotoFile.files||[])].filter(file=>file?.type?.startsWith('image/'));
+   const room=Math.max(0,8-editorPhotos.length);
+   if(!room){mealPhotoFile.value='';appToast('You already have 8 meal photos. Remove one before adding another.');return;}
+   const added=await Promise.all(selected.slice(0,room).map(readImageFile));
+   const unique=added.filter(Boolean).filter(src=>!editorPhotos.includes(src));
+   editorPhotos.push(...unique);mealPhotoFile.value='';renderMealPhotos();
+   appToast(unique.length===1?'Photo added.':unique.length>1?unique.length+' photos added.':'No new photos added.');
+  }catch(e){mealPhotoFile.value='';appToast(e.message);}
+ };
+}
 const renderEditorQuickCuts=focusId=>{
  const host=$('editFoodQuickCuts');if(!host)return;
  const standard=[...FOOD_QUICK,'Other'];
@@ -3071,12 +3139,6 @@ const renderEditorQuickCuts=focusId=>{
  };
 };
 renderEditorQuickCuts();
-$('editFoodFile').onchange=async()=>{
-try {
-const data=await readImageFile($('editFoodFile').files?.[0]);
-if(data){ $('editFoodPhoto').value=data; appToast('New photo selected. Save the meal to apply it.'); }
-} catch(e) { appToast(e.message); }
-};
 $('foodEditorForm').onsubmit=async e=>{
 e.preventDefault();
 const name=$('editFoodName').value.trim();
@@ -3108,49 +3170,38 @@ const nutrition=nutritionValues;
 const description=String($('editFoodDescription').value||'').trim();
 const ingredients=String($('editFoodIngredients').value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 const editorNote=isEdit?String($('editFoodNote')?.value||'').trim():'';
+await editorPhotosReady;
 const photoInput=$('editFoodPhoto').value.trim();
-let photo=photoInput||(isEdit&&item?.image?String(item.image):'');
-if(!photo && !isEdit){
-  const saveButton=document.querySelector('#foodEditorForm button.cut');
-  if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Finding photo…';}
-  photo=await findOnlineMealPhoto(name);
-  if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Add Meal';}
+if(photoInput){editorPhotos=editorPhotos.filter((_,i)=>i!==0);editorPhotos.unshift(photoInput);}
+let photo=editorPhotos[0]||'';
+if(!photo&&!isEdit){
+ const saveButton=document.querySelector('#foodEditorForm button.cut');
+ if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Finding photo…';}
+ photo=await findOnlineMealPhoto(name);
+ if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Add Meal';}
+ if(photo)editorPhotos=[photo];
 }
-if(!photo)photo=DEFAULT_FOOD_IMAGE;
+if(!editorPhotos.length)editorPhotos=[photo||DEFAULT_FOOD_IMAGE];
+photo=editorPhotos[0];
 let recipe=$('editFoodRecipe').value.trim();
 if(!name)return;
 if(isEdit&&isBuiltInEdit){
-const id=String(item.id);
-const idx=S.custom.findIndex(x=>String(x.id)===id);
-const previous=idx>=0?S.custom[idx]:null;
-if(photo.startsWith('data:image/')){
- const ok=await putStoredPhoto(id,photo);
- if(!ok){appToast('Could not save that photo on this device.');return;}
-
-}else if(String(photo).startsWith('idb:')){
- /* Existing device photo is intentionally preserved when no new upload was chosen. */
-}
-const updated={...defaultItem,...(previous||{}),builtInEdit:true,builtInId:id,id,name,primary:defaultItem.primary,category:cat,quickCuts,mealTimes,image:photo,description,ingredients,recipe,nutrition};
-if(idx>=0)S.custom[idx]=updated;else S.custom.push(updated);
-S.maybe.delete(id); S.hidden.delete(id);
+ const id=String(item.id),idx=S.custom.findIndex(x=>String(x.id)===id),previous=idx>=0?S.custom[idx]:null;let savedPhotos;
+ try{savedPhotos=await storeMealPhotoSet(id,editorPhotos);}catch(err){appToast(err.message);return;}
+ const updated={...defaultItem,...(previous||{}),builtInEdit:true,builtInId:id,id,name,primary:defaultItem.primary,category:cat,quickCuts,mealTimes,images:savedPhotos,image:savedPhotos[0]||DEFAULT_FOOD_IMAGE,description,ingredients,recipe,nutrition};
+ if(idx>=0)S.custom[idx]=updated;else S.custom.push(updated);S.maybe.delete(id);S.hidden.delete(id);
 } else if(isEdit){
-const idx=S.custom.findIndex(x=>x.id===item.id);
-if(idx<0)return;
-const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-if(id!==item.id && allFoods().some(x=>x.id===id)){appToast('A meal with that name already exists.');return;}
-if(photo.startsWith('data:image/')){const ok=await putStoredPhoto(id,photo);if(!ok){appToast('Could not save that photo on this device.');return;}}
-if(id!==item.id&&String(photo).startsWith('idb:')){const oldPhoto=await getStoredPhoto(item.id);if(oldPhoto){const ok=await putStoredPhoto(id,oldPhoto);if(!ok){appToast('Could not move the saved photo.');return;}photo=oldPhoto;}}
-const updated={...S.custom[idx],id,name,primary:S.custom[idx].primary,category:cat,quickCuts,mealTimes,image:photo,description,ingredients,recipe,nutrition};
-S.custom[idx]=updated;
-if(id!==item.id){ await deleteStoredPhoto(item.id); const oldNoteKey='food:'+item.id,newNoteKey='food:'+id; if(S.notes[oldNoteKey]){S.notes[newNoteKey]=S.notes[oldNoteKey];delete S.notes[oldNoteKey];saveItemNotes();} }
-S.maybe.delete(item.id); S.hidden.delete(item.id);
+ const idx=S.custom.findIndex(x=>x.id===item.id);if(idx<0)return;const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+ if(id!==item.id&&allFoods().some(x=>x.id===id)){appToast('A meal with that name already exists.');return;}
+ let savedPhotos;try{savedPhotos=await storeMealPhotoSet(id,editorPhotos);}catch(err){appToast(err.message);return;}
+ if(id!==item.id)await deleteStoredMealPhotos(item.id);
+ const updated={...S.custom[idx],id,name,primary:S.custom[idx].primary,category:cat,quickCuts,mealTimes,images:savedPhotos,image:savedPhotos[0]||DEFAULT_FOOD_IMAGE,description,ingredients,recipe,nutrition};S.custom[idx]=updated;
+ if(id!==item.id){const oldNoteKey='food:'+item.id,newNoteKey='food:'+id;if(S.notes[oldNoteKey]){S.notes[newNoteKey]=S.notes[oldNoteKey];delete S.notes[oldNoteKey];saveItemNotes();}}
+ S.maybe.delete(item.id);S.hidden.delete(item.id);
 } else {
-const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-if(allFoods().some(x=>x.id===id)){appToast('A meal with that name already exists.');return;}
-if(photo.startsWith('data:image/')) await putStoredPhoto(id,photo);
-const added={id,name,primary:id,category:cat,quickCuts,mealTimes,image:photo,description,ingredients,recipe};
-if(nutrition)added.nutrition=nutrition;
-S.custom.push(added);
+ const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(allFoods().some(x=>x.id===id)){appToast('A meal with that name already exists.');return;}
+ let savedPhotos;try{savedPhotos=await storeMealPhotoSet(id,editorPhotos);}catch(err){appToast(err.message);return;}
+ const added={id,name,primary:id,category:cat,quickCuts,mealTimes,images:savedPhotos,image:savedPhotos[0]||DEFAULT_FOOD_IMAGE,description,ingredients,recipe};if(nutrition)added.nutrition=nutrition;S.custom.push(added);
 }
 if(!S.custom.some(x=>Array.isArray(x.quickCuts)&&x.quickCuts.includes('Other')))S.cutCats.delete('Other');
 if(isEdit) setItemNote({id:(S.custom.find(x=>x.id===name.toLowerCase().replace(/[^a-z0-9]+/g,'-'))?.id||item?.id),name},'food',editorNote);

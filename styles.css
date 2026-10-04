@@ -7842,3 +7842,15 @@ button,input,select,textarea{
 .round-choose[data-family-action-label]::after{content:attr(data-family-action-label);display:block;font-size:10px;font-weight:950;letter-spacing:.08em;line-height:1;text-transform:uppercase}
 @media(max-width:600px){.round-choose[data-family-action-label]{width:86px!important;min-width:86px!important;height:44px!important;min-height:44px!important}.round-choose[data-family-action-label]::after{font-size:9px}}
 .family-stage-alert-card button{min-width:120px;padding-inline:22px}
+
+/* CP862 — Multi-photo Meal Editor */
+.meal-photo-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.meal-photo-editor-card{overflow:hidden;border:1px solid #302c27;border-radius:14px;background:#151412}
+.meal-photo-editor-card.is-main{border-color:#8d754e;box-shadow:0 0 0 1px rgba(141,117,78,.15)}
+.meal-photo-editor-card img{display:block;width:100%;aspect-ratio:1.3;object-fit:cover;background:#0d0d0c}
+.meal-photo-editor-card-tools{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:6px 7px}
+.meal-photo-editor-card-tools>span{font-size:7px;font-weight:900;letter-spacing:.12em;color:#b8ae9f}
+.meal-photo-editor-card-tools>div{display:flex;align-items:center;gap:2px}
+.meal-photo-main,.meal-photo-remove{border:0;background:transparent;color:#c7a56b;font-size:8px;font-weight:800;padding:4px}
+.meal-photo-remove{color:#a39a8d}
+@media(max-width:390px){.meal-photo-editor-grid{gap:6px}.meal-photo-editor-card-tools{padding:5px}}

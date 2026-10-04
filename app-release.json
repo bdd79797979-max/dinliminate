@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 861,
+  "build": 862,
   "sourceBranch": "main",
-  "checkpoint": "CP861",
-  "deploymentTrigger": "CP861-family-round-navigation-and-final-resolution-2026-10-04",
+  "checkpoint": "CP862",
+  "deploymentTrigger": "CP862-fix-meal-multi-photo-upload-2026-10-04",
   "vercelProductionVerified": false
 }
