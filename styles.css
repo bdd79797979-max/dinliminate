@@ -2727,9 +2727,12 @@ button,a,select{touch-action:manipulation}
   transform:translateZ(0);
   contain:paint;
 }
+/* CP901 — preserve the inline finger-to-card transform during active swipes.
+   The previous !important transform forced a compositor transform override and could
+   produce a one-frame flash/jump while the card was moving. */
 #food .swipe-card-stack>.card.swipe-active,
 #restaurant .restaurant-card-stack>.card.swipe-active{
-  transform:translateZ(0);
+  will-change:transform,opacity;
 }
 .unified-swipe-actions .round-action{
   touch-action:manipulation!important;
