@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 938,
+  "build": 939,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP938",
-  "deploymentTrigger": "CP938-meals-divider-2026-10-04"
+  "checkpoint": "CP939",
+  "deploymentTrigger": "CP939-canonical-decision-layer"
 }
