@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 907,
+  "build": 908,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP907",
-  "deploymentTrigger": "CP907-restaurant-search-enter-stability-2026-10-04"
+  "checkpoint": "CP908",
+  "deploymentTrigger": "CP908-app-diagnosis-interaction-stability-2026-10-04"
 }
