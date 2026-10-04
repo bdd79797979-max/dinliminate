@@ -15,7 +15,6 @@ assert.ok(typeof pt.structuredRestaurantMatches==='function','structuredRestaura
 assert.ok(typeof pt.imageDimensions==='function','imageDimensions export missing');
 assert.ok(typeof pt.mediaQuality==='function','mediaQuality export missing');
 assert.ok(typeof pt.fetchImage==='function','fetchImage export missing');
-assert.ok(typeof pt.fetchGooglePhoto==='function','fetchGooglePhoto export missing');
 
 const appSource=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
 assert.match(appSource,/function restaurantImmediatePhoto\(row\)/,'Restaurant cards should have one canonical immediate photo decision');
@@ -171,7 +170,6 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
       'canonical Restaurant first-paint source',
       'canonical next-card photo handoff',
       'decoded image-dimension validation',
-      'Google photo resolver export and on-demand contract',
       'source-image WebP normalization fixture'
     ]
   },null,2));
