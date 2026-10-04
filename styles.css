@@ -343,8 +343,8 @@
 
 /* CP108 — luxury home */
 .luxury-home{position:relative;overflow:hidden;text-align:center;background:
-  radial-gradient(circle at 10% 10%,#6d3d1322,transparent 28%),
-  radial-gradient(circle at 90% 20%,#8e6b2b1e,transparent 25%),
+  linear-gradient(180deg,rgba(6,6,6,.34),rgba(6,6,6,.58)),
+  url("/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F14778623%2Fpexels-photo-14778623.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1800") center/cover no-repeat,
   linear-gradient(180deg,#0c0c0c,#11100e 66%,#0c0c0c)}
 .luxury-home::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#ffffff05,transparent 35%,#e2a75d09 78%,transparent)}
 .luxury-orb{position:absolute;border-radius:50%;filter:blur(18px);pointer-events:none}
@@ -6475,9 +6475,6 @@ button,input,select,textarea{
 }
 
 
-/* CP797 — retired legacy embedded Home background.
-   The old embedded dining-table image has been removed. Home uses only the
-   canonical ./home-background.jpg door asset via the persistent background layer. */
 
 /* CP800 — tactile second-chance wheel: readable segments, color, manual flick, luxury landing. */
 .hungry-wheel-stage{touch-action:none;cursor:grab}
@@ -6544,47 +6541,6 @@ button,input,select,textarea{
 .app #winner .winner-brand{
   justify-self:center!important;
   text-align:center!important;
-}
-
-/* CP802 — persistent Home door-photo layer. The image never leaves the DOM
-   when navigating through Meals, Restaurants, Winner, or back to Home. */
-.home-background-layer{
-  position:absolute!important;
-  inset:0!important;
-  z-index:0!important;
-  overflow:hidden!important;
-  background:#090909!important;
-  pointer-events:none!important;
-  opacity:0!important;
-  visibility:hidden!important;
-  transition:opacity .18s ease!important;
-}
-.home-background-layer img{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center center!important;
-  display:block!important;
-}
-.home-background-layer::after{
-  content:""!important;
-  position:absolute!important;
-  inset:0!important;
-  background:
-    linear-gradient(180deg,rgba(5,4,3,.32),rgba(5,4,3,.50))!important;
-}
-.app.home-active .home-background-layer{
-  opacity:1!important;
-  visibility:visible!important;
-}
-.app.home-active:has(#home:not(.hidden)){
-  background-image:none!important;
-  background-color:#090909!important;
-}
-.app.home-active:has(#home:not(.hidden)) #home{
-  background:transparent!important;
 }
 
 /* CP802 — navigation: translucent menus; plain gold arrow-only backs. */
@@ -6656,9 +6612,6 @@ button,input,select,textarea{
   filter:drop-shadow(0 0 7px rgba(198,164,106,.85)) drop-shadow(0 3px 5px rgba(0,0,0,.55))!important;
 }
 #celebration .firework-burst span{filter:drop-shadow(0 0 5px rgba(198,164,106,.65))!important}
-
-/* CP802 — Home layer and nav must not be hidden by legacy :has() rules. */
-.app:has(#home:not(.hidden)) .home-background-layer{display:block!important}
 
 /* CP802 — final Home wordmark lock: exactly match Meals/Restaurants/Winner. */
 .app.home-active:has(#home:not(.hidden)) .app-topbar .brand{
@@ -7328,28 +7281,6 @@ button,input,select,textarea{
   .family-round-action,
   .family-winner-actions button,
   .family-winner-saved{transition:none!important}
-}
-
-/* CP820 — Home uses the canonical ornate door image only. 
-   The local home-background.jpg is the single source for the full Home canvas.
-   Override all older Home background layers so stale/legacy Pexels or embedded
-   dining-table backgrounds can never appear on the front page. */
-.app:has(#home:not(.hidden)){
-  background-image:none!important;
-  background-color:#090909!important;
-}
-.app:has(#home:not(.hidden)) #home{
-  background:transparent!important;
-}
-.app:has(#home:not(.hidden)) .home-background-layer{
-  opacity:1!important;
-  visibility:visible!important;
-  background:#090909!important;
-}
-.app:has(#home:not(.hidden)) .home-background-layer img{
-  content:url("./home-background.jpg")!important;
-  object-fit:cover!important;
-  object-position:center center!important;
 }
 
 /* CP829 — Meals: separate Quick Cuts from Meal Time Cuts without changing the restaurant rail. */
