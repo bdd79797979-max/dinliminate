@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 923 / CP923
+# CURRENT RELEASE — BUILD 924 / CP924
+
+## CP924 — Consolidated Home + Restaurant polish pass
+- Synchronized the HTML shell, JavaScript, stylesheet, service-worker cache, and release metadata to one release version.
+- Preserved the luxury Home photography and utility controls.
+- Preserved the Meal-only swipe hardening; Restaurant swipe behavior remains unchanged.
+- Preserved the minimalist Restaurant location row: no enclosing container, no control pills, no Radius chevron, and no visible status row.
+- Preserved guaranteed-first Restaurant photography with asynchronous verified venue-photo replacement.
+- Preserved the quiet Restaurant Refresh busy state.
 
 ## CP923 — Reclaim Restaurant location space
 - Removed the visible informational status row below the Restaurant location controls so it no longer consumes vertical space.
