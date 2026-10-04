@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 918,
+  "build": 919,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP918",
-  "deploymentTrigger": "CP918-remove-radius-pill-2026-10-04"
+  "checkpoint": "CP919",
+  "deploymentTrigger": "CP919-minimal-restaurant-location-controls-2026-10-04"
 }
