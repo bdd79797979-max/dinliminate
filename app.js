@@ -996,9 +996,8 @@ function renderMealTimeCuts(){
  toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times');
  toggle.title=collapsed?'Show Meal Times':'Hide Meal Times';
  const allMealTimesSelected=MEAL_TIME_CUTS.every(label=>S.mealTimeFilters?.has(label));
- const filtered=!allMealTimesSelected;
- toggle.classList.toggle('is-filtered',filtered);
- toggle.setAttribute('aria-pressed',filtered?'true':'false');
+ toggle.classList.toggle('is-active',allMealTimesSelected);
+ toggle.setAttribute('aria-pressed',allMealTimesSelected?'true':'false');
  toggle.setAttribute('data-all-selected',allMealTimesSelected?'true':'false');
  chips.innerHTML=MEAL_TIME_CUTS.map(label=>'<button class="chip meal-time-chip'+(S.mealTimeFilters?.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(S.mealTimeFilters?.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
  chips.querySelectorAll('[data-meal-time]').forEach(btn=>{
