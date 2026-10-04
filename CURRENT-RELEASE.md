@@ -1,3 +1,8 @@
+## CP904 — Phone freeze / photo-memory stability
+- Bounded the in-memory restaurant photo cache to 18 entries and revokes evicted blob URLs; currently visible restaurant photos are protected from eviction.
+- Coalesced restaurant photo prefetch work so rapid swipes do not queue a growing set of background image loads.
+- Corrected the runtime build marker/cache query to 904 and synchronized release metadata.
+
 ## CP903 — Details photo flash fix
 - Removed the independent Details photo fade/scale animation; the modal alone handles opening motion.
 - Hydrated restaurant/detail photos through a preloaded image before swapping the visible source, preventing a source-change repaint flash.
