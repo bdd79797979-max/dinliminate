@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 958,
+  "build": 959,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP958",
-  "deploymentTrigger": "CP958-eager-restaurant-photo-first-paint"
+  "checkpoint": "CP959",
+  "deploymentTrigger": "CP959-immediate-restaurant-card-with-background-photo-hydration"
 }
