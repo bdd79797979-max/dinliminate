@@ -1404,8 +1404,7 @@ function stageSwipePreview(card,img,src,key){
  card.dataset.swipePreviewReady='0';
  card.__swipePreviewReadyPromise=null;
  card.style.transition='none';
- const fixedSizePreview=card.dataset.swipeFixedSize==='1';
- card.style.transform=fixedSizePreview?'scale(1)':'scale(.96)';
+ card.style.transform='scale(1)';
  card.style.opacity='.62';
  card.style.filter='saturate(.82) brightness(.76)';
  card.style.visibility='hidden';
