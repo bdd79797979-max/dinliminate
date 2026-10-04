@@ -7053,23 +7053,6 @@ button,input,select,textarea{
   #restaurant .restaurant-refine-divider{font-size:10px!important}
 }
 
-/* CP882 — unified translucent top-right menu buttons with gold outline and gold hamburger lines. */
-.menu,#menu,#foodMenu,#restaurantMenu,#winnerMenu,
-.decision-menu,.winner-menu{
-  background:rgba(8,8,8,.28)!important;
-  border:1px solid rgba(214,183,120,.78)!important;
-  backdrop-filter:blur(14px) saturate(120%)!important;
-  -webkit-backdrop-filter:blur(14px) saturate(120%)!important;
-  box-shadow:
-    0 9px 25px rgba(0,0,0,.22),
-    inset 0 1px 0 rgba(255,248,226,.09),
-    0 0 12px rgba(214,183,120,.08)!important;
-}
-.menu span{
-  background:#d6b778!important;
-  box-shadow:0 0 7px rgba(214,183,120,.24)!important;
-}
-
 /* CP808 — Family Mode */
 .family-screen{overflow:hidden}
 .family-bar{flex:0 0 auto}
@@ -7347,43 +7330,6 @@ button,input,select,textarea{
   .family-winner-saved{transition:none!important}
 }
 
-/* CP819 — translucent menu glass with satin-gold outline and three gold lines. */
-.menu,
-.decision-menu,
-#winner .winner-menu,
-.confirm-hero .menu,
-#menu,#foodMenu,#restaurantMenu,#winnerMenu{
-  background:rgba(0,0,0,.24)!important;
-  border:1px solid rgba(214,183,120,.82)!important;
-  color:#e2c17f!important;
-  backdrop-filter:blur(12px) saturate(125%)!important;
-  -webkit-backdrop-filter:blur(12px) saturate(125%)!important;
-  box-shadow:
-    0 8px 22px rgba(0,0,0,.22),
-    inset 0 1px 0 rgba(255,248,226,.10),
-    0 0 14px rgba(214,183,120,.08)!important;
-}
-.menu span,
-#menu span,#foodMenu span,#restaurantMenu span,#winnerMenu span{
-  background:#d6b778!important;
-  box-shadow:0 0 7px rgba(214,183,120,.22)!important;
-}
-.menu:hover,
-.decision-menu:hover,
-#winner .winner-menu:hover,
-.confirm-hero .menu:hover{
-  background:rgba(0,0,0,.18)!important;
-  border-color:rgba(231,203,151,.96)!important;
-}
-.menu:active,
-.decision-menu:active,
-#winner .winner-menu:active,
-.confirm-hero .menu:active{
-  transform:scale(.96)!important;
-  background:rgba(0,0,0,.30)!important;
-}
-
-
 /* CP820 — Home uses the canonical ornate door image only. 
    The local home-background.jpg is the single source for the full Home canvas.
    Override all older Home background layers so stale/legacy Pexels or embedded
@@ -7405,30 +7351,6 @@ button,input,select,textarea{
   object-fit:cover!important;
   object-position:center center!important;
 }
-
-/* CP827 — surgical recovery from CP823: visibly translucent menu glass. */
-.menu,
-.decision-menu,
-#winner .winner-menu,
-.confirm-hero .menu,
-#menu,#foodMenu,#restaurantMenu,#winnerMenu{
-  background:rgba(0,0,0,.16)!important;
-  background-image:none!important;
-  border:1px solid rgba(214,183,120,.82)!important;
-  color:#e2c17f!important;
-  backdrop-filter:blur(12px) saturate(125%)!important;
-  -webkit-backdrop-filter:blur(12px) saturate(125%)!important;
-  box-shadow:
-    0 8px 22px rgba(0,0,0,.22),
-    inset 0 1px 0 rgba(255,248,226,.10),
-    0 0 14px rgba(214,183,120,.08)!important;
-}
-.menu span,
-#menu span,#foodMenu span,#restaurantMenu span,#winnerMenu span{
-  background:#d6b778!important;
-  box-shadow:0 0 7px rgba(214,183,120,.24)!important;
-}
-
 
 /* CP829 — Meals: separate Quick Cuts from Meal Time Cuts without changing the restaurant rail. */
 #food .quick-label{
@@ -7913,56 +7835,6 @@ button,input,select,textarea{
 @media(max-width:390px){.meal-card-photo-pager{top:8px;right:8px;height:25px;min-width:44px;padding:0 8px;font-size:9px}}
 
 
-/* CP886 — final menu glass: faint white translucent surface, never a black fill. */
-.menu,
-.decision-menu,
-.winner-menu,
-#menu,
-#foodMenu,
-#restaurantMenu,
-#winnerMenu{
-  background:rgba(255,255,255,.045)!important;
-  background-image:none!important;
-  background-color:rgba(255,255,255,.045)!important;
-  border:1px solid rgba(214,183,120,.90)!important;
-  color:#d6b778!important;
-  backdrop-filter:blur(14px) saturate(120%)!important;
-  -webkit-backdrop-filter:blur(14px) saturate(120%)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,248,226,.11),
-    0 6px 18px rgba(0,0,0,.10),
-    0 0 12px rgba(214,183,120,.08)!important;
-}
-.menu span,
-#menu span,
-#foodMenu span,
-#restaurantMenu span,
-#winnerMenu span{
-  background:#d6b778!important;
-  box-shadow:0 0 7px rgba(214,183,120,.28)!important;
-}
-.menu:hover,
-.decision-menu:hover,
-.winner-menu:hover,
-#menu:hover,
-#foodMenu:hover,
-#restaurantMenu:hover,
-#winnerMenu:hover{
-  background:rgba(255,255,255,.065)!important;
-  background-color:rgba(255,255,255,.065)!important;
-}
-.menu:active,
-.decision-menu:active,
-.winner-menu:active,
-#menu:active,
-#foodMenu:active,
-#restaurantMenu:active,
-#winnerMenu:active{
-  background:rgba(255,255,255,.08)!important;
-  background-color:rgba(255,255,255,.08)!important;
-}
-
-
 /* CP885 — selected Cuisine Cuts use the same white-gold outline as selected Meal Times. */
 #foodQuick .photo-chip:not(.cut),
 #restQuick .photo-chip:not(.cut){
@@ -8028,3 +7900,5 @@ button,input,select,textarea{
   background:#d6b778!important;
   box-shadow:0 0 7px rgba(214,183,120,.28)!important;
 }
+
+/* CP891 — source cleanup: legacy menu override layers removed; CP889 remains canonical. */
