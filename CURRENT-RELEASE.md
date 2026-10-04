@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 920 / CP920
+# CURRENT RELEASE — BUILD 921 / CP921
+
+## CP921 — Remove Restaurant location container
+- Removed the large enclosing black container around Current Location, Address, Refresh/Search, and Radius.
+- Kept the address field as the only subtle surfaced input; location/search controls remain minimalist and functional.
+- Preserved the existing Restaurant layout, search behavior, radius selection, and swipe interaction.
 
 ## CP920 — Final minimalist Radius treatment
 - Removed the remaining gold border/box around Radius.
