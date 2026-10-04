@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 872,
+  "build": 873,
   "sourceBranch": "main",
-  "checkpoint": "CP872",
-  "deploymentTrigger": "CP872-count-pill-only-photo-navigation-2026-10-04",
+  "checkpoint": "CP873",
+  "deploymentTrigger": "CP873-add-take-photo-meal-editor-2026-10-04",
   "vercelProductionVerified": false
 }

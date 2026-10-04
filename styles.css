@@ -3546,6 +3546,10 @@ button,input,select,textarea{
 .meal-editor-photo-copy small{font-size:9px;color:#726d64;line-height:1.35;}
 .meal-editor-photo-section .file-label{display:inline-grid;gap:5px;justify-items:end;font-size:9px;color:#9f978c;font-weight:800;}
 .meal-editor-photo-section .file-label input{max-width:170px;height:auto;padding:8px;border:1px solid #403a31;background:#171615;border-radius:10px;color:#d8d0c5;}
+.meal-editor-photo-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;}
+.meal-camera-button{min-height:38px;padding:0 13px;border:1px solid #514936;border-radius:11px;background:linear-gradient(180deg,#24211c,#181714);color:#d7c8b2;font:900 9px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+.meal-camera-button:active{transform:translateY(1px) scale(.98);}
+.meal-camera-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;}
 #foodEditorForm #editFoodPhoto{margin-top:8px;}
 @media(max-width:430px){
  #manageFoodsModal .manage-food-row{align-items:center;}
@@ -3555,6 +3559,9 @@ button,input,select,textarea{
  .meal-editor-photo-section{grid-template-columns:1fr;gap:8px;}
  .meal-editor-photo-section .file-label{justify-items:stretch;}
  .meal-editor-photo-section .file-label input{max-width:none;width:100%;box-sizing:border-box;}
+ .meal-editor-photo-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;}
+ .meal-editor-photo-actions .file-label{min-width:0;}
+ .meal-camera-button{min-height:42px;padding:0 12px;}
 }
 
 /* CP713 — reusable Custom Quick Cut tiles + universal meal recovery. */

@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '872';
+let APP_BUILD = '873';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3133,7 +3133,7 @@ const body='<form class="add" id="foodEditorForm">'+
 '<label class="meal-editor-text-label">About this meal<textarea id="editFoodDescription" placeholder="A short description of the meal (optional)" rows="3">'+esc(descriptionText)+'</textarea></label>'+
 '<label class="meal-editor-text-label">Ingredients<textarea id="editFoodIngredients" placeholder="One ingredient per line" rows="5">'+esc(ingredientsText)+'</textarea></label>'+
 '<label class="meal-editor-text-label">Recipe / preparation<textarea id="editFoodRecipe" placeholder="Preparation steps or recipe (optional)" rows="5">'+esc(item?.recipe||'')+'</textarea></label>'+(isEdit?'<section class="meal-editor-note-section"><div class="meal-editor-note-copy"><b>Add a note</b><small>Private to this device. Keep a reminder, favorite, or thought with this meal.</small></div><textarea id="editFoodNote" maxlength="1200" rows="3" placeholder="Write a note about this meal…">'+esc(itemNote(item,'food'))+'</textarea></section>':'')+
-'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Choose image</span><input id="editFoodFile" type="file" accept="image/*"></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
+'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><div class="meal-editor-photo-actions"><label class="file-label"><span>Choose photos</span><input id="editFoodFile" type="file" accept="image/*" multiple></label><button type="button" class="meal-camera-button" id="editFoodCamera">Take Photo</button><input id="editFoodCameraFile" class="meal-camera-input" type="file" accept="image/*" capture="environment"></div></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
 const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
 const mealPhotoFile=$('editFoodFile');
@@ -3289,22 +3289,37 @@ if(mealPhotoFile){
   };
  editorPhotosReady=hydrateStoredMealPhotoList(item).then(photos=>{editorPhotos=photos.slice(0,8);renderMealPhotos();}).catch(()=>renderMealPhotos());
  renderMealPhotos();
- mealPhotoFile.onchange=async()=>{
+ const ingestMealPhotoFiles=async(fileList)=>{
   try{
    await editorPhotosReady;
-   const selected=[...(mealPhotoFile.files||[])].filter(file=>file?.type?.startsWith('image/'));
+   const selected=[...(fileList||[])].filter(file=>file?.type?.startsWith('image/'));
    const room=Math.max(0,8-editorPhotos.length);
-   if(!room){mealPhotoFile.value='';appToast('You already have 8 meal photos. Remove one before adding another.');return;}
+   if(!room){appToast('You already have 8 meal photos. Remove one before adding another.');return;}
    const added=await Promise.all(selected.slice(0,room).map(readImageFile));
    const seen=new Set(dedupeMealPhotos(editorPhotos,8)),unique=[];
    for(const raw of added.filter(Boolean)){
     const ref=normalizeMealPhotoRef(raw);if(!ref||seen.has(ref))continue;
-    seen.add(ref);unique.push(ref);if(editorPhotos.length+unique.length>=8)break;
+    seen.add(ref);unique.push(ref);
+    if(editorPhotos.length+unique.length>=8)break;
    }
-   editorPhotos=dedupeMealPhotos([...editorPhotos,...unique],8);mealPhotoFile.value='';renderMealPhotos();
+   editorPhotos=dedupeMealPhotos([...editorPhotos,...unique],8);
+   renderMealPhotos();
    appToast(unique.length===1?'Photo added.':unique.length>1?unique.length+' photos added.':'No new photos added.');
-  }catch(e){mealPhotoFile.value='';appToast(e.message);}
+  }catch(e){appToast(e.message);}
  };
+ mealPhotoFile.onchange=async()=>{
+  await ingestMealPhotoFiles(mealPhotoFile.files);
+  mealPhotoFile.value='';
+ };
+ const mealPhotoCamera=$('editFoodCameraFile'),cameraButton=$('editFoodCamera');
+ cameraButton?.addEventListener('click',()=>{
+  if(editorPhotos.length>=8){appToast('You already have 8 meal photos. Remove one before adding another.');return;}
+  mealPhotoCamera?.click();
+ });
+ mealPhotoCamera?.addEventListener('change',async()=>{
+  await ingestMealPhotoFiles(mealPhotoCamera.files);
+  mealPhotoCamera.value='';
+ });
 }
 const renderEditorQuickCuts=focusId=>{
  const host=$('editFoodQuickCuts');if(!host)return;
