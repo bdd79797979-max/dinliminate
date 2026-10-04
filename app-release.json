@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 894,
+  "build": 895,
   "sourceBranch": "main",
-  "checkpoint": "CP894",
-  "deploymentTrigger": "CP894-fix-home-background-image",
+  "checkpoint": "CP895",
+  "deploymentTrigger": "CP895-delete-legacy-home-photos",
   "vercelProductionVerified": false
 }
