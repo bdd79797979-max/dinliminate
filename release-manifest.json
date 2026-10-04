@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 894,
+  "build": 895,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
-  "vercelProject": "dinliminates1",
+  "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP894",
-  "deploymentTrigger": "CP894-fix-home-background-image-2026-10-04"
+  "checkpoint": "CP895",
+  "deploymentTrigger": "CP895-delete-legacy-home-photos-2026-10-04"
 }
