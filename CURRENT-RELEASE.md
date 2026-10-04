@@ -1,14 +1,12 @@
-# CURRENT RELEASE — BUILD 945 / CP945
+# CURRENT RELEASE — BUILD 946 / CP946
 
-## CP945 — Canonical Restaurant photo pipeline
-- Restaurant first paint now uses one canonical immediate-photo decision: OSM-backed venue photos are trusted; arbitrary provider photos no longer jump onto the card before verification.
-- The waiting Restaurant card starts the same authoritative resolver used by the current card, so the next card can settle on its final venue photo before swipe promotion when the resolver is ready.
-- Restaurant swipe handoff now has a bounded canonical-photo wait and locks a promoted layer against late photo replacement, preventing a visible photo identity change during handoff.
-- Restaurant photo persistent cache was bumped to dinliminate.restaurant.photos.v3 and the resolver query to 711, invalidating the older photo decision/cache path.
-- Backend delivery now rejects decoded restaurant images with unusably small dimensions, excessive dimensions, or excessive pixel counts before they reach the phone card pipeline.
-- Unverified provider photo metadata now reports lower confidence instead of treating every provider URL as near-certain venue evidence.
-- Added QA coverage for canonical first-paint selection, next-card handoff, provider-confidence classification, Photon/OSM trust, and decoded image-dimension validation.
-- Restaurant behavior and Meal swipe scaling remain unchanged except for the shared photo-loading primitives.
+## CP946 — Google Place photos + normalized restaurant images
+- Wired the existing Google Places photo resource metadata into the canonical Restaurant resolver, including required author attributions.
+- Google Place photos are requested on demand only; Google photo resource names and photo bytes are excluded from Dinliminate's persistent restaurant-photo cache and background prefetch path.
+- Google Place Photo requests use Google's server-side resize parameters before delivery, then the server normalizes returned imagery into bounded WebP card assets.
+- Non-Google restaurant images are now normalized through Sharp to a maximum 1400×1050 card asset, reducing oversized source downloads while preserving aspect ratio.
+- Added decoded-image limits and normalization QA, and bumped the application/service-worker cache generation to CP946.
+- Google Places remains optional: production currently has no Google Places API key configured, so the new Google branch is dormant until that existing environment variable is added.
 ## CP939 — Canonical Meals + Restaurant decision layer
 - Unified Meals and Restaurant decision controls around one canonical visual/DOM contract.
 - Meals uses shared decision classes for Meal Times, Cuisine, ALL/MAYBES, live count, and Menu.
