@@ -1020,7 +1020,12 @@ function maybeDeckCount(kind){
 function renderMaybeDeckToggle(kind){
  const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
  const btn=$(id);if(!btn)return;
- const hasMaybe=maybeDeckCount(kind)>0;
+ const maybeCount=maybeDeckCount(kind);
+ const hasMaybe=maybeCount>0;
+ if(kind==='food'){
+  btn.innerHTML='<span class="top-maybe-label">ALL MAYBES</span><span class="top-maybe-count">'+maybeCount+'</span>';
+  btn.setAttribute('aria-label',S.maybeDeck?'Viewing Maybe choices. Tap to show all choices. '+maybeCount+' choices.':'Show Maybe choices. '+maybeCount+' choices.');
+ }
  btn.dataset.mode=S.maybeDeck?'maybe':'all';
  // In All mode with zero Maybes the control remains visibly bright but is
  // inert; it must never route an empty deck into Hungry mode.
@@ -4438,7 +4443,7 @@ if(e.key==='Enter'){
 if(e.key==='Escape'){ e.preventDefault(); invalidateAddressSuggestions(); }
 });
 bindRestaurantTools();
-$('winnerBackTop').onclick = () => S.familyNormalMode==='winner' ? familyDismissWinner() : home();
+$('winnerBackTop')?.addEventListener('click', () => S.familyNormalMode==='winner' ? familyDismissWinner() : home());
 $('hungryWheelSpin').onclick = (event) => {
  event?.preventDefault?.();
  event?.stopPropagation?.();
@@ -4467,7 +4472,7 @@ window.addEventListener('offline', updateOffline);
 window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=910').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=927').catch(() => {}));
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindMealPhotoCountControls();
 load();
