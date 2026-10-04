@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 932,
+  "build": 935,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP932",
-  "deploymentTrigger": "CP932-meals-maybe-count-2026-10-04"
+  "checkpoint": "CP935",
+  "deploymentTrigger": "CP935-meal-swipe-handoff-2026-10-04"
 }
