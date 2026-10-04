@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 944,
+  "build": 946,
   "sourceBranch": "main",
-  "checkpoint": "CP944",
-  "deploymentTrigger": "CP944-fixed-size-meal-swipe-preview",
+  "checkpoint": "CP946",
+  "deploymentTrigger": "CP946-google-photos-normalized-image-delivery",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP944-fixed-size-meal-swipe-preview"
+  "swipeAudit": "CP946-google-photos-normalized-image-delivery"
 }
