@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 899,
+  "build": 900,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP899",
-  "deploymentTrigger": "CP899-customizable-meal-times-in-manage-meals-2026-10-04"
+  "checkpoint": "CP900",
+  "deploymentTrigger": "CP900-move-meal-time-editing-into-add-edit-meal-2026-10-04"
 }
