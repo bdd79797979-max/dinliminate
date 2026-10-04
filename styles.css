@@ -8350,3 +8350,29 @@ button,input,select,textarea{
     padding-right:0!important;
   }
 }
+
+/* CP920 — final minimalist Radius treatment. No gold box, no white focus/dropdown chrome. */
+#restaurant .location-main .radius-control{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+#restaurant .location-main .radius-control:focus,
+#restaurant .location-main .radius-control:focus-visible,
+#restaurant .location-main .radius-select,
+#restaurant .location-main .radius-select:focus,
+#restaurant .location-main .radius-select:focus-visible{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+#restaurant .location-main .radius-select{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  -moz-appearance:none!important;
+  color-scheme:dark!important;
+  border-radius:0!important;
+}
