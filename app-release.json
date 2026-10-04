@@ -1,11 +1,11 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 951,
+  "build": 952,
   "sourceBranch": "main",
-  "checkpoint": "CP951",
-  "deploymentTrigger": "CP951-meal-swipe-staged-preview-handoff",
+  "checkpoint": "CP952",
+  "deploymentTrigger": "CP952-restore-simple-meal-swipe",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP951-meal-swipe-staged-preview-handoff",
-  "visualParity": "CP949-meals-restaurant-visual-parity"
+  "swipeAudit": "CP952-restore-simple-meal-swipe",
+  "visualParity": "CP952-restaurant-maybe-state-parity"
 }
