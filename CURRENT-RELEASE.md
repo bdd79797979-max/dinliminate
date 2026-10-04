@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 928 / CP928
+# CURRENT RELEASE — BUILD 929 / CP929
+
+## CP929 — Meals top navigation
+- Moved Meal Times and Cuisine into the Meals top navigation row.
+- Meals now reads left-to-right: Meal Times · Cuisine · All Maybes count · Menu.
+- Kept the existing Meal Times/Cuisine rails, Maybe toggle, Menu action, and runtime handlers intact.
+- Corrected the Meals Maybe renderer so the live Maybe count remains visible instead of being overwritten by the Restaurant-style ALL/MAYBES markup.
+- Preserved CP928 Restaurant Radius/Menu sizing and CP926 Meal swipe stability.
+
 
 ## CP928 — tighter Radius + smaller interior Menu
 - Shrunk the interior metallic-gold Menu control on Meals and Restaurant screens while preserving its far-right placement and touch target.
