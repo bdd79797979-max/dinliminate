@@ -9299,3 +9299,88 @@ button,input,select,textarea{
     font-size:8.7px!important;
   }
 }
+
+
+/* CP937 — final Meals/Restaurant mobile parity.
+   Meals discovery labels use the exact Restaurant Search/Cuisine scale and
+   the Maybe count uses the same quiet live-count treatment. */
+#food .food-interior-nav{
+  column-gap:11px!important;
+}
+#food .food-interior-nav .food-top-refine{
+  height:27px!important;
+  min-height:27px!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+  color:#f0eee9!important;
+}
+#food .food-interior-nav .food-top-maybe{
+  height:22px!important;
+  min-height:22px!important;
+  gap:6px!important;
+  color:#8f8b84!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.05em!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-label{
+  color:#8f8b84!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  letter-spacing:inherit!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-count{
+  color:#55d88a!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+  line-height:1!important;
+  text-shadow:0 0 10px rgba(85,216,138,.18)!important;
+}
+#food .interior-menu,
+#restaurant .interior-menu{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#food .interior-menu::after,
+#restaurant .interior-menu::after{
+  content:none!important;
+  display:none!important;
+}
+@media(max-width:390px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content max-content minmax(0,1fr) 34px!important;
+    column-gap:9px!important;
+  }
+  #food .food-interior-nav .food-top-refine{
+    font-size:11px!important;
+  }
+  #food .food-interior-nav .food-top-maybe{
+    font-size:9px!important;
+  }
+}
+@media(max-width:340px){
+  #food .food-interior-nav{
+    column-gap:6px!important;
+  }
+  #food .food-interior-nav .food-top-refine{
+    font-size:10.5px!important;
+  }
+  #food .food-interior-nav .food-top-maybe{
+    font-size:8.8px!important;
+    gap:5px!important;
+  }
+}
+#restaurant .restaurant-search-box,
+#restaurant .restaurant-search-box input{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+#restaurant .restaurant-search-box input{
+  display:block!important;
+  overflow:hidden!important;
+}
