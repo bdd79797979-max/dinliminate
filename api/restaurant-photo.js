@@ -524,7 +524,7 @@ async function officialRestaurantPages(name,address,website){
   const official=absoluteHttpsUrl(website);
   if(!official||isBlockedHost(official))return [];
   try{
-    const html=await fetchText(official,{},3000,1800000);
+    const html=await fetchText(official,{},2400,1800000);
     const pages=[];
     const direct=pageMatchesRestaurant(html,name,address)?html:null;
     if(direct)pages.push({url:official,html:direct});
@@ -538,13 +538,13 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
  const official=absoluteHttpsUrl(website);
  if(!official||isBlockedHost(official))return null;
  try{
-  const html=await fetchText(official,{},2200,1800000);
+  const html=await fetchText(official,{},1800,1800000);
   if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
   const candidates=extractVenueImageCandidates(html,official,name,address,official)
     .filter(item=>item.score>=45&&item.score>0&&hasVenueSignal(item))
     .slice(0,6);
   const attempts=await Promise.allSettled(candidates.map(async candidate=>{
-   try{return {media:await fetchImage(candidate.url,{'Referer':official},2600),candidate};}catch{return null;}
+   try{return {media:await fetchImage(candidate.url,{'Referer':official},2200),candidate};}catch{return null;}
   }));
   for(const hit of attempts){
    if(hit.status==='fulfilled'&&hit.value){
@@ -616,13 +616,13 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
  const hint=knownPublicPhotoPage(name,address,phone);
  if(!hint)return null;
  try{
-  const html=await fetchText(hint,{},2200,1500000);
-  if(!html||!pageMatchesRestaurant(html,name,address))return null;
+  const html=await fetchText(hint,{},1800,1500000);
+  if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
   const candidates=extractVenueImageCandidates(html,hint,name,address,website)
     .filter(item=>item.score>=38&&item.score>0&&hasVenueSignal(item))
     .slice(0,5);
   const attempts=await Promise.allSettled(candidates.map(async candidate=>{
-   try{return {media:await fetchImage(candidate.url,{'Referer':hint},2400),candidate};}catch{return null;}
+   try{return {media:await fetchImage(candidate.url,{'Referer':hint},2200),candidate};}catch{return null;}
   }));
   for(const hit of attempts){
    if(hit.status==='fulfilled'&&hit.value){
@@ -732,68 +732,62 @@ module.exports=async function handler(req,res){
   const osmExact=q.osmExact==='1';
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
-    // Tier 1: exact OSM POI photo. It is trusted as exact-venue evidence,
-    // but we still validate the image itself for usable dimensions.
-    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
-      try{
-        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},3500);
-        return sendMedia(res,{media,source:'osm-exact-poi'});
-      }catch{}
-    }
-
-    // Fast path: when an official website is already known, inspect the
-    // homepage first and try its strongest venue images immediately. This
-    // avoids waiting for broader search/verification work in the common case.
+    // CP973: resolve the official venue first, with a short fast-path budget.
+    // Exact OSM/public sources are fallbacks, never preferred over a working
+    // restaurant website.
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
     }
 
+    // A direct exact-POI image is the fastest trustworthy fallback when the
+    // restaurant site is unavailable.
+    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
+      try{
+        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
+        return sendMedia(res,{media,source:'osm-exact-poi'});
+      }catch{}
+    }
+
+    // Small set of manually verified exact restaurant mappings. These are
+    // emergency fast paths, after the official-site attempt.
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
     if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
 
-    const pages=await findVerifiedRestaurantPages(name,address,officialWebsite,phone);
+    const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
 
-    // Tier 1: exact restaurant/location images from the restaurant's own website.
+    // Continue searching the restaurant's own website before leaving the
+    // official domain.
     for(const entry of pages.official){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
         .filter(item=>item.score>=65&&item.score>0&&hasVenueSignal(item));
       const attempts=await Promise.allSettled(candidates.slice(0,8).map(async candidate=>{
-        try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},4000)}}catch{return null}
+        try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
       for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
         return sendMedia(res,{media:hit.value.media,source:'official-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
       }
     }
 
-    // Tier 3: exact-location image discovered by Bing Images, but only when
-    // the image's host page verifies this exact restaurant and address.
-    const bingImage=await exactImageFromBing(name,address,officialWebsite,phone);
-    if(bingImage)return sendMedia(res,bingImage);
-
-    // Tier 4: the image already attached to the exact OSM POI.
-    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
-      try{
-        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},4000);
-        return sendMedia(res,{media,source:'osm-exact-poi'});
-      }catch{}
-    }
-
-
-    // Tier 2: exact-location public restaurant pages.
+    // Then use exact public restaurant pages, with venue verification.
     for(const entry of pages.public){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
         .filter(item=>item.score>=65&&item.score>0&&hasVenueSignal(item));
       const attempts=await Promise.allSettled(candidates.slice(0,8).map(async candidate=>{
-        try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},4000)}}catch{return null}
+        try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
       for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
         return sendMedia(res,{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
       }
     }
+
+    // Last discovery layer: Bing Images, but only after exact host-page
+    // verification or a very strong exact match.
+    const bingImage=await exactImageFromBing(name,address,officialWebsite,phone);
+    if(bingImage)return sendMedia(res,bingImage);
 
     return json(res,404,{ok:false,error:'No verified venue photo was found from the allowed non-Google sources'});
   }catch(e){
