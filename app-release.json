@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 898,
+  "build": 899,
   "sourceBranch": "main",
-  "checkpoint": "CP898",
-  "deploymentTrigger": "CP898-home-front-page-cleanup",
+  "checkpoint": "CP899",
+  "deploymentTrigger": "CP899-customizable-meal-times-in-manage-meals",
   "vercelProductionVerified": false
 }
