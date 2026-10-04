@@ -8376,3 +8376,22 @@ button,input,select,textarea{
   color-scheme:dark!important;
   border-radius:0!important;
 }
+
+/* CP921 — remove the enclosing Restaurant location/search container.
+   Keep the controls themselves minimalist; retain only the subtle address field surface. */
+#restaurant .location-strip{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  padding:4px 0 3px!important;
+  margin-top:3px!important;
+}
+#restaurant .location-strip::before,
+#restaurant .location-strip::after{
+  display:none!important;
+  content:none!important;
+}
+#restaurant .location-status-row{
+  padding:0 2px!important;
+}
