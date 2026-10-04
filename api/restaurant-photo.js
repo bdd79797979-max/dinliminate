@@ -1,5 +1,10 @@
 'use strict';
 
+let sharp=null;
+try{sharp=require('sharp');}catch{}
+
+const GOOGLE_PLACES_API_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
+const GOOGLE_PHOTO_HOST_SUFFIX='.googleusercontent.com';
 const NO_PHOTO_HOSTS=new Set(['google.com','www.google.com','googleusercontent.com','lh3.googleusercontent.com','bing.com','www.bing.com','tse1.mm.bing.net','tse2.mm.bing.net','tse3.mm.bing.net','tse4.mm.bing.net','unsplash.com','images.unsplash.com','pexels.com','images.pexels.com','shutterstock.com','istockphoto.com','gettyimages.com','depositphotos.com','alamy.com','stock.adobe.com']);
 const BLOCKED_IMAGE_HINTS=/\b(?:logo|favicon|sprite|icon|avatar|placeholder|default[-_ ]?image|brandmark|wordmark|google[ -]?play|play[ -]?store|app[ -]?store|download[ -]?app|download|badge|payment|visa|mastercard|amex|social[ -]?media|facebook|instagram|tiktok|youtube|x[ -]?twitter)\b/i;
 const VENUE_IMAGE_HINTS=/\b(?:exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|façade|sign|signage|location|drive[- ]?thru|drive through|parking lot|parking|street view|patio|terrace)\b/i;
@@ -156,6 +161,41 @@ function chooseBetterPhoto(a,b){
   const bs=(PHOTO_SOURCE_TIER[b.source]||70)+mediaQuality(b.media);
   return bs>as?b:a;
 }
+async function normalizeRestaurantImage(bytes){
+  if(!sharp)throw new Error('Image normalization is unavailable.');
+  const result=await sharp(bytes,{failOn:'error',limitInputPixels:MAX_RESTAURANT_IMAGE_PIXELS})
+    .rotate()
+    .resize({width:1400,height:1050,fit:'inside',withoutEnlargement:true})
+    .webp({quality:82,effort:4})
+    .toBuffer({resolveWithObject:true});
+  if(!result?.data?.length||!result?.info?.width||!result?.info?.height)throw new Error('Image normalization failed.');
+  return {type:'image/webp',bytes:Buffer.from(result.data),width:result.info.width,height:result.info.height};
+}
+function isGooglePhotoUrl(raw){
+  const host=hostOf(raw);
+  return !!host&&(host.endsWith(GOOGLE_PHOTO_HOST_SUFFIX)||host==='googleusercontent.com');
+}
+async function fetchGooglePhoto(googlePhotoName,timeout=6500){
+  if(!GOOGLE_PLACES_API_KEY)return null;
+  const name=String(googlePhotoName||'').trim().replace(/^\/|\/$/g,'');
+  if(!/^places\/[A-Za-z0-9._~:%-]+\/photos\/[A-Za-z0-9._~:%-]+$/.test(name))return null;
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
+  try{
+    const endpoint='https://places.googleapis.com/v1/'+name+'/media?'+new URLSearchParams({
+      key:GOOGLE_PLACES_API_KEY,maxWidthPx:'1400',maxHeightPx:'1050'
+    }).toString();
+    const response=await fetch(endpoint,{headers:{'Accept':'application/json,image/*'},redirect:'follow',signal:ctl.signal});
+    if(!response.ok)return null;
+    const finalUrl=String(response.url||'');
+    if(!isGooglePhotoUrl(finalUrl))return null;
+    const type=(response.headers.get('content-type')||'').split(';')[0].toLowerCase();
+    if(!type.startsWith('image/')||type==='image/svg+xml'||type==='image/svg')return null;
+    const bytes=Buffer.from(await response.arrayBuffer());
+    if(bytes.length<4000||bytes.length>10*1024*1024)return null;
+    return await normalizeRestaurantImage(bytes);
+  }catch{return null}
+  finally{clearTimeout(timer)}
+}
 async function fetchImage(url,headers={},timeout=7000){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
   try{
@@ -178,7 +218,7 @@ async function fetchImage(url,headers={},timeout=7000){
     if(width>MAX_RESTAURANT_IMAGE_DIMENSION||height>MAX_RESTAURANT_IMAGE_DIMENSION)throw new Error('Image dimensions are too large.');
     if(width&&height&&(width*height)>MAX_RESTAURANT_IMAGE_PIXELS)throw new Error('Image pixel count is too large.');
     if(width&&height&&mediaQuality(dimensions)<0)throw new Error('Image dimensions are not suitable for a restaurant card.');
-    return {type,bytes,width,height};
+    return await normalizeRestaurantImage(bytes);
   }finally{clearTimeout(timer)}
 }
 
@@ -673,7 +713,9 @@ function sendMedia(res,found){
   res.setHeader?.('X-Restaurant-Photo-Source',found.source);
   if(found.media.width&&found.media.height)res.setHeader?.('X-Restaurant-Photo-Dimensions',found.media.width+'x'+found.media.height);
   if(found.sourceUrl)res.setHeader?.('X-Restaurant-Photo-Source-URL',found.sourceUrl);
-  if(found.sourceName&&found.sourceUrl){
+  const attributions=Array.isArray(found.attributions)&&found.attributions.length?found.attributions.map(x=>({displayName:String(x?.displayName||'').trim(),uri:String(x?.uri||'').trim()})).filter(x=>x.displayName||x.uri).slice(0,5):[];
+  if(attributions.length)res.setHeader?.('X-Restaurant-Photo-Attributions',Buffer.from(JSON.stringify(attributions)).toString('base64url'));
+  else if(found.sourceName&&found.sourceUrl){
     res.setHeader?.('X-Restaurant-Photo-Attributions',Buffer.from(JSON.stringify([{displayName:found.sourceName,uri:found.sourceUrl}])).toString('base64url'));
   }
   res.statusCode=200;
@@ -689,6 +731,12 @@ module.exports=async function handler(req,res){
   const officialWebsite=String(q.officialWebsite||website).trim().slice(0,700);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
+  const googlePhotoName=String(q.googlePhotoName||'').trim().slice(0,1200);
+  let googlePhotoAttributions=[];
+  try{
+    const parsed=JSON.parse(String(q.googlePhotoAttributions||'[]'));
+    googlePhotoAttributions=Array.isArray(parsed)?parsed.map(x=>({displayName:String(x?.displayName||'').trim(),uri:String(x?.uri||'').trim()})).filter(x=>x.displayName||x.uri).slice(0,5):[];
+  }catch{}
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
     // Tier 1: exact OSM POI photo. It is trusted as exact-venue evidence,
@@ -706,6 +754,13 @@ module.exports=async function handler(req,res){
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite);
       if(fastOfficial)return sendMedia(res,fastOfficial);
+    }
+
+    // Google photo resources are session-only and are requested on demand.
+    // Do not persist/cache the Google photo or photo resource name.
+    if(googlePhotoName){
+      const googleMedia=await fetchGooglePhoto(googlePhotoName);
+      if(googleMedia)return sendMedia(res,{media:googleMedia,source:'google-place-photo',attributions:googlePhotoAttributions});
     }
 
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
@@ -783,5 +838,8 @@ module.exports._test={
   fastKnownPublicPhoto,
   imageDimensions,
   mediaQuality,
-  fetchImage
+  fetchImage,
+  normalizeRestaurantImage,
+  fetchGooglePhoto,
+  isGooglePhotoUrl
 };
