@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 955,
+  "build": 956,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP955",
-  "deploymentTrigger": "CP955-double-wooden-doors-home-background"
+  "checkpoint": "CP956",
+  "deploymentTrigger": "CP956-meals-refinement-divider-parity"
 }
