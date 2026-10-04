@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 959,
+  "build": 960,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP959",
-  "deploymentTrigger": "CP959-immediate-restaurant-card-with-background-photo-hydration"
+  "checkpoint": "CP960",
+  "deploymentTrigger": "CP960-exact-clarksville-venue-photo-routes"
 }
