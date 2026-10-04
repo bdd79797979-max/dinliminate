@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 864,
+  "build": 865,
   "sourceBranch": "main",
-  "checkpoint": "CP864",
-  "deploymentTrigger": "CP864-meal-card-photo-viewer-2026-10-04",
+  "checkpoint": "CP865",
+  "deploymentTrigger": "CP865-fix-boot-parse-cache-2026-10-04",
   "vercelProductionVerified": false
 }
