@@ -1,3 +1,12 @@
+# CURRENT RELEASE — BUILD 959 / CP959
+
+## CP959 — Immediate Restaurant card + background exact-photo hydration
+- Restaurant cards render immediately instead of waiting for the photo resolver.
+- The card uses the existing safe restaurant fallback at first paint.
+- Exact permitted venue photos continue loading in the background and replace the fallback when verified.
+- Photo priming remains active for the current and next three Restaurant cards.
+- No Google photo API or photo credentials were added.
+
 # CURRENT RELEASE — BUILD 958 / CP958
 
 ## CP958 — Restaurant photo first paint + warmer prefetch
