@@ -366,17 +366,19 @@ function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAG
  });
 }
 function swapImageWhenReady(img,url){
- if(!img||!url||!img.isConnected)return;
+ if(!img||!url||!img.isConnected)return Promise.resolve(false);
  const nextUrl=String(url);
  const current=img.currentSrc||img.src||'';
- if(current===nextUrl)return;
- const probe=new Image();
- probe.decoding='async';
- probe.onload=()=>{
-  if(img.isConnected)img.src=nextUrl;
- };
- probe.onerror=()=>{};
- probe.src=nextUrl;
+ if(current===nextUrl)return Promise.resolve(true);
+ return new Promise(resolve=>{
+  const probe=new Image();
+  probe.decoding='async';
+  let settled=false;
+  const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
+  probe.onload=()=>{if(img.isConnected)img.src=nextUrl;finish(true);};
+  probe.onerror=()=>finish(false);
+  probe.src=nextUrl;
+ });
 }
 const restaurantPhotoInflight=new Map();
 const restaurantPhotoCache=new Map();
@@ -409,9 +411,11 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v2';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='711';
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v3';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=2;
+const RESTAURANT_PHOTO_HANDOFF_WAIT=950;
 let restaurantPhotoStoragePromise=null;
 function restaurantPhotoCacheRequest(row){
  const identity=normKey([row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
@@ -506,6 +510,17 @@ function restaurantFallbackImage(row){
  }
  return imageProxyUrl(REST_QUICK_IMAGES.American);
 }
+function restaurantImmediatePhoto(row){
+ if(!row)return imageProxyUrl(REST_QUICK_IMAGES.American);
+ const raw=String(row?.photo||row?.image||'').trim();
+ const source=String(row?.source||'');
+ // Only trust provider-attached venue photos when their provenance is tied to OSM.
+ // Other provider photos stay out of the first paint and let the canonical resolver decide.
+ if(/^https:\/\//i.test(raw)&&(source.startsWith('OpenStreetMap')||source.startsWith('Photon POI'))){
+  return imageProxyUrl(raw);
+ }
+ return restaurantFallbackImage(row);
+}
 function restaurantCardFallbackImage(row){
  const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
  const map=REST_QUICK_IMAGES;
@@ -559,7 +574,7 @@ async function loadRestaurantPhoto(row){
   }
   if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
   if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
-  params.set('resolver','710');
+  params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
   const requestUrl='/api/restaurant-photo?'+params.toString();
   pending=(async()=>{
    const stored=await getPersistentRestaurantPhoto(row);
@@ -2537,7 +2552,7 @@ S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
 const row = rows[S.restaurantIndex];
 const category = restaurantCategory(row);
-const restaurantFallback = (r) => imageProxyUrl(r?.photo || r?.photoFallback || r?.image || restaurantFallbackImage(r));
+const restaurantFallback = restaurantImmediatePhoto;
 const image = restaurantFallback(row);
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
