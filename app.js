@@ -106,23 +106,16 @@ function imageProxyUrl(raw){
  if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
  try{const u=new URL(src);if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;return '/api/image?url='+encodeURIComponent(u.href);}catch{return src;}
 }
-const HOME_DOOR_SOURCE='https://images.unsplash.com/photo-1740377016257-2a592e36d682?auto=format&fit=crop&fm=jpg&q=88&w=1800';
-const HOME_DOOR_PROXY='/api/image?url='+encodeURIComponent(HOME_DOOR_SOURCE);
-const HOME_DOOR_FALLBACK='./home-background.jpg?v=892';
+const HOME_DOOR_IMAGE='./home-background.jpg?v=893';
 function bindPersistentHomeBackground(){
  const img=$('homeBackgroundImage');
  if(!img||img.dataset.bound)return;
  img.dataset.bound='true';
- img.src=HOME_DOOR_PROXY;
- img.dataset.fallback=HOME_DOOR_FALLBACK;
+ img.src=HOME_DOOR_IMAGE;
  img.referrerPolicy='no-referrer';
  img.loading='eager';
  img.fetchPriority='high';
  img.decoding='async';
- img.addEventListener('error',()=>{
-   const fallback=img.dataset.fallback||HOME_DOOR_FALLBACK;
-   if(img.src!==fallback){img.src=fallback;}
- });
 }
 function normalizeMealPhotoRef(value){return String(value??'').trim();}
 function dedupeMealPhotos(photos,max=8){

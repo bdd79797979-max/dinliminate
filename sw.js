@@ -1,9 +1,9 @@
-const CACHE='dinliminate-shell-v878';
-const IMAGE_CACHE='dinliminate-images-v1';
-const HOME_DOOR='./home-background.jpg';
-const SHELL=['./','./index.html','./styles.css','./app.js?v=878','./data/foods.js','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg','./home-background.jpg'];
+const CACHE='dinliminate-shell-v893';
+const IMAGE_CACHE='dinliminate-images-v2';
+const HOME_DOOR='./home-background.jpg?v=893';
+const SHELL=['./','./index.html','./styles.css','./app.js?v=893','./data/foods.js','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg','./home-background.jpg'];
 self.addEventListener('install',event=>{
-  event.waitUntil(Promise.all([caches.open(CACHE).then(c=>c.addAll(SHELL).then(()=>fetch(HOME_DOOR).then(r=>r.ok?c.put(HOME_DOOR,r.clone()):null).catch(()=>null))),caches.open(IMAGE_CACHE)]).then(()=>self.skipWaiting()));
+  event.waitUntil(Promise.all([caches.open(CACHE).then(c=>c.addAll(SHELL)),caches.open(IMAGE_CACHE)]).then(()=>self.skipWaiting()));
 });
 self.addEventListener('activate',event=>{
   event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE&&k!==IMAGE_CACHE&&k!=='dinliminate.restaurant.photos.v2').map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
