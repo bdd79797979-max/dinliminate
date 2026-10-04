@@ -7484,10 +7484,10 @@ button,input,select,textarea{
   background:rgba(23,23,23,.94)!important;
 }
 #food .meal-time-chip.is-active{
-  color:#e2c17f!important;
-  border-color:rgba(214,183,120,.72)!important;
-  background:rgba(44,37,27,.9)!important;
-  box-shadow:inset 0 0 0 1px rgba(214,183,120,.15)!important;
+  color:#ddd!important;
+  border-color:#292929!important;
+  background:#171717!important;
+  box-shadow:none!important;
 }
 
 @media(max-width:390px){
@@ -7634,35 +7634,11 @@ button,input,select,textarea{
   grid-row:1!important;
   justify-self:end!important;
 }
-#food #foodMealTimeToggle::after{
-  content:"";
-  position:absolute!important;
-  top:-30%!important;
-  left:-48%!important;
-  width:22%!important;
-  height:160%!important;
-  transform:skewX(-18deg)!important;
-  background:linear-gradient(90deg,transparent,rgba(255,238,194,.42),transparent)!important;
-  opacity:0!important;
-  pointer-events:none!important;
-  mix-blend-mode:screen!important;
-  animation:cp774MealTimesSheen 9s ease-in-out infinite!important;
-}
-@keyframes cp774MealTimesSheen{
-  0%,65%,100%{left:-48%;opacity:0}
-  70%{opacity:.08}
-  78%{left:122%;opacity:.52}
-  83%{left:148%;opacity:0}
-}
+
 @media(max-width:390px){
   #food .quick-label{grid-template-columns:auto auto auto minmax(0,1fr)!important;gap:6px!important}
   #food .food-quick-control{font-size:10px!important}
 }
-@media(prefers-reduced-motion:reduce){
-  #food #foodMealTimeToggle::after{animation:none!important}
-}
-
-
 /* CP837 — final shared treatment for the two Meals filter labels. */
 #food .food-quick-control{
   position:relative!important;
@@ -7670,6 +7646,31 @@ button,input,select,textarea{
   isolation:isolate!important;
 }
 
+
+/* CP881 — unify discovery control color/open effect; Search dropdown layout remains unchanged. */
+#food .food-quick-control,
+#restaurant .restaurant-refine-tab{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
+#food .food-quick-control:hover,
+#restaurant .restaurant-refine-tab:hover{
+  color:#fff!important;
+}
+#food .food-quick-control.is-open,
+#restaurant .restaurant-refine-tab.is-open{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
+#food .food-quick-control:active,
+#restaurant .restaurant-refine-tab:active{
+  transform:none!important;
+  opacity:.78;
+}
+#food #foodMealTimeToggle.is-active{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
 
 /* CP838 — Meals controls and Meal Time editor use the same Add Meal visual language. */
 #food .food-quick-control{
@@ -7702,10 +7703,10 @@ button,input,select,textarea{
   transform:translateY(1px) scale(.985)!important;
 }
 #food .meal-time-quick .meal-time-chip.is-active{
-  border-color:#806943!important;
-  background:linear-gradient(145deg,#242018,#15130f)!important;
-  color:#e2c17f!important;
-  box-shadow:inset 0 0 0 1px #c6a46a33,0 5px 14px rgba(0,0,0,.24)!important;
+  border-color:#292929!important;
+  background:#171717!important;
+  color:#ddd!important;
+  box-shadow:none!important;
 }
 #foodEditorForm .meal-time-editor{
   border:1px solid #332f2a!important;

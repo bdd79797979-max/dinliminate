@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 880,
+  "build": 881,
   "sourceBranch": "main",
-  "checkpoint": "CP880",
-  "deploymentTrigger": "CP880-swap-meal-restaurant-refine-controls",
+  "checkpoint": "CP881",
+  "deploymentTrigger": "CP881-unify-discovery-control-effects",
   "vercelProductionVerified": false
 }

@@ -964,6 +964,7 @@ function renderQuickCutsCollapse(kind){
  }else{
   section.classList.toggle('is-collapsed',collapsed);
  }
+ toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
  toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Cuisine Cuts');
  toggle.title=collapsed?'Show Cuisine Cuts':'Hide Cuisine Cuts';
@@ -992,6 +993,7 @@ function renderMealTimeCuts(){
  const collapsed=!!S.mealTimeCutsCollapsed;
  chips.classList.toggle('is-rail-collapsed',collapsed);
  chips.setAttribute('aria-hidden',String(collapsed));
+ toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
  toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times');
  toggle.title=collapsed?'Show Meal Times':'Hide Meal Times';
