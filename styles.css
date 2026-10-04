@@ -9413,3 +9413,42 @@ button,input,select,textarea{
 .manage-foods-modal-bg.modal-bg-open{
   opacity:1!important;
 }
+
+
+/* CP938 — Meals discovery divider parity.
+   Match Restaurant's Search — Cuisine grouping without changing control behavior. */
+#food .food-interior-nav{
+  grid-template-columns:max-content max-content max-content minmax(0,1fr) 36px!important;
+}
+#food .food-top-refine-divider{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:0!important;
+  height:27px!important;
+  min-height:27px!important;
+  padding:0!important;
+  margin:0!important;
+  color:rgba(198,164,106,.52)!important;
+  font-size:10px!important;
+  font-weight:500!important;
+  line-height:1!important;
+  transform:translateY(-.5px);
+  user-select:none;
+  -webkit-user-select:none;
+  pointer-events:none;
+}
+@media(max-width:390px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content max-content max-content minmax(0,1fr) 34px!important;
+  }
+  #food .food-top-refine-divider{font-size:10px!important}
+}
+@media(max-width:340px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content max-content max-content minmax(0,1fr) 32px!important;
+    column-gap:5px!important;
+  }
+  #food .food-top-refine-divider{font-size:9.5px!important}
+}
