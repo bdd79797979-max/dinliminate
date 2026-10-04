@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 870,
+  "build": 871,
   "sourceBranch": "main",
-  "checkpoint": "CP870",
-  "deploymentTrigger": "CP870-true-touch-drag-cover-persistence-2026-10-04",
+  "checkpoint": "CP871",
+  "deploymentTrigger": "CP871-iphone-safe-placeholder-touch-drag-2026-10-04",
   "vercelProductionVerified": false
 }

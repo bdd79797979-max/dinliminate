@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '870';
+let APP_BUILD = '871';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3167,73 +3167,108 @@ if(mealPhotoFile){
    refreshMealPhotoEditorLabels();
   };
   const bindMealPhotoEditorDrag=()=>{
-   [...grid.querySelectorAll('.meal-photo-editor-card')].forEach(card=>{
-    let active=false,pointerId=null,startX=0,startY=0,dragging=false,ghost=null,offsetX=0,offsetY=0;
-    const moveGhost=e=>{
-     if(!ghost)return;
-     ghost.style.left=(e.clientX-offsetX)+'px';
-     ghost.style.top=(e.clientY-offsetY)+'px';
-    };
-    const removeGhost=()=>{
-     if(ghost?.isConnected)ghost.remove();
-     ghost=null;
-    };
-    const reset=()=>{
-     const pid=pointerId;
-     active=false;pointerId=null;dragging=false;
-     card.classList.remove('is-drag-source');
-     card.style.visibility='';
-     card.style.pointerEvents='';
-     removeGhost();
-     if(pid!=null){try{card.releasePointerCapture?.(pid);}catch{}}
-    };
-    card.onpointerdown=e=>{
-     if(e.isPrimary===false||e.button!=null&&e.button!==0)return;
-     if(e.target.closest?.('button'))return;
-     active=true;pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;
-     try{card.setPointerCapture?.(pointerId);}catch{}
-    };
-    card.onpointermove=e=>{
-     if(!active||e.pointerId!==pointerId)return;
-     const dx=e.clientX-startX,dy=e.clientY-startY;
-     if(!dragging){
-      if(Math.hypot(dx,dy)<7)return;
-      dragging=true;
-      if(e.cancelable)e.preventDefault();
-      const rect=card.getBoundingClientRect();
-      offsetX=e.clientX-rect.left;offsetY=e.clientY-rect.top;
-      ghost=card.cloneNode(true);
-      ghost.classList.remove('is-main','is-drag-source');
-      ghost.classList.add('meal-photo-drag-ghost');
-      ghost.style.width=rect.width+'px';
-      ghost.style.height=rect.height+'px';
-      document.body.appendChild(ghost);
-      card.classList.add('is-drag-source');
-      card.style.visibility='hidden';
-      card.style.pointerEvents='none';
+   if(grid.dataset.dragBound==='1')return;
+   grid.dataset.dragBound='1';
+   let drag=null;
+   const removeGhost=()=>{
+    if(drag?.ghost?.isConnected)drag.ghost.remove();
+    if(drag?.placeholder?.isConnected)drag.placeholder.remove();
+   };
+   const cleanup=(commit)=>{
+    if(!drag)return;
+    const state=drag;
+    document.removeEventListener('pointermove',onMove,true);
+    document.removeEventListener('pointerup',onUp,true);
+    document.removeEventListener('pointercancel',onCancel,true);
+    if(state.dragging){
+     if(state.placeholder?.isConnected){
+      if(commit)state.placeholder.replaceWith(state.card);
+      else state.placeholder.replaceWith(state.card);
      }
-     if(!dragging)return;
-     if(e.cancelable)e.preventDefault();
-     moveGhost(e);
-     const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.meal-photo-editor-card');
-     if(!target||target===card||!grid.contains(target))return;
-     const rect=target.getBoundingClientRect();
-     const midY=rect.top+rect.height/2,midX=rect.left+rect.width/2;
-     const before=e.clientY<midY || (Math.abs(e.clientY-midY)<rect.height*.34 && e.clientX<midX);
-     const anchor=before?target:target.nextElementSibling;
-     if(anchor===card)return;
-     if(before && card.nextElementSibling===target)return;
-     if(!before && target.nextElementSibling===card)return;
-     grid.insertBefore(card,anchor||null);
-     syncMealPhotoEditorOrder();
-    };
-    card.onpointerup=e=>{
-     if(!active)return;
-     if(dragging){if(e.cancelable)e.preventDefault();syncMealPhotoEditorOrder();}
-     reset();
-    };
-    card.onpointercancel=()=>{if(active){syncMealPhotoEditorOrder();reset();}};
-   });
+     state.card.classList.remove('is-drag-source');
+     state.card.style.visibility='';
+     state.card.style.pointerEvents='';
+     if(commit)syncMealPhotoEditorOrder();
+    }else{
+     state.card.classList.remove('is-drag-source');
+     state.card.style.visibility='';
+     state.card.style.pointerEvents='';
+    }
+    if(state.ghost?.isConnected)state.ghost.remove();
+    state.ghost=null;state.placeholder=null;
+    drag=null;
+   };
+   const beginDrag=e=>{
+    if(!drag||drag.dragging)return;
+    drag.dragging=true;
+    if(e.cancelable)e.preventDefault();
+    const rect=drag.card.getBoundingClientRect();
+    drag.offsetX=e.clientX-rect.left;
+    drag.offsetY=e.clientY-rect.top;
+    const placeholder=document.createElement('div');
+    placeholder.className='meal-photo-drag-placeholder';
+    placeholder.style.height=rect.height+'px';
+    placeholder.style.width=rect.width+'px';
+    placeholder.setAttribute('aria-hidden','true');
+    drag.placeholder=placeholder;
+    drag.card.replaceWith(placeholder);
+    drag.ghost=drag.card.cloneNode(true);
+    drag.ghost.classList.remove('is-main','is-drag-source');
+    drag.ghost.classList.add('meal-photo-drag-ghost');
+    drag.ghost.style.width=rect.width+'px';
+    drag.ghost.style.height=rect.height+'px';
+    document.body.appendChild(drag.ghost);
+    drag.card.classList.add('is-drag-source');
+    drag.card.style.visibility='hidden';
+    drag.card.style.pointerEvents='none';
+    moveGhost(e);
+   };
+   const moveGhost=e=>{
+    if(!drag?.ghost)return;
+    drag.ghost.style.left=(e.clientX-drag.offsetX)+'px';
+    drag.ghost.style.top=(e.clientY-drag.offsetY)+'px';
+   };
+   function onMove(e){
+    if(!drag||e.pointerId!==drag.pointerId)return;
+    const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;
+    if(!drag.dragging){
+     if(Math.hypot(dx,dy)<8)return;
+     beginDrag(e);
+    }
+    if(!drag?.dragging)return;
+    if(e.cancelable)e.preventDefault();
+    moveGhost(e);
+    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.meal-photo-editor-card');
+    if(!target||!grid.contains(target)||target===drag.card)return;
+    const rect=target.getBoundingClientRect();
+    const midY=rect.top+rect.height/2,midX=rect.left+rect.width/2;
+    const before=e.clientY<midY || (Math.abs(e.clientY-midY)<rect.height*.30 && e.clientX<midX);
+    const anchor=before?target:target.nextElementSibling;
+    if(anchor===drag.placeholder)return;
+    if(before && drag.placeholder.nextElementSibling===target)return;
+    if(!before && target.nextElementSibling===drag.placeholder)return;
+    grid.insertBefore(drag.placeholder,anchor||null);
+   }
+   function onUp(e){
+    if(!drag||e.pointerId!==drag.pointerId)return;
+    if(drag.dragging&&e.cancelable)e.preventDefault();
+    cleanup(true);
+   }
+   function onCancel(e){
+    if(!drag||e.pointerId!==drag.pointerId)return;
+    cleanup(true);
+   }
+   grid.onpointerdown=e=>{
+    if(e.isPrimary===false||e.button!=null&&e.button!==0)return;
+    if(e.target.closest?.('button'))return;
+    const card=e.target.closest?.('.meal-photo-editor-card');
+    if(!card||!grid.contains(card))return;
+    cleanup(false);
+    drag={card,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,dragging:false,ghost:null,placeholder:null,offsetX:0,offsetY:0};
+    document.addEventListener('pointermove',onMove,true);
+    document.addEventListener('pointerup',onUp,true);
+    document.addEventListener('pointercancel',onCancel,true);
+   };
   };
   const renderMealPhotos=()=>{
    editorPhotos=dedupeMealPhotos(editorPhotos,8);
