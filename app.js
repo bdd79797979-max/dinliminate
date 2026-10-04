@@ -966,8 +966,8 @@ function renderQuickCutsCollapse(kind){
  }
  toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Cuisine Cuts');
- toggle.title=collapsed?'Show Cuisine Cuts':'Hide Cuisine Cuts';
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Cuisine');
+ toggle.title=collapsed?'Show Cuisine':'Hide Cuisine';
  chips.setAttribute('aria-hidden',String(collapsed));
 }
 function bindQuickCutsCollapse(kind){
