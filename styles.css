@@ -9116,3 +9116,52 @@ button,input,select,textarea{
   content:none!important;
   display:none!important;
 }
+
+
+/* CP933 — maximize Meal + Restaurant cards between their real controls.
+   The stage owns the available vertical space; cards fill it instead of using
+   fixed svh caps. A small negative gutter maximizes card width on phones. */
+@media(max-width:600px){
+  #food,
+  #restaurant{
+    overflow-x:hidden!important;
+  }
+  #food .stage,
+  #restaurant .rest-stage{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    align-items:stretch!important;
+    justify-content:stretch!important;
+    overflow:visible!important;
+  }
+  #food .swipe-card-stack,
+  #restaurant .restaurant-card-stack{
+    width:calc(100% + 20px)!important;
+    max-width:none!important;
+    height:100%!important;
+    max-height:none!important;
+    margin-left:-10px!important;
+    margin-right:-10px!important;
+    aspect-ratio:auto!important;
+    flex:1 1 auto!important;
+  }
+  #food .swipe-card-stack>.card,
+  #restaurant .restaurant-card-stack>.card{
+    width:100%!important;
+    max-width:none!important;
+    height:100%!important;
+    max-height:none!important;
+    aspect-ratio:auto!important;
+  }
+}
+@media(max-width:360px){
+  #food .swipe-card-stack,
+  #restaurant .restaurant-card-stack{
+    width:calc(100% + 16px)!important;
+    margin-left:-8px!important;
+    margin-right:-8px!important;
+  }
+}
