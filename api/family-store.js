@@ -461,20 +461,13 @@ async function submitVote(sessionToken, payload) {
  return {ok:true,roundId,stage:currentStage,itemId:item,choice:currentChoice};
 }
 async function markStageSubmitted(sessionToken, payload) {
-  const sql = db();
-  const me = await auth(sql, sessionToken);
-  const roundId = itemId(payload && payload.roundId);
-  const currentStage = stage(payload && payload.stage);
-  const col = currentStage === 'initial' ? 'submitted_stage1_at' : currentStage === 'finalist' ? 'submitted_stage2_at' : 'submitted_tiebreak_at';
-  const rows = await sql.query(
-    'select fr.round_id from family_rounds fr join family_round_members frm on frm.round_id=fr.round_id and frm.member_id=$1 where fr.round_id=$2 and fr.family_id=$3 and frm.included=true limit 1',
-    [me.member_id, roundId, me.family_id]
-  );
-  if (!rows[0]) fail('ROUND_ACCESS', 'You are not part of this dinner decision.', 403);
-  await sql.query('update family_round_members set ' + col + '=now(),last_seen_at=now() where round_id=$1 and member_id=$2', [roundId, me.member_id]);
-  let round=(await sql.query('select * from family_rounds where round_id=$1 and family_id=$2',[roundId,me.family_id]))[0];
-  if(round){ round=await advanceInitialStageIfReady(sql, round); round=await ensureFinalistsStage(sql, round); round=await finalizeFinalStage(sql, round); round=await finalizeTiebreak(sql, round); }
-  return {ok:true,roundId,stage:currentStage};
+ const sql=db(),me=await auth(sql,sessionToken),roundId=itemId(payload&&payload.roundId),currentStage=stage(payload&&payload.stage),col=currentStage==='initial'?'submitted_stage1_at':currentStage==='finalist'?'submitted_stage2_at':'submitted_tiebreak_at';
+ const rows=await sql.query('select fr.round_id from family_rounds fr join family_round_members frm on frm.round_id=fr.round_id and frm.member_id=$1 where fr.round_id=$2 and fr.family_id=$3 and frm.included=true limit 1',[me.member_id,roundId,me.family_id]);
+ if(!rows[0])fail('ROUND_ACCESS','You are not part of this dinner decision.',403);
+ await sql.query('update family_round_members set '+col+'=now(),last_seen_at=now() where round_id=$1 and member_id=$2',[roundId,me.member_id]);
+ let round=(await sql.query('select * from family_rounds where round_id=$1 and family_id=$2',[roundId,me.family_id]))[0];
+ if(round){round=await advanceInitialStageIfReady(sql,round);round=await ensureFinalistsStage(sql,round);round=await finalizeFinalStage(sql,round);round=await finalizeTiebreak(sql,round);}
+ return {ok:true,roundId,stage:currentStage,round:round?publicRound(round):null};
 }
 async function rotateCode(sessionToken) {
   const sql = db();

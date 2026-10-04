@@ -1078,7 +1078,7 @@ function foodCut(item=S.pool[S.index]){
 }
 function foodMaybe(item=S.pool[S.index]){
  dismissSwipeHint();
- if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'&&familyRoundStage()!==1)return;
+ if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'&&familyRoundStage()!==1){familyBrowseNext('meal');return;}
  if(!item)return;
  if(S.pool.length===1){foodCommit('maybe',item);winner(item);return;}
  foodCommit('maybe',item);S.maybe.add(item.id);
@@ -2097,7 +2097,7 @@ function restaurantCut(row){
 
 function restaurantMaybe(row){
  dismissSwipeHint();
- if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1)return;
+ if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowseNext('restaurant');return;}
  if(!row)return;const rows=restaurantPoolFiltered();if(rows.length===1){winner(row);return;}
  const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
@@ -3874,33 +3874,21 @@ function familyShowJoin(){$('familyEntry')?.classList.add('hidden');$('familyCre
 function familyDisplayMemberList(members,me){const box=$('familyMemberList');if(!box)return;box.innerHTML='';(Array.isArray(members)?members:[]).forEach(m=>{const row=document.createElement('div');row.className='family-member-row'+(m.role==='host'?' is-host':'');row.innerHTML='<span class="family-member-avatar"></span><span class="family-member-copy"><b></b><small></small></span><span class="family-member-status"></span>';row.querySelector('.family-member-avatar').textContent=(String(m.name||'?').trim().slice(0,1)||'?').toUpperCase();row.querySelector('.family-member-copy b').textContent=String(m.name||'Family member');row.querySelector('.family-member-copy small').textContent=m.role==='host'?'Host':'Member';row.querySelector('.family-member-status').textContent=me&&m.id===me.id?'You':(m.active===false?'Away':'Here');box.appendChild(row);});}
 
 function familyEnsureNormalBar(type){
- const root=$(type==='meal'?'food':'restaurant');if(!root)return null;
- const id=type==='meal'?'foodFamilyNormalBar':'restaurantFamilyNormalBar';
- let bar=$(id);if(bar)return bar;
+ const root=$(type==='meal'?'food':'restaurant');if(!root)return null;const id=type==='meal'?'foodFamilyNormalBar':'restaurantFamilyNormalBar';let bar=$(id);if(bar)return bar;
  bar=document.createElement('div');bar.id=id;bar.className='family-normal-bar';bar.style.cssText='margin:3px 8px 8px;padding:10px 11px;border:1px solid rgba(198,164,106,.24);border-radius:16px;background:linear-gradient(145deg,rgba(198,164,106,.09),rgba(255,255,255,.025));display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.14);';
- const ids=type==='meal'?{k:'foodFamilyNormalKicker',t:'foodFamilyNormalTitle',s:'foodFamilyNormalStatus',time:'foodFamilyNormalTime',btn:'foodFamilyNormalStart'}:{k:'restaurantFamilyNormalKicker',t:'restaurantFamilyNormalTitle',s:'restaurantFamilyNormalStatus',time:'restaurantFamilyNormalTime',btn:'restaurantFamilyNormalStart'};
- bar.innerHTML='<div style="display:grid;gap:2px;min-width:0"><span id="'+ids.k+'" style="font-size:8px;letter-spacing:.15em;color:#c6a46a;font-weight:850">DINNER TOGETHER</span><b id="'+ids.t+'" style="font-size:13px;line-height:1.1">Prepare dinner together.</b><small id="'+ids.s+'" style="font-size:9px;line-height:1.35;color:#777;max-width:330px">Use the normal '+(type==='meal'?'Meal':'Restaurant')+' screen, then start the shared dinner.</small></div><div style="display:flex;align-items:center;gap:7px;flex:0 0 auto"><label id="'+ids.time+'Wrap" style="display:grid;gap:3px;color:#8a847c;font-size:7px;letter-spacing:.12em;font-weight:850">DINNER BY<input id="'+ids.time+'" type="time" aria-label="Dinner by time" style="height:34px;min-width:92px;border:1px solid #3a342b;border-radius:10px;background:#151413;color:#eee;padding:0 7px;font-size:10px;font-weight:800"></label><button id="'+ids.btn+'" type="button" style="min-height:36px;padding:0 11px;border:1px solid #9b8050;border-radius:11px;background:#c6a46a;color:#111;font-size:9px;font-weight:900;white-space:nowrap">Start Family Dinner</button></div>';
- const anchor=type==='meal'?root.querySelector('.quick-section'):root.querySelector('.location-strip');
- root.insertBefore(bar,anchor||root.firstChild);
- const startButton=$(type==='meal'?'foodFamilyNormalStart':'restaurantFamilyNormalStart');
- if(startButton && startButton.dataset.familyBound!=='1'){
-  startButton.dataset.familyBound='1';
-  startButton.addEventListener('click',()=>familyStartRoundFromNormal(type));
- }
+ const ids=type==='meal'?{k:'foodFamilyNormalKicker',t:'foodFamilyNormalTitle',s:'foodFamilyNormalStatus',time:'foodFamilyNormalTime',btn:'foodFamilyNormalStart',end:'foodFamilyNormalEnd'}:{k:'restaurantFamilyNormalKicker',t:'restaurantFamilyNormalTitle',s:'restaurantFamilyNormalStatus',time:'restaurantFamilyNormalTime',btn:'restaurantFamilyNormalStart',end:'restaurantFamilyNormalEnd'};
+ bar.innerHTML='<div style="display:grid;gap:2px;min-width:0"><span id="'+ids.k+'" style="font-size:8px;letter-spacing:.15em;color:#c6a46a;font-weight:850">DINNER TOGETHER</span><b id="'+ids.t+'" style="font-size:13px;line-height:1.1">Prepare dinner together.</b><small id="'+ids.s+'" style="font-size:9px;line-height:1.35;color:#777;max-width:330px">Use the normal '+(type==='meal'?'Meal':'Restaurant')+' screen, then start the shared dinner.</small></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 0 auto"><label id="'+ids.time+'Wrap" style="display:grid;gap:3px;color:#8a847c;font-size:7px;letter-spacing:.12em;font-weight:850">DINNER BY<input id="'+ids.time+'" type="time" aria-label="Dinner by time" style="height:34px;min-width:92px;border:1px solid #3a342b;border-radius:10px;background:#151413;color:#eee;padding:0 7px;font-size:10px;font-weight:800"></label><button id="'+ids.btn+'" type="button" style="min-height:36px;padding:0 11px;border:1px solid #9b8050;border-radius:11px;background:#c6a46a;color:#111;font-size:9px;font-weight:900;white-space:nowrap">Start Family Dinner</button><button id="'+ids.end+'" type="button" class="family-end-button hidden" aria-label="End Family Dinner">END DINNER</button></div>';
+ const anchor=type==='meal'?root.querySelector('.quick-section'):root.querySelector('.location-strip');root.insertBefore(bar,anchor||root.firstChild);const startButton=$(ids.btn),endButton=$(ids.end);
+ if(startButton&&startButton.dataset.familyBound!=='1'){startButton.dataset.familyBound='1';startButton.addEventListener('click',()=>familyStartRoundFromNormal(type));}
+ if(endButton&&endButton.dataset.familyBound!=='1'){endButton.dataset.familyBound='1';endButton.addEventListener('click',familyEndDinner);}
  return bar;
 }
-
 function familyNormalBar(type,mode='idle',data=null){
- const ids=type==='meal'?{bar:'foodFamilyNormalBar',k:'foodFamilyNormalKicker',t:'foodFamilyNormalTitle',s:'foodFamilyNormalStatus',time:'foodFamilyNormalTime',btn:'foodFamilyNormalStart',wrap:'foodFamilyNormalTimeWrap'}:{bar:'restaurantFamilyNormalBar',k:'restaurantFamilyNormalKicker',t:'restaurantFamilyNormalTitle',s:'restaurantFamilyNormalStatus',time:'restaurantFamilyNormalTime',btn:'restaurantFamilyNormalStart',wrap:'restaurantFamilyNormalTimeWrap'};
- const bar=familyEnsureNormalBar(type);if(!bar)return;const el=id=>$(id),start=el(ids.btn),time=el(ids.time),wrap=el(ids.wrap),host=familySessionRead()?.member?.role==='host';bar.classList.toggle('hidden',mode==='idle');
- if(mode==='setup'){el(ids.k).textContent='DINNER TOGETHER · HOST SETUP';el(ids.t).textContent=type==='meal'?'Prepare the meal choices.':'Prepare the restaurant choices.';el(ids.s).textContent='Use the normal '+(type==='meal'?'Meal':'Restaurant')+' screen. When everyone is ready, start the shared dinner.';wrap?.classList.remove('hidden');start?.classList.toggle('hidden',!host);if(start)start.disabled=!host||((type==='meal'?S.pool.length:restaurantPoolFiltered().length)===0);return;}
- if(mode==='decision'&&data?.activeRound){
-  const stage=Number(data.activeRound.currentStage)||1,copy=familyRoundCopy(stage),members=Array.isArray(data.roundMembers)?data.roundMembers.filter(x=>x.included):[],mine=familySessionRead()?.member?.id,meRow=members.find(x=>x.memberId===mine),key=stage===1?'submittedStage1':stage===2?'submittedStage2':'submittedTiebreak',submitted=members.filter(x=>!!x[key]).length,mineSubmitted=stage===1?!!meRow?.submittedStage1:stage===2?!!meRow?.submittedStage2:!!meRow?.submittedTiebreak;
-  el(ids.k).textContent='DINNER TOGETHER · '+copy.title;el(ids.t).textContent=copy.instruction;el(ids.s).textContent=mineSubmitted?'✓ ENTERED · Waiting for the Family…':submitted+' of '+members.length+' entered'+(stage===1?' · Enter anytime':'');wrap?.classList.add('hidden');start?.classList.add('hidden');familySetDecisionAction(type,stage,mineSubmitted);
-  if(stage===1&&localStorage.getItem('dinliminate.familyCoach.v2')!=='1'){localStorage.setItem('dinliminate.familyCoach.v2','1');window.setTimeout(()=>{if($('familyCoachBubble'))$('familyCoachBubble').remove();const b=document.createElement('div');b.id='familyCoachBubble';b.className='family-coach-bubble';b.innerHTML='<b>Same Dinliminate. Now together.</b><span>♥ builds your Maybes. ✓ enters them. You can enter anytime.</span><button type="button">Got it</button>';document.body.appendChild(b);b.querySelector('button').onclick=()=>b.remove();window.setTimeout(()=>b.remove(),8500);},150);}
-  return;
- }
- if(mode==='winner'){el(ids.k).textContent='DINNER TOGETHER · DECIDED';el(ids.t).textContent='Dinner is decided.';el(ids.s).textContent='Everyone agreed on tonight’s dinner.';wrap?.classList.add('hidden');start?.classList.add('hidden');}
+ const ids=type==='meal'?{k:'foodFamilyNormalKicker',t:'foodFamilyNormalTitle',s:'foodFamilyNormalStatus',time:'foodFamilyNormalTime',btn:'foodFamilyNormalStart',end:'foodFamilyNormalEnd'}:{k:'restaurantFamilyNormalKicker',t:'restaurantFamilyNormalTitle',s:'restaurantFamilyNormalStatus',time:'restaurantFamilyNormalTime',btn:'restaurantFamilyNormalStart',end:'restaurantFamilyNormalEnd'};
+ const bar=familyEnsureNormalBar(type);if(!bar)return;const el=id=>$(id),start=el(ids.btn),end=el(ids.end),wrap=$(ids.time+'Wrap'),host=familySessionRead()?.member?.role==='host';bar.classList.toggle('hidden',mode==='idle');
+ if(mode==='setup'){el(ids.k).textContent='DINNER TOGETHER · HOST SETUP';el(ids.t).textContent=type==='meal'?'Prepare the meal choices.':'Prepare the restaurant choices.';el(ids.s).textContent='Use the normal '+(type==='meal'?'Meal':'Restaurant')+' screen. When everyone is ready, start the shared dinner.';wrap?.classList.remove('hidden');start?.classList.toggle('hidden',!host);end?.classList.add('hidden');if(start)start.disabled=!host||((type==='meal'?S.pool.length:restaurantPoolFiltered().length)===0);return;}
+ if(mode==='decision'&&data?.activeRound){const stage=Number(data.activeRound.currentStage)||1,copy=familyRoundCopy(stage),members=Array.isArray(data.roundMembers)?data.roundMembers.filter(x=>x.included):[],mine=familySessionRead()?.member?.id,meRow=members.find(x=>x.memberId===mine),key=stage===1?'submittedStage1':stage===2?'submittedStage2':'submittedTiebreak',submitted=members.filter(x=>!!x[key]).length,mineSubmitted=stage===1?!!meRow?.submittedStage1:stage===2?!!meRow?.submittedStage2:!!meRow?.submittedTiebreak;el(ids.k).textContent='DINNER TOGETHER · '+copy.title;el(ids.t).textContent=copy.instruction;el(ids.s).textContent=mineSubmitted?'✓ ENTERED · Waiting for the Family…':submitted+' of '+members.length+' entered'+(stage===1?' · Enter anytime':'');wrap?.classList.add('hidden');start?.classList.add('hidden');end?.classList.toggle('hidden',!host);familySetDecisionAction(type,stage,mineSubmitted);return;}
+ if(mode==='winner'){el(ids.k).textContent='DINNER TOGETHER · DECIDED';el(ids.t).textContent='Dinner is decided.';el(ids.s).textContent='Everyone agreed on tonight’s dinner.';wrap?.classList.add('hidden');start?.classList.add('hidden');end?.classList.add('hidden');}
 }
 function familyDefaultDinnerTime(){const d=new Date(Date.now()+30*60*1000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function familyDinnerTargetIso(value){const p=String(value||'').split(':').map(Number);if(p.length!==2||!Number.isFinite(p[0])||!Number.isFinite(p[1]))return null;const d=new Date();d.setHours(p[0],p[1],0,0);if(d.getTime()<=Date.now()+120000)d.setDate(d.getDate()+1);return d.toISOString();}
@@ -3926,11 +3914,11 @@ async function familyStartRoundFromNormal(type){
  finally{if(b){b.disabled=false;b.textContent='Start Family Dinner';}}
 }
 function familyBeginNormalDecision(data){
- const round=data?.activeRound;if(!round)return;const type=round.decisionType==='restaurant'?'restaurant':'meal',stage=Number(round.currentStage)||1,stageData=familyNormalStagePool(round,data);const same=S.familyNormalMode==='decision'&&S.familyNormalRoundId===String(round.id)&&S.familyDecisionType===type&&S.familyNormalStage===stage&&S.screen===(type==='meal'?'food':'restaurant');
+ const round=data?.activeRound;if(!round)return;const type=round.decisionType==='restaurant'?'restaurant':'meal',stage=Number(round.currentStage)||1,stageData=familyNormalStagePool(round,data),same=S.familyNormalMode==='decision'&&S.familyNormalRoundId===String(round.id)&&S.familyDecisionType===type&&S.familyNormalStage===stage&&S.screen===(type==='meal'?'food':'restaurant');
  S.familyActiveData=data;S.familyDecisionType=type;S.familyNormalMode='decision';S.familyNormalRoundId=String(round.id);S.familyNormalStage=stage;S.familyNormalAutoResume=true;if(same){familyNormalBar(type,'decision',data);return;}
  S.winnerItem=null;S.winnerType=type==='restaurant'?'restaurant':'food';
- if(type==='meal'){S.foodActions=[];S.maybe.clear();S.foodMaybeRound=false;S.foodCuts.clear();S.cutCats.clear();S.pool=stageData.remaining.map(x=>({...x}));S.index=0;show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data);}
- else{S.restaurantActions=[];S.restaurantMaybeRound=false;S.restaurantCuts.clear();S.restaurantPool=stageData.remaining.map(x=>({...x,_cut:false,_maybe:false}));S.restaurantIndex=0;show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data);}
+ if(type==='meal'){S.foodActions=[];S.maybe.clear();S.foodMaybeRound=false;S.foodCuts.clear();S.cutCats.clear();S.pool=stageData.remaining.map(x=>({...x}));S.index=0;show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data);}else{S.restaurantActions=[];S.restaurantMaybeRound=false;S.restaurantCuts.clear();S.restaurantPool=stageData.remaining.map(x=>({...x,_cut:false,_maybe:false}));S.restaurantIndex=0;show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data);}
+ familyStageAlert(type,stage);familySwipeInstruction(type,stage);
 }
 function familyNormalStagePool(round,data){
  const snapshot=round?.snapshot||{},all=Array.isArray(snapshot.pool)?snapshot.pool:[],stage=Number(round.currentStage)||1;let source=all;
@@ -3942,35 +3930,50 @@ function familyNormalStagePool(round,data){
 function familyRoundStage(){return Number(S.familyActiveData?.activeRound?.currentStage)||1;}
 function familyRoundCopy(stage){
  if(stage===1)return{title:'PICK MAYBES',instruction:"Don't be picky. Add anything you'd be happy eating.",action:'ENTER MAYBES',aria:'Enter Maybes'};
- if(stage===2)return{title:'PICK A FINALIST',instruction:'Now be picky. Pick the one you want most.',action:'PICK A FINALIST',aria:'Pick a finalist'};
- return{title:'TIEBREAKER',instruction:'Only the tied choices remain. Pick one.',action:'PICK',aria:'Pick one'};
+ if(stage===2)return{title:'PICK A FINALIST',instruction:'Swipe normally to browse. Pick the one you want most.',action:'ENTER CHOICE',aria:'Enter Choice'};
+ return{title:'TIEBREAKER',instruction:'Swipe normally to browse. Pick one of the tied choices.',action:'ENTER CHOICE',aria:'Enter Choice'};
 }
 function familySetDecisionAction(type,stage,submitted){
  const btn=$(type==='meal'?'foodChoose':'restChoose'),copy=familyRoundCopy(stage);if(!btn)return;btn.setAttribute('aria-label',submitted?'Choices entered':copy.aria);btn.title=submitted?'Choices entered':copy.aria;btn.dataset.familyAction=copy.action;btn.disabled=!!submitted||S.familyNormalVoteBusy;
 }
-function familyBrowseNext(type){
- const stage=familyRoundStage();if(S.familyNormalMode!=='decision'||stage===1)return false;
- if(type==='meal'){const rows=S.pool||[];if(!rows.length)return true;S.foodActions.push({type:'family-browse',index:S.index});S.index=(S.index+1)%rows.length;drawFood();return true;}
- const rows=restaurantPoolFiltered();if(!rows.length)return true;S.restaurantActions.push({type:'family-browse',index:S.restaurantIndex});S.restaurantIndex=(S.restaurantIndex+1)%rows.length;drawRestaurants();return true;
+function familyStageAlert(type,stage){
+ $('familyStageAlert')?.remove();const c=stage===2?{k:'DINNER TOGETHER',h:'FINALISTS ARE IN',p:'Now everyone gets one pick. Swipe to browse · ✓ to enter.'}:stage===3?{k:'DINNER TOGETHER',h:'STILL TIED',p:'One last pick. Swipe to browse · ✓ to enter.'}:{k:'DINNER TOGETHER',h:'ROUND 1 IS LIVE',p:'Build your Maybes, then ✓ ENTER MAYBES.'};
+ const overlay=document.createElement('div');overlay.id='familyStageAlert';overlay.className='family-stage-alert';overlay.innerHTML='<div class="family-stage-alert-card"><span>'+c.k+'</span><b>'+c.h+'</b><p>'+c.p+'</p><button type="button">LET’S GO</button></div>';document.body.appendChild(overlay);const close=()=>overlay.remove();overlay.querySelector('button').onclick=close;window.setTimeout(close,4200);
+}
+function familySwipeInstruction(type,stage){
+ const root=$(type==='meal'?'food':'restaurant');if(!root)return;root.querySelector('.family-swipe-tip')?.remove();const tip=document.createElement('div');tip.className='family-swipe-tip';tip.innerHTML=stage===1?'<b>Round 1</b><span>Swipe or tap ♥ to build your Maybes. ✓ enters them.</span><button type="button" aria-label="Dismiss">×</button>':'<b>'+(stage===2?'Round 2':'Tiebreak')+'</b><span>Swipe left or right to browse. ✓ enters your choice.</span><button type="button" aria-label="Dismiss">×</button>';root.appendChild(tip);tip.querySelector('button').onclick=()=>tip.remove();window.setTimeout(()=>tip.remove(),6500);
 }
 async function familyEnterMaybes(type){
  if(S.familyNormalMode!=='decision'||familyRoundStage()!==1||S.familyNormalVoteBusy)return;const s=familySessionRead(),round=S.familyActiveData?.activeRound;if(!s?.token||!round)return;S.familyNormalVoteBusy=true;const status=type==='meal'?'foodFamilyNormalStatus':'restaurantFamilyNormalStatus';
- try{const ids=[...(S.maybe||new Set())].map(String).filter(Boolean);familySetStatus(status,'Entering '+ids.length+' Maybes for the Family…','busy');await Promise.all(ids.map(itemId=>familyApi('vote',{token:s.token,roundId:round.id,stage:'initial',itemId,choice:'maybe'})));await familyApi('submit-stage',{token:s.token,roundId:round.id,stage:'initial'});await familyRefreshState();}
+ try{const ids=[...(S.maybe||new Set())].map(String).filter(Boolean);familySetStatus(status,'Entering '+ids.length+' Maybes for the Family…','busy');await Promise.all(ids.map(itemId=>familyApi('vote',{token:s.token,roundId:round.id,stage:'initial',itemId,choice:'maybe'})));const submitted=await familyApi('submit-stage',{token:s.token,roundId:round.id,stage:'initial'});if(submitted?.round?.currentStage&&Number(submitted.round.currentStage)!==1){familyBeginNormalDecision({...S.familyActiveData,activeRound:submitted.round});return;}await familyRefreshState();}
  catch(err){familySetStatus(status,err.message||'Could not enter your Maybes.','error');}finally{S.familyNormalVoteBusy=false;}
 }
 async function familyPickSingle(type){
- const stage=familyRoundStage();if(S.familyNormalMode!=='decision'||stage===1||S.familyNormalVoteBusy)return;const s=familySessionRead(),round=S.familyActiveData?.activeRound;if(!s?.token||!round)return;const item=type==='meal'?S.pool?.[S.index]:restaurantPoolFiltered()?.[S.restaurantIndex];if(!item)return;S.familyNormalVoteBusy=true;const status=type==='meal'?'foodFamilyNormalStatus':'restaurantFamilyNormalStatus',voteStage=stage===2?'finalist':'tiebreak';
- try{familySetStatus(status,stage===2?'Finalist entered ✓ · Waiting for the Family…':'Tiebreak pick entered ✓ · Waiting for the Family…','busy');await familyApi('vote',{token:s.token,roundId:round.id,stage:voteStage,itemId:String(item.id),choice:'choose'});await familyApi('submit-stage',{token:s.token,roundId:round.id,stage:voteStage});$(type==='meal'?'foodStack':'restStage')?.classList.add('family-local-done');await familyRefreshState();}
- catch(err){familySetStatus(status,err.message||'Could not save your pick.','error');}finally{S.familyNormalVoteBusy=false;}
+ const stage=familyRoundStage();if(S.familyNormalMode!=='decision'||stage===1||S.familyNormalVoteBusy)return;const s=familySessionRead(),round=S.familyActiveData?.activeRound;if(!s?.token||!round)return;const item=type==='meal'?S.pool?.[S.index]:restaurantPoolFiltered()?.[S.restaurantIndex];if(!item)return;
+ S.familyNormalVoteBusy=true;const status=type==='meal'?'foodFamilyNormalStatus':'restaurantFamilyNormalStatus',voteStage=stage===2?'finalist':'tiebreak';
+ try{
+  familySetStatus(status,stage===2?'Entering your finalist…':'Entering your tiebreak pick…','busy');
+  await familyApi('vote',{token:s.token,roundId:round.id,stage:voteStage,itemId:String(item.id),choice:'choose'});
+  const submitted=await familyApi('submit-stage',{token:s.token,roundId:round.id,stage:voteStage});
+  if(submitted?.round?.status==='complete'){const resolved=submitted.round;familySessionWrite({...s,family:{...(s.family||{}),activeRoundId:null}});S.familyActiveData={...(S.familyActiveData||{}),activeRound:null,lastCompletedRound:resolved};resolved.snapshot?.outcome==='no_winner'?familyShowNoWinner(resolved):familyShowWinner(resolved);return;}
+  if(submitted?.round?.currentStage&&Number(submitted.round.currentStage)!==stage){familyBeginNormalDecision({...S.familyActiveData,activeRound:submitted.round});return;}
+  await familyRefreshState();
+ }catch(err){familySetStatus(status,err.message||'Could not save your pick.','error');}finally{S.familyNormalVoteBusy=false;}
 }
 function familySetWinnerMeta(round){
  const el=$('familyWinnerMeta')||(()=>{const p=document.createElement('p');p.id='familyWinnerMeta';p.className='family-winner-meta';$('winName')?.insertAdjacentElement('afterend',p);return p;})();if(!el)return;el.textContent=round?.snapshot?.outcome==='wheel'?'Decided together · won on the Family Wheel.':'Decided together · everyone already said yes to this choice.';el.classList.remove('hidden');
 }
 function familyHideWinnerMeta(){const el=$('familyWinnerMeta');if(el)el.classList.add('hidden');}
-function familyRestartFromNoWinner(){const type=S.familyDecisionType||'meal';S.familyNormalMode='idle';S.familyNormalAutoResume=true;S.familyNormalRoundId='';S.familyNormalStage=0;show('family');familyRefreshState().then(()=>{const s=familySessionRead();if(s?.member?.role==='host'&&!s.family?.activeRoundId)familyChooseNormalType(type);});}
+function familyRestartFromNoWinner(){
+ const overlay=$('familyNoWinnerOverlay');overlay?.remove();const type=S.familyDecisionType||'meal',s=familySessionRead();if(s)familySessionWrite({...s,dismissedWinnerRoundId:null});S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyNormalRoundId='';S.familyNormalStage=0;show('family');if(s?.member?.role==='host')window.setTimeout(()=>familyChooseNormalType(type),80);else familySetStatus('familyLobbyStatus','Waiting for the host to restart the dinner.');
+}
+function familyRestartAfterWinner(){
+ $('familyStageAlert')?.remove();$('familyNoWinnerOverlay')?.remove();const type=S.familyDecisionType||'meal',s=familySessionRead();if(!s?.member||s.member.role!=='host'){familyDismissWinner();return;}familySessionWrite({...s,dismissedWinnerRoundId:null});S.familyNormalMode='idle';S.familyNormalAutoResume=true;S.familyNormalRoundId='';S.familyNormalStage=0;familyChooseNormalType(type);
+}
 function familyShowNoWinner(round){
- const id=String(round?.id||'');S.familyActiveData={...(S.familyActiveData||{}),activeRound:round};S.familyNormalMode='winner';S.familyNormalRoundId=id;S.familyDecisionType=round?.decisionType==='restaurant'?'restaurant':'meal';S.familyNormalAutoResume=true;show('winner');
- $('winner')?.classList.remove('hungry-mode');$('winnerEyebrow')?.classList.remove('hidden');$('winnerEyebrow').textContent='DINNER TOGETHER · NO WINNER';$('winName').classList.remove('hidden');$('winName').textContent='NO WINNER';$('winImg')?.classList.add('hidden');$('details')?.classList.add('hidden');$('share')?.classList.add('hidden');$('restart')?.classList.remove('hidden');$('restart').textContent='START OVER';$('hungryNote')?.classList.remove('hidden');$('hungryNote').textContent='Nobody chose a dinner. Start the Family round again.';$('celebration')?.classList.add('hidden');familyHideWinnerMeta();
+ const s=familySessionRead();if(s)familySessionWrite({...s,dismissedWinnerRoundId:String(round?.id||'')});S.familyActiveData={...(S.familyActiveData||{}),activeRound:null,lastCompletedRound:round};S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyNormalRoundId='';S.familyNormalStage=0;show('family');$('familyNoWinnerOverlay')?.remove();
+ const overlay=document.createElement('div');overlay.id='familyNoWinnerOverlay';overlay.className='family-no-winner-overlay';const host=s?.member?.role==='host';
+ overlay.innerHTML='<div class="family-no-winner-card"><span>DINNER TOGETHER</span><h3>NO DINNER WAS CHOSEN</h3><p>No finalist was entered by everyone. Start again or exit Dinner Together.</p><div class="family-no-winner-actions"><button type="button" class="family-restart-button" '+(host?'':'disabled')+'>RESTART</button><button type="button" class="family-exit-button">EXIT</button></div></div>';document.body.appendChild(overlay);overlay.querySelector('.family-restart-button')?.addEventListener('click',familyRestartFromNoWinner);overlay.querySelector('.family-exit-button')?.addEventListener('click',familyBackFromMode);
 }
 function familyNormalBack(type){
  if(S.familyNormalMode==='setup'){S.familyNormalMode='idle';S.familyNormalRoundId='';S.familyNormalStage=0;S.familyVotedIds=new Set();show('family');familyRefreshState();return;}
@@ -3978,7 +3981,7 @@ function familyNormalBack(type){
  home();
 }
 function familyDecisionBack(type){familyNormalBack(type);}
-function familyShowWinner(round){const item=round?.winnerItem,id=String(round?.id||'');if(!item)return;if(S.familyNormalMode==='winner'&&S.familyNormalRoundId===id&&S.screen==='winner')return;S.familyActiveData={...(S.familyActiveData||{}),activeRound:round};S.familyNormalMode='winner';S.familyNormalRoundId=id;S.familyDecisionType=round.decisionType==='restaurant'?'restaurant':'meal';S.familyNormalAutoResume=true;winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true});if($('restart'))$('restart').textContent='BACK TO FAMILY';familySetWinnerMeta(round);if(round?.snapshot?.outcome==='wheel')familyAnimateWheel(round);}
+function familyShowWinner(round){const item=round?.winnerItem,id=String(round?.id||'');if(!item)return;if(S.familyNormalMode==='winner'&&S.familyNormalRoundId===id&&S.screen==='winner')return;S.familyActiveData={...(S.familyActiveData||{}),activeRound:round};S.familyNormalMode='winner';S.familyNormalRoundId=id;S.familyDecisionType=round.decisionType==='restaurant'?'restaurant':'meal';S.familyNormalAutoResume=true;winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true});if($('restart')){$('restart').textContent=familySessionRead()?.member?.role==='host'?'START OVER':'BACK TO FAMILY';$('restart').onclick=familySessionRead()?.member?.role==='host'?familyRestartAfterWinner:familyDismissWinner;}familySetWinnerMeta(round);if(round?.snapshot?.outcome==='wheel')familyAnimateWheel(round);}
 function familyDismissWinner(){const s=familySessionRead();if(s)familySessionWrite({...s,dismissedWinnerRoundId:S.familyNormalRoundId,lastWinnerItem:S.winnerItem||s.lastWinnerItem||null});S.familyNormalMode='idle';S.familyNormalAutoResume=true;show('family');familyRefreshState();}
 
 function familyRenderState(data){
@@ -3990,8 +3993,9 @@ function familyRenderState(data){
  $('familySetupOpen')?.classList.toggle('hidden',!(me.role==='host'&&!activeRound));$('familyStartDecision')?.classList.toggle('hidden',!(me.role==='host'&&!activeRound));
  const homeBtn=$('familySetupOpen'),restBtn=$('familyStartDecision');if(homeBtn){homeBtn.textContent='AT HOME';homeBtn.title='Use the normal Meal screen';}if(restBtn){restBtn.textContent='RESTAURANT';restBtn.title='Use the normal Restaurant screen';}
  if(stageSwipe){if(S.familyNormalAutoResume)familyBeginNormalDecision(data);else if(S.screen==='family')familySetStatus('familyLobbyStatus','Dinner is underway. Open Family Mode again to resume.');return;}
- if(showWinner){if(S.familyNormalAutoResume){completed?.snapshot?.outcome==='no_winner'?familyShowNoWinner(completed):familyShowWinner(completed);}else if(S.screen==='family')familySetStatus('familyLobbyStatus',completed?.snapshot?.outcome==='no_winner'?'No winner. Start over when you’re ready.':'Dinner is decided. Open Family Mode again to see the winner.');return;}
- if(onNormal){familyNormalBar(S.familyDecisionType,S.familyNormalMode,data);return;}
+  if(showWinner){if(S.familyNormalAutoResume){completed?.snapshot?.outcome==='no_winner'?familyShowNoWinner(completed):familyShowWinner(completed);}else if(S.screen==='family')familySetStatus('familyLobbyStatus',completed?.snapshot?.outcome==='no_winner'?'Dinner ended without a choice.':'Dinner is decided. Open Family Mode again to see the winner.');return;}
+  if(!activeRound&&['decision','winner'].includes(S.familyNormalMode)){S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyNormalRoundId='';S.familyNormalStage=0;show('family');familySetStatus('familyLobbyStatus','The Family dinner has ended.');return;}
+  if(onNormal){familyNormalBar(S.familyDecisionType,S.familyNormalMode,data);return;}
  familySetStatus('familyLobbyStatus',activeRound?(activeRound.status==='setup'?'Starting the dinner…':'Dinner is underway. Open Family Mode again to resume.'):me.role==='host'?'Everyone is here. Choose At Home or Restaurant to prepare dinner.':'You’re in. Waiting for the host to choose the dinner flow.');
 }
 async function familyRefreshState(){const s=familySessionRead();if(!s?.token)return null;try{const data=await familyApi('state',{token:s.token});familySessionWrite({...s,family:data.family,member:data.me,lastWinnerItem:data.activeRound?.winnerItem||data.lastCompletedRound?.winnerItem||s.lastWinnerItem||null,lastDecisionType:data.activeRound?.decisionType||data.lastCompletedRound?.decisionType||s.lastDecisionType||'food'});familyRenderState(data);return data;}catch(err){if(err.code==='UNAUTHORIZED')familySessionClear();familySetStatus('familyLobbyStatus',err.message||'Could not reconnect to this Family.','error');return null;}}
@@ -4002,6 +4006,12 @@ async function familyJoin(){const codeValue=$('familyJoinCode')?.value?.trim()||
 async function familyCopyCode(){const codeText=$('familyJoinCodeDisplay')?.textContent?.trim()||'';if(!codeText||codeText==='—')return;try{await navigator.clipboard.writeText(codeText);familySetStatus('familyLobbyStatus','Family code copied. Share it with everyone.');}catch{familySetStatus('familyLobbyStatus','Code: '+codeText);}}
 async function familyShareCode(){const codeText=$('familyJoinCodeDisplay')?.textContent?.trim()||'';if(!codeText||codeText==='—')return;const shareData={title:'Dinliminate — Dinner Together',text:'Join our Dinliminate dinner decision. Family code: '+codeText};if(typeof navigator.share==='function'){try{await navigator.share(shareData);return;}catch(err){if(err?.name==='AbortError')return;}}try{await navigator.clipboard.writeText(shareData.text);familySetStatus('familyLobbyStatus','Invite copied. Share it with everyone.');}catch{familySetStatus('familyLobbyStatus',shareData.text);}}
 async function familyOpen(){S.familyNormalAutoResume=true;['familySetup','familySwipe','familyWinner'].forEach(id=>$(id)?.classList.add('hidden'));show('family');const s=familySessionRead();if(!s?.token){S.familyNormalMode='idle';familyShowEntry();stopFamilyLobbyPolling();return;}await familyRefreshState();startFamilyLobbyPolling();}
+async function familyEndDinner(){
+ const s=familySessionRead();if(!s?.token||s.member?.role!=='host'||!s.family?.activeRoundId)return;
+ if(!await appConfirm('End Dinner Together','End the active Family dinner for everyone? They will return to the Family lobby.','End Dinner'))return;
+ try{await familyApi('end-round',{token:s.token});S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyNormalRoundId='';S.familyNormalStage=0;S.familyActiveData=null;show('family');await familyRefreshState();familySetStatus('familyLobbyStatus','Dinner ended by the host. You can start a new one anytime.');}
+ catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not end the Family dinner.','error');}
+}
 async function familyLeave(){const s=familySessionRead();if(!await appConfirm('Leave Family Mode',s?.family?.activeRoundId?'A Family dinner is active. You can leave and rejoin later.':'Leave this Family on this device?','Leave'))return;S.familyNormalMode='idle';S.familyNormalAutoResume=false;stopFamilyLobbyPolling();if(s?.token){try{await familyApi('leave',{token:s.token});}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not leave the Family.','error');return;}}familySessionClear();familyShowEntry();show('family');}
 async function familyRotateCode(){const s=familySessionRead();if(!s?.token)return;try{const d=await familyApi('rotate-code',{token:s.token});familySessionWrite({...s,family:{...(s.family||{}),joinCode:d.joinCode}});await familyRefreshState();}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}}
 function familyBackFromMode(){S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyDecisionType='';S.familyVotedIds=new Set();stopFamilyLobbyPolling();home();}

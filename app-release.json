@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 857,
+  "build": 858,
   "sourceBranch": "main",
-  "checkpoint": "CP857",
-  "deploymentTrigger": "CP857-fix-family-script-initialization-2026-10-03",
+  "checkpoint": "CP858",
+  "deploymentTrigger": "CP858-dinner-together-round2-host-end-restart-2026-10-03",
   "vercelProductionVerified": false
 }
