@@ -10,9 +10,9 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-// CP966 — keep the promoted Meal preview intact until the new current card is visible.
+// CP970 — atomic Meal swipe handoff: keep the promoted card visually stable while the recycled card is repainted.
 let foodSwipeHandoff=false;
-let APP_BUILD = '964';
+let APP_BUILD = '970';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -416,7 +416,7 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='964';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='970';
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v5';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=3;
@@ -1609,14 +1609,35 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   window.setTimeout(()=>{
    if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
    const foodHandoff=staticWaitingCard&&cardId==='foodCard';
-   if(foodHandoff)foodSwipeHandoff=true;
+   if(foodHandoff){
+    foodSwipeHandoff=true;
+    // The promoted card is already the visible next meal. Hide the recycled
+    // card while drawFood() repaints it so its old image can never flash on top.
+    card.style.transition='none';
+    card.style.transform='none';
+    card.style.opacity='0';
+    card.style.visibility='hidden';
+    card.classList.remove('swipe-active');
+    card.style.removeProperty('--swipe-tint-alpha');
+    card.dataset.swipe='';
+   }
    try{
     action();
    }finally{
     if(foodHandoff){
-     // drawFood() has updated the old/current DOM card to the promoted meal,
-     // but must not repurpose the visible waiting card until that handoff is complete.
-     if(card.isConnected)reset();
+     // Reuse the already-visible promoted image for the recycled card. This
+     // makes the handoff visually atomic even when the new card image is remote.
+     if(card.isConnected){
+      const promotedImg=next?.querySelector('img');
+      const recycledImg=card.querySelector('img');
+      if(promotedImg&&recycledImg){
+       const promotedSrc=String(promotedImg.currentSrc||promotedImg.src||'');
+       if(promotedSrc)recycledImg.src=promotedSrc;
+       if(promotedImg.alt)recycledImg.alt=promotedImg.alt;
+       recycledImg.style.transform='none';
+      }
+      reset();
+     }
      if($('foodNextCard')?.isConnected)prepareFoodNextCard();
      foodSwipeHandoff=false;
     }else{

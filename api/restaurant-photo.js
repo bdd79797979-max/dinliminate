@@ -561,13 +561,14 @@ const KNOWN_PUBLIC_PHOTO_PAGES=[
  {names:['thirsty goat'],addressTokens:['4044 madison st','4044 madison street','madison street 4044'],phone:'9313434628',url:'https://www.restaurantji.com/tn/clarksville/the-thirsty-goat-/'}
 ];
 function normalizePhoneDigits(value){return String(value||'').replace(/\D/g,'').slice(-10);}
+function compactMatchText(value){return normalizeMatchText(value).replace(/\s+/g,'');}
 function knownPublicPhotoPage(name,address='',phone=''){
- const normalized=normalizeMatchText(name);
+ const normalized=compactMatchText(name);
  const addr=normalizeMatchText(address);
  const phoneDigits=normalizePhoneDigits(phone);
  const hit=KNOWN_PUBLIC_PHOTO_PAGES.find(entry=>{
   const nameMatch=entry.names.some(n=>{
-   const key=normalizeMatchText(n);
+   const key=compactMatchText(n);
    return normalized===key||normalized.includes(key)||key.includes(normalized);
   });
   if(!nameMatch)return false;
