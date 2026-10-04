@@ -1,14 +1,16 @@
-# CURRENT RELEASE — BUILD 897 / CP897
+# CURRENT RELEASE — BUILD 898 / CP898
 
-## CP897 — solid double wooden door Home background
-- Replaced the previous Home background with a solid double wooden door entrance.
-- The new door design has solid wood panels with no glass/windows in the visible entrance.
-- Kept the AT HOME and RESTAURANT window-panel photos separate from the full-page background.
-- Kept the obsolete `home-background.jpg` and persistent legacy image layer deleted.
-- Bumped runtime, stylesheet, and service-worker cache versions.
-- Release metadata is synchronized to CP897.
+## CP898 — Home front-page cleanup
+- Home now uses a single canonical full-page solid double-wood door background with no glass/window panels in the door.
+- AT HOME and RESTAURANT keep their own independent photo panels.
+- Removed the obsolete Home decorative orb layer.
+- Removed remaining retired Home photo-rail and legacy image-element selectors.
+- Fixed the Home card image CSS-variable markup so the replacement photos load through valid HTML/CSS.
+- Kept the deleted legacy `home-background.jpg` asset and persistent image layer out of the build.
+- Bumped cache versions to keep stale Home styling/assets from resurfacing.
+- Release metadata is synchronized to CP898.
 
 ## Verification
-- No deleted local Home background asset is referenced.
-- No legacy persistent Home photo layer is referenced.
-- Home background is now the solid double wooden door source.
+- No `home-background.jpg`, `home-background-layer`, `homeBackgroundImage`, or `home-photo-img` references remain.
+- Home contains the solid double-door background plus two independent choice-panel images.
+- Home decorative orbs are removed from the DOM and stylesheet.
