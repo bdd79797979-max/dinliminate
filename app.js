@@ -1023,24 +1023,20 @@ function renderMaybeDeckToggle(kind){
  const maybeCount=maybeDeckCount(kind);
  const hasMaybe=maybeCount>0;
  const isMaybe=!!S.maybeDeck;
- const visibleCount=kind==='food' ? (isMaybe ? maybeCount : foodBasePool().length) : (isMaybe ? maybeCount : restaurantPoolBase().length);
+ const visibleCount=isMaybe ? maybeCount : (kind==='food' ? foodBasePool().length : restaurantPoolBase().length);
  btn.dataset.mode=isMaybe?'maybe':'all';
  btn.disabled=!hasMaybe;
  const target=isMaybe?'Show all choices':'Show Maybe choices';
  btn.setAttribute('aria-label',isMaybe?'Viewing Maybe choices. Tap to show all choices.':'Viewing all choices. Tap to show Maybe choices.');
  btn.setAttribute('aria-pressed',isMaybe?'true':'false');
  btn.title=target;
- if(kind==='food'){
-  const label=isMaybe?'MAYBES':'ALL';
-  btn.innerHTML='<span class="top-maybe-label">'+label+'</span><span class="top-maybe-divider" aria-hidden="true">·</span><span class="top-maybe-count">'+visibleCount+'</span>';
-  btn.classList.toggle('is-maybe',isMaybe);
-  btn.classList.toggle('is-all',!isMaybe);
-  btn.classList.toggle('has-maybes',hasMaybe);
- }else{
-  btn.innerHTML='<span class="deck-filter-label-all" aria-hidden="true">ALL</span><span class="deck-filter-divider" aria-hidden="true">·</span><span class="deck-filter-label-maybe" aria-hidden="true">MAYBES</span>';
-  btn.classList.toggle('is-maybe',isMaybe);
-  btn.classList.toggle('is-all',!isMaybe);
+ if(!btn.classList.contains('canonical-maybe-control')){
+  btn.classList.add('canonical-maybe-control');
  }
+ btn.innerHTML='<span class="maybe-control-all" aria-hidden="true">ALL</span><span class="maybe-control-divider" aria-hidden="true">·</span><span class="maybe-control-maybe" aria-hidden="true">MAYBES</span><span class="maybe-control-count" aria-hidden="true">'+visibleCount+'</span>';
+ btn.classList.toggle('is-maybe',isMaybe);
+ btn.classList.toggle('is-all',!isMaybe);
+ btn.classList.toggle('has-maybes',hasMaybe);
 }
 function bindMaybeDeckToggle(kind){
  const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
@@ -1244,7 +1240,7 @@ function drawFood(){
   img.onclick=null;
   if(S.maybe.has(item.id)){const stamp=document.createElement('span');stamp.className='maybe-stamp';stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';foodCard.appendChild(stamp);}
  }
- $('foodName').textContent=item.name;$('foodCat').textContent=item.category;setChoiceCount($('foodCount'),S.pool.length);
+ $('foodName').textContent=item.name;$('foodCat').textContent=item.category;
  if(photoCount>1){hydrateMealPhotoGallery(item).then(photos=>{if(S.pool[S.index]!==item)return;const total=photos.length||1;const idx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),total-1));item._mealPhotoIndex=idx;img.src=photos[idx]||foodPhoto(item);ensureMealCardPhotoPager(foodCard,total,idx);});}
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
@@ -2346,8 +2342,6 @@ function drawRestaurants() {
 const rows = restaurantPoolFiltered();
 renderRestaurantSearchControl();
 updateRestaurantStatus();
-const countEl = $('restaurantCount');
-if (countEl) setChoiceCount(countEl,rows.length);
 renderMaybeDeckToggle('restaurant');
 if (!rows.length) {
 const hasResults=!!S.restaurantPool.length;
