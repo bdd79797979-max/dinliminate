@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 889,
+  "build": 890,
   "sourceBranch": "main",
-  "checkpoint": "CP889",
-  "deploymentTrigger": "CP889-visible-clear-glass-menu-surface",
+  "checkpoint": "CP890",
+  "deploymentTrigger": "CP890-fix-home-menu-override",
   "vercelProductionVerified": false
 }
