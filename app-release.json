@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 885,
+  "build": 886,
   "sourceBranch": "main",
-  "checkpoint": "CP885",
-  "deploymentTrigger": "CP885-cuisine-cut-selected-gold-outline",
+  "checkpoint": "CP886",
+  "deploymentTrigger": "CP886-visible-cuisine-outline-and-white-glass-menu",
   "vercelProductionVerified": false
 }
