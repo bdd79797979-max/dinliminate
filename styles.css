@@ -9452,3 +9452,153 @@ button,input,select,textarea{
   }
   #food .food-top-refine-divider{font-size:9.5px!important}
 }
+
+
+
+/* CP942 — Canonical All Maybes control.
+   Meals and Restaurants use one implementation: same markup, states, count,
+   sizing, typography, interaction, and accessibility. Only the data pool differs. */
+.canonical-maybe-control{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  position:static!important;
+  inset:auto!important;
+  transform:none!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:91px!important;
+  max-width:100%!important;
+  height:25px!important;
+  min-height:25px!important;
+  margin:0!important;
+  padding:2px 4px!important;
+  gap:0!important;
+  border:1px solid #34312c!important;
+  border-radius:999px!important;
+  background:#131312!important;
+  color:#70706c!important;
+  box-shadow:inset 0 1px 0 #ffffff08!important;
+  font:inherit!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.05em!important;
+  line-height:1!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  cursor:pointer!important;
+  -webkit-tap-highlight-color:transparent!important;
+  transition:opacity .18s ease,transform .12s ease,box-shadow .18s ease!important;
+  overflow:visible!important;
+}
+.canonical-maybe-control>span{
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 auto!important;
+  height:19px!important;
+  min-width:0!important;
+  padding:0 5px!important;
+  border-radius:999px!important;
+}
+.canonical-maybe-control .maybe-control-all,
+.canonical-maybe-control .maybe-control-maybe{
+  color:#85817a!important;
+}
+.canonical-maybe-control .maybe-control-divider{
+  padding:0 2px!important;
+  color:rgba(198,164,106,.52)!important;
+  font-size:10px!important;
+  font-weight:500!important;
+  pointer-events:none!important;
+}
+.canonical-maybe-control .maybe-control-count{
+  min-width:14px!important;
+  padding:0 3px!important;
+  color:#55d88a!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+  font-variant-numeric:tabular-nums!important;
+  text-shadow:0 0 10px rgba(85,216,138,.18)!important;
+  pointer-events:none!important;
+}
+.canonical-maybe-control.is-all .maybe-control-all,
+.canonical-maybe-control.is-maybe .maybe-control-maybe{
+  background:#26362d!important;
+  color:#55d88a!important;
+  box-shadow:inset 0 0 0 1px #2f7d50!important,0 0 9px rgba(85,216,138,.08)!important;
+}
+.canonical-maybe-control.is-all .maybe-control-maybe,
+.canonical-maybe-control.is-maybe .maybe-control-all{
+  background:transparent!important;
+  color:#85817a!important;
+  box-shadow:none!important;
+}
+.canonical-maybe-control.has-maybes{
+  opacity:1!important;
+}
+.canonical-maybe-control:not(.has-maybes){
+  opacity:.48!important;
+}
+.canonical-maybe-control:disabled{
+  cursor:default!important;
+}
+.canonical-maybe-control:active:not(:disabled){
+  transform:scale(.98)!important;
+}
+.canonical-maybe-control:focus-visible{
+  outline:2px solid rgba(198,164,106,.55)!important;
+  outline-offset:2px!important;
+}
+#food .food-interior-nav .canonical-maybe-control{
+  grid-column:4!important;
+  grid-row:1!important;
+  justify-self:end!important;
+}
+#restaurant .restaurant-choice-management{
+  grid-template-columns:minmax(0,1fr) auto!important;
+}
+#restaurant .restaurant-choice-management .canonical-maybe-control{
+  justify-self:end!important;
+}
+@media(max-width:390px){
+  .canonical-maybe-control{
+    min-width:84px!important;
+    height:25px!important;
+    min-height:25px!important;
+    font-size:8.8px!important;
+  }
+  .canonical-maybe-control>span{
+    height:19px!important;
+    padding:0 4px!important;
+  }
+  .canonical-maybe-control .maybe-control-count{
+    min-width:13px!important;
+    padding:0 2px!important;
+    font-size:9.5px!important;
+  }
+}
+@media(max-width:340px){
+  .canonical-maybe-control{
+    min-width:80px!important;
+    height:24px!important;
+    min-height:24px!important;
+    padding:2px!important;
+    font-size:8.4px!important;
+  }
+  .canonical-maybe-control>span{
+    height:18px!important;
+    padding:0 3px!important;
+  }
+  .canonical-maybe-control .maybe-control-divider{
+    padding:0 1px!important;
+  }
+  .canonical-maybe-control .maybe-control-count{
+    min-width:12px!important;
+    padding:0 2px!important;
+    font-size:9px!important;
+  }
+}
