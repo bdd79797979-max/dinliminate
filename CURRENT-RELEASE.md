@@ -1,4 +1,11 @@
-# CURRENT RELEASE — BUILD 930 / CP930
+# CURRENT RELEASE — BUILD 931 / CP931
+
+## CP931 — Restaurant iPhone fit pass
+- Hardened the Restaurant location row for narrow phones through 340px widths without changing its control order or behavior.
+- Shrunk the final narrow-phone location controls and kept Radius compact and directly before the far-right Menu.
+- Prevented Restaurant address/search focus from triggering Safari auto-zoom by using a 16px input font on phone widths while preserving compact control heights.
+- Kept the Restaurant discovery row, search/cuisine controls, Maybe control, count, card geometry, and swipe behavior intact.
+
 
 ## CP930 — iPhone Meals layout hardening
 - Hardened the Meals top navigation for narrow phone widths so Meal Times, Cuisine, All Maybes/count, and Menu remain on one line.
