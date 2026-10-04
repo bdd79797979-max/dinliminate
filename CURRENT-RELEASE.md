@@ -1,4 +1,10 @@
-# CURRENT RELEASE — BUILD 915 / CP915
+# CURRENT RELEASE — BUILD 916 / CP916
+
+## CP916 — Meal swipe iPhone hardening
+- Corrected CP915 scope: Restaurant swipe behavior remains unchanged.
+- Reverted the unnecessary Home-card gesture handling change.
+- Hardened only the Meal swipe card’s iPhone compositor path by removing paint containment during transforms and enabling backface stability.
+- Preserved Meal Cut/Maybe swipe logic, thresholds, controls, and multi-photo behavior.
 
 ## CP915 — iPhone Home card gesture hardening
 - Removed the Home choice cards from generic touch manipulation behavior.
