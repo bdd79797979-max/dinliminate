@@ -14,6 +14,7 @@ assert.ok(typeof pt.extractVenueImageCandidates==='function','extractVenueImageC
 assert.ok(typeof pt.structuredRestaurantMatches==='function','structuredRestaurantMatches export missing');
 assert.ok(typeof pt.imageDimensions==='function','imageDimensions export missing');
 assert.ok(typeof pt.mediaQuality==='function','mediaQuality export missing');
+assert.ok(typeof pt.scoreImage==='function','scoreImage export missing');
 assert.ok(typeof pt.fetchImage==='function','fetchImage export missing');
 
 const appSource=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
@@ -23,12 +24,14 @@ assert.equal(appSource.includes("fixedMealPreview"),false,'Swipe code must use o
 assert.match(appSource,/next\.style\.transform='scale\(1\)'/,'Waiting card must remain at fixed scale during swipe');
 assert.match(appSource,/__restaurantCanonicalPhotoPromise/,'Restaurant next card should pre-resolve its canonical photo before handoff');
 assert.match(appSource,/RESTAURANT_PHOTO_HANDOFF_WAIT=950/,'Restaurant swipe handoff should have a bounded canonical-photo wait');
-assert.match(appSource,/RESTAURANT_PHOTO_CACHE_NAME='dinliminate\.restaurant\.photos\.v3'/,'Restaurant photo cache should be invalidated with the resolver revision');
+assert.match(appSource,/RESTAURANT_PHOTO_CACHE_NAME='dinliminate\.restaurant\.photos\.v4'/,'Restaurant photo cache should be invalidated with the resolver revision');
+assert.match(appSource,/RESTAURANT_PHOTO_RESOLVER_VERSION='712'/,'Restaurant photo resolver revision should be synchronized');
+assert.match(appSource,/params\.set\('phone'/,'Restaurant photo resolver should receive phone identity when available');
 assert.equal(/const restaurantFallback = \(r\) => imageProxyUrl\(r\?\.photo/.test(appSource),false,'Restaurant first paint must not trust arbitrary provider photo URLs');
 const structured=pt.structuredRestaurantMatches(`
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Restaurant","name":"Structured Bistro","address":{"@type":"PostalAddress","streetAddress":"456 Main Street","addressLocality":"Clarksville","addressRegion":"TN","postalCode":"37040"}}
-</script>`,'Structured Bistro','456 Main Street, Clarksville, TN 37040');
+{"@context":"https://schema.org","@type":"Restaurant","name":"Structured Bistro","telephone":"615-555-1212","address":{"@type":"PostalAddress","streetAddress":"456 Main Street","addressLocality":"Clarksville","addressRegion":"TN","postalCode":"37040"}}
+</script>`,'Structured Bistro','456 Main Street, Clarksville, TN 37040','615-555-1212');
 assert.equal(structured,true,'Structured restaurant/address data should verify an exact venue page');
 
 
@@ -82,6 +85,7 @@ assert.ok(!links.includes('https://other.example/unrelated'),'Unrelated domain s
 const candidates=pt.extractVenueImageCandidates(html,'https://exactbistro.example/','Exact Bistro','123 Main Street, Clarksville, TN 37040','https://exactbistro.example/');
 assert.ok(candidates.some(x=>x.url==='https://example.com/front.jpg'&&x.score>=65),'Venue exterior image should score as a candidate');
 assert.ok(candidates.some(x=>x.url==='https://example.com/menu.jpg'),'Menu image should be detectable for rejection');
+assert.ok(pt.scoreImage({contentUrl:'https://images.example.com/unrelated.jpg',hostPageUrl:'',title:'Unrelated photo',description:'',query:'Exact Bistro 123 Main Street restaurant exterior'},'Exact Bistro','123 Main Street, Clarksville, TN 37040','https://exactbistro.example/','6155551212')<55,'Bing query text alone must not manufacture image identity confidence');
 
 const assetGate=pt.extractImgCandidates(`
 <img src="https://cdn.example.com/google-play-badge.svg" width="135" height="40" alt="Get it on Google Play">
