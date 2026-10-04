@@ -1,4 +1,8 @@
-# CURRENT RELEASE — BUILD 955 / CP955
+# CURRENT RELEASE — BUILD 956 / CP956
+
+## CP956 — Meals refinement divider parity
+- Groups Meal Times and Cuisine into the same explicit refinement control pattern used by Restaurant Search — Cuisine, with a visible divider between the two controls.
+- Keeps the meal filter behavior unchanged; this is a presentation/structure parity fix only.
 
 ## CP955 — Full double wooden doors Home background
 - Replaces the luxury Home screen background with a full-frame double wooden doors photograph while preserving the existing Home layout and controls.
