@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 905,
+  "build": 906,
   "sourceBranch": "main",
-  "checkpoint": "CP905",
-  "deploymentTrigger": "CP905-lower-swipe-lesson",
+  "checkpoint": "CP906",
+  "deploymentTrigger": "CP906-wheel-second-spin-reset",
   "vercelProductionVerified": false
 }
