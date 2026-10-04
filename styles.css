@@ -9101,3 +9101,18 @@ button,input,select,textarea{
     font-size:8.5px!important;
   }
 }
+
+
+/* CP932 — Menu is lines only.
+   Remove the remaining decorative enclosure while preserving the invisible tap target. */
+.interior-menu,
+#menu{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.interior-menu::after,
+#menu::after{
+  content:none!important;
+  display:none!important;
+}
