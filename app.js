@@ -106,16 +106,23 @@ function imageProxyUrl(raw){
  if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
  try{const u=new URL(src);if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;return '/api/image?url='+encodeURIComponent(u.href);}catch{return src;}
 }
-const HOME_DOOR_IMAGE='./home-background.jpg?v=893';
+const HOME_DOOR_SOURCE='https://images.pexels.com/photos/14778623/pexels-photo-14778623.jpeg?auto=compress&cs=tinysrgb&w=1800';
+const HOME_DOOR_PROXY='/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F14778623%2Fpexels-photo-14778623.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1800';
+const HOME_DOOR_FALLBACK='./home-background.jpg?v=894';
 function bindPersistentHomeBackground(){
  const img=$('homeBackgroundImage');
  if(!img||img.dataset.bound)return;
  img.dataset.bound='true';
- img.src=HOME_DOOR_IMAGE;
+ img.src=HOME_DOOR_PROXY;
+ img.dataset.fallback=HOME_DOOR_FALLBACK;
  img.referrerPolicy='no-referrer';
  img.loading='eager';
  img.fetchPriority='high';
  img.decoding='async';
+ img.addEventListener('error',()=>{
+   const fallback=img.dataset.fallback||HOME_DOOR_FALLBACK;
+   if(img.src!==fallback){img.src=fallback;}
+ });
 }
 function normalizeMealPhotoRef(value){return String(value??'').trim();}
 function dedupeMealPhotos(photos,max=8){
