@@ -1652,7 +1652,21 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
       const rows=restaurantPoolFiltered();
       if(rows.length){
        S.restaurantIndex=Math.max(0,Math.min(S.restaurantIndex,rows.length-1));
+       // Finish the same atomic double-buffer swap used by meals: the recycled
+       // card becomes the visible current card before the promoted layer hides.
+       card.style.transition='none';
+       card.style.transform='none';
+       card.style.opacity='1';
+       card.style.visibility='visible';
+       card.style.filter='none';
        paintRestaurantCardsAfterHandoff(rows[S.restaurantIndex],rows[S.restaurantIndex+1]||null);
+       next.style.transition='none';
+       next.style.transform='none';
+       next.style.opacity='0';
+       next.style.visibility='hidden';
+       next.dataset.swipePromoted='';
+       const promotedCurrentImg=next.querySelector('img');
+       if(promotedCurrentImg)promotedCurrentImg.style.transform='none';
       }
      }
      restaurantSwipeHandoff=false;
