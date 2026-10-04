@@ -9763,3 +9763,28 @@ button,input,select,textarea{
     grid-template-columns:max-content minmax(0,1fr) max-content 32px!important;
   }
 }
+
+/* CP967 — unify Meal and Restaurant Cuisine buttons with the preferred
+   satin-gold resting state and white touch/hover response. */
+#foodQuick .photo-chip,
+#restQuick .photo-chip{
+  border-color:rgba(214,183,120,.62)!important;
+}
+#foodQuick .photo-chip span,
+#restQuick .photo-chip span{
+  color:#d9bd7b!important;
+  transition:color .14s ease,text-shadow .14s ease;
+}
+#foodQuick .photo-chip:hover,
+#restQuick .photo-chip:hover,
+#foodQuick .photo-chip:active,
+#restQuick .photo-chip:active{
+  border-color:#f4f0e7!important;
+}
+#foodQuick .photo-chip:hover span,
+#restQuick .photo-chip:hover span,
+#foodQuick .photo-chip:active span,
+#restQuick .photo-chip:active span{
+  color:#fff!important;
+  text-shadow:0 1px 4px #000,0 0 8px rgba(255,255,255,.16);
+}
