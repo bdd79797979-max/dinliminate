@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 877,
+  "build": 878,
   "sourceBranch": "main",
-  "checkpoint": "CP877",
-  "deploymentTrigger": "CP877-top-back-returns-home",
+  "checkpoint": "CP878",
+  "deploymentTrigger": "CP878-separate-meal-time-cuisine-controls",
   "vercelProductionVerified": false
 }

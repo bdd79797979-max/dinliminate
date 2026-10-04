@@ -7413,7 +7413,26 @@ button,input,select,textarea{
 
 /* CP829 — Meals: separate Quick Cuts from Meal Time Cuts without changing the restaurant rail. */
 #food .quick-label{
-  grid-template-columns:minmax(0,1fr) auto auto auto!important;
+  grid-template-columns:minmax(0,1fr) auto auto!important;
+}
+#food .food-refine-tabs{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-self:start!important;
+  min-width:0!important;
+  gap:10px!important;
+}
+#food .food-refine-tab{
+  flex:0 0 auto!important;
+}
+#food .food-refine-divider{
+  flex:0 0 auto!important;
+  color:#655f57!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  line-height:1!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
 }
 #food .food-quick-control{
   appearance:none!important;
@@ -7436,20 +7455,12 @@ button,input,select,textarea{
   text-align:left!important;
 }
 #food .food-quick-control:hover{color:#fff!important}
-#food .quick-cuts-collapse-toggle{
-  grid-column:1!important;
-  grid-row:1!important;
-}
-#food #foodMealTimeToggle{
+#food #foodMaybeDeck{
   grid-column:2!important;
   grid-row:1!important;
 }
-#food #foodMaybeDeck{
-  grid-column:3!important;
-  grid-row:1!important;
-}
 #food #foodCount{
-  grid-column:4!important;
+  grid-column:3!important;
   grid-row:1!important;
 }
 #food .food-quick-rail{
@@ -7484,6 +7495,8 @@ button,input,select,textarea{
 @media(max-width:390px){
   #food .quick-label{gap:6px!important}
   #food .food-quick-control{font-size:10px!important}
+  #food .food-refine-tabs{gap:7px!important}
+  #food .food-refine-divider{font-size:9px!important}
 }
 
 
