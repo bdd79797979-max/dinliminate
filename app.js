@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '902';
+let APP_BUILD = '904';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -382,6 +382,33 @@ function swapImageWhenReady(img,url){
 const restaurantPhotoInflight=new Map();
 const restaurantPhotoCache=new Map();
 const restaurantPhotoMissCache=new Map();
+const RESTAURANT_PHOTO_MEMORY_CACHE_MAX=18;
+function trimRestaurantPhotoMemoryCache(){
+ if(restaurantPhotoCache.size<=RESTAURANT_PHOTO_MEMORY_CACHE_MAX)return;
+ const protectedKeys=new Set(
+  [...document.querySelectorAll('img[data-restaurant-photo-key]')]
+   .map(img=>String(img.dataset.restaurantPhotoKey||'').trim())
+   .filter(Boolean)
+ );
+ const candidates=[...restaurantPhotoCache.entries()]
+  .filter(([key])=>!protectedKeys.has(key))
+  .sort((a,b)=>Number(a[1]?.lastUsedAt||0)-Number(b[1]?.lastUsedAt||0));
+ while(restaurantPhotoCache.size>RESTAURANT_PHOTO_MEMORY_CACHE_MAX&&candidates.length){
+  const [key,data]=candidates.shift();
+  if(!restaurantPhotoCache.delete(key))continue;
+  const url=String(data?.url||'');
+  if(url.startsWith('blob:')){
+   try{URL.revokeObjectURL(url);}catch{}
+  }
+ }
+}
+function touchRestaurantPhotoMemoryCache(rowKey,data){
+ if(!rowKey||!data)return data;
+ data.lastUsedAt=Date.now();
+ restaurantPhotoCache.set(rowKey,data);
+ trimRestaurantPhotoMemoryCache();
+ return data;
+}
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v2';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
@@ -501,7 +528,7 @@ async function loadRestaurantPhoto(row){
  const rowKey=String(row.id||row.canonicalId||'').trim();
  if(!rowKey)return null;
  const cacheHit=restaurantPhotoCache.get(rowKey);
- if(cacheHit?.url)return cacheHit;
+ if(cacheHit?.url)return touchRestaurantPhotoMemoryCache(rowKey,cacheHit);
  const missAt=Number(restaurantPhotoMissCache.get(rowKey)||0);
  if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
  let pending=restaurantPhotoInflight.get(rowKey);
@@ -541,7 +568,7 @@ async function loadRestaurantPhoto(row){
    await putPersistentRestaurantPhoto(row,blob,attributions,sourceName);
    return {url:URL.createObjectURL(blob),attributions,source:sourceName};
   })().then(data=>{
-   restaurantPhotoCache.set(rowKey,data);
+   touchRestaurantPhotoMemoryCache(rowKey,data);
    restaurantPhotoMissCache.delete(rowKey);
    if(data.source)row.photoSource=data.source;
    return data;
@@ -566,6 +593,8 @@ async function hydrateRestaurantPhoto(row,scope){
  });
 }
 
+let restaurantPhotoPrefetchTimer=0;
+let restaurantPhotoPrefetchToken=0;
 function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETCH_COUNT){
  const pool=Array.isArray(rows)?rows:[];
  if(navigator.onLine===false)return;
@@ -575,9 +604,16 @@ function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETC
   if(row)targets.push(row);
  }
  if(!targets.length)return;
- const run=()=>targets.forEach(row=>{loadRestaurantPhoto(row).catch(()=>{});});
- if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(run,{timeout:1200});
- else window.setTimeout(run,350);
+ const token=++restaurantPhotoPrefetchToken;
+ if(restaurantPhotoPrefetchTimer){
+  clearTimeout(restaurantPhotoPrefetchTimer);
+  restaurantPhotoPrefetchTimer=0;
+ }
+ restaurantPhotoPrefetchTimer=window.setTimeout(()=>{
+  restaurantPhotoPrefetchTimer=0;
+  if(token!==restaurantPhotoPrefetchToken)return;
+  targets.forEach(row=>{loadRestaurantPhoto(row).catch(()=>{});});
+ },450);
 }
 
 function phoneHref(raw){
