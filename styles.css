@@ -8244,3 +8244,50 @@ button,input,select,textarea{
   background:#171615;
   object-fit:cover;
 }
+
+/* CP918 — remove the Radius pill while preserving the selector and four-control layout. */
+#restaurant .location-main .radius-control{
+  width:auto!important;
+  min-width:0!important;
+  height:36px!important;
+  min-height:36px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+#restaurant .location-main .radius-control:hover{
+  border-color:transparent!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#restaurant .location-main .radius-select{
+  width:100%!important;
+  min-width:0!important;
+  padding:0 18px 0 2px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#d7bd7b!important;
+  box-shadow:none!important;
+  text-align:right!important;
+}
+#restaurant .location-main .radius-select:focus-visible{
+  outline:2px solid #cbb27a!important;
+  outline-offset:-2px!important;
+  border-radius:5px!important;
+}
+#restaurant .location-main .radius-chevron{
+  right:1px!important;
+}
+@media(max-width:390px){
+  #restaurant .location-main .radius-control{width:auto!important;min-width:0!important;height:34px!important;min-height:34px!important}
+  #restaurant .location-main .radius-select{padding-left:0!important;padding-right:17px!important;text-align:right!important}
+  #restaurant .location-main .radius-chevron{right:0!important}
+}
+@media(max-width:340px){
+  #restaurant .location-main .radius-control{width:auto!important;min-width:0!important;height:34px!important;min-height:34px!important}
+  #restaurant .location-main .radius-select{padding-left:0!important;padding-right:15px!important;font-size:9px!important}
+  #restaurant .location-main .radius-chevron{right:0!important;font-size:11px!important}
+}
