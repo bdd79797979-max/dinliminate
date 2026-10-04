@@ -1,3 +1,8 @@
+## CP909 — Runtime entry / PWA version synchronization
+- Synchronized the HTML, app runtime, service-worker registration, and release metadata to the same build.
+- Fixed App Diagnosis so its interaction checks no longer reference an undefined source variable.
+- The new service-worker shell version forces phones/PWAs off the mixed 900/907/908 asset chain that could leave stale runtime code running.
+
 ## CP908 — App Diagnosis expansion
 - Added Interaction Stability diagnostics for Restaurant Search keyboard Enter, search card preservation, Swipe/Cut/Maybe lesson placement, Hungry wheel repeat-spin isolation, restaurant-photo memory/flash protection, photo prefetch throttling, and PWA runtime versioning.
 - Diagnosis now flags the exact client-side regressions that were identified from recent iPhone testing instead of treating them only as manual checks.
@@ -35,7 +40,7 @@
 - Changed swipe completion so the new card/state renders before the detached outgoing card is reset, eliminating the visible reset frame at handoff.
 - Bumped the service-worker shell cache and release metadata to CP901.
 
-# CURRENT RELEASE — BUILD 903 / CP903
+# CURRENT RELEASE — BUILD 909 / CP909
 
 ## CP900 — Meal Time editing lives with the meal
 - Removed the standalone Meal Time management section from Manage Meals.
