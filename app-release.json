@@ -3,7 +3,7 @@
   "version": "1.0",
   "build": 913,
   "sourceBranch": "main",
-  "checkpoint": "CP913",
-  "deploymentTrigger": "CP913-luxury-home-utility-controls",
+  "checkpoint": "CP914",
+  "deploymentTrigger": "CP914-home-choice-photography",
   "vercelProductionVerified": false
 }
