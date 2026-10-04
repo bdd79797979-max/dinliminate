@@ -4276,9 +4276,9 @@ async function appDiagnosisView(existingModal){
    try{
     const swCheck=await fetch('./sw.js?diagnosis='+Date.now(),{cache:'no-store'});
     const swText=await swCheck.text();
-    swVersionSynchronized=swCheck.ok&&swText.includes('dinliminate-shell-v910')&&swText.includes("'./app.js?v=910'");
+    swVersionSynchronized=swCheck.ok&&swText.includes(`dinliminate-shell-v${appRuntimeVersion}`)&&swText.includes(`./app.js?v=${appRuntimeVersion}`);
    }catch{}
-   appRuntimeVersion==='910'&&swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker registration are synchronized to CP910.','The cache-query and service-worker shell now point to the same release.'):warn('runtime','PWA runtime versioning','The browser runtime is not fully synchronized to CP909.','A stale service worker or asset reference can make an older interaction bug appear to persist.');
+   swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker shell are synchronized to build '+appRuntimeVersion+'.','The cache-query and service-worker shell point to the same release.'):warn('runtime','PWA runtime versioning','The service-worker shell does not match app build '+appRuntimeVersion+'.','The app now unregisters an older worker and registers the current build-specific worker on load.');
    /* iPhone / PWA */
    const metaViewport=document.querySelector('meta[name="viewport"]')?.getAttribute('content')||'';
    metaViewport.includes('viewport-fit=cover')?pass('runtime','iPhone viewport','Safe-area-aware viewport settings are present.'):warn('runtime','iPhone viewport','The expected viewport-fit setting is missing.');
@@ -4699,7 +4699,19 @@ window.addEventListener('offline', updateOffline);
 window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=938').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', async () => {
+  try {
+    const build = encodeURIComponent(String(APP_BUILD || '964'));
+    const desiredSuffix = `?v=${build}`;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map(reg => {
+      const script = String(reg.active?.scriptURL || reg.waiting?.scriptURL || reg.installing?.scriptURL || '');
+      return script && !script.endsWith(desiredSuffix) ? reg.unregister() : Promise.resolve(false);
+    }));
+    const reg = await navigator.serviceWorker.register(`./sw.js${desiredSuffix}`, { updateViaCache: 'none' });
+    await reg.update().catch(() => {});
+  } catch {}
+});
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindMealPhotoCountControls();
 load();
