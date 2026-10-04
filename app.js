@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '865';
+let APP_BUILD = '870';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3138,6 +3138,7 @@ const body='<form class="add" id="foodEditorForm">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
 const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
 const mealPhotoFile=$('editFoodFile');
+const initialPhotoInput=normalizeMealPhotoRef($('editFoodPhoto')?.value);
 if(mealPhotoFile){
  mealPhotoFile.multiple=true;
  const label=mealPhotoFile.closest('.file-label')?.querySelector('span');
@@ -3146,62 +3147,108 @@ if(mealPhotoFile){
  const grid=document.createElement('div');grid.id='mealPhotoEditorGrid';grid.className='meal-photo-editor-grid';photoSection?.appendChild(grid);
  const count=document.createElement('small');count.id='mealPhotoEditorCount';count.className='meal-photo-editor-count';photoSection?.appendChild(count);
   const refreshMealPhotoEditorLabels=()=>{
-   [...grid.querySelectorAll('.meal-photo-editor-card')].forEach((card,i)=>{
+   const cards=[...grid.querySelectorAll('.meal-photo-editor-card')];
+   cards.forEach((card,i)=>{
     card.classList.toggle('is-main',i===0);
     const label=card.querySelector('.meal-photo-editor-card-tools>span');
     if(label)label.textContent=i===0?'COVER':'PHOTO '+(i+1);
     const image=card.querySelector('img');
     if(image)image.alt=i===0?'Cover photo':'Meal photo '+(i+1);
+    const remove=card.querySelector('[data-meal-photo-remove]');
+    if(remove)remove.setAttribute('aria-label','Remove meal photo '+(i+1));
    });
+   count.textContent=editorPhotos.length+' / 8 photos · touch-drag to reorder · first is Cover';
+  };
+  const syncMealPhotoEditorOrder=()=>{
+   editorPhotos=[...grid.querySelectorAll('.meal-photo-editor-card')]
+    .map(card=>card.__mealPhotoRef)
+    .filter(Boolean);
+   editorPhotos=dedupeMealPhotos(editorPhotos,8);
+   refreshMealPhotoEditorLabels();
   };
   const bindMealPhotoEditorDrag=()=>{
    [...grid.querySelectorAll('.meal-photo-editor-card')].forEach(card=>{
-    let active=false,pointerId=null,startX=0,startY=0,moved=false;
-    const cleanup=()=>{
+    let active=false,pointerId=null,startX=0,startY=0,dragging=false,ghost=null,offsetX=0,offsetY=0;
+    const moveGhost=e=>{
+     if(!ghost)return;
+     ghost.style.left=(e.clientX-offsetX)+'px';
+     ghost.style.top=(e.clientY-offsetY)+'px';
+    };
+    const removeGhost=()=>{
+     if(ghost?.isConnected)ghost.remove();
+     ghost=null;
+    };
+    const reset=()=>{
      const pid=pointerId;
-     active=false;pointerId=null;moved=false;card.classList.remove('is-dragging');
+     active=false;pointerId=null;dragging=false;
+     card.classList.remove('is-drag-source');
+     card.style.visibility='';
+     card.style.pointerEvents='';
+     removeGhost();
      if(pid!=null){try{card.releasePointerCapture?.(pid);}catch{}}
     };
     card.onpointerdown=e=>{
      if(e.isPrimary===false||e.button!=null&&e.button!==0)return;
      if(e.target.closest?.('button'))return;
-     active=true;pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;moved=false;
+     active=true;pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;
      try{card.setPointerCapture?.(pointerId);}catch{}
     };
     card.onpointermove=e=>{
      if(!active||e.pointerId!==pointerId)return;
      const dx=e.clientX-startX,dy=e.clientY-startY;
-     if(!moved){
-      if(Math.hypot(dx,dy)<10)return;
-      moved=true;card.classList.add('is-dragging');
+     if(!dragging){
+      if(Math.hypot(dx,dy)<7)return;
+      dragging=true;
+      if(e.cancelable)e.preventDefault();
+      const rect=card.getBoundingClientRect();
+      offsetX=e.clientX-rect.left;offsetY=e.clientY-rect.top;
+      ghost=card.cloneNode(true);
+      ghost.classList.remove('is-main','is-drag-source');
+      ghost.classList.add('meal-photo-drag-ghost');
+      ghost.style.width=rect.width+'px';
+      ghost.style.height=rect.height+'px';
+      document.body.appendChild(ghost);
+      card.classList.add('is-drag-source');
+      card.style.visibility='hidden';
+      card.style.pointerEvents='none';
      }
+     if(!dragging)return;
      if(e.cancelable)e.preventDefault();
+     moveGhost(e);
      const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.meal-photo-editor-card');
      if(!target||target===card||!grid.contains(target))return;
-     const cards=[...grid.querySelectorAll('.meal-photo-editor-card')];
-     const from=cards.indexOf(card),to=cards.indexOf(target);
-     if(from<0||to<0||from===to)return;
      const rect=target.getBoundingClientRect();
-     const before=e.clientY<rect.top+rect.height/2 || (Math.abs(e.clientY-(rect.top+rect.height/2))<rect.height*.32 && e.clientX<rect.left+rect.width/2);
-     let insertIndex=before?to:to+1;
-     if(from<insertIndex)insertIndex--;
-     insertIndex=Math.max(0,Math.min(editorPhotos.length-1,insertIndex));
-     if(insertIndex===from)return;
-     const [picked]=editorPhotos.splice(from,1);
-     editorPhotos.splice(insertIndex,0,picked);
-     if(before)grid.insertBefore(card,target);else grid.insertBefore(card,target.nextSibling);
-     refreshMealPhotoEditorLabels();
+     const midY=rect.top+rect.height/2,midX=rect.left+rect.width/2;
+     const before=e.clientY<midY || (Math.abs(e.clientY-midY)<rect.height*.34 && e.clientX<midX);
+     const anchor=before?target:target.nextElementSibling;
+     if(anchor===card)return;
+     if(before && card.nextElementSibling===target)return;
+     if(!before && target.nextElementSibling===card)return;
+     grid.insertBefore(card,anchor||null);
+     syncMealPhotoEditorOrder();
     };
-    card.onpointerup=()=>{if(active)cleanup();};
-    card.onpointercancel=()=>{if(active)cleanup();};
+    card.onpointerup=e=>{
+     if(!active)return;
+     if(dragging){if(e.cancelable)e.preventDefault();syncMealPhotoEditorOrder();}
+     reset();
+    };
+    card.onpointercancel=()=>{if(active){syncMealPhotoEditorOrder();reset();}};
    });
   };
   const renderMealPhotos=()=>{
+   editorPhotos=dedupeMealPhotos(editorPhotos,8);
    count.textContent=editorPhotos.length+' / 8 photos · touch-drag to reorder · first is Cover';
-   grid.innerHTML=editorPhotos.map((src,i)=>'<div class="meal-photo-editor-card '+(i===0?'is-main':'')+'" data-meal-photo-index="'+i+'"><img src="'+esc(imageProxyUrl(src||FINAL_FOOD_IMAGE))+'" alt="'+esc(i===0?'Cover photo':'Meal photo '+(i+1))+'" draggable="false"><div class="meal-photo-editor-card-tools"><span>'+(i===0?'COVER':'PHOTO '+(i+1))+'</span><div><button type="button" class="meal-photo-remove" data-meal-photo-remove="'+i+'" aria-label="Remove meal photo '+(i+1)+'">×</button></div></div></div>').join('');
-   grid.querySelectorAll('[data-meal-photo-remove]').forEach(btn=>btn.onclick=e=>{
+   grid.innerHTML=editorPhotos.map((src,i)=>'<div class="meal-photo-editor-card '+(i===0?'is-main':'')+'" data-meal-photo-index="'+i+'"><img src="'+esc(imageProxyUrl(src||FINAL_FOOD_IMAGE))+'" alt="'+esc(i===0?'Cover photo':'Meal photo '+(i+1))+'" draggable="false"><div class="meal-photo-editor-card-tools"><span>'+(i===0?'COVER':'PHOTO '+(i+1))+'</span><div><button type="button" class="meal-photo-remove" aria-label="Remove meal photo '+(i+1)+'">×</button></div></div></div>').join('');
+   [...grid.querySelectorAll('.meal-photo-editor-card')].forEach((card,i)=>{
+    card.__mealPhotoRef=editorPhotos[i];
+   });
+   grid.querySelectorAll('.meal-photo-remove').forEach(btn=>btn.onclick=e=>{
     e.preventDefault();e.stopPropagation();
-    editorPhotos.splice(Number(btn.dataset.mealPhotoRemove),1);
+    const card=btn.closest('.meal-photo-editor-card'),ref=card?.__mealPhotoRef;
+    if(ref){editorPhotos=editorPhotos.filter(photo=>photo!==ref);}else{
+     const idx=[...grid.querySelectorAll('.meal-photo-editor-card')].indexOf(card);
+     if(idx>=0)editorPhotos.splice(idx,1);
+    }
     renderMealPhotos();
    });
    bindMealPhotoEditorDrag();
@@ -3314,7 +3361,8 @@ const ingredients=String($('editFoodIngredients').value||'').split(/\r?\n/).map(
 const editorNote=isEdit?String($('editFoodNote')?.value||'').trim():'';
 await editorPhotosReady;
 const photoInput=normalizeMealPhotoRef($('editFoodPhoto').value);
-if(photoInput){editorPhotos=dedupeMealPhotos([photoInput,...editorPhotos.filter((_,i)=>i!==0)],8);}
+const photoInputChanged=photoInput!==initialPhotoInput;
+if(photoInputChanged&&photoInput)editorPhotos=dedupeMealPhotos([photoInput,...editorPhotos],8);
 else editorPhotos=dedupeMealPhotos(editorPhotos,8);
 let photo=editorPhotos[0]||'';
 if(!photo&&!isEdit){

@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 869,
+  "build": 870,
   "sourceBranch": "main",
-  "checkpoint": "CP869",
-  "deploymentTrigger": "CP869-touch-drag-cover-and-card-count-fix-2026-10-04",
+  "checkpoint": "CP870",
+  "deploymentTrigger": "CP870-true-touch-drag-cover-persistence-2026-10-04",
   "vercelProductionVerified": false
 }
