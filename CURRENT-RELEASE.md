@@ -1,4 +1,13 @@
-# CURRENT RELEASE — BUILD 937 / CP937
+# CURRENT RELEASE — BUILD 938 / CP938
+
+## CP938 — Meals ALL / MAYBES deck-count parity
+- Meals now explicitly renders ALL · count in ALL mode and MAYBES · count in Maybe mode.
+- ALL mode uses the complete active Meal pool, including meals already marked Maybe.
+- MAYBES mode uses only the active Maybe Meal pool and its filtered count.
+- Kept the Restaurant filter behavior intact and matched the Meals count treatment to its restrained neutral language.
+- Preserved the existing Meal swipe handoff, card geometry, Menu, Meal Times, Cuisine, and Restaurant work.
+
+
 
 ## CP937 — final mobile polish / Meal swipe handoff
 - Reworked the Meal swipe handoff so the promoted next card stays visible while the newly rendered Meal becomes ready, eliminating the old quick jump-back frame.
