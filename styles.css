@@ -8765,3 +8765,98 @@ button,input,select,textarea{
     font-size:8.5px!important;
   }
 }
+
+
+/* CP928 — tighten interior menu + Restaurant radius spacing.
+   Keep the location row readable while moving Radius left and shrinking the Menu. */
+.interior-menu,
+#menu{
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+}
+.interior-menu span,
+#menu span{
+  width:15px!important;
+  height:1.4px!important;
+}
+.interior-menu::after,
+#menu::after{
+  inset:10px 8px;
+}
+#restaurant .location-main{
+  grid-template-columns:40px minmax(0,1fr) 36px max-content 36px!important;
+  gap:3px!important;
+}
+#restaurant .location-main .location-btn,
+#restaurant .location-main .find,
+#restaurant .location-main .location-menu{
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+}
+#restaurant .location-main .radius-control{
+  min-width:32px!important;
+  max-width:42px!important;
+  height:34px!important;
+  min-height:34px!important;
+}
+#restaurant .location-main .radius-select{
+  min-width:32px!important;
+  max-width:42px!important;
+  height:34px!important;
+  min-height:34px!important;
+  font-size:10px!important;
+  font-weight:850!important;
+}
+@media(max-width:430px){
+  #restaurant .location-main{
+    grid-template-columns:40px minmax(0,1fr) 36px max-content 36px!important;
+    gap:3px!important;
+  }
+  #restaurant .location-main .location-btn,
+  #restaurant .location-main .find,
+  #restaurant .location-main .location-menu{
+    width:36px!important;
+    min-width:36px!important;
+    height:36px!important;
+    min-height:36px!important;
+  }
+  #restaurant .location-main .radius-control{
+    min-width:32px!important;
+    max-width:42px!important;
+    height:34px!important;
+    min-height:34px!important;
+  }
+  #restaurant .location-main .radius-select{
+    min-width:32px!important;
+    max-width:42px!important;
+    height:34px!important;
+    min-height:34px!important;
+    font-size:10px!important;
+  }
+}
+@media(max-width:360px){
+  #restaurant .location-main{
+    grid-template-columns:36px minmax(0,1fr) 34px max-content 34px!important;
+    gap:2px!important;
+  }
+  #restaurant .location-main .location-btn,
+  #restaurant .location-main .find,
+  #restaurant .location-main .location-menu{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+  }
+  #restaurant .location-main .radius-control,
+  #restaurant .location-main .radius-select{
+    min-width:30px!important;
+    max-width:38px!important;
+    height:32px!important;
+    min-height:32px!important;
+  }
+  #restaurant .location-main .radius-select{font-size:9px!important}
+}
