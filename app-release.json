@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 876,
+  "build": 877,
   "sourceBranch": "main",
-  "checkpoint": "CP876",
-  "deploymentTrigger": "CP876-velocity-spring-next-card-swipe-polish",
+  "checkpoint": "CP877",
+  "deploymentTrigger": "CP877-top-back-returns-home",
   "vercelProductionVerified": false
 }

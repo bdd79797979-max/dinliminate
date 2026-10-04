@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '876';
+let APP_BUILD = '877';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3984,8 +3984,20 @@ const appMenu = $('menu'); if (appMenu) {appMenu.setAttribute('aria-expanded','f
 const foodMenu = $('foodMenu'); if (foodMenu) {foodMenu.setAttribute('aria-expanded','false');foodMenu.onclick = openDrawer;}
 const restaurantMenu = $('restaurantMenu'); if (restaurantMenu) {restaurantMenu.setAttribute('aria-expanded','false');restaurantMenu.onclick = openDrawer;}
 const winnerMenu = $('winnerMenu'); if (winnerMenu) {winnerMenu.setAttribute('aria-expanded','false');winnerMenu.onclick = openDrawer;}
-const foodBackTop = $('foodBackTop'); if (foodBackTop) foodBackTop.onclick = ()=>familyDecisionBack('meal');
-const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaurantBackTop.onclick = ()=>familyDecisionBack('restaurant');
+function decisionBackHome(){
+ S.familyNormalMode='idle';
+ S.familyNormalAutoResume=false;
+ S.familyDecisionType='';
+ S.familyNormalRoundId='';
+ S.familyNormalStage=0;
+ S.familyVotedIds=new Set();
+ S.familyBrowseHistory=[];
+ S.familyVoteBusy=false;
+ stopFamilyLobbyPolling();
+ home();
+}
+const foodBackTop = $('foodBackTop'); if (foodBackTop) foodBackTop.onclick = decisionBackHome;
+const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaurantBackTop.onclick = decisionBackHome;
 $('drawerClose').onclick = closeDrawer;
 $('drawerBg').onclick = closeDrawer;
 $('manage').onclick = () => { closeDrawer(); window.setTimeout(()=>manageFoodsView(),190); };
