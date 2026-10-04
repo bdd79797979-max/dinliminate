@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 865,
+  "build": 866,
   "sourceBranch": "main",
-  "checkpoint": "CP865",
-  "deploymentTrigger": "CP865-fix-boot-parse-cache-2026-10-04",
+  "checkpoint": "CP866",
+  "deploymentTrigger": "CP866-fix-meal-photo-tap-swipe-coexistence-2026-10-04",
   "vercelProductionVerified": false
 }

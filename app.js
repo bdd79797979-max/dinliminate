@@ -1125,7 +1125,6 @@ function drawFood(){
   foodCard.querySelector('.maybe-stamp')?.remove();
   ensureMealCardPhotoPager(foodCard,photoCount,photoIndex);
   img.onclick=null;
-  if(photoCount>1){img.onclick=e=>{e.preventDefault();e.stopPropagation();item._mealPhotoIndex=(Number(item._mealPhotoIndex||0)+1)%photoCount;hydrateMealPhotoGallery(item).then(photos=>{if(S.pool[S.index]!==item)return;const total=photos.length||1;const idx=((Number(item._mealPhotoIndex||0)%total)+total)%total;item._mealPhotoIndex=idx;img.src=photos[idx]||foodPhoto(item);ensureMealCardPhotoPager(foodCard,total,idx);});};}
   if(S.maybe.has(item.id)){const stamp=document.createElement('span');stamp.className='maybe-stamp';stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';foodCard.appendChild(stamp);}
  }
  $('foodName').textContent=item.name;$('foodCat').textContent=item.category;setChoiceCount($('foodCount'),S.pool.length);
@@ -1191,10 +1190,10 @@ function triggerSwipeHaptic(){
  return false;
 }
 
-function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
+function bindSwipeCard(cardId,nextId,onCut,onMaybe,onTap) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
- let downX=0,lastX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
+ let downX=0,lastX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null,downTarget=null;
  card.style.touchAction='none';
  card.style.userSelect='none';
  card.style.webkitUserSelect='none';
@@ -1291,9 +1290,11 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   const dx=lastX-downX;
   if(Math.abs(dx)>=90)commit(dx);
   else{
+   const tapTarget=downTarget;
    active=false;
    cleanup();
    settleBack();
+   if(Math.abs(dx)<=8 && tapTarget && !tapTarget.closest?.('button,a,input,select,textarea')) onTap?.(tapTarget,e);
   }
  };
  card.onpointerdown=e=>{
@@ -1302,6 +1303,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   if(e.target.closest?.('button,a,input,select'))return;
   downX=e.clientX;
   lastX=e.clientX;
+  downTarget=e.target;
   active=true;
   committed=false;
   hapticTriggered=false;
@@ -1311,7 +1313,6 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.transition='none';
   card.style.opacity='1';
   try{card.setPointerCapture?.(e.pointerId);}catch{}
-  if(e.cancelable)e.preventDefault();
  };
  card.onpointermove=e=>{
   if(!active||e.isPrimary===false||e.pointerId!==pointerId)return;
@@ -1326,7 +1327,24 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  card.onlostpointercapture=()=>{if(active)cancel();};
  card.onclick=e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();}};
 }
-function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe())}
+function cycleFoodPhotoFromTap(target){
+ const img=target?.closest?.('#foodImg'),item=S.pool[S.index],card=$('foodCard');
+ if(!img||!item||!card)return false;
+ const count=mealPhotoList(item).length||1;
+ if(count<=1)return false;
+ item._mealPhotoIndex=(Number(item._mealPhotoIndex||0)+1)%count;
+ hydrateMealPhotoGallery(item).then(photos=>{
+  if(S.pool[S.index]!==item)return;
+  const total=photos.length||1;
+  const idx=((Number(item._mealPhotoIndex||0)%total)+total)%total;
+  item._mealPhotoIndex=idx;
+  img.src=photos[idx]||foodPhoto(item);
+  ensureMealCardPhotoPager(card,total,idx);
+ });
+ return true;
+}
+
+function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(),target=>{cycleFoodPhotoFromTap(target);})}
 function appToast(message){
 document.querySelector('#appToast')?.remove();
 const el=document.createElement('div'); el.id='appToast'; el.className='app-toast'; el.textContent=message;
