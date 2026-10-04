@@ -1,4 +1,3 @@
-/* CP693 verification marker — no runtime behavior change. */
 
 (() => {
 'use strict';
@@ -8,7 +7,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '909';
+let APP_BUILD = '910';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -2217,17 +2216,15 @@ S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
 // Rebuild the active restaurant pool from the fresh provider response.
  // Do not carry the previous pool forward: stale rows can survive provider-side
  // dedupe/filter fixes and reappear as duplicate or non-restaurant cards.
- const previousRows=[];
-const incomingRows=(d.results || []).map(row => ({...row, providerId:row.id, canonicalId:restaurantCanonicalId(row), _maybe:false, _cut:false, _hidden:false})).filter(row=>{
+ const incomingRows=(d.results || []).map(row => ({...row, providerId:row.id, canonicalId:restaurantCanonicalId(row), _maybe:false, _cut:false, _hidden:false})).filter(row=>{
  const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
  return Number.isFinite(dist) && dist<=radius+0.001;
 });
-S.restaurantPool = dedupeRestaurantPool([...incomingRows,...previousRows]).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
+S.restaurantPool = dedupeRestaurantPool(incomingRows).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
 S.restaurantSearchOrigin = {lat:Number(loc.lat),lon:Number(loc.lon)};
 S.restaurantSearchKey = searchKey;
 S.restaurantIndex = 0; S.restaurantActions = []; S.restaurantMaybeRound = false;
 S.winnerItem = null;
-const poolFastFoodCount=S.restaurantPool.filter(r=>restaurantIsFastFood(r)).length;
 if(S.restaurantPool.length) {
   updateRestaurantStatus();
 } else {
@@ -3897,7 +3894,6 @@ async function appDiagnosisView(existingModal){
    const expectedFoodQuick=['American','Southern','Mexican','Italian','Asian','Pasta','Soup/Stew','Healthy','Seafood','Potato','Other'];
    const foodQuickContract=expectedFoodQuick.every((x,i)=>foodQuick[i]===x)&&foodQuick.length>=expectedFoodQuick.length;
    foodQuickContract?pass('food','Meal Cuisine Cuts','The current Food Cuisine Cut order is present.','Other remains conditional for custom meals.'):fail('food','Meal Cuisine Cuts','Food Cuisine Cuts are out of sync.','Expected American, Southern, Mexican, Italian, Asian, Pasta, Soup/Stew, Healthy, Seafood, Potato, Other.');
-   const forbiddenPork=foods.some(x=>String(x?.name||'').toLowerCase().includes('pork')&&false);
    const legacy=foods.filter(x=>/stouffer|frozen dinner/i.test(String(x?.name||'')));
    legacy.length?fail('food','Legacy meal cleanup',legacy.length+' Stouffer/frozen-dinner choice(s) remain.',legacy.map(x=>x.name).join(', ')):pass('food','Legacy meal cleanup','Stouffer/frozen-dinner legacy choice is absent.');
    const foodSourceChecks=typeof foodCut==='function'&&typeof foodMaybe==='function'&&typeof foodBack==='function'&&typeof bindCardButton==='function';
@@ -3927,7 +3923,6 @@ async function appDiagnosisView(existingModal){
    const photoSourceChecks=typeof hydrateRestaurantPhoto==='function'&&typeof loadRestaurantPhoto==='function';
    photoSourceChecks?pass('restaurant','Restaurant photography','The current cards hydrate restaurant-specific photos through the dedicated restaurant photo pipeline.','The photo system can fall back safely when a venue-specific source is unavailable.'):fail('restaurant','Restaurant photography','The dedicated restaurant-photo pipeline is not visible in the current app source.');
    info('restaurant','Photo/search credential independence','Restaurant photography and search are integrated without requiring a Google credential in the client.','The backend can use provider/official/web verification paths when available; the diagnosis does not require a Google key to run.');
-   const restaurantIds=Object.keys(window).filter(()=>false);
    const currentRestaurants=S.restaurantPool||[];
    currentRestaurants.length?info('restaurant','Current restaurant pool',currentRestaurants.length+' restaurant result(s) are loaded on this device.', 'Run the restaurant search to inspect live counts and current Cuisine Cut behavior.'):info('restaurant','Current restaurant pool','No Restaurant results are loaded on this screen.','This is normal while the diagnosis is opened from Home or Settings.');
    const healthUrl='./api/restaurant-search?mode=health&diagnosis='+Date.now();
@@ -3966,9 +3961,9 @@ async function appDiagnosisView(existingModal){
    try{
     const swCheck=await fetch('./sw.js?diagnosis='+Date.now(),{cache:'no-store'});
     const swText=await swCheck.text();
-    swVersionSynchronized=swCheck.ok&&swText.includes('dinliminate-shell-v909')&&swText.includes("'./app.js?v=909'");
+    swVersionSynchronized=swCheck.ok&&swText.includes('dinliminate-shell-v910')&&swText.includes("'./app.js?v=910'");
    }catch{}
-   appRuntimeVersion==='909'&&swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker registration are synchronized to CP909.','The cache-query and service-worker shell now point to the same release.'):warn('runtime','PWA runtime versioning','The browser runtime is not fully synchronized to CP909.','A stale service worker or asset reference can make an older interaction bug appear to persist.');
+   appRuntimeVersion==='910'&&swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker registration are synchronized to CP910.','The cache-query and service-worker shell now point to the same release.'):warn('runtime','PWA runtime versioning','The browser runtime is not fully synchronized to CP909.','A stale service worker or asset reference can make an older interaction bug appear to persist.');
    /* iPhone / PWA */
    const metaViewport=document.querySelector('meta[name="viewport"]')?.getAttribute('content')||'';
    metaViewport.includes('viewport-fit=cover')?pass('runtime','iPhone viewport','Safe-area-aware viewport settings are present.'):warn('runtime','iPhone viewport','The expected viewport-fit setting is missing.');
