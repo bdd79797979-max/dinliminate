@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 896,
+  "build": 897,
   "sourceBranch": "main",
-  "checkpoint": "CP896",
-  "deploymentTrigger": "CP896-restore-home-window-imagery",
+  "checkpoint": "CP897",
+  "deploymentTrigger": "CP897-solid-double-wood-door-background",
   "vercelProductionVerified": false
 }
