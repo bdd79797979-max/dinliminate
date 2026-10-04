@@ -603,7 +603,6 @@ const allFoods = () => {
  return merged.concat(customOnly);
 };
 const STORAGE_VERSION = 6;
-function namesToMealTimeCustom(list){return Array.isArray(list)?list:[];}
 const ITEM_NOTES_KEY = 'dinliminate.item.notes.v1';
 function loadItemNotes(){
  try{
@@ -4302,7 +4301,7 @@ hiddenRestaurants:{...S.hiddenRestaurants},
 cutCats:[...S.cutCats],
 maybe:[...S.maybe],
 mealTimeFilters:[...S.mealTimeFilters],
-mealTimeAllSelected:MEAL_TIME_CUTS.every(label=>S.mealTimeFilters?.has(label)),
+mealTimeAllSelected:mealTimeOptions().filter(x=>x.enabled).every(item=>S.mealTimeFilters?.has(item.name)),
 foodMaybeRound:!!S.foodMaybeRound,
 restaurantMaybeRound:!!S.restaurantMaybeRound,
 restaurantCuts:[...S.restaurantCuts],
