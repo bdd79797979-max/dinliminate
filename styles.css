@@ -5483,12 +5483,15 @@ button,input,select,textarea{
 .utility-modal.modal-opening{transform:translate(-50%,-8px) scale(.985)!important}
 .utility-modal.modal-open{transform:translate(-50%,0) scale(1)!important}
 .utility-modal.modal-closing{transform:translate(-50%,-4px) scale(.99)!important}
-.details-modal .detail-hero .history-detail-photo{
-  opacity:0;
-  transform:scale(1.012);
-  transition:opacity .16s ease .02s,transform .20s cubic-bezier(.22,1,.36,1) .02s!important;
+/* CP903 — keep Details photos visually stable while the modal opens.
+   The modal animates as a whole; the image must not fade/scale independently
+   or it can reveal a repaint/source-swap flash on iPhone Safari. */
+.details-modal .detail-hero .history-detail-photo,
+.details-modal.modal-open .detail-hero .history-detail-photo{
+  opacity:1!important;
+  transform:none!important;
+  transition:none!important;
 }
-.details-modal.modal-open .detail-hero .history-detail-photo{opacity:1;transform:scale(1)}
 .details-modal .detail-unified-title{
   opacity:0;
   transform:translateY(4px);
