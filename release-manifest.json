@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 915,
+  "build": 916,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP915",
-  "deploymentTrigger": "CP915-home-card-gesture-hardening-2026-10-04"
+  "checkpoint": "CP916",
+  "deploymentTrigger": "CP916-meal-swipe-iphone-hardening-2026-10-04"
 }
