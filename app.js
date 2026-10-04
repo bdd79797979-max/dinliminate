@@ -1387,6 +1387,14 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
   window.setTimeout(async()=>{
+   // Meal-only handoff: the promoted next layer must leave the stage before
+   // drawFood() repopulates the stack, otherwise it visibly snaps back.
+   if(cardId==='foodCard'&&next){
+    next.style.transition='none';
+    next.style.opacity='0';
+    next.style.transform='scale(.96)';
+    next.style.filter='saturate(.82) brightness(.76)';
+   }
    action();
    if(cardId==='foodCard'&&card.isConnected){
     const img=card.querySelector('#foodImg');
