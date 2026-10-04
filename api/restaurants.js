@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r31';
+const API_VERSION='r32';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -11,7 +11,7 @@ const SEARCH_BUDGET_MS=3000;
 const WIDE_DISCOVERY_RESERVE_MS=700;
 const WIDE_RADIUS_THRESHOLD=50;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2600;
+const WIDE_PRIMARY_TIMEBOX_MS=2300;
 const WIDE_DISCOVERY_TIMEBOX_MS=2600;
 const OVERPASS_HTTP_TIMEOUT_MS=2500;
 const MAX_SEARCH_PER_MINUTE=60;
@@ -1184,12 +1184,7 @@ if(mode==='search'){
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
  const discoveryPromise=null;
  const primaryPromise=wideSearch
-  ? Promise.allSettled([
-    photonPlaces(lat,lon,50,searchTerm),
-    arcgisPlaces(lat,lon,50,searchTerm),
-    searchTerm?googleSearchPlaces(lat,lon,50,searchTerm):googlePlaces(lat,lon,50),
-    photonWidePlaces(lat,lon,radius,searchTerm)
-  ])
+  ? [arcgisPlaces(lat,lon,radius,searchTerm,2100)]
   : [
     photonPlaces(lat,lon,providerRadius,searchTerm),
     arcgisPlaces(lat,lon,providerRadius,searchTerm),
@@ -1197,10 +1192,10 @@ if(mode==='search'){
   ];
  let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   [primaryBatch,parallelWide]=await Promise.all([
-     withinBudget(primaryPromise,WIDE_PRIMARY_TIMEBOX_MS,'Primary restaurant providers timed out'),
-     {__timeout:true,reason:'Wide expansion deferred'}
-   ]);
+   const wideWinner=await firstProviderWithRows(primaryPromise,Math.min(WIDE_PRIMARY_TIMEBOX_MS,Math.max(1500,primaryBudget-(Date.now()-startedAt))));
+   fastProvider=wideWinner.provider;
+   primaryBatch=wideWinner.value;
+   parallelWide={__timeout:true,reason:'Wide expansion deferred'};
  }else{
    const tasks=primaryPromise;
    const winner=await firstProviderWithRows(tasks,Math.max(1200,Math.min(1900,primaryBudget-(Date.now()-startedAt))));
