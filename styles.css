@@ -8395,3 +8395,26 @@ button,input,select,textarea{
 #restaurant .location-status-row{
   padding:0 2px!important;
 }
+
+/* CP922 — quiet Restaurant Refresh busy state. No white ring/outline while searching. */
+#restaurant .location-main .find[data-state="busy"],
+#restaurant .location-main .find[data-state="busy"]:focus,
+#restaurant .location-main .find[data-state="busy"]:focus-visible{
+  outline:0!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+#restaurant .location-main .find[data-state="busy"] .find-spinner{
+  width:12px!important;
+  height:12px!important;
+  min-width:12px!important;
+  min-height:12px!important;
+  border:1.5px solid rgba(215,189,123,.30)!important;
+  border-top-color:rgba(215,189,123,.78)!important;
+  border-right-color:rgba(215,189,123,.58)!important;
+  border-bottom-color:rgba(215,189,123,.22)!important;
+  border-left-color:rgba(215,189,123,.22)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
