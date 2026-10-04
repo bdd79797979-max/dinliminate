@@ -10,7 +10,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '956';
+let APP_BUILD = '957';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1447,7 +1447,7 @@ function prepareFoodNextCard(){
  nextCard.style.display=next?'block':'none';
  nextCard.style.visibility=next?'visible':'hidden';
  nextCard.style.transition='none';
- nextCard.style.transform='scale(1)';
+ nextCard.style.transform='none';
  nextCard.style.opacity='.62';
  nextCard.style.filter='saturate(.82) brightness(.76)';
  nextCard.dataset.swipePromoted='';
@@ -1469,12 +1469,13 @@ function prepareFoodNextCard(){
   if(fb&&current!==fb){this.src=fb;return;}
   if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}
  };
- nimg.style.transform='scale(1)';
+ nimg.style.transform='none';
  nimg.src=foodPhoto(next);
 }
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
+ const staticWaitingCard=cardId==='foodCard';
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null,swipeThreshold=90;
@@ -1506,13 +1507,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
   if(next){
-   next.style.transform='scale(1)';
+   if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
    next.style.opacity='.62';
    next.style.filter='saturate(.82) brightness(.76)';
    next.style.visibility='visible';
    next.dataset.swipePromoted='';
    const nextImg=next.querySelector('img');
-   if(nextImg)nextImg.style.transform='scale(1)';
+   if(nextImg)nextImg.style.transform=staticWaitingCard?'none':'scale(1)';
   }
  };
  const settleBack=()=>{
@@ -1571,13 +1572,15 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.transform='translate3d('+(direction*distance)+'px,0,0) rotate('+(direction*10)+'deg)';
   if(next){
    next.dataset.swipePromoted='1';
-   next.style.transition='transform '+Math.max(duration-10,110)+'ms cubic-bezier(.22,1,.36,1),opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease';
-   next.style.transform='scale(1)';
+   next.style.transition=staticWaitingCard
+    ?'opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease'
+    :'transform '+Math.max(duration-10,110)+'ms cubic-bezier(.22,1,.36,1),opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease';
+   if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
    next.style.opacity='1';
    next.style.visibility='visible';
    next.style.filter='saturate(1) brightness(1)';
    const promotedImg=next.querySelector('img');
-   if(promotedImg)promotedImg.style.transform='scale(1)';
+   if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
   }
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
@@ -1586,13 +1589,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
    action();
    if(next){
     next.style.transition='none';
-    next.style.transform='scale(1)';
+    if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
     next.style.opacity='.62';
     next.style.filter='saturate(.82) brightness(.76)';
     next.style.visibility='visible';
     next.dataset.swipePromoted='';
     const promotedImg=next.querySelector('img');
-    if(promotedImg)promotedImg.style.transform='scale(1)';
+    if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
    }
    if(card.isConnected)reset();
   },duration);
@@ -1611,7 +1614,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*3.1),0,.24)));
   card.dataset.swipe=dx<0?'cut':'maybe';
   if(next){
-   next.style.transform='scale(1)';
+   if(!staticWaitingCard)next.style.transform='scale(1)';
    next.style.opacity=String(clamp(.62+Math.min(1,progress)*.38,.62,1));
    next.style.filter='saturate('+clamp(.82+Math.min(1,progress)*.18,.82,1).toFixed(3)+') brightness('+clamp(.76+Math.min(1,progress)*.24,.76,1).toFixed(3)+')';
   }

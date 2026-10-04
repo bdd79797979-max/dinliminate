@@ -9719,3 +9719,47 @@ button,input,select,textarea{
   #food .food-refine-tabs{gap:8px!important}
   #food .food-refine-tabs .food-top-refine-divider{font-size:10px!important}
 }
+
+
+/* CP957 — Meals menu is pinned to the far-right grid column. */
+#food .food-interior-nav{
+  grid-template-columns:max-content minmax(0,1fr) max-content 36px!important;
+  column-gap:0!important;
+}
+#food .food-refine-tabs{
+  grid-column:1!important;
+  justify-self:start!important;
+  min-width:0!important;
+}
+#food .food-interior-nav .food-top-maybe{
+  grid-column:3!important;
+  grid-row:1!important;
+  justify-self:end!important;
+}
+#food .food-interior-nav .interior-menu{
+  grid-column:4!important;
+  grid-row:1!important;
+  justify-self:end!important;
+}
+
+/* CP957 — Meal waiting card has no transform path.
+   The waiting layer remains geometrically identical before, during, and after a swipe.
+   Only visual emphasis (opacity/filter) may change. */
+#food .swipe-card-stack>.next-card{
+  transform:none!important;
+  transition-property:opacity,filter!important;
+  will-change:opacity,filter!important;
+}
+#food .swipe-card-stack>.next-card img{
+  transform:none!important;
+}
+@media(max-width:390px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content minmax(0,1fr) max-content 34px!important;
+  }
+}
+@media(max-width:340px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content minmax(0,1fr) max-content 32px!important;
+  }
+}

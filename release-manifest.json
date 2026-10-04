@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 956,
+  "build": 957,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP956",
-  "deploymentTrigger": "CP956-meals-refinement-divider-parity"
+  "checkpoint": "CP957",
+  "deploymentTrigger": "CP957-meals-menu-right-and-static-waiting-card"
 }

@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 956 / CP956
+# CURRENT RELEASE — BUILD 957 / CP957
+
+## CP957 — Meals menu right + static waiting card
+- Pins the Meals menu to the far-right grid column.
+- Removes the remaining Meal next-card transform writes from the swipe source, so the waiting card cannot translate or scale as a side effect of a swipe.
+- Keeps only opacity/filter emphasis changes on the waiting layer and leaves Restaurant swipe behavior untouched.
 
 ## CP956 — Meals refinement divider parity
 - Groups Meal Times and Cuisine into the same explicit refinement control pattern used by Restaurant Search — Cuisine, with a visible divider between the two controls.
