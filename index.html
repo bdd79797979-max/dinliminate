@@ -13,12 +13,10 @@
 
 <title>Dinliminate — Meal Decisions Simplified</title>
 
-<link rel="preload" as="image" fetchpriority="high" href="/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F14778623%2Fpexels-photo-14778623.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1800">
 <link rel="stylesheet" href="./styles.css?v=894">
 </head>
 <body>
 <main class="app">
-<div class="home-background-layer" id="homeBackgroundLayer" aria-hidden="true"><img id="homeBackgroundImage" alt="" fetchpriority="high" loading="eager" decoding="async" referrerpolicy="no-referrer"></div>
 <div class="offline-indicator hidden" id="offlineIndicator" role="status" aria-live="polite">Offline · saved meal choices still work</div>
 <div class="storage-indicator hidden" id="storageIndicator" role="status" aria-live="polite">Could not save some changes on this device.</div>
 
@@ -28,10 +26,10 @@
 <div class="luxury-orb orb-one"></div><div class="luxury-orb orb-two"></div>
 <div class="home-intro"><p class="eyebrow">HUNGRY?</p><h1>Meal Decisions Simplified</h1><p class="sub">Swipe. Refine. Enjoy.</p></div>
 <div class="home-actions">
-<button class="home-card home-card-photo food-choice" id="foodStart" style="--home-photo:url('/api/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1564406455859-a7e229c9cc10%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1800%26q%3D88')">
+<button class="home-card home-card-photo food-choice" id="foodStart">
   <span class="home-card-overlay"></span><span class="home-card-copy"><strong>AT HOME</strong><span>Enter, your meal awaits.</span></span><span class="arrow">›</span>
 </button>
-<button class="home-card home-card-photo restaurant-choice" id="restStart" style="--home-photo:url('/api/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1781184307914-00ea8c9b3f6f%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1800%26q%3D88')">
+<button class="home-card home-card-photo restaurant-choice" id="restStart">
   <span class="home-card-overlay"></span><span class="home-card-copy"><strong>RESTAURANT</strong><span>Enter, your table awaits.</span></span><span class="arrow">›</span>
 </button>
 </div>
