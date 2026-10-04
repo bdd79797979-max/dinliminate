@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 921 / CP921
+# CURRENT RELEASE — BUILD 922 / CP922
+
+## CP922 — Quiet Restaurant Refresh busy state
+- Removed the bright/white busy-state ring and focus chrome from Restaurant Refresh.
+- Busy searching now uses a subtle muted-gold spinner with no surrounding box or outline.
+- Preserved Refresh behavior and the minimalist location row.
 
 ## CP921 — Remove Restaurant location container
 - Removed the large enclosing black container around Current Location, Address, Refresh/Search, and Radius.
