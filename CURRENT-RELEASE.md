@@ -1,3 +1,11 @@
+# CURRENT RELEASE — BUILD 960 / CP960
+
+## CP960 — Exact Clarksville venue photo routes
+- Adds exact photo-page routes for the tested Clarksville McDonald's, Subway, and Excell Bar-B-Q venues.
+- Routes are matched by restaurant identity plus exact address/phone evidence before the page is inspected.
+- Keeps official/public venue sourcing and existing image validation; no Google photo API is used.
+- Preserves immediate safe fallback behavior and background exact-photo hydration.
+
 # CURRENT RELEASE — BUILD 959 / CP959
 
 ## CP959 — Immediate Restaurant card + background exact-photo hydration
