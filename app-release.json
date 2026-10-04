@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 888,
+  "build": 889,
   "sourceBranch": "main",
-  "checkpoint": "CP888",
-  "deploymentTrigger": "CP888-rename-cuisine-cuts-to-cuisine",
+  "checkpoint": "CP889",
+  "deploymentTrigger": "CP889-visible-clear-glass-menu-surface",
   "vercelProductionVerified": false
 }
