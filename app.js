@@ -3206,12 +3206,21 @@ function renderFoodEditorMealTimes(selectedOverride){
       '<button type="button" class="food-editor-meal-time-toggle '+(isOff?'':'is-on')+'" data-food-editor-meal-time-toggle="'+esc(item.id)+'" aria-pressed="'+(isOff?'false':'true')+'">'+(isOff?'Off':'On')+'</button>'+
       (item.custom?'<button type="button" class="food-editor-meal-time-delete" data-food-editor-meal-time-delete="'+esc(item.id)+'" aria-label="Delete '+esc(item.name)+'">×</button>':'')+
     '</div></div>';
-  }).join('');
+  }).join('')+
+   '<div class="food-editor-meal-time-add"><input id="newFoodEditorMealTimeName" maxlength="28" placeholder="New Meal Time" autocomplete="off"><button type="button" id="addFoodEditorMealTime">＋ Add</button></div>';
   manager.querySelectorAll('[data-food-editor-meal-time-edit]').forEach(btn=>btn.onclick=()=>renameMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeEdit));
   manager.querySelectorAll('[data-food-editor-meal-time-delete]').forEach(btn=>btn.onclick=()=>deleteMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDelete));
   manager.querySelectorAll('[data-food-editor-meal-time-up]').forEach(btn=>btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeUp,-1));
   manager.querySelectorAll('[data-food-editor-meal-time-down]').forEach(btn=>btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDown,1));
   manager.querySelectorAll('[data-food-editor-meal-time-toggle]').forEach(btn=>btn.onclick=()=>toggleMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeToggle));
+  $('addFoodEditorMealTime')?.addEventListener('click',()=>{
+    const input=$('newFoodEditorMealTimeName');
+    addMealTimeInFoodEditor(input?.value);
+    if(input){input.value='';input.focus();}
+  });
+  $('newFoodEditorMealTimeName')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();$('addFoodEditorMealTime')?.click();}
+  });
 }
 function renameMealTimeInFoodEditor(id){
  const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item)return;
@@ -3306,7 +3315,7 @@ mealTimeManageToggle?.addEventListener('click',()=>{
  mealTimeManageToggle.textContent=open?'Done':'Edit Meal Times';
  if(open)renderFoodEditorMealTimes();
 });
-renderFoodEditorMealTimes(existingMealTimes.size?[...existingMealTimes]:mealTimeNames());
+renderFoodEditorMealTimes([...existingMealTimes]);
 const mealPhotoFile=$('editFoodFile');
 const initialPhotoInput=normalizeMealPhotoRef($('editFoodPhoto')?.value);
 if(mealPhotoFile){
