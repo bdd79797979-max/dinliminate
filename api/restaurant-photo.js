@@ -555,11 +555,25 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
  return null;
 }
 const KNOWN_PUBLIC_PHOTO_PAGES=[
- {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],url:'https://www.visitclarksvilletn.com/listing/excell-bar-b-q/128/'}
+ {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
+ {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
+ {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'}
 ];
-function knownPublicPhotoPage(name){
+function normalizePhoneDigits(value){return String(value||'').replace(/\D/g,'').slice(-10);}
+function knownPublicPhotoPage(name,address='',phone=''){
  const normalized=normalizeMatchText(name);
- const hit=KNOWN_PUBLIC_PHOTO_PAGES.find(entry=>entry.names.some(n=>normalized===normalizeMatchText(n)||normalized.includes(normalizeMatchText(n))||normalizeMatchText(n).includes(normalized)));
+ const addr=normalizeMatchText(address);
+ const phoneDigits=normalizePhoneDigits(phone);
+ const hit=KNOWN_PUBLIC_PHOTO_PAGES.find(entry=>{
+  const nameMatch=entry.names.some(n=>{
+   const key=normalizeMatchText(n);
+   return normalized===key||normalized.includes(key)||key.includes(normalized);
+  });
+  if(!nameMatch)return false;
+  const addressMatch=entry.addressTokens.some(token=>addr.includes(normalizeMatchText(token)));
+  const phoneMatch=entry.phone&&phoneDigits?normalizePhoneDigits(entry.phone)===phoneDigits:false;
+  return addressMatch||phoneMatch;
+ });
  return hit?.url||'';
 }
 const KNOWN_RESTAURANT_PHOTOS=[
@@ -597,7 +611,7 @@ async function fastKnownRestaurantPhoto(name,address){
  return null;
 }
 async function fastKnownPublicPhoto(name,address,website){
- const hint=knownPublicPhotoPage(name);
+ const hint=knownPublicPhotoPage(name,address);
  if(!hint)return null;
  try{
   const html=await fetchText(hint,{},2200,1500000);
