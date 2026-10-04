@@ -1,18 +1,18 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r30';
+const API_VERSION='r31';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
 const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chick-fil-A","Popeyes","Subway","Sonic","Arby's","Whataburger","Five Guys","Raising Cane's","Wingstop","Bojangles","Cook Out","Dairy Queen","Zaxby's","Church's Chicken","Captain D's","Long John Silver's","Jimmy John's","Jersey Mike's","Firehouse Subs","Little Caesars","Domino's","Papa John's","Pizza Hut","Marco's Pizza","Krystal","Steak 'n Shake","White Castle","Freddy's","In-N-Out","Carl's Jr.","Panda Express","Jack in the Box","Hardee's","Del Taco","Checkers","Rally's"];
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
-const SEARCH_BUDGET_MS=3500;
+const SEARCH_BUDGET_MS=3000;
 const WIDE_DISCOVERY_RESERVE_MS=700;
 const WIDE_RADIUS_THRESHOLD=50;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2800;
-const WIDE_DISCOVERY_TIMEBOX_MS=2800;
+const WIDE_PRIMARY_TIMEBOX_MS=2600;
+const WIDE_DISCOVERY_TIMEBOX_MS=2600;
 const OVERPASS_HTTP_TIMEOUT_MS=2500;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
@@ -175,6 +175,27 @@ async function photonWideCenterPlaces(lat,lon,searchExtentRadius,searchTerm=''){
   }
  }
  return {rows,errors};
+}
+async function firstProviderWithRows(tasks,timeoutMs=1800){
+ const started=Date.now();
+ return new Promise(resolve=>{
+   let settled=0,done=false;
+   const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value)};
+   const timer=setTimeout(()=>finish({provider:'timeout',value:{rows:[],errors:['Primary provider race timed out']}}),Math.max(600,timeoutMs));
+   tasks.forEach((task,i)=>{
+     Promise.resolve(task).then(value=>{
+       settled++;
+       if(value&&Array.isArray(value.rows)&&value.rows.length){
+         finish({provider:i,value});
+       }else if(settled===tasks.length){
+         finish({provider:'empty',value:{rows:[],errors:['All primary providers returned no restaurants'],elapsedMs:Date.now()-started}});
+       }
+     }).catch(error=>{
+       settled++;
+       if(settled===tasks.length)finish({provider:'error',value:{rows:[],errors:[String(error?.message||error||'Primary providers failed')],elapsedMs:Date.now()-started}});
+     });
+   });
+ });
 }
 async function photonWidePlaces(lat,lon,radius,searchTerm=''){
  const points=widePhotonCenters(lat,lon,radius),rows=[],errors=[];
@@ -1169,24 +1190,38 @@ if(mode==='search'){
     searchTerm?googleSearchPlaces(lat,lon,50,searchTerm):googlePlaces(lat,lon,50),
     photonWidePlaces(lat,lon,radius,searchTerm)
   ])
-  : Promise.allSettled([
+  : [
     photonPlaces(lat,lon,providerRadius,searchTerm),
     arcgisPlaces(lat,lon,providerRadius,searchTerm),
     searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius)
-  ]);
- let primaryBatch,parallelWide=null;
+  ];
+ let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
    [primaryBatch,parallelWide]=await Promise.all([
      withinBudget(primaryPromise,WIDE_PRIMARY_TIMEBOX_MS,'Primary restaurant providers timed out'),
-     withinBudget(discoveryPromise,WIDE_DISCOVERY_TIMEBOX_MS,'Wide radius discovery timed out')
+     {__timeout:true,reason:'Wide expansion deferred'}
    ]);
  }else{
-   primaryBatch=await withinBudget(primaryPromise,Math.max(1000,primaryBudget-(Date.now()-startedAt)),'Primary restaurant providers timed out');
+   const tasks=primaryPromise;
+   const winner=await firstProviderWithRows(tasks,Math.max(1200,Math.min(1900,primaryBudget-(Date.now()-startedAt))));
+   fastProvider=winner.provider;
+   primaryBatch=winner.value;
  }
- const photonResult=Array.isArray(primaryBatch)?primaryBatch[0]:{status:'rejected',reason:new Error('Primary restaurant providers timed out')};
- const arcgisResult=Array.isArray(primaryBatch)?primaryBatch[1]:{status:'rejected',reason:new Error('Primary restaurant providers timed out')};
- const googleResult=Array.isArray(primaryBatch)?primaryBatch[2]:{status:'rejected',reason:new Error('Primary restaurant providers timed out')};
- const widePhotonResult=wideSearch && Array.isArray(primaryBatch)?primaryBatch[3]:{status:'rejected',reason:new Error('Wide Photon provider not used')};
+ let photonResult={status:'rejected',reason:new Error('Photon not selected')};
+ let arcgisResult={status:'rejected',reason:new Error('ArcGIS not selected')};
+ let googleResult={status:'rejected',reason:new Error('Google not selected')};
+ let widePhotonResult={status:'rejected',reason:new Error('Wide Photon provider not used')};
+ if(Array.isArray(primaryBatch)){
+   photonResult=primaryBatch[0]||photonResult;
+   arcgisResult=primaryBatch[1]||arcgisResult;
+   googleResult=primaryBatch[2]||googleResult;
+   widePhotonResult=primaryBatch[3]||widePhotonResult;
+ }else if(primaryBatch?.rows){
+   const v={status:'fulfilled',value:primaryBatch};
+   if(fastProvider===0)photonResult=v;
+   else if(fastProvider===1)arcgisResult=v;
+   else if(fastProvider===2)googleResult=v;
+ }
  const photonOut=photonResult.status==='fulfilled'?photonResult.value:{rows:[],errors:[String(photonResult.reason?.message||photonResult.reason||'Photon unavailable')]};
  const widePhotonOut=widePhotonResult.status==='fulfilled'?widePhotonResult.value:{rows:[],errors:wideSearch?[String(widePhotonResult.reason?.message||widePhotonResult.reason||'Wide Photon unavailable')]:[]};
  if(wideSearch)photonOut.rows=[...(photonOut.rows||[]),...(widePhotonOut.rows||[])];
@@ -1196,7 +1231,7 @@ if(mode==='search'){
  const preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  const preliminaryFast=preliminary.filter(r=>r.fastFood).length;
  let osmOut={rows:[],errors:[]};
- const needsOverpass=!preliminary.length||preliminaryFast===0;
+ const needsOverpass=!preliminary.length;
  if(discoveryPromise){
    if(wideSearch){
      const got=parallelWide;
@@ -1230,7 +1265,7 @@ if(mode==='search'){
    .filter((name,i,a)=>a.findIndex(x=>norm(x)===norm(name))===i)
    .slice(0,12);
  const contactRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
- if(contactAllowed&&missingContactNames.length&&contactRemaining>1900&&preliminary.length<12){
+ if(contactAllowed&&missingContactNames.length&&contactRemaining>2300&&preliminary.length<3){
    const expandedNames=[...new Set(contactCandidates.filter(r=>missingContactNames.some(n=>norm(n)===norm(r.name))).flatMap(r=>[r.name,r.brand,r.operator]).filter(Boolean))].slice(0,12);
    const got=await withinBudget(contactEnrichment(lat,lon,Math.min(radius,25),expandedNames),Math.min(1900,contactRemaining),'Restaurant contact enrichment timed out');
    if(got&&!got.__timeout)contactOut=got; else contactOut.errors.push('Contact enrichment timed out');
@@ -1249,7 +1284,7 @@ if(mode==='search'){
    const phone=String(r.phone||'').trim();
    const classification=RESTAURANT_TAXONOMY.classifyRestaurant({...r,website,phone}); const canonicalCategory=classification.primary||r.category||'American'; const classifiedFastFood=classification.tags.includes('Fast Food'); const photo=restaurantPhotoMeta(r); return {...r,category:canonicalCategory,fastFood:classifiedFastFood,quickCutTags:classification.tags,quickCutEvidence:classification.evidence,...photo,website,phone,websiteSource:r.website?'provider':(known?'known-brand':(cached?'official-search':'google-search-fallback')),phoneSource:phone?'provider':'google-search-fallback'};
   });
- const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:wideSearch?WIDE_PHOTON_RING_POINTS+1:1,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
+ const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:wideSearch?WIDE_PHOTON_RING_POINTS+1:1,primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
