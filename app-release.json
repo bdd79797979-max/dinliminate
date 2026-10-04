@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 941,
+  "build": 942,
   "sourceBranch": "main",
-  "checkpoint": "CP941",
-  "deploymentTrigger": "CP941-restore-immediate-restaurant-photos",
+  "checkpoint": "CP942",
+  "deploymentTrigger": "CP942-canonical-maybe-control",
   "vercelProductionVerified": false
 }
