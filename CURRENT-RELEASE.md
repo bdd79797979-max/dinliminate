@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 918 / CP918
+# CURRENT RELEASE — BUILD 919 / CP919
+
+## CP919 — Minimal Restaurant location controls
+- Removed the circular/pill chrome from Current Location and Refresh while preserving their full tap targets and actions.
+- Removed the Radius chevron; Radius remains a text-only selector.
+- Preserved the Restaurant location row, search behavior, and existing functionality.
 
 ## CP918 — Remove Radius pill
 - Removed the rounded pill container around the Restaurant Radius selector.
