@@ -7051,6 +7051,23 @@ button,input,select,textarea{
   #restaurant .restaurant-refine-divider{font-size:10px!important}
 }
 
+/* CP882 — unified translucent top-right menu buttons with gold outline and gold hamburger lines. */
+.menu,#menu,#foodMenu,#restaurantMenu,#winnerMenu,
+.decision-menu,.winner-menu{
+  background:rgba(8,8,8,.28)!important;
+  border:1px solid rgba(214,183,120,.78)!important;
+  backdrop-filter:blur(14px) saturate(120%)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(120%)!important;
+  box-shadow:
+    0 9px 25px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,248,226,.09),
+    0 0 12px rgba(214,183,120,.08)!important;
+}
+.menu span{
+  background:#d6b778!important;
+  box-shadow:0 0 7px rgba(214,183,120,.24)!important;
+}
+
 /* CP808 — Family Mode */
 .family-screen{overflow:hidden}
 .family-bar{flex:0 0 auto}

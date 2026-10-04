@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 881,
+  "build": 882,
   "sourceBranch": "main",
-  "checkpoint": "CP881",
-  "deploymentTrigger": "CP881-unify-discovery-control-effects",
+  "checkpoint": "CP882",
+  "deploymentTrigger": "CP882-translucent-gold-menu-controls",
   "vercelProductionVerified": false
 }
