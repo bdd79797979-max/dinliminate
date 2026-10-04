@@ -1,4 +1,4 @@
-const CACHE='dinliminate-shell-v916';
+const CACHE='dinliminate-shell-v917';
 const IMAGE_CACHE='dinliminate-images-v4';
 const SHELL=['./','./index.html','./styles.css?v=913','./app.js?v=913','./data/foods.js','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
 self.addEventListener('install',event=>{
