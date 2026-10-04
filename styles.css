@@ -9213,3 +9213,89 @@ button,input,select,textarea{
   color:#55d88a!important;
   text-shadow:0 0 10px rgba(85,216,138,.18)!important;
 }
+
+
+/* CP936 — Match Meals discovery controls to Restaurant.
+   Meal Times and Cuisine use the same size/weight/treatment as Restaurant Search/Cuisine.
+   All Maybes keeps its live count but adopts the same restrained count scale and tone. */
+#food .food-interior-nav .food-top-refine{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  color:#f0eee9!important;
+  width:auto!important;
+  min-width:0!important;
+  height:27px!important;
+  min-height:27px!important;
+  margin:0!important;
+  padding:0!important;
+  font:inherit!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  line-height:1!important;
+  letter-spacing:.01em!important;
+  text-align:left!important;
+  white-space:nowrap!important;
+  cursor:pointer!important;
+  -webkit-tap-highlight-color:transparent!important;
+  transition:color .18s ease,text-shadow .18s ease,opacity .18s ease!important;
+}
+#food .food-interior-nav .food-top-refine:hover{
+  color:#fff!important;
+}
+#food .food-interior-nav .food-top-refine.is-open{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
+#food .food-interior-nav .food-top-refine:active{
+  transform:none!important;
+  opacity:.78!important;
+}
+#food .food-interior-nav .food-top-maybe{
+  color:#8f8b84!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.05em!important;
+  text-transform:uppercase!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-label{
+  color:#63d992!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  letter-spacing:inherit!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-count{
+  color:#55d88a!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+  line-height:1!important;
+  font-variant-numeric:tabular-nums!important;
+  text-shadow:0 0 10px rgba(85,216,138,.18)!important;
+}
+@media(max-width:390px){
+  #food .food-interior-nav .food-top-refine{
+    font-size:11px!important;
+  }
+  #food .food-interior-nav .food-top-maybe{
+    font-size:9px!important;
+    letter-spacing:.05em!important;
+  }
+  #food .food-interior-nav .food-top-maybe .top-maybe-count{
+    font-size:10px!important;
+  }
+}
+@media(max-width:340px){
+  #food .food-interior-nav{
+    column-gap:5px!important;
+  }
+  #food .food-interior-nav .food-top-refine{
+    font-size:10.5px!important;
+  }
+  #food .food-interior-nav .food-top-maybe{
+    font-size:8.7px!important;
+  }
+}
