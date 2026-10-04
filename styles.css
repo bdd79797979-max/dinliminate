@@ -8291,3 +8291,62 @@ button,input,select,textarea{
   #restaurant .location-main .radius-select{padding-left:0!important;padding-right:15px!important;font-size:9px!important}
   #restaurant .location-main .radius-chevron{right:0!important;font-size:11px!important}
 }
+
+/* CP919 — minimalist Restaurant location controls.
+   Current Location and Refresh remain full-size tap targets but lose the circular/pill chrome.
+   Radius stays text-only with no chevron. */
+#restaurant .location-main .location-btn,
+#restaurant .location-main .find{
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#d7bd7b!important;
+}
+#restaurant .location-main .location-btn:hover:not(:disabled),
+#restaurant .location-main .find:hover:not(:disabled){
+  border-color:transparent!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#ecd39c!important;
+}
+#restaurant .location-main .location-btn:active,
+#restaurant .location-main .find:not(:disabled):active{
+  transform:scale(.92)!important;
+}
+#restaurant .location-main .radius-chevron{
+  display:none!important;
+}
+#restaurant .location-main .radius-select{
+  padding-right:0!important;
+  color:#d7bd7b!important;
+}
+@media(max-width:390px){
+  #restaurant .location-main .location-btn,
+  #restaurant .location-main .find{
+    width:36px!important;
+    min-width:36px!important;
+    height:36px!important;
+    min-height:36px!important;
+  }
+  #restaurant .location-main .radius-select{
+    padding-right:0!important;
+  }
+}
+@media(max-width:340px){
+  #restaurant .location-main .location-btn,
+  #restaurant .location-main .find{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+  }
+  #restaurant .location-main .radius-select{
+    padding-right:0!important;
+  }
+}
