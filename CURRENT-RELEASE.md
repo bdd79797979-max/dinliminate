@@ -1,5 +1,11 @@
 # CURRENT RELEASE — BUILD 938 / CP938
 
+## CP938 — Meals Search/Cuisine divider parity
+- Added the same compact separator treatment used by Restaurant between Meal Times and Cuisine.
+- Preserved the existing four-control Meals order: Meal Times — Cuisine — All/Maybes count — Menu.
+- Preserved all existing handlers, card layout, Maybe filtering, and swipe behavior.
+
+
 ## CP938 — Meals ALL / MAYBES deck-count parity
 - Meals now explicitly renders ALL · count in ALL mode and MAYBES · count in Maybe mode.
 - ALL mode uses the complete active Meal pool, including meals already marked Maybe.
