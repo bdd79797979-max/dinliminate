@@ -2727,6 +2727,24 @@ button,a,select{touch-action:manipulation}
   transform:translateZ(0);
   contain:paint;
 }
+/* CP902 — keep Restaurant Search/Cuisine controls above the card stage.
+   The discovery rail is in normal flow before .rest-stage, but the positioned
+   card stack can visually overlap it on compact viewports. Elevate the rail
+   as one layer instead of changing the card geometry. */
+#restaurant .restaurant-quick-section{
+  position:relative!important;
+  z-index:20!important;
+}
+#restaurant .rest-stage{
+  position:relative!important;
+  z-index:1!important;
+}
+#restaurant .restaurant-search-box,
+#restaurant .restaurant-refine-tabs{
+  position:relative!important;
+  z-index:21!important;
+}
+
 /* CP901 — preserve the inline finger-to-card transform during active swipes.
    The previous !important transform forced a compositor transform override and could
    produce a one-frame flash/jump while the card was moving. */
