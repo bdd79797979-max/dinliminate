@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 949 / CP949
+# CURRENT RELEASE — BUILD 950 / CP950
+
+## CP950 — Fix Meal swipe responsiveness at source
+- Removed the Meal-only pre-animation wait on the next image.
+- The Meal card now begins its horizontal swipe immediately; the staged next image may finish decoding during the handoff instead of blocking the gesture.
+- Preserved the CP947 zero-geometry-delta waiting card and CP944 protected Meal handoff.
+- Restaurant swipe code is unchanged.
+
+## CP949 — Meals / Restaurants visual parity
 
 ## CP949 — Meals / Restaurants visual parity
 - Restaurant ALL · MAYBES count is explicitly locked to the same green count treatment used by Meals.
