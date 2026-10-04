@@ -7956,3 +7956,11 @@ button,input,select,textarea{
 #winnerMenu:active{
   background-color:rgba(255,255,255,.035)!important;
 }
+
+
+/* CP885 — selected Cuisine Cuts use the same white-gold outline as selected Meal Times. */
+#foodQuick .photo-chip.cut,
+#restQuick .photo-chip.cut{
+  border-color:#f0e2bf!important;
+  box-shadow:0 0 0 1px rgba(214,183,120,.42),0 0 12px rgba(214,183,120,.10)!important;
+}
