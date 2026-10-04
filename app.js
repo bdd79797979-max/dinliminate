@@ -2478,10 +2478,17 @@ $('restaurantQuery').oninput=()=>{
  renderRestaurantSearchControl();
 }
 
+let celebrationHideTimer=0;
+function hideCelebration(){
+ const el=$('celebration');
+ if(celebrationHideTimer){clearTimeout(celebrationHideTimer);celebrationHideTimer=0;}
+ if(el){el.classList.add('hidden');el.innerHTML='';}
+}
 function triggerCelebration(goldOnly=false) {
 const el = $('celebration');
 if (!el) return;
-el.innerHTML = '';
+if(celebrationHideTimer){clearTimeout(celebrationHideTimer);celebrationHideTimer=0;}
+el.innerHTML = ''; 
 const colors = goldOnly
  ? ['#c6a46a','#f1d894','#fff7df','#d8b86b','#fffaf0']
  : ['#c6a46a','#f1d894','#f5f1e8','#ffb04a','#fffaf0'];
@@ -2498,7 +2505,7 @@ burst.appendChild(p);
 el.appendChild(burst);
 }
 el.classList.remove('hidden');
-window.setTimeout(()=>el.classList.add('hidden'),14000);
+celebrationHideTimer=window.setTimeout(()=>{el.classList.add('hidden');el.innerHTML='';celebrationHideTimer=0;},14000);
 }
 function triggerWinnerMoment(hungry=false){
  const el=$('winner');if(!el)return;
@@ -2707,6 +2714,9 @@ function finishHungryWheelRotation(item,rotation){
 function startContinuousWheelSpin(){
  const svg=$('hungryWheel');
  if(!svg||S.hungryWheelSpinning)return;
+ hideCelebration();
+ if(S.hungryWheelSpinToken==null)S.hungryWheelSpinToken=0;
+ S.hungryWheelSpinToken++;
  const pool=hungryWheelPool();
  if(!pool.length){appToast('There are no meals available to spin.');return;}
  S.hungryWheelDisplayItems=pool;
@@ -2749,7 +2759,7 @@ function slowAndStopHungryWheel(){
  const targetBase=-(idx*step+step/2);
  const current=S.hungryWheelRotation;
  const target=targetBase+360*Math.ceil((current-targetBase+720)/360);
- const token=++S.hungryWheelSpinToken;
+ const token=S.hungryWheelSpinToken=Number(S.hungryWheelSpinToken||0)+1;
  S.hungryWheelSpinPhase='slowing';
  if(S.hungryWheelFrame){cancelAnimationFrame(S.hungryWheelFrame);S.hungryWheelFrame=null;}
  S.hungryWheelChoice=item;
