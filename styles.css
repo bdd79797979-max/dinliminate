@@ -8860,3 +8860,89 @@ button,input,select,textarea{
   }
   #restaurant .location-main .radius-select{font-size:9px!important}
 }
+
+
+/* CP929 — Meals top navigation order: Meal Times · Cuisine · All Maybes count · Menu.
+   Move the two discovery controls into the same compact top row as the Maybe count. */
+#food .food-interior-nav{
+  display:grid!important;
+  grid-template-columns:max-content max-content minmax(0,1fr) 36px!important;
+  align-items:center!important;
+  justify-content:initial!important;
+  column-gap:10px!important;
+}
+#food .food-interior-nav .food-top-refine{
+  position:static!important;
+  transform:none!important;
+  width:auto!important;
+  min-width:0!important;
+  height:36px!important;
+  min-height:36px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#dfd8cd!important;
+  font-size:9px!important;
+  font-weight:850!important;
+  letter-spacing:.045em!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+#food .food-interior-nav .food-top-refine:hover{color:#fff!important}
+#food .food-interior-nav .food-top-refine:active{transform:scale(.97)!important}
+#food .food-interior-nav .food-top-refine.is-active{color:#e0c17e!important}
+#food .food-interior-nav .food-top-maybe{
+  position:static!important;
+  left:auto!important;
+  top:auto!important;
+  transform:none!important;
+  justify-self:end!important;
+  width:auto!important;
+  min-width:0!important;
+  height:36px!important;
+  min-height:36px!important;
+  padding:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:5px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#d7bd7b!important;
+  font-size:9px!important;
+  font-weight:850!important;
+  letter-spacing:.13em!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  z-index:20!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-label{color:#b8a887!important}
+#food .food-interior-nav .food-top-maybe .top-maybe-count{
+  color:#f0d493!important;
+  font-size:10px!important;
+  letter-spacing:.03em!important;
+  font-variant-numeric:tabular-nums;
+}
+#food .food-interior-nav .food-top-maybe:disabled{opacity:.6!important}
+#food .food-quick-section>.quick-label{display:none!important}
+#food .food-quick-section>#foodCount{display:none!important}
+@media(max-width:390px){
+  #food .food-interior-nav{
+    grid-template-columns:max-content max-content minmax(0,1fr) 34px!important;
+    column-gap:7px!important;
+  }
+  #food .food-interior-nav .food-top-refine{font-size:8.5px!important}
+  #food .food-interior-nav .food-top-maybe{font-size:8px!important;gap:4px!important;letter-spacing:.11em!important}
+  #food .food-interior-nav .food-top-maybe .top-maybe-count{font-size:9px!important}
+}
