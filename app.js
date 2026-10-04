@@ -3843,7 +3843,7 @@ async function auditFoodPhotoUrls(foods){
 async function appDiagnosisView(existingModal){
  if(!existingModal||!document.body.contains(existingModal))return null;
  const shellClass='diagnosis-modal';
- const initialSections=['Core app','Meal system','Restaurant system','iPhone & PWA','Build & launch'];
+ const initialSections=['Core app','Meal system','Restaurant system','iPhone & PWA','Interaction stability','Build & launch'];
  const body='<div class="diagnosis-wrap"><div id="diagnosisBody" aria-busy="true"><div class="diagnosis-summary diagnosis-summary-strong"><span class="diagnosis-status-dot warn" aria-hidden="true"></span><div><b>App Diagnosis</b><small>Refreshing the current Dinliminate release.</small></div><strong>Live</strong></div>'+initialSections.map(label=>'<section class="diagnosis-section"><div class="diagnosis-section-head"><b>'+label+'</b><span>Checking…</span></div><div class="diagnosis-row info"><span class="diagnosis-mark" aria-hidden="true">i</span><span><b>Checking</b><small>Reading the current app state and release contracts.</small></span></div></section>').join('')+'</div><div class="diagnosis-runbar"><span id="diagnosisRunStatus" class="diagnosis-run-status" aria-live="polite">Checking…</span><button class="secondary diagnosis-refresh" id="diagnosisRefresh" type="button" aria-pressed="false" disabled aria-label="Run diagnostics again">Run again</button></div></div>';
  const modal=existingModal;
  modal.classList.add(shellClass);
@@ -3940,6 +3940,30 @@ async function appDiagnosisView(existingModal){
    }catch(e){warn('restaurant','Restaurant API health','Health check failed or timed out.','The diagnosis does not change location or search state.');
    }
    
+   /* Interaction stability */
+   const queryInputSource=String(document.querySelector('#restaurantQuery')?.oninput||'');
+   const queryKeydownSource=String(document.querySelector('#restaurantQuery')?.onkeydown||'');
+   const searchSource=typeof searchRestaurants==='function'?String(searchRestaurants):'';
+   const queryStable=!queryInputSource.includes('drawRestaurants()')&&queryKeydownSource.includes('preventDefault')&&queryKeydownSource.includes('stopPropagation')&&queryKeydownSource.includes('searchRestaurants()');
+   queryStable?pass('runtime','Restaurant keyboard submit','Restaurant Search Enter submits from the current field without redrawing the active card first.','Typing is state-only and debounced; the phone keyboard action is one explicit submit.'):fail('runtime','Restaurant keyboard submit','The Restaurant Search keyboard path can redraw or double-submit the card.','Keep typing state-only and let Enter perform one explicit search.');
+   const searchRetainsCard=!searchSource.includes("$('restStage').innerHTML='';")&&!searchSource.includes('S.restaurantPool=[]; S.restaurantIndex=0; S.restaurantActions=[]; S.restaurantCuts.clear();');
+   searchRetainsCard?pass('runtime','Search visual stability','Restaurant searches keep the current card visible while loading and on recoverable failure.','A slow provider response should not visually blank or reset the card stage.'):fail('runtime','Search visual stability','The restaurant search path still clears or wipes the current card during loading or failure.','Preserve the current card until fresh results are ready.');
+   const stylesText=document.documentElement?Array.from(document.styleSheets).map(sheet=>{try{return Array.from(sheet.cssRules||[]).map(r=>r.cssText).join('\n')}catch{return ''}}).join('\n'):'';
+   const coachLowered=/\.swipe-card-coach\{[^}]*bottom:6px/i.test(stylesText)&&/@media\(max-width:390px\)[\s\S]*?\.swipe-card-coach\{[^}]*bottom:4px/i.test(stylesText);
+   coachLowered?pass('runtime','Swipe lesson placement','The first Swipe/Cut/Maybe lesson is anchored near the bottom action controls on phones.','The instruction stays inside the card and no longer sits high above the action row.'):warn('runtime','Swipe lesson placement','The source contains the Swipe/Cut/Maybe lesson, but final mobile spacing could not be verified here.','Physical iPhone spacing remains a device-check item.');
+   const wheelStartSource=typeof startContinuousWheelSpin==='function'?String(startContinuousWheelSpin):'';
+   const wheelFinishSource=typeof finishHungryWheelRotation==='function'?String(finishHungryWheelRotation):'';
+   const wheelStable=wheelStartSource.includes('hideCelebration()')&&wheelStartSource.includes('S.hungryWheelSpinToken++')&&wheelFinishSource.includes('triggerCelebration(true)');
+   wheelStable?pass('runtime','Hungry wheel repeat-spin isolation','A new wheel spin clears prior celebration state and advances the spin token before motion starts.','Old stop callbacks cannot resolve into a later spin.'):fail('runtime','Hungry wheel repeat-spin isolation','Repeat-spin state isolation is incomplete.','Reset celebration and invalidate prior wheel callbacks at spin start.');
+   const photoCacheSource=typeof loadRestaurantPhoto==='function'?String(loadRestaurantPhoto):'';
+   const cacheBound=photoCacheSource.includes('touchRestaurantPhotoMemoryCache')&&src.includes('RESTAURANT_PHOTO_MEMORY_CACHE_MAX=18')&&src.includes('URL.revokeObjectURL');
+   const photoSwapSource=typeof swapImageWhenReady==='function'?String(swapImageWhenReady):'';
+   cacheBound&&photoSwapSource.includes('new Image()')&&photoSwapSource.includes('probe.onload')?pass('runtime','Restaurant photo memory/flash protection','Restaurant photo memory is bounded and replacements are preloaded before the visible source changes.','This reduces iPhone memory pressure and photo source-change flashes.'):warn('runtime','Restaurant photo memory/flash protection','The bounded photo-cache or preloaded image swap safeguards could not be fully verified.','Repeat restaurant browsing on an iPhone remains an important stress test.');
+   const prefetchSource=typeof prefetchRestaurantPhotos==='function'?String(prefetchRestaurantPhotos):'';
+   prefetchSource.includes('restaurantPhotoPrefetchTimer')&&prefetchSource.includes('clearTimeout(restaurantPhotoPrefetchTimer)')?pass('runtime','Restaurant photo prefetch throttling','Rapid card movement coalesces background photo prefetch work instead of stacking loads.','This limits network and memory pressure during fast browsing.'):warn('runtime','Restaurant photo prefetch throttling','Photo prefetch throttling could not be fully verified.','Rapid swiping can otherwise increase network and memory pressure.');
+   const appRuntimeVersion=String(APP_BUILD||'');
+   const swVersionSynchronized=src.includes("navigator.serviceWorker.register('./sw.js?v=907')");
+   appRuntimeVersion==='907'&&swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker registration are synchronized to CP907.','A cache-query change helps the phone pick up the current shell.'):warn('runtime','PWA runtime versioning','The browser runtime is not fully synchronized to CP907.','A stale service worker can make an older interaction bug appear to persist.');
    /* iPhone / PWA */
    const metaViewport=document.querySelector('meta[name="viewport"]')?.getAttribute('content')||'';
    metaViewport.includes('viewport-fit=cover')?pass('runtime','iPhone viewport','Safe-area-aware viewport settings are present.'):warn('runtime','iPhone viewport','The expected viewport-fit setting is missing.');
