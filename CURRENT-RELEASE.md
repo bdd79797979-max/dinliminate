@@ -1,4 +1,13 @@
-# CURRENT RELEASE — BUILD 951 / CP951
+# CURRENT RELEASE — BUILD 952 / CP952
+
+## CP952 — Restore simple Meal swipe path
+- Removed the Meal-specific preview/staging/handoff hooks introduced in CP943–CP951.
+- Meal swipes now use the same direct card movement and promotion path as Restaurant.
+- Retained CP947 fixed geometry: the waiting card stays at scale 1.
+- Restaurant ALL · MAYBES count and selected-label green state are explicitly locked to the Meals treatment.
+- No new swipe animation or preview feature added.
+
+## CP951 — Meal swipe staged-preview handoff
 
 ## CP951 — Meal swipe staged-preview handoff
 - Meal swipes no longer call the fallback/re-staging preview routine during commit.
