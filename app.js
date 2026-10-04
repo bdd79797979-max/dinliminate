@@ -4228,39 +4228,13 @@ const homeActionHandler = (event) => {
 document.addEventListener('click', homeActionHandler, true);
 function bindHomeCardPress(id){
  const el=$(id);if(!el)return;
- let timer=0,downX=0,downY=0,moved=false,pointerId=null;
- const clearPress=()=>{
-  clearTimeout(timer);
-  el.classList.remove('is-pressed');
- };
- const down=e=>{
-  clearPress();
-  downX=Number(e.clientX)||0;
-  downY=Number(e.clientY)||0;
-  moved=false;
-  pointerId=e.pointerId??null;
-  el.classList.add('is-pressed');
- };
- const move=e=>{
-  if(pointerId!=null&&e.pointerId!==pointerId)return;
-  const dx=(Number(e.clientX)||0)-downX;
-  const dy=(Number(e.clientY)||0)-downY;
-  if(Math.hypot(dx,dy)>8){
-   moved=true;
-   clearPress();
-  }
- };
- const up=()=>{
-  clearTimeout(timer);
-  el.classList.remove('is-pressed');
-  timer=window.setTimeout(()=>el.classList.remove('is-pressed'),40);
-  pointerId=null;
- };
+ let timer=0;
+ const down=()=>{clearTimeout(timer);el.classList.add('is-pressed');};
+ const up=()=>{clearTimeout(timer);timer=window.setTimeout(()=>el.classList.remove('is-pressed'),140);};
  el.addEventListener('pointerdown',down,{passive:true});
- el.addEventListener('pointermove',move,{passive:true});
  el.addEventListener('pointerup',up,{passive:true});
  el.addEventListener('pointercancel',up,{passive:true});
- el.addEventListener('pointerleave',()=>{if(!moved)clearPress();},{passive:true});
+ el.addEventListener('pointerleave',up,{passive:true});
 }
 
 $('foodStart').onclick = startFood;
