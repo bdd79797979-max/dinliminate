@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 906,
+  "build": 907,
   "sourceBranch": "main",
-  "checkpoint": "CP906",
-  "deploymentTrigger": "CP906-wheel-second-spin-reset",
+  "checkpoint": "CP907",
+  "deploymentTrigger": "CP907-restaurant-search-enter-stability",
   "vercelProductionVerified": false
 }
