@@ -10,9 +10,9 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-// CP971 — freeze the waiting card during swipe; promote it only after the outgoing card finishes.
+// CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '972';
+let APP_BUILD = '973';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -416,15 +416,17 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='972';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='973';
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v5';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
-const RESTAURANT_PHOTO_PREFETCH_COUNT=3;
-const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1500;
+const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
+const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1600;
+const RESTAURANT_PHOTO_NEAR_READY_TIMEOUT=650;
+const RESTAURANT_NEUTRAL_IMAGE='./fallback-restaurant.svg';
 const RESTAURANT_PHOTO_HANDOFF_WAIT=950;
 let restaurantPhotoStoragePromise=null;
 function restaurantPhotoCacheRequest(row){
- const identity=normKey([row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
+ const identity=normKey(['v'+RESTAURANT_PHOTO_RESOLVER_VERSION,row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
  let hash=2166136261;
  for(let i=0;i<identity.length;i++){hash^=identity.charCodeAt(i);hash=Math.imul(hash,16777619);}
  return new Request('/__dinliminate_restaurant_photo_cache__/'+(hash>>>0).toString(36));
@@ -517,7 +519,7 @@ function restaurantFallbackImage(row){
  return imageProxyUrl(REST_QUICK_IMAGES.American);
 }
 function restaurantImmediatePhoto(row){
- if(!row)return imageProxyUrl(REST_QUICK_IMAGES.American);
+ if(!row)return RESTAURANT_NEUTRAL_IMAGE;
  // First paint should prefer an exact venue photo already known to the app.
  const known=knownRestaurantPhotoFallback(row);
  if(known)return known;
@@ -531,7 +533,7 @@ function restaurantImmediatePhoto(row){
  if(/^https:\/\//i.test(raw)&&(source.startsWith('OpenStreetMap')||source.startsWith('Photon POI'))){
   return imageProxyUrl(raw);
  }
- return restaurantFallbackImage(row);
+ return RESTAURANT_NEUTRAL_IMAGE;
 }
 function restaurantCardFallbackImage(row){
  const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
@@ -647,13 +649,21 @@ async function primeRestaurantPhotosBeforeFirstPaint(rows,startIndex=0){
   if(row)targets.push(row);
  }
  if(!targets.length)return;
- const currentPromise=loadRestaurantPhoto(targets[0]).catch(()=>null);
- targets.slice(1).forEach(row=>{loadRestaurantPhoto(row).catch(()=>{});});
+ const promises=targets.map(row=>loadRestaurantPhoto(row).catch(()=>null));
+ const started=Date.now();
  try{
   await Promise.race([
-   currentPromise,
+   promises[0],
    new Promise(resolve=>window.setTimeout(resolve,RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT))
   ]);
+  const elapsed=Date.now()-started;
+  const remaining=Math.max(0,RESTAURANT_PHOTO_NEAR_READY_TIMEOUT-Math.max(0,elapsed));
+  if(promises[1]&&remaining>0){
+   await Promise.race([
+    promises[1],
+    new Promise(resolve=>window.setTimeout(resolve,remaining))
+   ]);
+  }
  }catch{}
 }
 
@@ -2512,7 +2522,14 @@ if(S.restaurantPool.length) {
 } else {
   $('status').textContent = d.providerErrors?.length ? 'Restaurant sources are unavailable. Try again.' : 'No restaurants found in this radius.';
 }
-restaurantQuick(); drawRestaurants(); primeRestaurantPhotosBeforeFirstPaint(S.restaurantPool, S.restaurantIndex); save();
+restaurantQuick();
+if(S.restaurantPool.length){
+  $('restStage')?.setAttribute('data-photo-state','preparing');
+  await primeRestaurantPhotosBeforeFirstPaint(S.restaurantPool, S.restaurantIndex);
+}
+drawRestaurants();
+$('restStage')?.removeAttribute('data-photo-state');
+save();
 } catch (err) {
 if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
 S.restaurantSearchDegraded=true;
@@ -2581,7 +2598,7 @@ const shortAddress = row.address ? esc(String(row.address).split(',').slice(0,2)
 const cardDetailsAction = '<button class="restaurant-card-utility restaurant-card-details-utility" id="restDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
  const cardUtilityRow='<div class="restaurant-card-meta-row"><span class="restaurant-card-meta">'+esc(category)+'</span>'+cardDetailsAction+'</div>';
 $('restStage').innerHTML =
-'<div class="restaurant-card-stack"><article class="card next-card '+(nextRow?'':'hidden')+'" id="restaurantNextCard" aria-hidden="true"><img src="'+esc(nextImage)+'" data-restaurant-photo-key="'+esc(nextRow?.id||'')+'" data-fallback="'+esc(nextRow?.photoFallback||restaurantFallbackImage(nextRow))+'" data-final-fallback="'+esc(restaurantFallbackImage(nextRow))+'" alt="'+esc(nextRow?.name||'')+'"><div class="shade"></div><div class="restaurant-photo-credit" aria-live="polite"></div></article><article class="card" id="restaurantCard"><img src="'+esc(image)+'" data-restaurant-photo-key="'+esc(row.id||'')+'" data-fallback="'+esc(row.photoFallback||restaurantFallbackImage(row))+'" data-final-fallback="'+esc(restaurantFallbackImage(row))+'" alt="'+esc(row.name)+'"><div class="shade"></div><div class="restaurant-card-photo-ui">'+restaurantMaybeBadge+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy">'+cardUtilityRow+'<h3>'+esc(row.name)+'</h3>'+cardLocation+'</div></div></article></div>'+'<div class="swipe-actions unified-swipe-actions" aria-label="Restaurant decision controls"><button class="round-action round-back secondary" id="restBack" aria-label="Back"><span>↶</span></button><button class="round-action round-cut cut" id="restCut" aria-label="Cut"><span>✕</span></button><button class="round-action round-maybe maybe" id="restMaybe" aria-label="Maybe"><span>♥</span></button><button class="round-action round-choose choose" id="restChoose" aria-label="Choose this restaurant"><span>✓</span></button></div>';
+'<div class="restaurant-card-stack"><article class="card next-card '+(nextRow?'':'hidden')+'" id="restaurantNextCard" aria-hidden="true"><img src="'+esc(nextImage)+'" data-restaurant-photo-key="'+esc(nextRow?.id||'')+'" data-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" data-final-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" alt="'+esc(nextRow?.name||'')+'"><div class="shade"></div><div class="restaurant-photo-credit" aria-live="polite"></div></article><article class="card" id="restaurantCard"><img src="'+esc(image)+'" data-restaurant-photo-key="'+esc(row.id||'')+'" data-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" data-final-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" alt="'+esc(row.name)+'"><div class="shade"></div><div class="restaurant-card-photo-ui">'+restaurantMaybeBadge+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy">'+cardUtilityRow+'<h3>'+esc(row.name)+'</h3>'+cardLocation+'</div></div></article></div>'+'<div class="swipe-actions unified-swipe-actions" aria-label="Restaurant decision controls"><button class="round-action round-back secondary" id="restBack" aria-label="Back"><span>↶</span></button><button class="round-action round-cut cut" id="restCut" aria-label="Cut"><span>✕</span></button><button class="round-action round-maybe maybe" id="restMaybe" aria-label="Maybe"><span>♥</span></button><button class="round-action round-choose choose" id="restChoose" aria-label="Choose this restaurant"><span>✓</span></button></div>';
 const current = rows[S.restaurantIndex];
 const restBackButton=$('restBack');if(restBackButton){const familyBack=familyIsBrowseStage('restaurant')&&!familyBrowseSubmitted();restBackButton.disabled=!familyBack&&S.restaurantActions.length===0;restBackButton.setAttribute('aria-disabled',String(!familyBack&&S.restaurantActions.length===0));}
 bindCardButton('restBack', restaurantBack);
@@ -2590,7 +2607,7 @@ bindCardButton('restMaybe', () => restaurantMaybe(current));
 bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');}else winner(current)});
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
-bindImageFallback('#restStage img',restaurantFallback(row),restaurantFallbackImage(row));
+bindImageFallback('#restStage img',restaurantFallback(row),RESTAURANT_NEUTRAL_IMAGE);
 const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
