@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 925 / CP925
+# CURRENT RELEASE — BUILD 926 / CP926
+
+## CP926 — Meal swipe image handoff
+- Fixed the Meal-only swipe flashback by waiting for the incoming meal image to load/decode before restoring the card after a committed swipe.
+- Removed the earlier Meal compositor containment rule and retained only backface stability.
+- Restaurant swipe behavior is unchanged.
 
 ## CP925 — Swipe direction positioning
 - Moved the Meal and Restaurant CUT / SWIPE / MAYBE guidance out of the card and anchored it to the shared swipe-control rail.
