@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 942,
+  "build": 943,
   "sourceBranch": "main",
-  "checkpoint": "CP942",
-  "deploymentTrigger": "CP942-canonical-maybe-control",
+  "checkpoint": "CP943",
+  "deploymentTrigger": "CP943-deterministic-swipe-preview-handoff",
   "vercelProductionVerified": false
 }
