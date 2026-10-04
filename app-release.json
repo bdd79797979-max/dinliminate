@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 897,
+  "build": 898,
   "sourceBranch": "main",
-  "checkpoint": "CP897",
-  "deploymentTrigger": "CP897-solid-double-wood-door-background",
+  "checkpoint": "CP898",
+  "deploymentTrigger": "CP898-home-front-page-cleanup",
   "vercelProductionVerified": false
 }
