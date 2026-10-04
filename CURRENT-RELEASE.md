@@ -1,4 +1,12 @@
-# CURRENT RELEASE — BUILD 950 / CP950
+# CURRENT RELEASE — BUILD 951 / CP951
+
+## CP951 — Meal swipe staged-preview handoff
+- Meal swipes no longer call the fallback/re-staging preview routine during commit.
+- The gesture uses the already-staged next-card image promise, so the next layer cannot be hidden or reset while the outgoing card is moving.
+- The Meal swipe remains immediately responsive and keeps the CP947 zero-geometry-delta waiting card.
+- Restaurant swipe behavior remains unchanged.
+
+## CP950 — Fix Meal swipe responsiveness at source
 
 ## CP950 — Fix Meal swipe responsiveness at source
 - Removed the Meal-only pre-animation wait on the next image.
