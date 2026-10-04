@@ -9654,3 +9654,19 @@ button,input,select,textarea{
     font-size:10px!important;
   }
 }
+
+
+/* CP952 — Restaurant ALL · MAYBES parity with Meals. */
+#restaurant #restaurantMaybeDeck.canonical-maybe-control .maybe-control-count{
+  color:#55d88a!important;
+  font-weight:900!important;
+  text-shadow:0 0 10px rgba(85,216,150,.18)!important;
+}
+#restaurant #restaurantMaybeDeck.canonical-maybe-control.is-all .maybe-control-all,
+#restaurant #restaurantMaybeDeck.canonical-maybe-control.is-maybe .maybe-control-maybe{
+  color:#55d88a!important;
+}
+#restaurant #restaurantMaybeDeck.canonical-maybe-control.is-all .maybe-control-maybe,
+#restaurant #restaurantMaybeDeck.canonical-maybe-control.is-maybe .maybe-control-all{
+  color:#85817a!important;
+}
