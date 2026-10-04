@@ -1,3 +1,8 @@
+## CP906 — Hungry wheel second-spin reset
+- Starting a new Hungry wheel spin now clears any previous fireworks/celebration layer.
+- The wheel spin token is advanced at spin start so an older stop/finish callback cannot resolve into a later spin.
+- Runtime and service-worker asset versioning synchronized to CP906.
+
 ## CP904 — Phone freeze / photo-memory stability
 - Bounded the in-memory restaurant photo cache to 18 entries and revokes evicted blob URLs; currently visible restaurant photos are protected from eviction.
 - Coalesced restaurant photo prefetch work so rapid swipes do not queue a growing set of background image loads.
