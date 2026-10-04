@@ -1,3 +1,9 @@
+## CP907 — Restaurant search keyboard submit stability
+- Enter/search now reads the current field value directly and performs one submit without an extra card redraw.
+- Restaurant search typing no longer redraws the active card on every keystroke; provider search remains debounced.
+- Search keeps the existing card visible while results are loading instead of clearing the card stage first.
+- Search errors now preserve the current card rather than wiping the restaurant pool.
+
 ## CP906 — Hungry wheel second-spin reset
 - Starting a new Hungry wheel spin now clears any previous fireworks/celebration layer.
 - The wheel spin token is advanced at spin start so an older stop/finish callback cannot resolve into a later spin.
