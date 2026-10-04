@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 953,
+  "build": 954,
   "sourceBranch": "main",
-  "checkpoint": "CP953",
-  "deploymentTrigger": "CP953-restaurant-photo-resolver-quality",
+  "checkpoint": "CP954",
+  "deploymentTrigger": "CP954-restaurant-first-paint",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity"
