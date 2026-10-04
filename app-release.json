@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 901,
+  "build": 902,
   "sourceBranch": "main",
-  "checkpoint": "CP901",
-  "deploymentTrigger": "CP901-eliminate-swipe-card-handoff-flash",
+  "checkpoint": "CP902",
+  "deploymentTrigger": "CP902-restaurant-discovery-layer-over-card",
   "vercelProductionVerified": false
 }
