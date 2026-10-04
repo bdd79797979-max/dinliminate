@@ -1,4 +1,13 @@
-# CURRENT RELEASE — BUILD 926 / CP926
+# CURRENT RELEASE — BUILD 927 / CP927
+
+## CP927 — headerless luxury interior navigation
+- Removed the repeated Dinliminate wordmark and persistent top Back arrow from the main interior screens; the Front Page remains the branded entrance.
+- Replaced Meals, Family, and Winner top chrome with a compact interior navigation row and far-right polished metallic-gold Menu control.
+- Moved the Meals All/Maybes control into the centered top row and added its live Maybe count.
+- Rebuilt the Restaurant location row as one line: Current Location, Enter Address, Refresh, Radius, Menu.
+- Preserved the existing Restaurant minimalist controls, hidden status row, search behavior, and radius selector.
+- Reclaimed the removed header height so Meal and Restaurant cards can grow vertically on iPhone without changing swipe logic.
+- Kept CP926 Meal swipe image handoff hardening and Restaurant swipe behavior intact.
 
 ## CP926 — Meal swipe image handoff
 - Fixed the Meal-only swipe flashback by waiting for the incoming meal image to load/decode before restoring the card after a committed swipe.
@@ -132,7 +141,7 @@
 - Changed swipe completion so the new card/state renders before the detached outgoing card is reset, eliminating the visible reset frame at handoff.
 - Bumped the service-worker shell cache and release metadata to CP901.
 
-# CURRENT RELEASE — BUILD 910 / CP910
+## Historical release notes — CP910 and earlier
 
 ## CP900 — Meal Time editing lives with the meal
 - Removed the standalone Meal Time management section from Manage Meals.
