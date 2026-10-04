@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 931,
+  "build": 932,
   "sourceBranch": "main",
-  "checkpoint": "CP931",
-  "deploymentTrigger": "CP931-restaurant-phone-fit",
+  "checkpoint": "CP932",
+  "deploymentTrigger": "CP932-menu-lines-only",
   "vercelProductionVerified": false
 }
