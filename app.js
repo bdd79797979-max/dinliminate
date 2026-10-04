@@ -1,3 +1,4 @@
+// CP950 final tree sync: Meal swipe gate removed; keep this commit as the deploy source of truth.
 
 (() => {
 'use strict';
