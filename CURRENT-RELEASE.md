@@ -1,12 +1,14 @@
-# CURRENT RELEASE — BUILD 911 / CP911
+# CURRENT RELEASE — BUILD 912 / CP912
 
-## CP911 — Luxury metallic-gold brand polish
+## CP912 — Startup syntax repair + luxury metallic-gold brand polish
 - Replaced the canonical Dinliminate wordmark treatment with a restrained polished-metal gold finish.
 - Applied the same identity consistently across Home, Meals, Restaurants, Family, Winner, and the navigation drawer.
 - Preserved the existing wordmark structure, sizing, responsive layout, and animation architecture.
 - Updated the shell cache/style query and release metadata to build 911.
 - Refreshed the SVG app mark with the same dimensional metallic-gold direction.
 - Refreshed the raster PWA icons to match the metallic-gold app identity.
+- Repaired the CP900 Meal Time editor parser failure in `app.js`, which was preventing the entire client runtime from initializing.
+- Updated the JavaScript fallback build marker and PWA shell asset versions to 912 so browsers request the corrected runtime.
 
 ## CP910 — Surgical cleanup and runtime synchronization
 - Removed confirmed dead/no-op runtime fragments without changing the application architecture.
