@@ -1,12 +1,14 @@
-# CURRENT RELEASE — BUILD 944 / CP944
+# CURRENT RELEASE — BUILD 945 / CP945
 
-## CP944 — Fixed-size Meal swipe preview
-- Kept the waiting Meal card at one fixed geometry throughout idle, drag, and handoff.
-- Removed live waiting-card scale interpolation during swipe; reveal now uses opacity/brightness only.
-- Removed the waiting Meal image’s separate zoom so the card/photo cannot visibly resize during the gesture.
-- Bumped the Meal JavaScript cache version to `?v=944` so deployed phones receive the corrected swipe source.
-- Restaurant swipe behavior remains unchanged.
-
+## CP945 — Canonical Restaurant photo pipeline
+- Restaurant first paint now uses one canonical immediate-photo decision: OSM-backed venue photos are trusted; arbitrary provider photos no longer jump onto the card before verification.
+- The waiting Restaurant card starts the same authoritative resolver used by the current card, so the next card can settle on its final venue photo before swipe promotion when the resolver is ready.
+- Restaurant swipe handoff now has a bounded canonical-photo wait and locks a promoted layer against late photo replacement, preventing a visible photo identity change during handoff.
+- Restaurant photo persistent cache was bumped to dinliminate.restaurant.photos.v3 and the resolver query to 711, invalidating the older photo decision/cache path.
+- Backend delivery now rejects decoded restaurant images with unusably small dimensions, excessive dimensions, or excessive pixel counts before they reach the phone card pipeline.
+- Unverified provider photo metadata now reports lower confidence instead of treating every provider URL as near-certain venue evidence.
+- Added QA coverage for canonical first-paint selection, next-card handoff, provider-confidence classification, Photon/OSM trust, and decoded image-dimension validation.
+- Restaurant behavior and Meal swipe scaling remain unchanged except for the shared photo-loading primitives.
 ## CP939 — Canonical Meals + Restaurant decision layer
 - Unified Meals and Restaurant decision controls around one canonical visual/DOM contract.
 - Meals uses shared decision classes for Meal Times, Cuisine, ALL/MAYBES, live count, and Menu.
