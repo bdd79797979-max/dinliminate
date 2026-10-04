@@ -9344,6 +9344,25 @@ button,input,select,textarea{
   border:0!important;
   box-shadow:none!important;
 }
+#food .food-interior-nav .food-top-maybe .top-maybe-label,
+#food .food-interior-nav .food-top-maybe .top-maybe-divider,
+#food .food-interior-nav .food-top-maybe .top-maybe-count{
+  color:#8f8b84!important;
+  text-shadow:none!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  letter-spacing:inherit!important;
+}
+#food .food-interior-nav .food-top-maybe .top-maybe-divider{
+  padding:0 1px!important;
+}
+#food .food-interior-nav .food-top-maybe.is-maybe .top-maybe-label{
+  color:#8f8b84!important;
+}
+#food .food-interior-nav .food-top-maybe.has-maybes .top-maybe-count{
+  color:#8f8b84!important;
+}
+
 #food .interior-menu::after,
 #restaurant .interior-menu::after{
   content:none!important;
