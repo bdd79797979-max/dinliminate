@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 866,
+  "build": 867,
   "sourceBranch": "main",
-  "checkpoint": "CP866",
-  "deploymentTrigger": "CP866-fix-meal-photo-tap-swipe-coexistence-2026-10-04",
+  "checkpoint": "CP867",
+  "deploymentTrigger": "CP867-meal-photo-reorder-cover-ordering-2026-10-04",
   "vercelProductionVerified": false
 }

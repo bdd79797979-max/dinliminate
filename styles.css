@@ -7853,6 +7853,11 @@ button,input,select,textarea{
 .meal-photo-editor-card-tools>div{display:flex;align-items:center;gap:2px}
 .meal-photo-main,.meal-photo-remove{border:0;background:transparent;color:#c7a56b;font-size:8px;font-weight:800;padding:4px}
 .meal-photo-remove{color:#a39a8d}
+/* CP867 — Meal editor photo ordering */
+.meal-photo-order{border:0;background:transparent;color:#c7a56b;font-size:11px;font-weight:900;padding:4px 5px;line-height:1;min-width:22px;min-height:24px}
+.meal-photo-order:disabled{opacity:.22}
+.meal-photo-order:not(:disabled):active{transform:scale(.92)}
+.meal-photo-editor-card.is-main .meal-photo-editor-card-tools>span{color:#e2c787}
 @media(max-width:390px){.meal-photo-editor-grid{gap:6px}.meal-photo-editor-card-tools{padding:5px}}
 
 /* CP863 — Meal photo upload polish */

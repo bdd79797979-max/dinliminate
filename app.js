@@ -3115,7 +3115,7 @@ const body='<form class="add" id="foodEditorForm">'+
 '<label class="meal-editor-text-label">About this meal<textarea id="editFoodDescription" placeholder="A short description of the meal (optional)" rows="3">'+esc(descriptionText)+'</textarea></label>'+
 '<label class="meal-editor-text-label">Ingredients<textarea id="editFoodIngredients" placeholder="One ingredient per line" rows="5">'+esc(ingredientsText)+'</textarea></label>'+
 '<label class="meal-editor-text-label">Recipe / preparation<textarea id="editFoodRecipe" placeholder="Preparation steps or recipe (optional)" rows="5">'+esc(item?.recipe||'')+'</textarea></label>'+(isEdit?'<section class="meal-editor-note-section"><div class="meal-editor-note-copy"><b>Add a note</b><small>Private to this device. Keep a reminder, favorite, or thought with this meal.</small></div><textarea id="editFoodNote" maxlength="1200" rows="3" placeholder="Write a note about this meal…">'+esc(itemNote(item,'food'))+'</textarea></section>':'')+
-'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Choose a new image to replace the current photo, or leave it unchanged.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Choose image</span><input id="editFoodFile" type="file" accept="image/*"></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
+'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Choose image</span><input id="editFoodFile" type="file" accept="image/*"></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
 const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
 const mealPhotoFile=$('editFoodFile');
@@ -3127,10 +3127,22 @@ if(mealPhotoFile){
  const grid=document.createElement('div');grid.id='mealPhotoEditorGrid';grid.className='meal-photo-editor-grid';photoSection?.appendChild(grid);
  const count=document.createElement('small');count.id='mealPhotoEditorCount';count.className='meal-photo-editor-count';photoSection?.appendChild(count);
  const renderMealPhotos=()=>{
-  count.textContent=editorPhotos.length+' / 8 photos · first is Main';
-  grid.innerHTML=editorPhotos.map((src,i)=>'<div class="meal-photo-editor-card '+(i===0?'is-main':'')+'"><img src="'+esc(imageProxyUrl(src||FINAL_FOOD_IMAGE))+'" alt="Meal photo '+(i+1)+'" draggable="false"><div class="meal-photo-editor-card-tools"><span>'+(i===0?'MAIN':'PHOTO '+(i+1))+'</span><div>'+(i?'<button type="button" class="meal-photo-main" data-meal-photo-main="'+i+'">Main</button>':'')+'<button type="button" class="meal-photo-remove" data-meal-photo-remove="'+i+'" aria-label="Remove meal photo '+(i+1)+'">×</button></div></div></div>').join('');
-  grid.querySelectorAll('[data-meal-photo-remove]').forEach(btn=>btn.onclick=()=>{editorPhotos.splice(Number(btn.dataset.mealPhotoRemove),1);renderMealPhotos();});
-  grid.querySelectorAll('[data-meal-photo-main]').forEach(btn=>btn.onclick=()=>{const picked=editorPhotos.splice(Number(btn.dataset.mealPhotoMain),1)[0];if(picked){editorPhotos.unshift(picked);renderMealPhotos();}});
+  count.textContent=editorPhotos.length+' / 8 photos · first is Cover';
+  grid.innerHTML=editorPhotos.map((src,i)=>'<div class="meal-photo-editor-card '+(i===0?'is-main':'')+'"><img src="'+esc(imageProxyUrl(src||FINAL_FOOD_IMAGE))+'" alt="Meal photo '+(i+1)+'" draggable="false"><div class="meal-photo-editor-card-tools"><span>'+(i===0?'COVER':'PHOTO '+(i+1))+'</span><div><button type="button" class="meal-photo-order" data-meal-photo-up="'+i+'" aria-label="Move photo '+(i+1)+' earlier" '+(i===0?'disabled':'')+'>↑</button><button type="button" class="meal-photo-order" data-meal-photo-down="'+i+'" aria-label="Move photo '+(i+1)+' later" '+(i===editorPhotos.length-1?'disabled':'')+'>↓</button><button type="button" class="meal-photo-remove" data-meal-photo-remove="'+i+'" aria-label="Remove meal photo '+(i+1)+'">×</button></div></div></div>').join('');
+  grid.querySelectorAll('[data-meal-photo-up]').forEach(btn=>btn.onclick=()=>{
+   const i=Number(btn.dataset.mealPhotoUp);if(i<=0)return;
+   [editorPhotos[i-1],editorPhotos[i]]=[editorPhotos[i],editorPhotos[i-1]];
+   renderMealPhotos();
+  });
+  grid.querySelectorAll('[data-meal-photo-down]').forEach(btn=>btn.onclick=()=>{
+   const i=Number(btn.dataset.mealPhotoDown);if(i<0||i>=editorPhotos.length-1)return;
+   [editorPhotos[i],editorPhotos[i+1]]=[editorPhotos[i+1],editorPhotos[i]];
+   renderMealPhotos();
+  });
+  grid.querySelectorAll('[data-meal-photo-remove]').forEach(btn=>btn.onclick=()=>{
+   editorPhotos.splice(Number(btn.dataset.mealPhotoRemove),1);
+   renderMealPhotos();
+  });
  };
  editorPhotosReady=hydrateStoredMealPhotoList(item).then(photos=>{editorPhotos=photos.slice(0,8);renderMealPhotos();}).catch(()=>renderMealPhotos());
  renderMealPhotos();
