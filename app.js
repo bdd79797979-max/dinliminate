@@ -1094,6 +1094,7 @@ function resolveFoodAfterDecision(){
  S.index=Math.max(0,Math.min(S.index,S.pool.length-1));drawFood();save();
 }
 function foodBack(){
+ if(familyIsBrowseStage('meal')){familyBrowseBack('meal');return;}
  const action=S.foodActions.pop();if(!action)return;
  if(action.type==='cut')S.foodCuts.delete(action.id);
  if(action.type==='maybe'){if(action.hadMaybe)S.maybe.add(action.id);else S.maybe.delete(action.id);}
@@ -2106,6 +2107,7 @@ function restaurantMaybe(row){
 }
 
 function restaurantBack(){
+ if(familyIsBrowseStage('restaurant')){familyBrowseBack('restaurant');return;}
  const action=S.restaurantActions.pop();if(!action)return;
  const row=S.restaurantPool.find(x=>x.id===action.id);if(row){if(action.type==='cut')row._cut=false;if(action.type==='maybe')row._maybe=!!action.hadMaybe;}
  S.restaurantMaybeRound=!!action.maybeRound||!!action.roundAfter;const rows=restaurantPoolFiltered(),restored=rows.findIndex(x=>x.id===action.id);
@@ -4026,10 +4028,10 @@ async function familyOpen(){S.familyNormalAutoResume=true;['familySetup','family
 async function familyEndDinner(){
  const s=familySessionRead();if(!s?.token||s.member?.role!=='host'||!s.family?.activeRoundId)return;
  if(!await appConfirm('End Dinner Together','End the active Family dinner for everyone? They will return to the Family lobby.','End Dinner'))return;
- try{await familyApi('end-round',{token:s.token});S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyNormalRoundId='';S.familyNormalStage=0;S.familyActiveData=null;show('family');await familyRefreshState();familySetStatus('familyLobbyStatus','Dinner ended by the host. You can start a new one anytime.');}
+ try{await familyApi('end-round',{token:s.token});familyResetCompareState();S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyNormalRoundId='';S.familyNormalStage=0;S.familyActiveData=null;show('family');await familyRefreshState();familySetStatus('familyLobbyStatus','Dinner ended by the host. You can start a new one anytime.');}
  catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not end the Family dinner.','error');}
 }
-async function familyLeave(){const s=familySessionRead();if(!await appConfirm('Leave Family Mode',s?.family?.activeRoundId?'A Family dinner is active. You can leave and rejoin later.':'Leave this Family on this device?','Leave'))return;S.familyNormalMode='idle';S.familyNormalAutoResume=false;stopFamilyLobbyPolling();if(s?.token){try{await familyApi('leave',{token:s.token});}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not leave the Family.','error');return;}}familySessionClear();familyShowEntry();show('family');}
+async function familyLeave(){const s=familySessionRead();if(!await appConfirm('Leave Family Mode',s?.family?.activeRoundId?'A Family dinner is active. You can leave and rejoin later.':'Leave this Family on this device?','Leave'))return;familyResetCompareState();S.familyNormalMode='idle';S.familyNormalAutoResume=false;stopFamilyLobbyPolling();if(s?.token){try{await familyApi('leave',{token:s.token});}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not leave the Family.','error');return;}}familySessionClear();familyShowEntry();show('family');}
 async function familyRotateCode(){const s=familySessionRead();if(!s?.token)return;try{const d=await familyApi('rotate-code',{token:s.token});familySessionWrite({...s,family:{...(s.family||{}),joinCode:d.joinCode}});await familyRefreshState();}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}}
 function familyBackFromMode(){S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyDecisionType='';S.familyVotedIds=new Set();familyResetCompareState();stopFamilyLobbyPolling();home();}
 

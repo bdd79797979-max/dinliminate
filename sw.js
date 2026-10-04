@@ -1,4 +1,4 @@
-const CACHE='dinliminate-shell-v859';
+const CACHE='dinliminate-shell-v860';
 const IMAGE_CACHE='dinliminate-images-v1';
 const HOME_DOOR='./home-background.jpg';
 const SHELL=['./','./index.html','./styles.css','./app.js?v=858','./data/foods.js','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg','./home-background.jpg'];

@@ -1,9 +1,12 @@
-# CURRENT RELEASE — BUILD 859 / CP859
+# CURRENT RELEASE — BUILD 860 / CP860
 
 Date: 2026-10-04
 
-## CP859
-Family Mode Round 2/Tiebreak browsing is now a dedicated browse state: swipe, Cut, Maybe, and Back navigate finalists; ✓ ENTER is the only selection action. Round 1 and Round 2/Tiebreak use single Family operations that return progressed/winner state immediately. Compare Both is a sequential workflow: At Home → Restaurant → final dinner-type choice, with never more than one active round. Family Back returns to the Family lobby.
+## CP860 — Final Family Mode audit hardening
+- Family Back now uses the dedicated Round 2/Tiebreak browse history before normal decision history.
+- Compare Both state is explicitly cleared when a Family dinner is ended or the user leaves Family Mode.
+- Added regression contract coverage for Round 2 swipe/back browsing, Enter routing, immediate winner handling, Compare Both routing, and release/cache identity.
+- App/service-worker identity advanced to v860.
 
 ## Verification
-Source parsing/static checks are required. Exact two-device interactive Family testing remains a device/browser gate while TinyFish browser automation is unavailable due to a depleted wallet.
+Static parsing and contract checks pass on the CP860 source. Vercel deployment identity and runtime error health are checked after deployment. Live two-device swipe/Enter testing remains a physical/browser gate while TinyFish browser automation is unavailable.
