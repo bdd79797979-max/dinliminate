@@ -4,6 +4,6 @@
   "build": 934,
   "sourceBranch": "main",
   "checkpoint": "CP934",
-  "deploymentTrigger": "CP933-maximize-decision-cards",
+  "deploymentTrigger": "CP934-restaurant-search-field",
   "vercelProductionVerified": false
 }
