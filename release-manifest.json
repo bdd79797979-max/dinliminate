@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 970,
+  "build": 971,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP970",
-  "deploymentTrigger": "CP970-atomic-meal-swipe-and-exact-venue-photo-fix"
+  "checkpoint": "CP971",
+  "deploymentTrigger": "CP971-freeze-waiting-card-during-swipe"
 }

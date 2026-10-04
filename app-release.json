@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 970,
+  "build": 971,
   "sourceBranch": "main",
-  "checkpoint": "CP970",
-  "deploymentTrigger": "CP970-atomic-meal-swipe-and-exact-venue-photo-fix",
+  "checkpoint": "CP971",
+  "deploymentTrigger": "CP971-freeze-waiting-card-during-swipe",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity",

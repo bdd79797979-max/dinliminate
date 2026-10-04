@@ -10,9 +10,9 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-// CP970 — atomic Meal swipe handoff: keep the promoted card visually stable while the recycled card is repainted.
+// CP971 — freeze the waiting card during swipe; promote it only after the outgoing card finishes.
 let foodSwipeHandoff=false;
-let APP_BUILD = '970';
+let APP_BUILD = '971';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -416,7 +416,7 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='970';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='971';
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v5';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=3;
@@ -1594,15 +1594,12 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.transform='translate3d('+(direction*distance)+'px,0,0) rotate('+(direction*10)+'deg)';
   if(next){
    next.dataset.swipePromoted='1';
-   next.style.transition=staticWaitingCard
-    ?'opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease'
-    :'transform '+Math.max(duration-10,110)+'ms cubic-bezier(.22,1,.36,1),opacity '+Math.max(duration-10,110)+'ms ease,filter '+Math.max(duration-10,110)+'ms ease';
-   if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
-   next.style.opacity='1';
+   // Keep the waiting card fixed throughout the outgoing animation.
+   next.style.transition='none';
+   next.style.transform='none';
    next.style.visibility='visible';
-   next.style.filter='saturate(1) brightness(1)';
    const promotedImg=next.querySelector('img');
-   if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
+   if(promotedImg)promotedImg.style.transform='none';
   }
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
@@ -1669,11 +1666,8 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.opacity='1';
   card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*3.1),0,.24)));
   card.dataset.swipe=dx<0?'cut':'maybe';
-  if(next){
-   if(!staticWaitingCard)next.style.transform='scale(1)';
-   next.style.opacity=String(clamp(.62+Math.min(1,progress)*.38,.62,1));
-   next.style.filter='saturate('+clamp(.82+Math.min(1,progress)*.18,.82,1).toFixed(3)+') brightness('+clamp(.76+Math.min(1,progress)*.24,.76,1).toFixed(3)+')';
-  }
+  // CP971: keep the waiting card completely fixed while the top card moves.
+  // It is promoted only after the outgoing animation finishes.
   if(absX>=swipeThreshold&&!hapticTriggered){
    hapticTriggered=true;
    triggerSwipeHaptic();
