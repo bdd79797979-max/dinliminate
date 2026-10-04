@@ -106,24 +106,6 @@ function imageProxyUrl(raw){
  if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
  try{const u=new URL(src);if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;return '/api/image?url='+encodeURIComponent(u.href);}catch{return src;}
 }
-const HOME_DOOR_SOURCE='https://images.pexels.com/photos/14778623/pexels-photo-14778623.jpeg?auto=compress&cs=tinysrgb&w=1800';
-const HOME_DOOR_PROXY='/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F14778623%2Fpexels-photo-14778623.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1800';
-const HOME_DOOR_FALLBACK='./home-background.jpg?v=894';
-function bindPersistentHomeBackground(){
- const img=$('homeBackgroundImage');
- if(!img||img.dataset.bound)return;
- img.dataset.bound='true';
- img.src=HOME_DOOR_PROXY;
- img.dataset.fallback=HOME_DOOR_FALLBACK;
- img.referrerPolicy='no-referrer';
- img.loading='eager';
- img.fetchPriority='high';
- img.decoding='async';
- img.addEventListener('error',()=>{
-   const fallback=img.dataset.fallback||HOME_DOOR_FALLBACK;
-   if(img.src!==fallback){img.src=fallback;}
- });
-}
 function normalizeMealPhotoRef(value){return String(value??'').trim();}
 function dedupeMealPhotos(photos,max=8){
  const out=[],seen=new Set();
@@ -381,13 +363,6 @@ function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAG
    if(final&&current!==final){img.dataset.imageFallback='true';img.src=final;return;}
    img.dataset.imageFallback='true';
   });
- });
-}
-function bindHomeImageFallbacks(){
- document.querySelectorAll('.home-photo-img').forEach(img=>{
-  const final=img.dataset.finalFallback||FINAL_FOOD_IMAGE;
-  img.referrerPolicy='no-referrer';img.loading='eager';
-  img.onerror=function(){const current=this.currentSrc||this.src;if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};
  });
 }
 const restaurantPhotoInflight=new Map();
@@ -3959,8 +3934,6 @@ function bindHomeCardPress(id){
 
 $('foodStart').onclick = startFood;
 $('restStart').onclick = openRestaurant;
-['#foodStart .home-card-overlay','#foodStart .home-card-copy','#foodStart .arrow','#foodStart .home-photo-img'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();startFood();},{capture:true});});
-['#restStart .home-card-overlay','#restStart .home-card-copy','#restStart .arrow','#restStart .home-photo-img'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();openRestaurant();},{capture:true});});
 bindCardButton('foodCut',()=>foodCut());
 bindCardButton('foodMaybe',()=>foodMaybe());
 bindCardButton('foodBack',foodBack);
@@ -4153,11 +4126,9 @@ window.addEventListener('offline', updateOffline);
 window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
-bindHomeImageFallbacks();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=865').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=895').catch(() => {}));
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindMealPhotoCountControls();
-bindPersistentHomeBackground();
 load();
 renderLocationSource();
 renderFindButton();
