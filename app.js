@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '899';
+let APP_BUILD = '900';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3177,6 +3177,98 @@ async function findOnlineMealPhoto(name) {
  }
 }
 
+function selectedMealTimesFromEditor(){
+ return [...document.querySelectorAll('#editFoodMealTime input[name="editMealTime"]:checked')].map(x=>String(x.value||'').trim()).filter(Boolean);
+}
+function renderFoodEditorMealTimes(selectedOverride){
+ const host=$('editFoodMealTime'),manager=$('editFoodMealTimeManager'),toggle=$('editMealTimesManage');
+ if(!host)return;
+ const selected=new Set(Array.isArray(selectedOverride)?selectedOverride:selectedMealTimesFromEditor());
+ const options=mealTimeOptions();
+ host.innerHTML=options.filter(x=>x.enabled).map(item=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(item.name)+'" '+(selected.has(item.name)?'checked':'')+'><span>'+esc(item.name)+'</span></label>').join('');
+ host.querySelectorAll('input[name="editMealTime"]').forEach(input=>input.addEventListener('change',()=>{
+  const checked=selectedMealTimesFromEditor();
+  if(!checked.length){input.checked=true;appToast('Choose at least one Meal Time.');return;}
+ }));
+ if(toggle){
+  toggle.textContent=manager?.classList.contains('hidden')?'Edit Meal Times':'Done';
+  toggle.setAttribute('aria-expanded',String(!manager?.classList.contains('hidden')));
+ }
+ if(manager){
+  manager.innerHTML=mealTimeCatalog().map((item,index)=>{
+   const cfg=ensureMealTimeSettings(),isOff=cfg.disabled.has(item.id),first=index===0,last=index===mealTimeCatalog().length-1;
+   return '<div class="food-editor-meal-time-row" data-food-editor-meal-time-id="'+esc(item.id)+'">'+
+    '<div class="food-editor-meal-time-main"><b>'+esc(item.name)+'</b><small>'+esc(item.custom?'CUSTOM':'DEFAULT')+(isOff?' · OFF':'')+'</small></div>'+
+    '<div class="food-editor-meal-time-tools">'+
+      '<button type="button" class="food-editor-meal-time-move" data-food-editor-meal-time-up="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' up" '+(first?'disabled':'')+'>↑</button>'+
+      '<button type="button" class="food-editor-meal-time-move" data-food-editor-meal-time-down="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' down" '+(last?'disabled':'')+'>↓</button>'+
+      '<button type="button" class="food-editor-meal-time-edit" data-food-editor-meal-time-edit="'+esc(item.id)+'">Edit</button>'+
+      '<button type="button" class="food-editor-meal-time-toggle '+(isOff?'':'is-on')+'" data-food-editor-meal-time-toggle="'+esc(item.id)+'" aria-pressed="'+(isOff?'false':'true')+'">'+(isOff?'Off':'On')+'</button>'+
+      (item.custom?'<button type="button" class="food-editor-meal-time-delete" data-food-editor-meal-time-delete="'+esc(item.id)+'" aria-label="Delete '+esc(item.name)+'">×</button>':'')+
+    '</div></div>';
+  }).join('');
+  manager.querySelectorAll('[data-food-editor-meal-time-edit]').forEach(btn=>btn.onclick=()=>renameMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeEdit));
+  manager.querySelectorAll('[data-food-editor-meal-time-delete]').forEach(btn=>btn.onclick=()=>deleteMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDelete));
+  manager.querySelectorAll('[data-food-editor-meal-time-up]').forEach(btn=>btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeUp,-1));
+  manager.querySelectorAll('[data-food-editor-meal-time-down]').forEach(btn=>btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDown,1));
+  manager.querySelectorAll('[data-food-editor-meal-time-toggle]').forEach(btn=>btn.onclick=()=>toggleMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeToggle));
+}
+function renameMealTimeInFoodEditor(id){
+ const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item)return;
+ const row=document.querySelector('[data-food-editor-meal-time-id="'+CSS.escape(String(id))+'"]'),main=row?.querySelector('.food-editor-meal-time-main');if(!main||main.querySelector('input'))return;
+ const selected=selectedMealTimesFromEditor(),old=item.name;
+ main.innerHTML='<input class="food-editor-meal-time-edit-input" maxlength="28" value="'+esc(old)+'" aria-label="Rename Meal Time">';
+ const input=main.querySelector('input');
+ const finish=commit=>{
+  if(!commit){renderFoodEditorMealTimes(selected);return;}
+  const next=String(input.value||'').trim();
+  if(!next){appToast('Give the Meal Time a name.');input.focus();return;}
+  if(mealTimeCatalog().some(x=>x.id!==item.id&&normKey(x.name)===normKey(next))){appToast('That Meal Time name is already in use.');input.focus();input.select();return;}
+  const cfg=ensureMealTimeSettings();
+  const nextSelected=selected.map(x=>x===old?next:x);
+  if(item.custom){
+   const custom=cfg.custom.find(x=>String(x.id)===String(id));if(custom)custom.name=next;
+  }else{
+   const oldCurrent=cfg.names[item.id]||item.defaultName;cfg.names[item.id]=next;syncMealTimeReferences(oldCurrent,next,item.id);
+  }
+  save();buildFood();foodQuick();renderMealTimeCuts();renderFoodEditorMealTimes(nextSelected);
+ };
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();finish(true)}else if(e.key==='Escape'){e.preventDefault();finish(false)}});
+ input.addEventListener('blur',()=>window.setTimeout(()=>{if(document.body.contains(input))finish(true)},80));
+ input.focus();input.select();
+}
+function addMealTimeInFoodEditor(name){
+ const next=String(name||'').trim();
+ if(!next){appToast('Give the new Meal Time a name.');return;}
+ if(mealTimeCatalog().some(x=>normKey(x.name)===normKey(next))){appToast('That Meal Time name is already in use.');return;}
+ const selected=selectedMealTimesFromEditor(),cfg=ensureMealTimeSettings(),id='meal-time-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+ cfg.custom.push({id,name:next});cfg.order.push(id);cfg.order=[...new Set(cfg.order)];
+ save();renderFoodEditorMealTimes([...selected,next]);appToast(next+' added to this meal.');
+}
+async function deleteMealTimeInFoodEditor(id){
+ const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item?.custom)return;
+ if(!await appConfirm('Delete '+item.name+'?','Meals using this Meal Time will move to '+(mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner')+'.','Delete Meal Time'))return;
+ const selected=selectedMealTimesFromEditor(),fallback=mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner',replace=item.name;
+ S.custom.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
+ S.deletedCustomMeals?.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
+ const cfg=ensureMealTimeSettings();cfg.custom=cfg.custom.filter(x=>String(x.id)!==String(id));cfg.order=cfg.order.filter(x=>String(x)!==String(id));cfg.disabled.delete(String(id));
+ const nextSelected=selected.map(x=>x===replace?fallback:x);
+ save();buildFood();foodQuick();renderMealTimeCuts();renderFoodEditorMealTimes(nextSelected);appToast(item.name+' deleted.');
+}
+function moveMealTimeInFoodEditor(id,direction){
+ const cfg=ensureMealTimeSettings(),key=String(id),idx=cfg.order.findIndex(x=>String(x)===key),to=idx+direction;
+ if(idx<0||to<0||to>=cfg.order.length)return;
+ [cfg.order[idx],cfg.order[to]]=[cfg.order[to],cfg.order[idx]];
+ save();renderFoodEditorMealTimes();
+}
+function toggleMealTimeInFoodEditor(id){
+ const cfg=ensureMealTimeSettings(),key=String(id),currentlyOff=cfg.disabled.has(key);
+ if(!currentlyOff&&mealTimeOptions().filter(x=>x.enabled).length<=1){appToast('Keep at least one Meal Time active.');return;}
+ const selected=selectedMealTimesFromEditor(),item=mealTimeCatalog().find(x=>x.id===key),oldName=item?.name;
+ if(currentlyOff)cfg.disabled.delete(key);
+ else{cfg.disabled.add(key);if(oldName){const nextSelected=selected.filter(x=>x!==oldName);if(!nextSelected.length){cfg.disabled.delete(key);appToast('Keep at least one Meal Time selected for this meal.');return;}}}
+ save();buildFood();foodQuick();renderMealTimeCuts();renderFoodEditorMealTimes(selected.filter(x=>x!==oldName));
+}
 function foodEditor(item=null) {
 const isEdit=!!item;
 const defaultItem=isEdit?getDefaultFoods().find(x=>String(x.id)===String(item?.id)):null;
@@ -3193,7 +3285,7 @@ let editorPhotos=dedupeMealPhotos(mealPhotoList(item),8);
 let editorPhotosReady=Promise.resolve();
 const body='<form class="add" id="foodEditorForm">'+
 '<input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'">'+
-'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><legend>Meal Times</legend><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid">'+mealTimeOptions().map(def=>def.name).map(label=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(label)+'" '+(existingMealTimes.has(label)?'checked':'')+'><span>'+esc(label)+'</span></label>').join('')+'</div></fieldset>'+
+'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><div class="meal-time-editor-head"><legend>Meal Times</legend><button type="button" class="meal-time-edit-toggle" id="editMealTimesManage" aria-expanded="false">Edit Meal Times</button></div><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid"></div><div id="editFoodMealTimeManager" class="food-editor-meal-time-manager hidden" aria-label="Edit Meal Times"></div></fieldset>'+
 '<div class="meal-editor-section"><div class="meal-editor-section-title">Nutrition per serving</div><p class="meal-editor-helper">Fill in the five numbers that will appear in the meal Details screen.</p><div class="meal-nutrition-editor-grid">'+
 '<label>Calories<input id="editFoodCalories" type="number" required min="0" step="1" inputmode="numeric" placeholder="520" value="'+esc(nut.calories??'')+'"><span>kcal</span></label>'+
 '<label>Protein<input id="editFoodProtein" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="27" value="'+esc(nut.protein??'')+'"><span>g</span></label>'+
@@ -3207,6 +3299,14 @@ const body='<form class="add" id="foodEditorForm">'+
 '<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Add Photos</span><input id="editFoodFile" type="file" accept="image/*" multiple></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
 const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
+const mealTimeManageToggle=$('editMealTimesManage'),mealTimeManager=$('editFoodMealTimeManager');
+mealTimeManageToggle?.addEventListener('click',()=>{
+ const open=mealTimeManager?.classList.toggle('hidden')===false;
+ mealTimeManageToggle.setAttribute('aria-expanded',String(open));
+ mealTimeManageToggle.textContent=open?'Done':'Edit Meal Times';
+ if(open)renderFoodEditorMealTimes();
+});
+renderFoodEditorMealTimes(existingMealTimes.size?[...existingMealTimes]:mealTimeNames());
 const mealPhotoFile=$('editFoodFile');
 const initialPhotoInput=normalizeMealPhotoRef($('editFoodPhoto')?.value);
 if(mealPhotoFile){
@@ -3545,86 +3645,6 @@ function restoreDeletedMeal(id){
   S.deleted.delete(key);
  }
  buildFood();foodQuick();save();manageFoodsView();
-}
-function mealTimeManagerRows(){
- const options=mealTimeOptions(),enabledCount=options.filter(x=>x.enabled).length;
- return options.map((item,index)=>{
-  const isFirst=index===0,isLast=index===options.length-1;
-  return '<div class="manage-meal-time-row" data-meal-time-id="'+esc(item.id)+'">'+
-    '<div class="manage-meal-time-main"><b>'+esc(item.name)+'</b><small>'+esc(item.custom?'CUSTOM':'DEFAULT')+(item.enabled?'':' · OFF')+'</small></div>'+
-    '<div class="manage-meal-time-actions">'+
-      '<button type="button" class="manage-meal-time-icon" data-meal-time-up="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' up" '+(isFirst?'disabled':'')+'>↑</button>'+
-      '<button type="button" class="manage-meal-time-icon" data-meal-time-down="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' down" '+(isLast?'disabled':'')+'>↓</button>'+
-      '<button type="button" class="manage-meal-time-action" data-meal-time-edit="'+esc(item.id)+'">Edit</button>'+
-      '<button type="button" class="manage-meal-time-toggle '+(item.enabled?'is-on':'')+'" data-meal-time-toggle="'+esc(item.id)+'" aria-pressed="'+(item.enabled?'true':'false')+'">'+(item.enabled?'On':'Off')+'</button>'+
-      (item.custom?'<button type="button" class="manage-meal-time-delete" data-meal-time-delete="'+esc(item.id)+'" aria-label="Delete '+esc(item.name)+'">×</button>':'')+
-    '</div></div>';
- }).join('');
-}
-function mealTimeManagerMarkup(){
- const options=mealTimeOptions(),enabled=options.filter(x=>x.enabled).length;
- return '<section class="manage-meal-time-section">'+
-   '<div class="manage-section-heading"><div><span class="manage-kicker">MEAL TIMES</span><h5>Shape your day.</h5><p>Rename the defaults, add your own, reorder them, or turn one off. Your meals keep their assignments.</p></div><small>'+enabled+' active</small></div>'+
-   '<div class="manage-meal-time-list">'+mealTimeManagerRows()+'</div>'+
-   '<form class="manage-meal-time-add" id="addMealTimeForm"><input id="newMealTimeName" maxlength="28" placeholder="New Meal Time" autocomplete="off"><button type="submit">＋ Add</button></form>'+
- '</section>';
-}
-function renameMealTime(id){
- const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item)return;
- const row=document.querySelector('[data-meal-time-id="'+CSS.escape(String(id))+'"]');if(!row)return;
- const main=row.querySelector('.manage-meal-time-main');if(!main||main.querySelector('input'))return;
- const old=item.name;
- main.innerHTML='<input class="manage-meal-time-edit" maxlength="28" value="'+esc(old)+'" aria-label="Rename Meal Time">';
- const input=main.querySelector('input');
- const finish=commit=>{
-  const next=String(input.value||'').trim();
-  if(commit){
-   if(!next){appToast('Give the Meal Time a name.');input.focus();return;}
-   const conflict=mealTimeCatalog().some(x=>x.id!==item.id&&normKey(x.name)===normKey(next));
-   if(conflict){appToast('That Meal Time name is already in use.');input.focus();input.select();return;}
-   if(item.custom){
-    const cfg=ensureMealTimeSettings(),custom=cfg.custom.find(x=>String(x.id)===String(id));if(custom)custom.name=next;
-   }else{
-    const cfg=ensureMealTimeSettings(),oldCurrent=cfg.names[item.id]||item.defaultName;cfg.names[item.id]=next;syncMealTimeReferences(oldCurrent,next,item.id);
-   }
-   save();buildFood();foodQuick();renderMealTimeCuts();manageFoodsView();return;
-  }
-  manageFoodsView();
- };
- input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();finish(true)}else if(e.key==='Escape'){e.preventDefault();finish(false)}});
- input.addEventListener('blur',()=>window.setTimeout(()=>{if(document.body.contains(input))finish(true)},80));
- input.focus();input.select();
-}
-function addMealTime(name){
- const next=String(name||'').trim();
- if(!next){appToast('Give the new Meal Time a name.');return false;}
- if(mealTimeCatalog().some(x=>normKey(x.name)===normKey(next))){appToast('That Meal Time name is already in use.');return false;}
- const cfg=ensureMealTimeSettings(),id='meal-time-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
- cfg.custom.push({id,name:next});cfg.order.push(id);cfg.order=[...new Set(cfg.order)];save();manageFoodsView();appToast(next+' added.');return true;
-}
-async function deleteMealTime(id){
- const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item||!item.custom)return;
- if(!await appConfirm('Delete '+item.name+'?','Meals assigned only to this custom Meal Time will move to '+(mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner')+'.','Delete Meal Time'))return;
- const fallback=mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner';
- const replace=item.name;
- S.custom.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
- S.deletedCustomMeals?.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
- const cfg=ensureMealTimeSettings();cfg.custom=cfg.custom.filter(x=>String(x.id)!==String(id));cfg.order=cfg.order.filter(x=>String(x)!==String(id));cfg.disabled.delete(String(id));S.mealTimeFilters.delete(replace);
- if(!S.mealTimeFilters.size)S.mealTimeFilters=new Set(mealTimeNames());
- save();buildFood();foodQuick();renderMealTimeCuts();manageFoodsView();appToast(item.name+' deleted.');
-}
-function moveMealTime(id,direction){
- const cfg=ensureMealTimeSettings(),key=String(id),idx=cfg.order.findIndex(x=>String(x)===key),to=idx+direction;
- if(idx<0||to<0||to>=cfg.order.length)return;
- [cfg.order[idx],cfg.order[to]]=[cfg.order[to],cfg.order[idx]];
- save();manageFoodsView();
-}
-function toggleMealTime(id){
- const cfg=ensureMealTimeSettings(),key=String(id),currentlyOff=cfg.disabled.has(key);
- if(!currentlyOff && mealTimeOptions().filter(x=>x.enabled).length<=1){appToast('Keep at least one Meal Time active.');return;}
- if(currentlyOff)cfg.disabled.delete(key);else{cfg.disabled.add(key);const item=mealTimeCatalog().find(x=>x.id===key);if(item)S.mealTimeFilters.delete(item.name);}
- if(!S.mealTimeFilters.size)S.mealTimeFilters=new Set(mealTimeNames());
- save();buildFood();foodQuick();renderMealTimeCuts();manageFoodsView();
 }
 function manageFoodsView() {
  const rows=allFoods(),deletedRows=deletedFoodRows();
