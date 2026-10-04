@@ -1,5 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
+const sharp=require('sharp');
 const fs=require('node:fs');
 const path=require('node:path');
 const restaurants=require('../api/restaurants.js');
@@ -14,6 +15,7 @@ assert.ok(typeof pt.structuredRestaurantMatches==='function','structuredRestaura
 assert.ok(typeof pt.imageDimensions==='function','imageDimensions export missing');
 assert.ok(typeof pt.mediaQuality==='function','mediaQuality export missing');
 assert.ok(typeof pt.fetchImage==='function','fetchImage export missing');
+assert.ok(typeof pt.fetchGooglePhoto==='function','fetchGooglePhoto export missing');
 
 const appSource=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
 assert.match(appSource,/function restaurantImmediatePhoto\(row\)/,'Restaurant cards should have one canonical immediate photo decision');
@@ -91,6 +93,8 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
   const originalFetch=global.fetch;
   const osmUrl='https://example.com/osm-venue.jpg';
   const badDimensionsUrl='https://example.com/bad-dimensions.png';
+  const validPhoto=await sharp({create:{width:800,height:600,channels:3,background:{r:120,g:120,b:120}}}).jpeg({quality:82}).toBuffer();
+  const tinyPhoto=await sharp({create:{width:100,height:100,channels:3,background:{r:120,g:120,b:120}}}).png().toBuffer();
   let fetchCalls=0;
   const pngWithDimensions=(width,height,size=5000)=>{
     const bytes=Buffer.alloc(size,0);
@@ -105,11 +109,11 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
       return {
         ok:true,status:200,
         headers:{get(name){return name.toLowerCase()==='content-type'?'image/jpeg':null}},
-        async arrayBuffer(){return Uint8Array.from({length:5000},()=>7).buffer}
+        async arrayBuffer(){return validPhoto.buffer.slice(validPhoto.byteOffset,validPhoto.byteOffset+validPhoto.byteLength)}
       };
     }
     if(u===badDimensionsUrl){
-      const bytes=pngWithDimensions(100,100);
+      const bytes=tinyPhoto;
       return {
         ok:true,status:200,
         headers:{get(name){return name.toLowerCase()==='content-type'?'image/png':null}},
@@ -142,7 +146,7 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
   }
   console.log(JSON.stringify({
     ok:true,
-    cases:16,
+    cases:18,
     verified:[
       'no generic restaurant photo fallback',
       'provider venue photo metadata',
@@ -158,7 +162,9 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
       'Photon OSM photo trust classification',
       'canonical Restaurant first-paint source',
       'canonical next-card photo handoff',
-      'decoded image-dimension validation'
+      'decoded image-dimension validation',
+      'Google photo resolver export and on-demand contract',
+      'source-image WebP normalization fixture'
     ]
   },null,2));
 })().catch(err=>{console.error(err);process.exitCode=1});
