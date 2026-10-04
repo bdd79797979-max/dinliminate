@@ -5831,8 +5831,7 @@ button,input,select,textarea{
   justify-content:center!important;
   overflow:hidden!important;
 }
-.app:has(#home:not(.hidden)) #home .luxury-orb,
-.app:has(#home:not(.hidden)) #home .home-photo-rail{
+.app:has(#home:not(.hidden)) #home .luxury-orb{
   display:none!important;
 }
 .app:has(#home:not(.hidden)) #home .home-intro,
