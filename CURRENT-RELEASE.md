@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 922 / CP922
+# CURRENT RELEASE — BUILD 923 / CP923
+
+## CP923 — Reclaim Restaurant location space
+- Removed the visible informational status row below the Restaurant location controls so it no longer consumes vertical space.
+- Kept status messaging available to assistive technology without reserving layout space.
+- Tightened the location strip and removed extra top spacing so the Search/Cuisine controls and Restaurant card move upward beneath the location row.
 
 ## CP922 — Quiet Restaurant Refresh busy state
 - Removed the bright/white busy-state ring and focus chrome from Restaurant Refresh.
