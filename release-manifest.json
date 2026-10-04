@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 971,
+  "build": 972,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP971",
-  "deploymentTrigger": "CP971-freeze-waiting-card-during-swipe"
+  "checkpoint": "CP972",
+  "deploymentTrigger": "CP972-merge-primary-restaurant-provider-data"
 }

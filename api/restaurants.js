@@ -1001,6 +1001,10 @@ function sameRestaurant(x,r){
   if(sameAddress&&sameNameFamily)return true;
   if(addressScore>=0.90&&sameNameFamily)return true;
   if(sameStreet&&sameNameFamily&&originDistanceClose&&partialAddress)return true;
+  // CP972: Photon can return a venue with reordered address fields or without
+  // a housenumber. Merge very-close same-name provider rows so richer
+  // address/contact data is retained for exact photo resolution.
+  if(sameNameFamily&&dist<=0.08&&partialAddress)return true;
 
   // Strong provider-independent identity signals.
   if(sameCanonicalIdentity)return true;
@@ -1197,10 +1201,14 @@ if(mode==='search'){
    primaryBatch=wideWinner.value;
    parallelWide={__timeout:true,reason:'Wide expansion deferred'};
  }else{
+   // CP972: keep both fast primary providers. ArcGIS often supplies the
+   // street number, phone, and website that Photon omits, which exact photo
+   // matching needs to identify the correct venue.
    const tasks=primaryPromise;
-   const winner=await firstProviderWithRows(tasks,Math.max(1200,Math.min(1900,primaryBudget-(Date.now()-startedAt))));
-   fastProvider=winner.provider;
-   primaryBatch=winner.value;
+   const settled=await Promise.allSettled(tasks);
+   primaryBatch=settled;
+   const firstWithRows=settled.findIndex(x=>x?.status==='fulfilled'&&Array.isArray(x.value?.rows)&&x.value.rows.length);
+   fastProvider=firstWithRows>=0?firstWithRows:'none';
  }
  let photonResult={status:'rejected',reason:new Error('Photon not selected')};
  let arcgisResult={status:'rejected',reason:new Error('ArcGIS not selected')};
