@@ -9,7 +9,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '950';
+let APP_BUILD = '951';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1550,7 +1550,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   hapticTriggered=false;
   cleanup();
   suppressClickUntil=Date.now()+450;
-  const foodPreviewPromise=(next&&cardId==='foodCard')?ensureSwipePreviewReady(next):null;
+  const foodPreviewPromise=(next&&cardId==='foodCard')?(next.__swipePreviewReadyPromise||Promise.resolve(false)):null;
   if(next&&cardId==='restaurantCard'&&next.__restaurantCanonicalPhotoPromise){
    await Promise.race([
     next.__restaurantCanonicalPhotoPromise.catch(()=>null),
