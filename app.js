@@ -3237,6 +3237,7 @@ function renameMealTimeInFoodEditor(id){
   const nextSelected=selected.map(x=>x===old?next:x);
   if(item.custom){
    const custom=cfg.custom.find(x=>String(x.id)===String(id));if(custom)custom.name=next;
+   syncMealTimeReferences(old,next,item.id);
   }else{
    const oldCurrent=cfg.names[item.id]||item.defaultName;cfg.names[item.id]=next;syncMealTimeReferences(oldCurrent,next,item.id);
   }
@@ -3257,7 +3258,7 @@ function addMealTimeInFoodEditor(name){
 async function deleteMealTimeInFoodEditor(id){
  const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item?.custom)return;
  if(!await appConfirm('Delete '+item.name+'?','Meals using this Meal Time will move to '+(mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner')+'.','Delete Meal Time'))return;
- const selected=selectedMealTimesFromEditor(),fallback=mealTimeCatalog().find(x=>x.id==='lunch-dinner')?.name||'Lunch / Dinner',replace=item.name;
+ const selected=selectedMealTimesFromEditor(),fallback=mealTimeOptions().find(x=>x.enabled&&x.id!==String(id))?.name||mealTimeOptions().find(x=>x.enabled)?.name||'Lunch / Dinner',replace=item.name;
  S.custom.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
  S.deletedCustomMeals?.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
  const cfg=ensureMealTimeSettings();cfg.custom=cfg.custom.filter(x=>String(x.id)!==String(id));cfg.order=cfg.order.filter(x=>String(x)!==String(id));cfg.disabled.delete(String(id));
