@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 916,
+  "build": 917,
   "sourceBranch": "main",
-  "checkpoint": "CP916",
-  "deploymentTrigger": "CP916-meal-swipe-iphone-hardening",
+  "checkpoint": "CP917",
+  "deploymentTrigger": "CP917-restaurant-photo-first-render",
   "vercelProductionVerified": false
 }
