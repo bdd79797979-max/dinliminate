@@ -9206,3 +9206,10 @@ button,input,select,textarea{
     min-height:37px!important;
   }
 }
+
+
+/* CP932 — restore Meals All Maybes count to the same live-count green used by Restaurant. */
+#food .food-interior-nav .food-top-maybe .top-maybe-count{
+  color:#55d88a!important;
+  text-shadow:0 0 10px rgba(85,216,138,.18)!important;
+}
