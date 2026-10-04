@@ -131,7 +131,12 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
     );
     status=200;
     assert.equal(headers['X-Restaurant-Photo-Source'],'osm-exact-poi');
-    assert.equal(body.length,5000);
+    assert.equal(headers['Content-Type'],'image/webp');
+    assert.ok(body.length>1000,'Normalized photo should retain usable image data');
+    assert.ok(body.length<validPhoto.length*2,'Normalized photo should remain bounded after conversion');
+    const normalized=await pt.normalizeRestaurantImage(validPhoto);
+    assert.equal(normalized.type,'image/webp');
+    assert.ok(normalized.width<=1400&&normalized.height<=1050,'Normalized image dimensions must fit the phone card budget');
     assert.equal(fetchCalls,1,'Exact OSM photo should return before any web discovery requests');
 
     assert.deepEqual(pt.imageDimensions(pngWithDimensions(1200,800)),{width:1200,height:800});
@@ -146,7 +151,7 @@ assert.equal(assetGate.some(x=>/wendys-location-exterior/i.test(x.url)),true,'A 
   }
   console.log(JSON.stringify({
     ok:true,
-    cases:18,
+    cases:17,
     verified:[
       'no generic restaurant photo fallback',
       'provider venue photo metadata',
