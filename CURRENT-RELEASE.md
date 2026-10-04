@@ -1,3 +1,11 @@
+# CURRENT RELEASE — BUILD 964 / CP964
+
+## CP964 — Fast restaurant search + fresh client photo cache
+- Fastest-provider-first restaurant search.
+- Wide-radius first-response optimization.
+- Refreshes the app/service-worker cache markers so the latest Restaurant photo resolver reaches phones/PWAs.
+- Keeps exact-venue photo verification and no-Google photo sourcing.
+
 # CURRENT RELEASE — BUILD 960 / CP960
 
 ## CP960 — Exact Clarksville venue photo routes
