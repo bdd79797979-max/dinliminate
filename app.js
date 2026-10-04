@@ -1449,6 +1449,8 @@ function prepareFoodNextCard(){
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
+ const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
+ card.dataset.swipeBindingToken=swipeBindingToken;
  let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0,active=false,committed=false,hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null,swipeThreshold=90;
  card.style.touchAction='none';
  card.style.userSelect='none';
@@ -1526,7 +1528,9 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   suppressClickUntil=Date.now()+450;
   if(next){
    await ensureSwipePreviewReady(next);
+   if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
   }
+  if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
   const width=cardWidth();
   const distance=Math.max(520,Math.round(width*1.35));
   const magnitude=clamp(Math.abs(speed),0,.0001+2.2);
@@ -1549,6 +1553,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   dismissSwipeHint();
   const action=direction<0?onCut:onMaybe;
   window.setTimeout(async()=>{
+   if(card.dataset.swipeBindingToken!==swipeBindingToken)return;
    if(cardId==='foodCard'&&next){
     // Keep the promoted layer visible while the hidden current layer is prepared.
     // drawFood() is locked out from repurposing this exact DOM layer until handoff.
