@@ -1,12 +1,18 @@
-# CURRENT RELEASE — BUILD 865 / CP865
+# CURRENT RELEASE — BUILD 868 / CP868
 
-## CP865 — restore app boot and normalize runtime cache
-
-- Replaced the CP864 meal-card photo hunk with a syntax-safe version while preserving multi-photo viewing.
-- Synchronized app.js, HTML, service-worker cache, and service-worker registration to v865.
-- No Family backend data changed.
+## CP868 — Uniform meal photo navigation
+- The meal card's photo count is now the only control for advancing through multiple photos.
+- Tapping the photo itself no longer changes photos.
+- Meal Details uses the same top-right photo-count control for the same interaction.
+- Removed the Previous / Next arrows from the Details gallery.
+- Card swiping remains reserved for CUT / MAYBE; the photo-count control is excluded from swipe capture.
+- The first ordered photo remains the Cover photo from CP867.
 
 ## Verification
 - app.js parse: PASS
 - sw.js parse: PASS
-- release JSON: PASS
+- Card photo itself: non-navigating
+- Card top-right count: advances photo
+- Details top-right count: advances photo
+- Details arrows: removed
+- App/cache version synchronized to v868
