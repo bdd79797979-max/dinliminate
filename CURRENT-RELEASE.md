@@ -1,4 +1,9 @@
-# CURRENT RELEASE — BUILD 913 / CP913
+# CURRENT RELEASE — BUILD 913 / CP914
+
+## CP914 — Premium Home choice photography
+- Replaced the Home AT HOME and RESTAURANT card photography with stronger, more luxurious Pexels imagery selected for the existing wide mobile card crop.
+- Preserved the existing card IDs, layout, overlays, labels, and interactions.
+- Bumped the service-worker shell cache so the new Home photography is picked up after the next deployment.
 
 ## CP913 — Luxury Home utility controls
 - Elevated the Home Add to phone and Share app controls with a discreet concierge-style metallic-gold finish, improved depth, brushed-gold edge detailing, and refined typography.
