@@ -1022,21 +1022,23 @@ function renderMaybeDeckToggle(kind){
  const btn=$(id);if(!btn)return;
  const maybeCount=maybeDeckCount(kind);
  const hasMaybe=maybeCount>0;
- if(kind==='food'){
-  btn.innerHTML='<span class="top-maybe-label">ALL MAYBES</span><span class="top-maybe-count">'+maybeCount+'</span>';
-  btn.setAttribute('aria-label',S.maybeDeck?'Viewing Maybe choices. Tap to show all choices. '+maybeCount+' choices.':'Show Maybe choices. '+maybeCount+' choices.');
- }
  btn.dataset.mode=S.maybeDeck?'maybe':'all';
- // In All mode with zero Maybes the control remains visibly bright but is
- // inert; it must never route an empty deck into Hungry mode.
+ // In All mode with zero Maybes the control remains visibly present but inert;
+ // it must never route an empty deck into Hungry mode.
  btn.disabled=!hasMaybe;
  const target=S.maybeDeck?'Show all choices':'Show Maybe choices';
  btn.setAttribute('aria-label',S.maybeDeck?'Viewing Maybe choices. Tap to show all choices.':'Viewing all choices. Tap to show Maybe choices.');
  btn.setAttribute('aria-pressed',S.maybeDeck?'true':'false');
  btn.title=target;
- btn.innerHTML='<span class="deck-filter-label-all" aria-hidden="true">ALL</span><span class="deck-filter-divider" aria-hidden="true">·</span><span class="deck-filter-label-maybe" aria-hidden="true">MAYBES</span>';
- btn.classList.toggle('is-maybe',S.maybeDeck);
- btn.classList.toggle('is-all',!S.maybeDeck);
+ if(kind==='food'){
+  btn.innerHTML='<span class="top-maybe-label">ALL MAYBES</span><span class="top-maybe-count">'+maybeCount+'</span>';
+  btn.classList.remove('is-maybe','is-all');
+  btn.classList.toggle('has-maybes',hasMaybe);
+ }else{
+  btn.innerHTML='<span class="deck-filter-label-all" aria-hidden="true">ALL</span><span class="deck-filter-divider" aria-hidden="true">·</span><span class="deck-filter-label-maybe" aria-hidden="true">MAYBES</span>';
+  btn.classList.toggle('is-maybe',S.maybeDeck);
+  btn.classList.toggle('is-all',!S.maybeDeck);
+ }
 }
 function bindMaybeDeckToggle(kind){
  const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
@@ -4472,7 +4474,7 @@ window.addEventListener('offline', updateOffline);
 window.addEventListener('online',()=>{if(S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.screen==='restaurant')maybeAutoRefreshRestaurantLocation();});
 updateOffline();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=928').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=929').catch(() => {}));
 if(new URLSearchParams(location.search).get('qa')==='1') window.__DINLIMINATE_TEST__={safeExternalUrl,restaurantWebsiteUrl,knownRestaurantWebsite,restaurantPhoneSearchUrl,phoneHref,restaurantCategory,restaurantCuisineTags,restaurantCuisineEvidence,restaurantQuickMatches,restaurantMatchesQuery,normalizeRestaurantSearch,restaurantSearchTermMatches,dedupeRestaurantPool,restaurantNameSimilarityUI,restaurantNameCoreMatchUI,restaurantAddressSimilarityUI,restaurantFallbackImage,loadRestaurantPhoto,addressLooksComplete,locationMovedMiles,winner,recordHistory,hungryWheelPool,renderHungryWheel,spinHungryWheel,hungryRestaurantPool,hungryRestaurantPick,renderHungryRestaurantMystery,revealHungryRestaurant};
 bindMealPhotoCountControls();
 load();
