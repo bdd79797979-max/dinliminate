@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 960,
+  "build": 964,
   "sourceBranch": "main",
-  "checkpoint": "CP960",
-  "deploymentTrigger": "CP960-exact-clarksville-venue-photo-routes",
+  "checkpoint": "CP964",
+  "deploymentTrigger": "CP964-fast-restaurant-search-and-client-photo-cache-refresh",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity",
