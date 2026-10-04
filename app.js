@@ -7,7 +7,7 @@ const $ = (id) => document.getElementById(id);
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
-let APP_BUILD = '910';
+let APP_BUILD = '911';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3245,46 +3245,93 @@ function selectedMealTimesFromEditor(){
  return [...document.querySelectorAll('#editFoodMealTime input[name="editMealTime"]:checked')].map(x=>String(x.value||'').trim()).filter(Boolean);
 }
 function renderFoodEditorMealTimes(selectedOverride){
- const host=$('editFoodMealTime'),manager=$('editFoodMealTimeManager'),toggle=$('editMealTimesManage');
- if(!host)return;
- const selected=new Set(Array.isArray(selectedOverride)?selectedOverride:selectedMealTimesFromEditor());
- const options=mealTimeOptions();
- host.innerHTML=options.filter(x=>x.enabled).map(item=>'<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(item.name)+'" '+(selected.has(item.name)?'checked':'')+'><span>'+esc(item.name)+'</span></label>').join('');
- host.querySelectorAll('input[name="editMealTime"]').forEach(input=>input.addEventListener('change',()=>{
-  const checked=selectedMealTimesFromEditor();
-  if(!checked.length){input.checked=true;appToast('Choose at least one Meal Time.');return;}
- }));
- if(toggle){
-  toggle.textContent=manager?.classList.contains('hidden')?'Edit Meal Times':'Done';
-  toggle.setAttribute('aria-expanded',String(!manager?.classList.contains('hidden')));
- }
- if(manager){
-  manager.innerHTML=mealTimeCatalog().map((item,index)=>{
-   const cfg=ensureMealTimeSettings(),isOff=cfg.disabled.has(item.id),first=index===0,last=index===mealTimeCatalog().length-1;
-   return '<div class="food-editor-meal-time-row" data-food-editor-meal-time-id="'+esc(item.id)+'">'+
-    '<div class="food-editor-meal-time-main"><b>'+esc(item.name)+'</b><small>'+esc(item.custom?'CUSTOM':'DEFAULT')+(isOff?' · OFF':'')+'</small></div>'+
-    '<div class="food-editor-meal-time-tools">'+
-      '<button type="button" class="food-editor-meal-time-move" data-food-editor-meal-time-up="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' up" '+(first?'disabled':'')+'>↑</button>'+
-      '<button type="button" class="food-editor-meal-time-move" data-food-editor-meal-time-down="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' down" '+(last?'disabled':'')+'>↓</button>'+
-      '<button type="button" class="food-editor-meal-time-edit" data-food-editor-meal-time-edit="'+esc(item.id)+'">Edit</button>'+
-      '<button type="button" class="food-editor-meal-time-toggle '+(isOff?'':'is-on')+'" data-food-editor-meal-time-toggle="'+esc(item.id)+'" aria-pressed="'+(isOff?'false':'true')+'">'+(isOff?'Off':'On')+'</button>'+
-      (item.custom?'<button type="button" class="food-editor-meal-time-delete" data-food-editor-meal-time-delete="'+esc(item.id)+'" aria-label="Delete '+esc(item.name)+'">×</button>':'')+
-    '</div></div>';
-  }).join('')+
-   '<div class="food-editor-meal-time-add"><input id="newFoodEditorMealTimeName" maxlength="28" placeholder="New Meal Time" autocomplete="off"><button type="button" id="addFoodEditorMealTime">＋ Add</button></div>';
-  manager.querySelectorAll('[data-food-editor-meal-time-edit]').forEach(btn=>btn.onclick=()=>renameMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeEdit));
-  manager.querySelectorAll('[data-food-editor-meal-time-delete]').forEach(btn=>btn.onclick=()=>deleteMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDelete));
-  manager.querySelectorAll('[data-food-editor-meal-time-up]').forEach(btn=>btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeUp,-1));
-  manager.querySelectorAll('[data-food-editor-meal-time-down]').forEach(btn=>btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDown,1));
-  manager.querySelectorAll('[data-food-editor-meal-time-toggle]').forEach(btn=>btn.onclick=()=>toggleMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeToggle));
-  $('addFoodEditorMealTime')?.addEventListener('click',()=>{
-    const input=$('newFoodEditorMealTimeName');
-    addMealTimeInFoodEditor(input?.value);
-    if(input){input.value='';input.focus();}
+  const host=$('editFoodMealTime');
+  const manager=$('editFoodMealTimeManager');
+  const toggle=$('editMealTimesManage');
+  if(!host)return;
+
+  const selected=new Set(Array.isArray(selectedOverride)?selectedOverride:selectedMealTimesFromEditor());
+  const options=mealTimeOptions();
+
+  host.innerHTML=options
+    .filter(item=>item.enabled)
+    .map(item=>{
+      const checked=selected.has(item.name)?' checked':'';
+      return '<label class="quick-cut-tile meal-time-option"><input type="checkbox" name="editMealTime" value="'+esc(item.name)+'"'+checked+'><span>'+esc(item.name)+'</span></label>';
+    })
+    .join('');
+
+  host.querySelectorAll('input[name="editMealTime"]').forEach(input=>{
+    input.addEventListener('change',()=>{
+      const checked=selectedMealTimesFromEditor();
+      if(!checked.length){
+        input.checked=true;
+        appToast('Choose at least one Meal Time.');
+      }
+    });
   });
-  $('newFoodEditorMealTimeName')?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){e.preventDefault();$('addFoodEditorMealTime')?.click();}
-  });
+
+  if(toggle){
+    const editing=!!manager&&!manager.classList.contains('hidden');
+    toggle.textContent=editing?'Done':'Edit Meal Times';
+    toggle.setAttribute('aria-expanded',String(editing));
+  }
+
+  if(manager){
+    const catalog=mealTimeCatalog();
+    manager.innerHTML=catalog.map((item,index)=>{
+      const cfg=ensureMealTimeSettings();
+      const isOff=cfg.disabled.has(item.id);
+      const first=index===0;
+      const last=index===catalog.length-1;
+      const customDelete=item.custom
+        ? '<button type="button" class="food-editor-meal-time-delete" data-food-editor-meal-time-delete="'+esc(item.id)+'" aria-label="Delete '+esc(item.name)+'">×</button>'
+        : '';
+
+      return '<div class="food-editor-meal-time-row" data-food-editor-meal-time-id="'+esc(item.id)+'">'
+        +'<div class="food-editor-meal-time-main"><b>'+esc(item.name)+'</b><small>'+esc(item.custom?'CUSTOM':'DEFAULT')+(isOff?' · OFF':'')+'</small></div>'
+        +'<div class="food-editor-meal-time-tools">'
+        +'<button type="button" class="food-editor-meal-time-move" data-food-editor-meal-time-up="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' up"'+(first?' disabled':'')+'>↑</button>'
+        +'<button type="button" class="food-editor-meal-time-move" data-food-editor-meal-time-down="'+esc(item.id)+'" aria-label="Move '+esc(item.name)+' down"'+(last?' disabled':'')+'>↓</button>'
+        +'<button type="button" class="food-editor-meal-time-edit" data-food-editor-meal-time-edit="'+esc(item.id)+'">Edit</button>'
+        +'<button type="button" class="food-editor-meal-time-toggle '+(isOff?'':'is-on')+'" data-food-editor-meal-time-toggle="'+esc(item.id)+'" aria-pressed="'+(isOff?'false':'true')+'">'+(isOff?'Off':'On')+'</button>'
+        +customDelete
+        +'</div></div>';
+    }).join('')
+    +'<div class="food-editor-meal-time-add"><input id="newFoodEditorMealTimeName" maxlength="28" placeholder="New Meal Time" autocomplete="off"><button type="button" id="addFoodEditorMealTime">＋ Add</button></div>';
+
+    manager.querySelectorAll('[data-food-editor-meal-time-edit]').forEach(btn=>{
+      btn.onclick=()=>renameMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeEdit);
+    });
+    manager.querySelectorAll('[data-food-editor-meal-time-delete]').forEach(btn=>{
+      btn.onclick=()=>deleteMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDelete);
+    });
+    manager.querySelectorAll('[data-food-editor-meal-time-up]').forEach(btn=>{
+      btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeUp,-1);
+    });
+    manager.querySelectorAll('[data-food-editor-meal-time-down]').forEach(btn=>{
+      btn.onclick=()=>moveMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeDown,1);
+    });
+    manager.querySelectorAll('[data-food-editor-meal-time-toggle]').forEach(btn=>{
+      btn.onclick=()=>toggleMealTimeInFoodEditor(btn.dataset.foodEditorMealTimeToggle);
+    });
+
+    $('addFoodEditorMealTime')?.addEventListener('click',()=>{
+      const input=$('newFoodEditorMealTimeName');
+      addMealTimeInFoodEditor(input?.value);
+      if(input){
+        input.value='';
+        input.focus();
+      }
+    });
+
+    $('newFoodEditorMealTimeName')?.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        $('addFoodEditorMealTime')?.click();
+      }
+    });
+  }
 }
 function renameMealTimeInFoodEditor(id){
  const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item)return;
