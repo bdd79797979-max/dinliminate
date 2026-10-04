@@ -1,4 +1,11 @@
-# CURRENT RELEASE — BUILD 939 / CP939
+# CURRENT RELEASE — BUILD 944 / CP944
+
+## CP944 — Fixed-size Meal swipe preview
+- Kept the waiting Meal card at one fixed geometry throughout idle, drag, and handoff.
+- Removed live waiting-card scale interpolation during swipe; reveal now uses opacity/brightness only.
+- Removed the waiting Meal image’s separate zoom so the card/photo cannot visibly resize during the gesture.
+- Bumped the Meal JavaScript cache version to `?v=944` so deployed phones receive the corrected swipe source.
+- Restaurant swipe behavior remains unchanged.
 
 ## CP939 — Canonical Meals + Restaurant decision layer
 - Unified Meals and Restaurant decision controls around one canonical visual/DOM contract.
