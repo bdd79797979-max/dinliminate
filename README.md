@@ -5,8 +5,8 @@ Dinliminate is a phone-first meal and restaurant decision app built around fast,
 ## Current release
 
 - **Version:** 1.0
-- **Build:** 999
-- **Checkpoint:** CP999
+- **Build:** 1000
+- **Checkpoint:** CP1000
 - **Source:** `main`
 - **Release state:** candidate source; production verification is still pending because the connected Vercel account has exhausted its Hobby daily deployment allowance.
 - **Photo policy:** restaurant photography uses the no-Google resolver/source ladder.
