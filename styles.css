@@ -10561,3 +10561,46 @@ body{-webkit-text-size-adjust:100%;}
     max-height:100dvh!important;
   }
 }
+
+
+/* CP1011 — runtime touch-device fallback for mobile Safari layout modes. */
+.device-touch-mobile .app{
+  position:relative!important;width:100vw!important;min-width:100vw!important;max-width:none!important;
+  height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;
+  margin:0!important;padding:0!important;overflow:hidden!important;box-sizing:border-box!important;
+}
+.device-touch-mobile .app-topbar{
+  position:absolute!important;inset:0 0 auto 0!important;z-index:80!important;
+  width:100%!important;max-width:none!important;margin:0!important;
+  padding-top:env(safe-area-inset-top)!important;box-sizing:border-box!important;
+}
+.device-touch-mobile .screen{
+  position:absolute!important;inset:0!important;width:100vw!important;min-width:100vw!important;max-width:none!important;
+  height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;margin:0!important;
+  box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;
+}
+.device-touch-mobile .screen.hidden{display:none!important;}
+.device-touch-mobile .screen.luxury-home{overflow:hidden!important;}
+.device-touch-mobile .app:has(#home:not(.hidden)) #home{
+  width:100vw!important;min-width:100vw!important;max-width:none!important;
+  height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;margin:0!important;
+  padding:calc(env(safe-area-inset-top) + 74px) 14px max(18px,calc(env(safe-area-inset-bottom) + 18px)) 14px!important;
+  box-sizing:border-box!important;
+}
+.device-touch-mobile .decision-screen,
+.device-touch-mobile .winner.screen,
+.device-touch-mobile .family-screen{
+  height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;
+}
+.device-touch-mobile .decision-screen{overflow:hidden!important;}
+.device-touch-mobile .winner.screen{overflow-y:auto!important;}
+.device-touch-mobile .drawer,
+.device-touch-mobile .drawer-bg,
+.device-touch-mobile .modal,
+.device-touch-mobile .modal-bg,
+.device-touch-mobile .overlay,
+.device-touch-mobile .location-permission-modal,
+.device-touch-mobile .location-permission-bg,
+.device-touch-mobile #tutorialLayer{
+  max-width:100vw!important;max-height:100dvh!important;
+}
