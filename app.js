@@ -463,8 +463,8 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='705-legacy';
-const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v7-legacy';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='official-first-v1';
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v8-official-first';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
 const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1600;
@@ -571,6 +571,7 @@ function restaurantPhotoEndpointUrl(row){
  if(row.name)params.set('name',String(row.name));
  if(row.address)params.set('address',String(row.address));
  if(row.phone)params.set('phone',String(row.phone));
+ if(row.brand)params.set('brand',String(row.brand));
  const website=safeExternalUrl(row.website);
  if(website)params.set('website',website);
  const officialLocationPage=safeExternalUrl(row.officialLocationPage||row.officialLocation||'')||cachedRestaurantLocationPage(row);
@@ -694,7 +695,10 @@ async function primeRestaurantPhotosBeforeFirstPaint(rows,startIndex=0){
   if(row)targets.push(row);
  }
  if(!targets.length)return;
- const promises=targets.map(row=>loadRestaurantPhoto(row).catch(()=>null));
+ const promises=targets.map(async row=>{
+  try{await hydrateRestaurantWebsite(row,'');}catch{}
+  return loadRestaurantPhoto(row).catch(()=>null);
+ });
  const started=Date.now();
  try{
   await Promise.race([
@@ -731,7 +735,10 @@ function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETC
  restaurantPhotoPrefetchTimer=window.setTimeout(()=>{
   restaurantPhotoPrefetchTimer=0;
   if(token!==restaurantPhotoPrefetchToken)return;
-  targets.forEach(row=>{loadRestaurantPhoto(row).catch(()=>{});});
+  targets.forEach(async row=>{
+    try{await hydrateRestaurantWebsite(row,'');}catch{}
+    await loadRestaurantPhoto(row).catch(()=>null);
+  });
  },0);
 }
 
