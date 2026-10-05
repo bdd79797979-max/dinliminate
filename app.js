@@ -630,9 +630,9 @@ function restaurantImmediatePhoto(row){
  const rowKey=String(row?.id||row?.canonicalId||'').trim();
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
  if(cached?.url)return touchRestaurantPhotoMemoryCache(rowKey,cached).url;
- // Google Places content is loaded on demand and is never used as an image src
- // directly, so the browser cannot silently prefetch/cache Google content.
- return RESTAURANT_NEUTRAL_IMAGE;
+ // Use the app's verified/non-Google fallback artwork while the visible card's
+ // Google photo is requested on demand.
+ return restaurantFallbackImage(row);
 }
 function restaurantCardFallbackImage(row){
  const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
