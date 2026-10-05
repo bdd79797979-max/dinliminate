@@ -9831,3 +9831,18 @@ button,input,select,textarea{
   filter:drop-shadow(0 2px 5px rgba(79,52,14,.28))!important;
   animation:cp911MetallicGoldSheen 11s cubic-bezier(.35,0,.2,1) infinite!important;
 }
+
+/* CP980 — Cuisine readability and Meal/Restaurant Cuisine button parity. */
+#foodQuick .photo-chip span,
+#restQuick .photo-chip span{
+  color:#fff!important;
+  text-shadow:0 1px 4px rgba(0,0,0,.28)!important;
+}
+#food #foodQuickToggle{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
+#food #foodQuickToggle:hover,
+#food #foodQuickToggle.is-open{
+  color:#fff!important;
+}
