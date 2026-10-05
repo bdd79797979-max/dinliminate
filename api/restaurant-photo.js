@@ -622,6 +622,7 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
  return null;
 }
 const KNOWN_PUBLIC_PHOTO_PAGES=[
+ {names:['shelbys trio',"shelby's trio"],addressTokens:['304 n 2nd st','304 north 2nd street'],phone:'9319193373',url:'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street'},
  {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
  {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
  {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'},
