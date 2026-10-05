@@ -22,6 +22,14 @@ Date: 2026-10-05
 - Settings → Tutorial Mode starts from Home.
 - Add to phone, Share, and Tutorial use the same Home utility icon styling.
 
+## CP1004 menu/modal flash gate
+
+- Menu → Manage Meals opens without exposing the previous screen.
+- Manage Meals → Add Meal opens without exposing the previous screen.
+- Menu → Settings and Menu → History open without exposing the previous screen.
+- Modal opening backdrops are opaque on first paint.
+- Mobile CSS/service-worker cache versions are refreshed.
+
 ## Full iPhone viewport gate
 
 - App uses the full mobile dynamic viewport.
