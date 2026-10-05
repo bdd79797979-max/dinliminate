@@ -101,7 +101,7 @@ async function tryGoogleRestaurantPhoto(input){
    const photos=Array.isArray(place.photos)?place.photos.slice(0,10):[];
    if(!photos.length)continue;
    const ranked=photos.map((p,i)=>({photo:p,score:photoQuality(p,i)})).filter(x=>x.score>-500).sort((a,b)=>b.score-a.score);
-   for(const item of ranked.slice(0,2)){
+   for(const item of ranked.slice(0,1)){
     const photo=item.photo,media=await googlePhotoMedia(photo.name);if(!media)continue;
     const author=Array.isArray(photo.authorAttributions)?photo.authorAttributions.map(a=>({displayName:clean(a?.displayName,120),uri:clean(a?.uri,600)})).filter(a=>a.displayName&&/^https:\/\//i.test(a.uri)).slice(0,3):[];
     const googleMapsUri=clean(photo.googleMapsUri,800);
