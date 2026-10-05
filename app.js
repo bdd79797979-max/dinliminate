@@ -4607,26 +4607,25 @@ bindCardButton('foodBack',foodBack);
 document.querySelectorAll('[data-home]').forEach(btn => btn.onclick = home);
 bindHomeCardPress('foodStart');bindHomeCardPress('restStart');
 let drawerCloseTimer=0;
-const closeDrawer=()=>{
- clearTimeout(drawerCloseTimer);
- const drawer=$('drawer'),bg=$('drawerBg');
- drawer?.classList.remove('is-open');
- bg?.classList.remove('is-open');
- ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
- drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
+const showMenuHint=(trigger)=>{
+  document.querySelector('#menuHint')?.remove();if(!trigger)return;
+  const rect=trigger.getBoundingClientRect(),hint=document.createElement('div');hint.id='menuHint';hint.className='menu-hint';hint.textContent='Menu';
+  hint.style.top=Math.min(window.innerHeight-38,Math.max(8,rect.bottom+7))+'px';hint.style.right=Math.max(8,window.innerWidth-rect.right)+'px';
+  document.body.appendChild(hint);requestAnimationFrame(()=>hint.classList.add('is-visible'));window.setTimeout(()=>hint.remove(),1800);
 };
-const openDrawer=()=>{
- clearTimeout(drawerCloseTimer);
- const drawer=$('drawer'),bg=$('drawerBg');
- drawer?.classList.remove('hidden');
- bg?.classList.remove('hidden');
- requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
- ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+const closeDrawer=(immediate=false)=>{
+  clearTimeout(drawerCloseTimer);const drawer=$('drawer'),bg=$('drawerBg');
+  drawer?.classList.remove('is-open');bg?.classList.remove('is-open');document.querySelector('#menuHint')?.remove();
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
+  if(immediate){drawer?.classList.add('hidden');bg?.classList.add('hidden');return;}
+  drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
 };
-const appMenu = $('menu'); if (appMenu) {appMenu.setAttribute('aria-expanded','false');appMenu.onclick = openDrawer;}
-const foodMenu = $('foodMenu'); if (foodMenu) {foodMenu.setAttribute('aria-expanded','false');foodMenu.onclick = openDrawer;}
-const restaurantMenu = $('restaurantMenu'); if (restaurantMenu) {restaurantMenu.setAttribute('aria-expanded','false');restaurantMenu.onclick = openDrawer;}
-const winnerMenu = $('winnerMenu'); if (winnerMenu) {winnerMenu.setAttribute('aria-expanded','false');winnerMenu.onclick = openDrawer;}
+const openDrawer=(event)=>{
+  clearTimeout(drawerCloseTimer);showMenuHint(event?.currentTarget);const drawer=$('drawer'),bg=$('drawerBg');
+  drawer?.classList.remove('hidden');bg?.classList.remove('hidden');
+  requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+};
 function decisionBackHome(){
  S.familyNormalMode='idle';
  S.familyNormalAutoResume=false;
@@ -4644,7 +4643,8 @@ const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaur
 $('drawerClose').onclick = closeDrawer;
 $('drawerBg').onclick = closeDrawer;
 const navigateFromDrawer=(navigate)=>{
-  try{navigate?.();}finally{closeDrawer();}
+  closeDrawer(true);
+  try{navigate?.();}catch{}
 };
 $('manage').onclick = () => navigateFromDrawer(manageFoodsView);
 $('settings').onclick = () => navigateFromDrawer(settingsView);
