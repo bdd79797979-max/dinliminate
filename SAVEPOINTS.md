@@ -1,15 +1,16 @@
-# CURRENT SAVEPOINT — BUILD 1007 / CP1007
+# CURRENT SAVEPOINT — BUILD 1008 / CP1008
 
 Date: 2026-10-05
 
-Working branch: `cp1007-cornbread-buttermilk-reference`
+Working branch: `cp1008-managed-image-cache`
 
-## CP1007 — Buttermilk & Cornbread Reference Image
+## CP1008 — Managed Meal + Restaurant Image Cache
 
-- Uses the exact user-supplied online cornbread-and-buttermilk image.
-- Updates the meal asset cache version and image-host allowlist.
-- Leaves all other app behavior unchanged.
+- Keeps meal and restaurant photos in the existing image cache while adding a storage budget.
+- Uses a 75 MiB ceiling and evicts least-recently-used entries back to 60 MiB.
+- Uses persistent IndexedDB metadata so image usage survives service-worker restarts.
+- Does not impose a hard photo-count limit.
 
 ## Recovery anchor
 
-- **CP1006:** `a2d3fc659cafc699aa27db817f29d676a8db5b86`
+- **CP1007:** `00e7ebed09ed0558853d1b7fcb8f872866cf7038`

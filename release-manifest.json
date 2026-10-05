@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1007,
+  "build": 1008,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1007",
-  "deploymentTrigger": "CP1007-cornbread-buttermilk-reference"
+  "checkpoint": "CP1008",
+  "deploymentTrigger": "CP1008-managed-image-cache"
 }
