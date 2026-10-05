@@ -420,8 +420,7 @@
 .luxury-home h1{font-size:clamp(2rem,7.2vw,3.8rem);line-height:.98;max-width:10em;margin:7px auto 0}
 .luxury-home .sub{font-size:10px;line-height:1.35;margin:8px auto 0}
 .luxury-home .home-actions{flex:0 0 auto;width:min(100%,430px);margin:18px auto 0;gap:9px}
-.luxury-home .home-card-choice{position:relative;display:flex;align-items:flex-end;min-height:94px;height:94px;padding:0;border-radius:22px;overflow:hidden;background-image:var(--home-photo);background-size:cover;background-position:center;border:1px solid #ffffff1d;box-shadow:0 18px 45px #0009}
-.home-card-choice .home-card-overlay{position:absolute;inset:0;background:linear-gradient(90deg,#080808d9 0%,#0808087d 43%,#08080818 100%),linear-gradient(0deg,#000d 0%,transparent 58%)}
+.luxury-home .home-card-choice{position:relative;display:flex;align-items:flex-end;min-height:94px;height:94px;padding:0;border-radius:22px;overflow:hidden;background:#171615;border:1px solid #ffffff1d;box-shadow:0 18px 45px #0009}
 .home-card-choice .home-card-copy{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0 15px 13px;text-align:left}
 .home-card-choice .home-card-copy strong{font-size:21px;line-height:1.05;color:#fff7e8}
 .home-card-choice .home-card-copy>span{font-size:9px;color:#d8d0c4}
@@ -449,8 +448,8 @@
 /* CP109 — final iPhone-safe Home and richer Restaurant Details */
 .luxury-home .home-card-choice{background-color:#171615}
 .luxury-home .home-card-choice::after{content:'';position:absolute;inset:1px;border-radius:20px;pointer-events:none;border:1px solid #ffffff10}
-.luxury-home .home-card-choice.food-choice{background-position:center 58%}
-.luxury-home .home-card-choice.restaurant-choice{background-position:center 50%}
+.luxury-home .home-card-choice.food-choice,
+.luxury-home .home-card-choice.restaurant-choice{background-position:center}
 .restaurant-detail-summary{margin-top:13px}
 .restaurant-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .restaurant-detail-grid>div{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:11px;background:#211f1c}
@@ -5878,16 +5877,12 @@ button,input,select,textarea{
   height:96px!important;
   padding:0!important;
   overflow:hidden!important;
-  background-image:var(--home-photo)!important;
-  background-size:cover!important;
-  background-position:center!important;
+  background-image:none!important;
   background-color:#171615!important;
   border:1px solid rgba(255,255,255,.28)!important;
   border-radius:20px!important;
   box-shadow:none!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-choice.food-choice{background-position:center 58%!important}
-.app:has(#home:not(.hidden)) #home .home-card-choice.restaurant-choice{background-position:center 50%!important}
 .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-overlay{
   display:block!important;
   position:absolute!important;
@@ -10039,16 +10034,4 @@ button,input,select,textarea{
   background-position:center center !important;
   background-repeat:no-repeat !important;
   background-color:#080706 !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice{
-  background-image:none !important;
-  background-color:rgba(8,7,6,.10) !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-overlay,
-.app:has(#home:not(.hidden)) #home .home-card-choice::before,
-.app:has(#home:not(.hidden)) #home .home-card-choice::after{
-  display:none !important;
-  content:none !important;
-  background:none !important;
-  box-shadow:none !important;
 }
