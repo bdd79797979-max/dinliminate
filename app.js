@@ -576,8 +576,9 @@ function restaurantGooglePhotoEndpointUrl(row){
  if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
  const placeId=restaurantGooglePlaceId(row);
  if(placeId)params.set('placeId',placeId);
+ params.set('googleOnly','1');
  params.set('resolver','google-v1');
- return '/api/google-restaurant-photo?'+params.toString();
+ return '/api/restaurant-photo?'+params.toString();
 }
 function restaurantGooglePlaceId(row){
  const key='dinliminate.google.placeids.v1';
@@ -617,6 +618,7 @@ function restaurantPhotoEndpointUrl(row){
  }
  if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
  if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
+ params.set('skipGoogle','1');
  params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
  return '/api/restaurant-photo?'+params.toString();
 }
@@ -625,9 +627,9 @@ function restaurantImmediatePhoto(row){
  const rowKey=String(row?.id||row?.canonicalId||'').trim();
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
  if(cached?.url)return touchRestaurantPhotoMemoryCache(rowKey,cached).url;
- // CP993: the card itself points at the photo resolver. The resolver owns
- // official-site -> exact-public -> OSM -> exact-search fallback ordering.
- return restaurantPhotoEndpointUrl(row)||RESTAURANT_NEUTRAL_IMAGE;
+ // Google Places content is loaded on demand and is never used as an image src
+ // directly, so the browser cannot silently prefetch/cache Google content.
+ return RESTAURANT_NEUTRAL_IMAGE;
 }
 function restaurantCardFallbackImage(row){
  const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
@@ -745,12 +747,10 @@ async function hydrateRestaurantPhoto(row,scope){
 }
 
 async function primeRestaurantPhotosBeforeFirstPaint(rows,startIndex=0){
- const pool=Array.isArray(rows)?rows:[];
- if(navigator.onLine===false)return;
- const row=pool[startIndex];
- if(!row)return;
+ const pool=Array.isArray(rows)?rows:[];if(navigator.onLine===false)return;
+ const row=pool[startIndex];if(!row)return;
  try{await hydrateRestaurantWebsite(row,'');}catch{}
- await loadRestaurantPhotoPreferred(row).catch(()=>null);
+ await loadRestaurantPhoto(row).catch(()=>null);
 }
 let restaurantPhotoPrefetchTimer=0;
 let restaurantPhotoPrefetchToken=0;
