@@ -1,18 +1,21 @@
-# CURRENT SAVEPOINT — BUILD 998 / CP998
+# CURRENT SAVEPOINT — BUILD 999 / CP999
 
 Date: 2026-10-05
 
 Working branch: `main`
 
-## CP998 — Tutorial Toggle & Choose Advance Repair
+## CP999 — Tutorial Engine Stabilization
 
-- Tutorial icon starts/ends Tutorial Mode.
-- Choose reliably advances into Winner.
-- Choose wording: “Make your decision early.”
-- Tutorial Home icon has no dark focus/touch enclosure.
-- CP997 full tutorial flow remains intact.
+- Choose advances into Winner from both the real button and the tutorial bubble.
+- Winner and cross-path transitions invalidate stale tutorial overlays.
+- Meal Times/Cuisine bubble positioning remains keep-out aware.
+- Enter Restaurant and Enter Meals remain part of the full tutorial.
+- CP998 remains the immediate rollback.
 
 ## Recovery anchors
+
+### CP998
+`d83d45dcb41f8dae9f8c3c1104aeddd74e24c6cd`
 
 ### CP997
 `ad8e508d87b0852ef4cb56f494c1bff9c9ee3185`

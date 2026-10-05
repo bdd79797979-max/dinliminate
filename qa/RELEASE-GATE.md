@@ -22,6 +22,13 @@ Date: 2026-10-05
 - Settings → Tutorial Mode starts from Home.
 - Add to phone, Share, and Tutorial use the same Home utility icon styling.
 
+## Tutorial Engine gates
+
+- Choose button activation advances the tutorial into Winner.
+- Choose tutorial bubble advances into Winner without creating fake history.
+- Screen transitions invalidate the previous tutorial overlay before the next screen paints.
+- Stale tutorial tokens cannot position a bubble on the wrong screen.
+
 ## Repository gates
 
 Before calling CP997 launch-ready:
