@@ -3109,8 +3109,12 @@ if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
    return data.url;
   }).catch(()=>null);
 }
-hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
-if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
+hydrateRestaurantWebsite(row,'#restStage #restaurantCard')
+ .finally(()=>hydrateRestaurantPhoto(row,'#restStage #restaurantCard'));
+if(nextRow){
+ hydrateRestaurantWebsite(nextRow,'#restStage #restaurantNextCard')
+  .finally(()=>hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard'));
+}
 prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
 maybeShowInCardSwipeCoach();
 if(S.familyNormalMode==='setup'&&S.familyDecisionType==='restaurant')familyNormalBar('restaurant','setup',S.familyActiveData);
