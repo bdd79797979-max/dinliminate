@@ -69,3 +69,11 @@ Physical iPhone Safari/PWA behavior still requires a device run; repository chec
 ## Deployment
 
 Vercel is the official runtime target. The current connected Vercel account has exhausted its Hobby 24-hour deployment allowance, so the CP910 source is committed to `main` but cannot be newly deployed until that limit resets. Netlify remains available as legacy/backup configuration.
+
+
+## CP989 — Card handoff and UI regression repair
+- Restored the meal swipe handoff guard before redraw so the waiting card remains the exact next meal while the current card is recycled.
+- Wired every hamburger menu button (Home, Meals, Restaurant, Winner, Family) to the shared drawer.
+- Restyled modal close controls so the X remains visible and gold rather than blacked out.
+- Reasserted the shared Cuisine/Meal Time chip touch, color, and active-state treatment.
+- CP987 remains the clean rollback baseline; CP988 is superseded by this repair for swipe behavior.
