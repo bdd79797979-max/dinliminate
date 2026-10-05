@@ -192,7 +192,8 @@ self.addEventListener('fetch',event=>{
 
   const imageHosts=['images.pexels.com','images.unsplash.com','commons.wikimedia.org','static.spotapps.co','hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','recipesclare.com','www.ajsbbq.co.nz','southernbite.com','snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com','www.pastapiracy.com','slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com','www.cooksoups.com','bigbitesedenderry.com','kookycrunch.com','www.goodnes.com','cdn.apartmenttherapy.info','www.southernliving.com','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','myhomemaderecipe.com','www.finedininglovers.com','1.bp.blogspot.com'];
 
-  if(url.origin!==self.location.origin&&!imageHosts.includes(url.hostname))return;
+  const isImageRequest=req.destination==='image'||url.pathname.match(/\.(?:avif|webp|jpe?g|png|gif)$/i);
+  if(url.origin!==self.location.origin&&!isImageRequest&&!imageHosts.includes(url.hostname))return;
 
   if(url.origin===self.location.origin&&url.pathname==='/api/image'){
     event.respondWith(
@@ -219,7 +220,6 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  const isImageRequest=req.destination==='image'||url.pathname.match(/\.(?:avif|webp|jpe?g|png|gif)$/i);
   const targetCache=isImageRequest?IMAGE_CACHE:CACHE;
 
   event.respondWith(
