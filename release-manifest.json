@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1008,
+  "build": 1009,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1008",
-  "deploymentTrigger": "CP1008-managed-image-cache"
+  "checkpoint": "CP1009",
+  "deploymentTrigger": "CP1009-true-iphone-viewport-shell"
 }
