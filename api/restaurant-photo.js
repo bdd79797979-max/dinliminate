@@ -458,20 +458,20 @@ function venueScore(candidate,name,address,website){
 }
 function hasVenueSignal(candidate){
   const context=String(candidate?.context||'');
-  if(!context.trim())return false;
-  // The page itself has already been verified as the exact restaurant/location.
-  // For page-level image metadata (og:image / JSON-LD), that verification is
-  // sufficient; forcing venue words into the image tag context rejects many
-  // legitimate restaurant hero photos.
   if(candidate?.source==='meta'||candidate?.source==='jsonld')return true;
+  if(candidate?.source==='restaurantji-photo')return true;
+  // The page itself has already been verified as the exact restaurant/location.
+  // Once obvious graphics/menu assets are rejected, a normal image element on
+  // a verified official/public venue page is a valid photo candidate even when
+  // its alt text is empty or the surrounding HTML contains no venue keywords.
+  if(['img','background'].includes(candidate?.source)&&Number(candidate?.score||0)>=10)return true;
   // Exact verified venue pages may expose their photo as an anchor to a
   // standalone image (common in older local-news articles).
-  if(candidate?.source==='linked-image'&&Number(candidate?.score||0)>=45)return true;
+  if(candidate?.source==='linked-image'&&Number(candidate?.score||0)>=30)return true;
+  if(!context.trim())return false;
   const hay=normalizeMatchText(context);
   const venueHits=(hay.match(/exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|sign|signage|location|drive thru|parking lot|parking|street view|patio|terrace/g)||[]).length;
   const foodHits=(hay.match(/menu|food|dish|meal|burger|pizza|salad|steak|wings|tacos|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine/g)||[]).length;
-  // Require venue evidence, but allow normal restaurant-page copy around a
-  // real venue photo instead of rejecting it because the page mentions food.
   return venueHits>=1 && foodHits <= (venueHits*3+4);
 }
 
@@ -638,8 +638,8 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
   const html=await fetchText(official,{},1800,1800000);
   if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
   const candidates=extractVenueImageCandidates(html,official,name,address,official)
-    .filter(item=>item.score>=18&&item.score>0&&hasVenueSignal(item))
-    .slice(0,8);
+    .filter(item=>item.score>=10&&item.score>0&&hasVenueSignal(item))
+    .slice(0,10);
   const attempts=await Promise.allSettled(candidates.map(async candidate=>{
    try{return {media:await fetchImage(candidate.url,{'Referer':official},2200),candidate};}catch{return null;}
   }));
@@ -996,7 +996,7 @@ module.exports=async function handler(req,res){
     // official domain.
     for(const entry of pages.official){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
-        .filter(item=>item.score>=18&&item.score>0&&hasVenueSignal(item));
+        .filter(item=>item.score>=10&&item.score>0&&hasVenueSignal(item));
       const attempts=await Promise.allSettled(candidates.slice(0,8).map(async candidate=>{
         try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
