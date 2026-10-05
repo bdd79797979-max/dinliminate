@@ -1070,6 +1070,7 @@ module.exports=async function handler(req,res){
   const phone=String(q.phone||'').trim().slice(0,80);
   const website=String(q.website||'').trim().slice(0,700);
   const officialWebsite=String(q.officialWebsite||website).trim().slice(0,700);
+  const officialLocationPage=String(q.officialLocationPage||'').trim().slice(0,900);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
@@ -1077,6 +1078,13 @@ module.exports=async function handler(req,res){
     // CP976: if provider data has no website, use exact public venue pages
     // to discover the restaurant's own site before public-photo fallback.
     let fastDirectory=null;
+
+    // CP992: honor an exact official location page when the caller already has one.
+    if(officialLocationPage){
+      const directLocation=await fastOfficialVenuePhoto(name,address,officialLocationPage,phone);
+      if(directLocation)return sendMedia(res,{...directLocation,source:'official-location-page'});
+    }
+
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
