@@ -12,6 +12,5 @@
   "photoPolicy": "no-google",
   "onboarding": "CP1006-full-iphone-viewport-fix",
   "imageCache": "CP1008-size-based-lru-75mb",
-  "onboarding": "CP1006-full-iphone-viewport-fix",
   "viewportShell": "CP1009-true-full-viewport"
 }
