@@ -10283,3 +10283,13 @@ button,input,select,textarea{
     max-height:100dvh;
   }
 }
+
+/* CP1004 — harden menu/modal handoffs against iPhone first-frame flashes.
+   The old opening state made the backdrop transparent for one animation frame,
+   exposing the screen underneath when a drawer or modal was being replaced.
+   Keep the backdrop opaque immediately; the modal itself retains its entrance motion. */
+.modal-bg.modal-bg-opening{
+  opacity:1!important;
+  background:#000c!important;
+  transition:none!important;
+}

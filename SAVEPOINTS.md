@@ -1,8 +1,15 @@
-# CURRENT SAVEPOINT — BUILD 1003 / CP1003
+# CURRENT SAVEPOINT — BUILD 1004 / CP1004
 
 Date: 2026-10-05
 
 Working branch: `main`
+
+## CP1004 — Menu / Modal Flash Hardening
+
+- Modal backdrops are opaque on their first paint, preventing the previous screen from showing through during drawer/modal replacement.
+- Existing modal motion and screen designs remain unchanged.
+- Mobile CSS and service-worker cache versions were bumped to force the corrected shell onto devices.
+- Rollback: CP1003.
 
 ## CP1003 — Full iPhone Viewport Adaptation
 
