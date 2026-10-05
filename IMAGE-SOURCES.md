@@ -11,17 +11,18 @@ The built-in catalog contains **Buttermilk & Cornbread** only; the standalone **
 The current image is the **Cornbread & Buttermilk** photograph from *Our State* (photograph by Tim Robison), which specifically depicts cornbread with buttermilk. Usage rights should be reviewed before public distribution.
 Meal images are tied to the meal catalog and should be dish-specific. Third-party image sources require the appropriate rights/usage review before public distribution.
 
-### Restaurant imagery — no Google photos
+### Restaurant imagery
 
-Google photo APIs, Google photo credentials, and Google Places photo metadata are **not** used for restaurant photography.
-
-The restaurant-photo resolver follows this priority:
+Google Places Photos are supported as a **server-side fallback**, not as the first source. The restaurant-photo resolver follows this priority:
 
 1. official restaurant website, gallery, or exact location page
 2. exact public venue page
 3. exact OpenStreetMap/Photon venue image
-4. tightly validated exact-restaurant search imagery
-5. safe restaurant/category fallback
+4. Google Places Photo for an identity-checked exact venue
+5. tightly validated exact-restaurant search imagery
+6. safe restaurant/category fallback
+
+The Google photo path is budget-controlled with a durable monthly request counter and fails closed when the budget tracker is unavailable.
 
 Identity checks should use restaurant name plus address/phone/site evidence so a nearby or similarly named venue cannot supply the photo.
 
