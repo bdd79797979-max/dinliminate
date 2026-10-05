@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 987,
+  "build": 988,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP987",
-  "deploymentTrigger": "CP987-full-audit-zoom-reset-menu"
+  "checkpoint": "CP988",
+  "deploymentTrigger": "CP988-swipe-engine-v2"
 }
