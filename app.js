@@ -8,6 +8,27 @@
 const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.DINLIMINATE_FOODS : [];
 const DEFAULT_FOOD_IMAGE = 'https://images.pexels.com/photos/16365767/pexels-photo-16365767.jpeg?auto=compress&cs=tinysrgb&w=1800';
 const $ = (id) => document.getElementById(id);
+
+// CP1011 — runtime touch-device viewport fallback.
+// Some mobile Safari modes can expose a wider layout viewport than the physical
+// iPhone. Use touch points + physical screen bounds as a second signal so the
+// full-phone shell does not depend on CSS hover/pointer reporting alone.
+(() => {
+  const root = document.documentElement;
+  const markTouchMobile = () => {
+    const touch = Number(navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+    const screenW = Number(window.screen?.width || 0);
+    const screenH = Number(window.screen?.height || 0);
+    const physicalMax = Math.max(screenW, screenH);
+    const layoutW = Number(window.innerWidth || 0);
+    const mobileTouch = touch && physicalMax > 0 && physicalMax <= 1024 && layoutW <= 1024;
+    root.classList.toggle('device-touch-mobile', mobileTouch);
+  };
+  markTouchMobile();
+  window.addEventListener('resize', markTouchMobile, {passive:true});
+  window.addEventListener('orientationchange', markTouchMobile, {passive:true});
+})();
+
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
