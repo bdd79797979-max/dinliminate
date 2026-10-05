@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 999,
+  "build": 1000,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP999",
-  "deploymentTrigger": "CP999-tutorial-engine-stabilization"
+  "checkpoint": "CP1000",
+  "deploymentTrigger": "CP1000-home-door-background"
 }

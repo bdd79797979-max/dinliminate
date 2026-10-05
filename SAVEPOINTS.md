@@ -1,24 +1,21 @@
-# CURRENT SAVEPOINT — BUILD 999 / CP999
+# CURRENT SAVEPOINT — BUILD 1000 / CP1000
 
 Date: 2026-10-05
 
 Working branch: `main`
 
-## CP999 — Tutorial Engine Stabilization
+## CP1000 — Full-Screen Home Door Background
 
-- Choose advances into Winner from both the real button and the tutorial bubble.
-- Winner and cross-path transitions invalidate stale tutorial overlays.
-- Meal Times/Cuisine bubble positioning remains keep-out aware.
-- Enter Restaurant and Enter Meals remain part of the full tutorial.
-- CP998 remains the immediate rollback.
+- Supplied double-door image is the sole active Home page background.
+- Home uses `cover` and centered positioning for full-screen presentation.
+- Legacy Home background photos were removed from the active CSS rules.
+- PWA cache markers are synchronized to Build 1000.
+- CP999 remains the immediate code rollback.
 
 ## Recovery anchors
 
-### CP998
-`d83d45dcb41f8dae9f8c3c1104aeddd74e24c6cd`
-
-### CP997
-`ad8e508d87b0852ef4cb56f494c1bff9c9ee3185`
+### CP999
+`784b41c066818cc097be189ff76ab8b17b0bff72`
 
 ### CP957
 `d03a75ab63f1708524f1406e33d5a09c74f689f4`

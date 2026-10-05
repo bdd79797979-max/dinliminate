@@ -344,7 +344,6 @@
 /* CP108 — luxury home */
 .luxury-home{position:relative;overflow:hidden;text-align:center;background:
   linear-gradient(180deg,rgba(6,6,6,.34),rgba(6,6,6,.58)),
-  url("/api/image?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F18851531%2Fpexels-photo-18851531.jpeg%3Fauto%3Dcompress%26cs%3Dtinysrgb%26w%3D1600") center/cover no-repeat,
   linear-gradient(180deg,#0c0c0c,#11100e 66%,#0c0c0c)}
 .luxury-home::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#ffffff05,transparent 35%,#e2a75d09 78%,transparent)}
 .luxury-home .eyebrow{color:#bfa16b;letter-spacing:.24em}
@@ -7851,10 +7850,7 @@ button,input,select,textarea{
    The new door image is the full Home canvas. AT HOME and RESTAURANT use
    separate replacement photos only inside their window panels. */
 .app:has(#home:not(.hidden)) #home{
-  background:
-    linear-gradient(180deg,rgba(5,4,3,.30),rgba(5,4,3,.56)),
-    url("/api/image?url=https%3A%2F%2Fimg.staticmb.com%2Fmbcontent%2Fimages%2Fuploads%2F2025%2F7%2FRegular-Inspection.jpg")
-    center center / cover no-repeat !important;
+  background:transparent !important;
 }
 .app:has(#home:not(.hidden)) #home .home-card-photo{
   background-image:var(--home-photo) !important;
@@ -10064,4 +10060,14 @@ button,input,select,textarea{
   box-shadow:none!important;
   outline:none!important;
   -webkit-tap-highlight-color:transparent!important;
+}
+
+
+/* CP1000 — user-selected full-screen double-door Home background. */
+.app:has(#home:not(.hidden)) #home{
+  background-image:url("/assets/home-door.jpg?v=1000") !important;
+  background-size:cover !important;
+  background-position:center center !important;
+  background-repeat:no-repeat !important;
+  background-color:#080706 !important;
 }
