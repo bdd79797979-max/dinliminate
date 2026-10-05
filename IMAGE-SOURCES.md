@@ -5,6 +5,9 @@
 All built-in image URLs must use HTTPS.
 
 ### Meal imagery
+
+### CP1005 Buttermilk & Cornbread
+The built-in Buttermilk & Cornbread meal now uses Wikimedia Commons **Buttermilk-(right)-and-Milk-(left).jpg**, a CC BY-SA 3.0 image by Ukko.
 Meal images are tied to the meal catalog and should be dish-specific. Third-party image sources require the appropriate rights/usage review before public distribution.
 
 ### Restaurant imagery — no Google photos
