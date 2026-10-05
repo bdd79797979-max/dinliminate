@@ -7,19 +7,20 @@ const NO_PHOTO_HOSTS=new Set(['google.com','www.google.com','googleusercontent.c
 const BLOCKED_IMAGE_HINTS=/\b(?:logo|favicon|sprite|icon|avatar|placeholder|default[-_ ]?image|brandmark|wordmark|google[ -]?play|play[ -]?store|app[ -]?store|download[ -]?app|download|badge|payment|visa|mastercard|amex|social[ -]?media|facebook|instagram|tiktok|youtube|x[ -]?twitter)\b/i;
 const VENUE_IMAGE_HINTS=/\b(?:exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|façade|sign|signage|location|drive[- ]?thru|drive through|parking lot|parking|street view|patio|terrace)\b/i;
 const FOOD_IMAGE_HINTS=/\b(?:food|dish|meal|burger|pizza|salad|steak|wings|tacos?|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entrée|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine)\b/i;
-const PHOTO_GRAPHIC_HINTS=/\b(?:menu(?:board|boards|page|item)?|menu[-_ ]?board|food[-_ ]?menu|menu[-_ ]?cover|flyer|promo(?:tion)?|poster|collage|montage|mosaic|screenshot|screen[-_ ]?shot|social[-_ ]?image|sharing[-_ ]?image|banner|coupon|special[-_ ]?graphic|advert(?:isement)?|template|graphic)\b/i;
+const PHOTO_GRAPHIC_HINTS=/\b(?:menu(?:board|boards|page|item)?|menu[-_ ]?board|food[-_ ]?menu|menu[-_ ]?cover|flyer|promo(?:tion)?|poster|collage|montage|mosaic|screenshot|screen[-_ ]?shot|social[-_ ]?image|sharing[-_ ]?image|banner|coupon|special[-_ ]?graphic|advert(?:isement)?|template|graphic|composite|photo[-_ ]?grid|multi[-_ ]?photo|multi[-_ ]?panel|four[-_ ]?panel|2x2|3x3|contact[-_ ]?sheet|story[-_ ]?grid)\b/i;
 const PHOTO_CONTEXT_HINTS=/\b(?:photo|photos|photograph|gallery|dining|interior|exterior|outside|storefront|patio|restaurant|burger|pizza|tacos?|steak|wings|chicken|fries|dessert|sandwich|plate)\b/i;
 const LOW_QUALITY_IMAGE_HINTS=/\b(?:thumbnail|thumb|tiny|small|lowres|low[-_ ]?res|preview|sprite|tile)\b/i;
 const MAX_RESTAURANT_IMAGE_DIMENSION=6000;
 const MAX_RESTAURANT_IMAGE_PIXELS=12000000;
 const PHOTO_SOURCE_TIER={
   'known-restaurant-photo':100,
-  'official-fast-path':96,
-  'osm-exact-poi':95,
-  'official-venue-page':94,
+  'official-fast-path':99,
+  'official-venue-page':96,
+  'restaurantji-photo':94,
   'exact-public-venue-image':92,
   'known-public-venue-page':90,
-  'exact-public-venue-page':88
+  'osm-exact-poi':88,
+  'exact-public-venue-page':84
 };
 
 function json(res,status,payload){
@@ -154,6 +155,46 @@ function mediaQuality(media){
   if(ratio>=1.1&&ratio<=2.1)score+=4;
   return score;
 }
+async function isLikelyPhotoCollage(bytes){
+  if(!sharp||!bytes?.length)return false;
+  try{
+    const sample=await sharp(bytes,{failOn:'error',limitInputPixels:MAX_RESTAURANT_IMAGE_PIXELS})
+      .resize({width:96,height:96,fit:'fill'})
+      .removeAlpha()
+      .grayscale()
+      .raw()
+      .toBuffer({resolveWithObject:true});
+    const data=sample?.data,info=sample?.info;
+    if(!data||!info?.width||!info?.height)return false;
+    const w=info.width,h=info.height,px=(x,y)=>data[(y*w)+x];
+    const lineContrast=(center,isColumn)=>{
+      const limit=isColumn?w:h;let total=0,strong=0,count=0;
+      for(let i=6;i<limit-6;i++){
+        let seam=0,side=0,seamN=0,sideN=0;
+        for(let d=-1;d<=1;d++){
+          const idx=center+d;
+          if(idx<0||idx>=(isColumn?w:h))continue;
+          seam+=isColumn?px(idx,i):px(i,idx);seamN++;
+        }
+        for(const d of [-5,-4,-3,3,4,5]){
+          const idx=center+d;
+          if(idx<0||idx>=(isColumn?w:h))continue;
+          side+=isColumn?px(idx,i):px(i,idx);sideN++;
+        }
+        if(!seamN||!sideN)continue;
+        const diff=Math.abs(seam/seamN-side/sideN);
+        total+=diff;count++;if(diff>=35)strong++;
+      }
+      return {mean:count?total/count:0,support:count?strong/count:0};
+    };
+    for(const ratio of [.5,.333,.667]){
+      const v=lineContrast(Math.max(2,Math.min(w-3,Math.round(w*ratio))),true);
+      const hline=lineContrast(Math.max(2,Math.min(h-3,Math.round(h*ratio))),false);
+      if(v.mean>=24&&hline.mean>=24&&v.support>=.42&&hline.support>=.42)return true;
+    }
+  }catch{}
+  return false;
+}
 function chooseBetterPhoto(a,b){
   if(!a)return b;
   if(!b)return a;
@@ -192,6 +233,7 @@ async function fetchImage(url,headers={},timeout=7000){
     if(width>MAX_RESTAURANT_IMAGE_DIMENSION||height>MAX_RESTAURANT_IMAGE_DIMENSION)throw new Error('Image dimensions are too large.');
     if(width&&height&&(width*height)>MAX_RESTAURANT_IMAGE_PIXELS)throw new Error('Image pixel count is too large.');
     if(width&&height&&mediaQuality(dimensions)<0)throw new Error('Image dimensions are not suitable for a restaurant card.');
+    if(await isLikelyPhotoCollage(bytes))throw new Error('Image appears to be a multi-panel or composite graphic.');
     return await normalizeRestaurantImage(bytes);
   }finally{clearTimeout(timer)}
 }
@@ -495,10 +537,12 @@ function extractVenueImageCandidates(html,pageUrl,name,address,website){
   ];
   const meta=extractMetaImages(html,pageUrl).map(url=>({url,context:url+' '+normalizeMatchText(name)+' restaurant',label:'open-graph image',source:'meta'}));
   const seen=new Set();
+  const pageIsDirectory=isPhotoDiscoveryHost(pageUrl);
   const all=[...raw,...meta].map(item=>({...item,score:venueScore(item,name,address,website)}))
     .filter(item=>{
       if(seen.has(item.url))return false;
       seen.add(item.url);
+      if(pageIsDirectory&&['meta','jsonld'].includes(item.source))return false;
       return !isRejectedPhotoCandidate(item);
     });
   return all.sort((a,b)=>b.score-a.score);
@@ -889,6 +933,15 @@ async function findVerifiedRestaurantPages(name,address,website){
    return !isPhotoDiscoveryHost(x.url);
   });
   const publicPages=verified.filter(x=>websiteHost?sameHost(x.url,websiteHost)===false:isPhotoDiscoveryHost(x.url));
+  const publicSourcePriority=(url)=>{
+    const host=discoveryHost(url);
+    if(host==='restaurantji.com')return 100;
+    if(host==='tripadvisor.com'||host==='tripadvisor.ca')return 94;
+    if(host==='clarksvillenow.com'||host==='visitclarksvilletn.com')return 90;
+    if(host==='restaurantguru.com')return 76;
+    return 60;
+  };
+  publicPages.sort((a,b)=>publicSourcePriority(b.url)-publicSourcePriority(a.url));
 
   const officialMerged=[...official,...officialFromSearch]
    .filter((x,i,a)=>a.findIndex(y=>sameHost(y.url,x.url))===i)
@@ -972,23 +1025,20 @@ module.exports=async function handler(req,res){
       if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
     }
 
-    // A direct exact-POI image is the fastest trustworthy fallback when the
-    // restaurant site is unavailable.
-    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
-      try{
-        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
-        return sendMedia(res,{media,source:'osm-exact-poi'});
-      }catch{}
-    }
-
-    // Small set of manually verified exact restaurant mappings. These are
-    // emergency fast paths, after the official-site attempt.
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
     if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
     if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
+
+    // OSM exact-POI image is a later fallback after exact/reputable venue photos.
+    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
+      try{
+        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
+        return sendMedia(res,{media,source:'osm-exact-poi'});
+      }catch{}
+    }
 
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
 
