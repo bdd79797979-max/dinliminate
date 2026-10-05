@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 984,
+  "build": 985,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP984",
-  "deploymentTrigger": "CP984-mealtimes-and-photo-quality"
+  "checkpoint": "CP985",
+  "deploymentTrigger": "CP985-fix-menu-navigation-flash"
 }
