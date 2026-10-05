@@ -4545,8 +4545,8 @@ function settingsView(){
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">TOOLS</div><div class="settings-actions">'+
  
-settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
- settingsActionButton('tutorialModeSettings','✦','Tutorial Mode','Walk through Home, Meals, Restaurants, and the Menu again.','tutorial-action')+
+settingsActionButton('tutorialModeSettings','✦','Tutorial Mode','Walk through Home, Meals, Restaurants, and the Menu again.','tutorial-action')+
+ settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
  settingsActionButton('resetRestore','↺','Reset & Restore','Restore original meals or wipe all local app data.','restore-action')+
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">YOUR DATA</div><div class="settings-actions settings-actions-utility">'+
