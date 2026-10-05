@@ -1506,29 +1506,30 @@ function prepareFoodNextCard(){
 }
 function bindRestaurantPhotoPinch(target){
   const img=target?.tagName==='IMG'?target:target?.querySelector?.('img');
-  if(!img||img.dataset.restaurantPinchBound==='1')return;
+  if(!img)return;
+  if(img.dataset.restaurantPinchBound==='1'){img.style.transform='none';return;}
   img.dataset.restaurantPinchBound='1';
   img.classList.add('restaurant-photo-zoomable');
   img.style.touchAction='none';
   img.style.transformOrigin='center center';
-  const points=new Map();let scale=1,startDistance=0,startScale=1,pinching=false;
+  const surface=img.closest('.card')||img,points=new Map();let scale=1,startDistance=0,startScale=1,pinching=false;
   const distance=()=>{const p=[...points.values()];return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);};
   const apply=()=>{img.style.transform=scale<=1.01?'none':'scale('+scale.toFixed(3)+')';};
   const finishPointer=e=>{points.delete(e.pointerId);if(points.size<2){pinching=false;if(scale<=1.01){scale=1;apply();}}};
-  img.addEventListener('pointerdown',e=>{
-    if(e.pointerType!=='touch')return;
+  surface.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch'||!e.target.closest?.('img'))return;
     points.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(points.size===2){pinching=true;startDistance=Math.max(1,distance());startScale=scale;e.preventDefault();}
   },{passive:false});
-  img.addEventListener('pointermove',e=>{
+  surface.addEventListener('pointermove',e=>{
     if(!pinching||e.pointerType!=='touch')return;
     const p=points.get(e.pointerId);if(!p)return;
     p.x=e.clientX;p.y=e.clientY;
     const d=distance();if(!d)return;
     scale=Math.max(1,Math.min(3.5,startScale*(d/startDistance)));apply();e.preventDefault();
   },{passive:false});
-  img.addEventListener('pointerup',finishPointer,{passive:true});
-  img.addEventListener('pointercancel',finishPointer,{passive:true});
+  surface.addEventListener('pointerup',finishPointer,{passive:true});
+  surface.addEventListener('pointercancel',finishPointer,{passive:true});
 }
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
@@ -5026,6 +5027,7 @@ function familyShowWinner(round){
 function handleWinnerRestart(){
   if(S.familyNormalMode==='winner'){
     const round=S.familyActiveData?.activeRound||S.familyActiveData?.lastCompletedRound||null,cmp=round?.snapshot?.compareBoth||null,session=familySessionRead(),host=session?.member?.role==='host';
+    if(round?.snapshot?.outcome==='no_winner')return familyRestartFromNoWinner();
     if(cmp?.mode==='compare_both'&&cmp.track==='meal')return host?familyContinueCompareRestaurant(round):familyDismissWinner();
     if(cmp?.mode==='compare_both'&&cmp.track==='restaurant')return host?familyCreateCompareFinal(round):familyDismissWinner();
     return host?familyRestartAfterWinner():familyDismissWinner();
