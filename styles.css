@@ -8897,9 +8897,14 @@ button,input,select,textarea{
   cursor:pointer!important;
   -webkit-tap-highlight-color:transparent!important;
 }
-#food .food-interior-nav .food-top-refine:hover{color:#fff!important}
+#food .food-interior-nav .food-top-refine:hover,
+#food .food-interior-nav .food-top-refine:active,
+#food .food-interior-nav .food-top-refine.is-open,
+#food .food-interior-nav .food-top-refine.is-active{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
 #food .food-interior-nav .food-top-refine:active{transform:scale(.97)!important}
-#food .food-interior-nav .food-top-refine.is-active{color:#e0c17e!important}
 #food .food-interior-nav .food-top-maybe{
   position:static!important;
   left:auto!important;
