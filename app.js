@@ -5183,9 +5183,9 @@ async function resetAppDataFlow(){
   S.hidden=new Set();S.deleted=new Set();S.deletedCustomMeals=[];S.customQuickCuts=[];S.hiddenRestaurants={};S.cutCats.clear();S.foodCuts.clear();S.maybe.clear();S.maybeDeck=false;S.foodMaybeRound=false;S.restaurantCuts.clear();S.restaurantMaybeRound=false;
   S.quickCutsCollapsed={food:true,restaurant:true};S.mealTimeCutsCollapsed=true;S.mealTimeSettings={custom:[],names:{},order:DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),disabled:new Set()};S.mealTimeFilters=new Set(mealTimeNames());
   S.pool=[];S.restaurantPool=[];S.index=0;S.restaurantIndex=0;S.foodActions=[];S.restaurantActions=[];S.restaurantQuery='';S.restaurantSearchKey='';S.restaurantSearchOrigin=null;S.restaurantSearchDegraded=false;
-  S.location=null;S.locationSource='none';S.locationFreshAt=null;S.locationFreshAt=null;S.storageWarning=false;S.saved=false;S.custom=[];S.notes={};
+  S.location=null;S.locationSource='none';S.locationFreshAt=null;S.storageWarning=false;S.saved=false;S.custom=[];S.notes={};
   S.winnerItem=null;S.winnerType='food';S.hungryRestaurantChoice=null;S.hungryRestaurantPendingChoice=null;S.hungryWheelChoice=null;S.hungryWheelDisplayItems=null;S.hungryWheelRotation=0;S.hungryWheelLandedId=null;S.hungryWheelSpinning=false;S.hungryWheelSpinPhase='idle';S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
-  S.familyNormalMode='idle';S.familyDecisionType='';S.familyNormalRoundId='';S.familyNormalStage=0;S.familyNormalAutoResume=false;S.familyActiveData=null;S.familyVotedIds=new Set();S.familyBrowseHistory=[];S.familyCompareBothMode='';S.familyCompareBothGroupId='';S.familyCompareBothMealWinner=null;S.familyPollTimer=0;S.familyPollBusy=false;S.familyVoteBusy=false;
+  S.familyNormalMode='idle';S.familyDecisionType='';S.familyNormalRoundId='';S.familyNormalStage=0;S.familyNormalAutoResume=false;S.familyActiveData=null;S.familyVotedIds=new Set();S.familyBrowseHistory=[];S.familyCompareBothMode='';S.familyCompareBothGroupId='';S.familyCompareBothMealWinner=null;S.familyPollTimer=0;S.familyPollBusy=false;S.familyNormalVoteBusy=false;
   try{S.notes={};saveItemNotes();}catch{}
   window.location.reload();
 }
