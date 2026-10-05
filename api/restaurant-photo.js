@@ -815,13 +815,13 @@ async function fastOfficialVenuePhoto(name,address,website,officialLocationPage=
  return null;
 }
 const KNOWN_PUBLIC_PHOTO_PAGES=[
- {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],url:'https://www.visitclarksvilletn.com/listing/excell-bar-b-q/128/'}
+ {names:['shelbys trio',"shelby's trio"],addressTokens:['304 n 2nd st','304 north 2nd street'],phone:'9319193373',url:'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street'},
+ {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
+ {names:['mcdonalds'],addressTokens:['724 sango rd','724 sango road'],phone:'9313580259',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds/'},
+ {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
+ {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'},
+ {names:['thirsty goat'],addressTokens:['4044 madison st','4044 madison street','madison street 4044'],phone:'9313434628',url:'https://www.restaurantji.com/tn/clarksville/the-thirsty-goat-/'}
 ];
-function knownPublicPhotoPage(name){
- const normalized=normalizeMatchText(name);
- const hit=KNOWN_PUBLIC_PHOTO_PAGES.find(entry=>entry.names.some(n=>normalized===normalizeMatchText(n)||normalized.includes(normalizeMatchText(n))||normalizeMatchText(n).includes(normalized)));
- return hit?.url||'';
-}
 function normalizePhoneDigits(value){return String(value||'').replace(/\D/g,'').slice(-10);}
 function compactMatchText(value){return normalizeMatchText(value).replace(/\s+/g,'');}
 function knownPublicPhotoPage(name,address='',phone=''){
