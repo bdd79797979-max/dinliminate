@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '990';
+let APP_BUILD = '991';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1252,33 +1252,30 @@ function maybeShowInCardSwipeCoach(){
  host.appendChild(coach);
 }
 
-const HOW_TO_GUIDE_KEY='dinliminate.howToGuide.v1';
+const HOW_TO_GUIDE_KEY='dinliminate.howToGuide.v2';
 function showHowToGuide(firstRun=false){
- const slides=[
-  ['WELCOME','Dinner decisions, simplified.','Dinliminate narrows the choices until one meal or restaurant survives. You refine; Dinliminate keeps the process moving.','<div class="howto-choice-pair"><span><b>AT HOME</b><small>Your meal awaits</small></span><i>or</i><span><b>RESTAURANT</b><small>Your table awaits</small></span></div>'],
-  ['SWIPE','Swipe to refine.','Left is CUT. Right is MAYBE. Swipe the card itself, or use the matching buttons below it.','<div class="howto-swipe-demo"><span class="cut-demo">← CUT</span><strong>SWIPE</strong><span class="maybe-demo">MAYBE →</span></div>'],
-  ['CONTROLS','Four simple controls.','Back restores your last decision. Cut removes it. Maybe saves it for later. Choose makes the current card the winner.','<div class="howto-control-grid"><span><b>↶</b><small>BACK</small></span><span><b>✕</b><small>CUT</small></span><span><b>♥</b><small>MAYBE</small></span><span><b>✓</b><small>CHOOSE</small></span></div>'],
-  ['REFINE','Cuisine + Meal Times.','Cuisine narrows what sounds good. Meal Times filters when you want it. Multiple meal times can be selected, and all are selected by default.','<div class="howto-chip-demo"><span>Cuisine</span><span>Meal Times</span><span>Breakfast</span><span>Lunch / Dinner</span><span>Snacks / Desserts</span></div>'],
-  ['MAYBES + DETAILS','Keep the good options.','ALL · MAYBES brings back the choices you saved. Details gives you photos, notes, full information, and hide controls.','<div class="howto-feature-demo"><span><b>ALL · MAYBES</b><small>Revisit saved possibilities</small></span><span><b>DETAILS</b><small>More information, photos & notes</small></span></div>'],
-  ['RESTAURANTS','Find the table.','Set a location and radius, then refine the restaurants. Pinch restaurant photos to zoom. Details gives you venue actions such as Website, Call, and Directions.','<div class="howto-restaurant-demo"><span>⌖<small>LOCATION</small></span><span>◌<small>RADIUS</small></span><span>⤢<small>PINCH TO ZOOM</small></span><span>↗<small>DETAILS</small></span></div>'],
-  ['FAMILY MODE','Decide together.','Open Menu → Family Mode. Create or Join a family, then everyone makes picks. Finalists and the winner stay in the normal Dinliminate flow.','<div class="howto-family-demo"><span>MENU</span><b>→</b><span>FAMILY MODE</span><b>→</b><span>CREATE / JOIN</span></div>'],
-  ['FINISH','You are never stuck.','Choose a winner at any point. If everything is cut, Hungry mode gives you a second chance instead of leaving you with nothing.','<div class="howto-finish-demo"><span>REFINE</span><i>→</i><strong>WINNER</strong></div>']
+ const steps=[
+  {kicker:'1 · SWIPE',title:'Make the first cut easy.',what:'Swipe left to CUT a choice. Swipe right to mark it MAYBE.',why:'It keeps you moving without opening menus or stopping to think about every option.',demo:'<div class="howto-popup-swipe"><span class="howto-cut">← CUT</span><b>· SWIPE ·</b><span class="howto-maybe">MAYBE →</span></div>'},
+  {kicker:'2 · FILTER',title:'Tell Dinliminate what fits tonight.',what:'Use Cuisine and Meal Times to narrow the deck before you start swiping.',why:'Fewer irrelevant choices means a faster, better decision. Meal Times can have more than one selection.',demo:'<div class="howto-popup-chips"><span>Cuisine</span><span>Meal Times</span><span>Breakfast</span><span>Lunch / Dinner</span><span>Snacks / Desserts</span></div>'},
+  {kicker:'3 · MAYBES',title:'Keep the good possibilities.',what:'MAYBE saves a choice instead of cutting it. ALL · MAYBES lets you switch between the full deck and your saved possibilities.',why:'You do not have to choose a winner immediately. Keep the few options worth another look.',demo:'<div class="howto-popup-feature"><strong>ALL · MAYBES</strong><small>Revisit what you kept.</small></div>'},
+  {kicker:'4 · DETAILS',title:'Look closer when you need to.',what:'Tap the Details icon on a card for photos, information, notes, and hide controls.',why:'The card stays simple while the full information is available only when you need it.',demo:'<div class="howto-popup-feature"><strong>DETAILS</strong><small>More information without cluttering the card.</small></div>'},
+  {kicker:'5 · RESTAURANTS',title:'Use the same simple idea for restaurants.',what:'Set a location and radius, then refine the restaurant deck. Restaurant photos can be pinched to zoom.',why:'You can narrow a large local list without losing the quick swipe experience.',demo:'<div class="howto-popup-feature-row"><span>LOCATION</span><span>RADIUS</span><span>PINCH TO ZOOM</span></div>'},
+  {kicker:'6 · CONTROLS',title:'Buttons are there when you want them.',what:'Back restores your last decision. CUT removes the current choice. MAYBE keeps it. CHOOSE makes the current card the winner.',why:'Swipe when it is faster. Tap when you want precise control.',demo:'<div class="howto-popup-controls"><span>↶<small>BACK</small></span><span>✕<small>CUT</small></span><span>♥<small>MAYBE</small></span><span>✓<small>CHOOSE</small></span></div>'},
+  {kicker:'7 · FAMILY MODE',title:'Decide together when everyone is hungry.',what:'Menu → Family Mode lets people join the same dinner decision and make their picks.',why:'Everyone participates, but the experience still follows Dinliminate’s normal flow.',demo:'<div class="howto-popup-family"><span>MENU</span><b>→</b><span>FAMILY MODE</span><b>→</b><span>CREATE / JOIN</span></div>'},
+  {kicker:'8 · MENU',title:'Everything else stays one tap away.',what:'The Menu gives you Manage Meals, History, Settings, Family Mode, and Back to Start.',why:'The decision screen stays clean because the utility tools live in one consistent place.',demo:'<div class="howto-popup-menu-lines"><i></i><i></i><i></i><b>MENU</b></div>'}
  ];
- const body='<div class="howto-guide" id="howToGuide"><div class="howto-progress" id="howToProgress" aria-hidden="true"></div><div class="howto-slide-viewport" id="howToSlideViewport"></div><div class="howto-footer"><button type="button" class="howto-skip" id="howToSkip">Skip</button><div class="howto-nav"><button type="button" class="secondary howto-back" id="howToBack">Back</button><button type="button" class="detail-web-action howto-next" id="howToNext">Next</button></div></div></div>';
- const modal=openModal('howToModal',firstRun?'Welcome to Dinliminate':'How Dinliminate Works',body);
+ const body='<div class="howto-popup" id="howToGuide"><div class="howto-popup-progress" id="howToProgress" aria-hidden="true"></div><div class="howto-popup-content" id="howToSlideViewport"></div><div class="howto-popup-footer"><button type="button" class="howto-skip" id="howToSkip">Skip</button><button type="button" class="howto-next" id="howToNext">Next</button></div></div>';
+ const modal=openModal('howToModal','How Dinliminate Works',body);
  let index=0;
  const render=()=>{
-  const s=slides[index],vp=$('howToSlideViewport'),pr=$('howToProgress'),back=$('howToBack'),next=$('howToNext'),skip=$('howToSkip');
-  if(vp)vp.innerHTML='<article class="howto-slide"><div class="howto-kicker">'+esc(s[0])+'</div><h4>'+esc(s[1])+'</h4><p>'+esc(s[2])+'</p><div class="howto-visual">'+s[3]+'</div></article>';
-  if(pr)pr.innerHTML=slides.map((_,i)=>'<span class="'+(i===index?'is-active':'')+'"></span>').join('');
-  if(back)back.disabled=index===0;
-  if(next)next.textContent=index===slides.length-1?'Done':'Next';
-  if(skip)skip.textContent=index===slides.length-1?'':'Skip';
+  const step=steps[index],vp=$('howToSlideViewport'),pr=$('howToProgress'),next=$('howToNext');
+  if(vp)vp.innerHTML='<article class="howto-popup-step"><div class="howto-popup-kicker">'+esc(step.kicker)+'</div><h4>'+esc(step.title)+'</h4><div class="howto-popup-what"><b>WHAT</b><p>'+esc(step.what)+'</p></div><div class="howto-popup-why"><b>WHY</b><p>'+esc(step.why)+'</p></div><div class="howto-popup-demo">'+step.demo+'</div></article>';
+  if(pr)pr.innerHTML=steps.map((_,i)=>'<span class="'+(i===index?'is-active':'')+'"></span>').join('');
+  if(next)next.textContent=index===steps.length-1?'Done':'Next';
  };
  const finish=()=>modal.querySelector('[data-close]')?.click();
  if(firstRun){try{localStorage.setItem(HOW_TO_GUIDE_KEY,'1')}catch{}}
- $('howToBack').onclick=()=>{if(index>0){index--;render();}};
- $('howToNext').onclick=()=>{if(index<slides.length-1){index++;render();}else finish();};
+ $('howToNext').onclick=()=>{if(index<steps.length-1){index++;render();}else finish();};
  $('howToSkip').onclick=finish;
  render();
  return modal;
