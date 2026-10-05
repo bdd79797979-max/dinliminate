@@ -1,5 +1,7 @@
 'use strict';
 
+const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
+
 let sharp=null;
 try{sharp=require('sharp');}catch{}
 
@@ -1073,6 +1075,7 @@ module.exports=async function handler(req,res){
   const officialLocationPage=String(q.officialLocationPage||'').trim().slice(0,900);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
+  const googlePlaceId=String(q.placeId||q.googlePlaceId||'').trim().slice(0,220);
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
     // CP976: if provider data has no website, use exact public venue pages
@@ -1151,6 +1154,13 @@ module.exports=async function handler(req,res){
         return sendMedia(res,{media,source:'osm-exact-poi'});
       }catch{}
     }
+
+    // Google Places Photo is the next verified fallback. It is server-side,
+    // budget-controlled, and identity-checked against the requested venue.
+    const googlePhoto=await tryGoogleRestaurantPhoto({
+      name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
+    });
+    if(googlePhoto)return sendMedia(res,googlePhoto);
 
     // Last discovery layer: Bing Images, but only after exact host-page
     // verification or a very strong exact match.
