@@ -950,11 +950,19 @@ document.querySelector('.app')?.classList.toggle('home-active',screen === 'home'
 $('globalBack')?.classList.add('hidden');
 $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
 window.scrollTo?.(0,0);
-if(S.tutorialMode)window.setTimeout(()=>scheduleTutorialForScreen(screen),90);
 }
 
 const TUTORIAL_MODE_KEY='dinliminate.tutorialMode.v1';
-const tutorialState={active:false,screen:'',index:0,steps:[],token:0};
+const tutorialState={
+ active:false,
+ screen:'',
+ index:0,
+ steps:[],
+ token:0,
+ awaitingAction:false,
+ pendingDecisionScreen:'',
+ returnContext:null
+};
 function ensureTutorialUI(){
  if(document.querySelector('#tutorialLayer'))return;
  const layer=document.createElement('div');layer.id='tutorialLayer';layer.className='tutorial-layer hidden';layer.setAttribute('aria-hidden','true');
@@ -969,32 +977,61 @@ function tutorialToast(message){
  window.setTimeout(()=>{toast.classList.remove('is-visible');window.setTimeout(()=>toast.remove(),180)},1200);
 }
 function stopTutorialMode(){
- tutorialState.token++;tutorialState.active=false;tutorialState.screen='';tutorialState.index=0;tutorialState.steps=[];
+ tutorialState.token++;
+ tutorialState.active=false;
+ tutorialState.screen='';
+ tutorialState.index=0;
+ tutorialState.steps=[];
+ tutorialState.awaitingAction=false;
+ tutorialState.pendingDecisionScreen='';
+ tutorialState.returnContext=null;
+ S.tutorialMode=false;
  const layer=document.querySelector('#tutorialLayer');if(layer){layer.classList.add('hidden');layer.setAttribute('aria-hidden','true');}
- document.querySelector('#tutorialBubble')?.classList.remove('is-visible');document.body.classList.remove('tutorial-mode-on');
+ document.querySelector('#tutorialBubble')?.classList.remove('is-visible');
+ document.body.classList.remove('tutorial-mode-on');
 }
 function setTutorialMode(enabled,showNotice=true){
- const on=!!enabled;S.tutorialMode=on;try{localStorage.setItem(TUTORIAL_MODE_KEY,on?'1':'0')}catch{}
- document.body.classList.toggle('tutorial-mode-on',on);
+ const on=!!enabled;
+ S.tutorialMode=on;
  if(!on){stopTutorialMode();if(showNotice)tutorialToast('Tutorial Mode OFF');return;}
- ensureTutorialUI();if(showNotice)tutorialToast('Tutorial Mode ON');
- window.setTimeout(()=>startTutorialForScreen(S.screen||'home',true),80);
+ ensureTutorialUI();
+ if(showNotice)tutorialToast('Tutorial Mode ON');
+ startTutorialFromHome();
+}
+function startTutorialFromHome(){
+ const begin=()=>{
+  S.tutorialMode=true;
+  document.body.classList.add('tutorial-mode-on');
+  tutorialState.token++;
+  tutorialState.active=true;
+  tutorialState.screen='home';
+  tutorialState.index=0;
+  tutorialState.steps=[];
+  tutorialState.awaitingAction=false;
+  tutorialState.pendingDecisionScreen='';
+  tutorialState.returnContext=null;
+  show('home');
+  startTutorialForScreen('home',true,{index:0});
+ };
+ closeDrawer?.(true);
+ window.requestAnimationFrame(begin);
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#home .home-intro',title:'Welcome to Dinliminate',body:'Take the stress out of deciding what to eat.'},
-  {target:'#home .home-intro h1',title:'Meal Decisions Simplified',body:'Swipe through meals or restaurants until you find what you want.'}
+  {target:'#home .home-intro',title:'TUTORIAL',body:'Tap this bubble to move to the next step.'},
+  {target:'#home .home-intro h1',title:'DINLIMINATE',body:'Swipe through meals or restaurants until you find what you want.'},
+  {target:'#home .home-actions',title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot']}
  ];
  if(screen==='food')return[
   {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},
   {target:'#foodCut',title:'CUT',body:'Remove this meal.'},
   {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
-  {target:'#foodChoose',title:'Choose',body:'Make your decision early.'},
+  {target:'#foodChoose',title:'Choose',body:'Tap Choose to continue.',action:'choose'},
   {target:'#foodDetails',title:'Details',body:'See more about this meal.'},
-  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.'},
-  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.'},
+  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#mealTimeQuick']},
+  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodQuick']},
   {target:'#foodMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining meals and Maybes. See how many choices remain.'},
-  {target:'#foodMenu',title:'Menu',body:'Open the app menu.',after:'menu'}
+  {target:'#foodMenu',title:'Menu',body:'Open the app menu.',avoid:['#drawer']}
  ];
  if(screen==='restaurant')return[
   {target:'#locate',title:'Current Location',body:'Use your current location.'},
@@ -1004,30 +1041,40 @@ function tutorialStepsForScreen(screen){
   {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.'},
   {target:'#restCut',title:'CUT',body:'Remove this restaurant.'},
   {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
-  {target:'#restChoose',title:'Choose',body:'Make your decision early.'},
-  {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.'},
-  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.'},
+  {target:'#restChoose',title:'Choose',body:'Tap Choose to continue.',action:'choose'},
+  {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
+  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
-  {target:'#restaurantMenu',title:'Menu',body:'Open the app menu.',after:'menu'}
- ];
- if(screen==='menu')return[
-  {target:'#manage',title:'Manage Meals',body:'Add, edit, hide, delete, or restore meals.'},
-  {target:'#history',title:'History',body:'See your previous decisions.'},
-  {target:'#settings',title:'Settings',body:'Manage app settings and tools.'},
-  {target:'#familyMode',title:'Family Mode',body:'Decide together.'},
-  {target:'#backToStart',title:'Back to Start',body:'Return to the home screen.'}
+  {target:'#restaurantMenu',title:'Menu',body:'Open the app menu.',avoid:['#drawer']}
  ];
  return[];
 }
-function tutorialOpenMenuTarget(){
- const button=S.screen==='restaurant'?document.querySelector('#restaurantMenu'):document.querySelector('#foodMenu');
- try{openDrawer({currentTarget:button})}catch{}
+function tutorialUnionRect(selectors){
+ const rects=(selectors||[]).map(sel=>{try{return document.querySelector(sel)?.getBoundingClientRect()||null}catch{return null}})
+  .filter(r=>r&&r.width&&r.height);
+ if(!rects.length)return null;
+ return{
+  left:Math.min(...rects.map(r=>r.left)),
+  top:Math.min(...rects.map(r=>r.top)),
+  right:Math.max(...rects.map(r=>r.right)),
+  bottom:Math.max(...rects.map(r=>r.bottom)),
+  width:Math.max(...rects.map(r=>r.right))-Math.min(...rects.map(r=>r.left)),
+  height:Math.max(...rects.map(r=>r.bottom))-Math.min(...rects.map(r=>r.top))
+ };
+}
+function tutorialTargetRect(step){
+ const target=step?.target?document.querySelector(step.target):null;
+ if(!target)return null;
+ const main=target.getBoundingClientRect();
+ if(!main.width||!main.height)return null;
+ const related=tutorialUnionRect([step.target,...(step.avoid||[])]);
+ return related||main;
 }
 function tutorialPosition(){
  const step=tutorialState.steps[tutorialState.index];
- const bubble=document.querySelector('#tutorialBubble'),target=step?.target?document.querySelector(step.target):null,spot=document.querySelector('#tutorialSpotlight');
- if(!bubble||!target){advanceTutorial();return;}
- const rect=target.getBoundingClientRect();if(!rect.width||!rect.height){advanceTutorial();return;}
+ const bubble=document.querySelector('#tutorialBubble'),spot=document.querySelector('#tutorialSpotlight');
+ const rect=tutorialTargetRect(step);
+ if(!bubble||!rect){advanceTutorial();return;}
  spot.style.left=(rect.left-6)+'px';spot.style.top=(rect.top-6)+'px';spot.style.width=(rect.width+12)+'px';spot.style.height=(rect.height+12)+'px';
  bubble.classList.remove('is-visible');bubble.style.visibility='hidden';bubble.dataset.side='';bubble.style.left='0px';bubble.style.top='0px';
  requestAnimationFrame(()=>{
@@ -1056,30 +1103,99 @@ function renderTutorialStep(){
  layer.classList.remove('hidden');layer.setAttribute('aria-hidden','false');
  const title=document.querySelector('#tutorialBubbleTitle'),body=document.querySelector('#tutorialBubbleBody');
  if(title)title.textContent=step.title;if(body)body.textContent=step.body;
+ tutorialState.awaitingAction=!!step.action;
  requestAnimationFrame(tutorialPosition);
 }
-function startTutorialForScreen(screen,force=false){
+function startTutorialForScreen(screen,force=false,options={}){
  if(!force&&!tutorialModeEnabled())return;
- const normalized=['home','food','restaurant'].includes(screen)?screen:screen==='menu'?'menu':'';
- if(!normalized){stopTutorialMode();return;}
+ const normalized=['home','food','restaurant'].includes(screen)?screen:'';
+ if(!normalized){return;}
  const steps=tutorialStepsForScreen(normalized);if(!steps.length){stopTutorialMode();return;}
- tutorialState.token++;tutorialState.active=true;tutorialState.screen=normalized;tutorialState.index=0;tutorialState.steps=steps;
- document.body.classList.add('tutorial-mode-on');ensureTutorialUI();renderTutorialStep();
+ tutorialState.token++;
+ tutorialState.active=true;
+ tutorialState.screen=normalized;
+ tutorialState.steps=steps;
+ const nextIndex=Number.isInteger(options.index)?Math.max(0,Math.min(options.index,steps.length-1)):0;
+ tutorialState.index=nextIndex;
+ document.body.classList.add('tutorial-mode-on');
+ ensureTutorialUI();
+ renderTutorialStep();
 }
+function tutorialEnterDecisionScreen(screen,index=0){
+ if(!tutorialModeEnabled()||!tutorialState.active)return;
+ tutorialState.pendingDecisionScreen='';
+ startTutorialForScreen(screen,true,{index});
+}
+function tutorialMarkHomeChoice(screen){
+ if(!tutorialModeEnabled()||!tutorialState.active)return;
+ const step=tutorialState.steps[tutorialState.index];
+ if(step?.action!=='home-choice')return;
+ tutorialState.awaitingAction=false;
+ tutorialState.pendingDecisionScreen=screen;
+}
+function tutorialMarkChoose(screen){
+ if(!tutorialModeEnabled()||!tutorialState.active)return;
+ const step=tutorialState.steps[tutorialState.index];
+ if(step?.action!=='choose')return;
+ tutorialState.awaitingAction=false;
+ tutorialState.returnContext={screen,index:tutorialState.index};
+}
+function tutorialWinnerRestart(){
+ if(!tutorialModeEnabled()||!tutorialState.active||!tutorialState.returnContext)return false;
+ const context={...tutorialState.returnContext};
+ tutorialState.returnContext=null;
+ const resumeIndex=context.index+1;
+ if(context.screen==='food')startFood({tutorialResumeIndex:resumeIndex});
+ else if(context.screen==='restaurant')openRestaurant({tutorialResumeIndex:resumeIndex});
+ else return false;
+ return true;
+}
+function tutorialOpenMenuTarget(){return;}
 function advanceTutorial(){
  const step=tutorialState.steps[tutorialState.index];
+ if(step?.action){return;}
  tutorialState.index++;
- if(step?.after==='menu'){tutorialOpenMenuTarget();window.setTimeout(()=>startTutorialForScreen('menu',true),190);return;}
  if(tutorialState.index>=tutorialState.steps.length){stopTutorialMode();return;}
  renderTutorialStep();
 }
-function scheduleTutorialForScreen(screen){if(!tutorialModeEnabled())return;window.setTimeout(()=>startTutorialForScreen(screen),60)}
+function scheduleTutorialForScreen(){return;}
 function bindTutorialUI(){
  ensureTutorialUI();
  const bubble=document.querySelector('#tutorialBubble');
  if(bubble&&!bubble.dataset.bound){bubble.dataset.bound='1';bubble.addEventListener('click',advanceTutorial);}
  const toggle=document.querySelector('#tutorialModeToggle');
- if(toggle&&!toggle.dataset.bound){toggle.dataset.bound='1';toggle.addEventListener('click',()=>setTutorialMode(!tutorialModeEnabled()));}
+ if(toggle&&!toggle.dataset.bound){
+  toggle.dataset.bound='1';
+  toggle.addEventListener('click',event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   startTutorialFromHome();
+  });
+ }
+ const toggleSettings=document.querySelector('#tutorialModeSettings');
+ if(toggleSettings&&!toggleSettings.dataset.bound){
+  toggleSettings.dataset.bound='1';
+  toggleSettings.addEventListener('click',event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   startTutorialFromHome();
+  });
+ }
+ document.addEventListener('click',event=>{
+  if(!tutorialModeEnabled()||!tutorialState.active)return;
+  const target=event.target?.closest?.('#foodStart,#restStart');
+  const step=tutorialState.steps[tutorialState.index];
+  if(target&&step?.action==='home-choice'){
+   tutorialMarkHomeChoice(target.id==='restStart'?'restaurant':'food');
+  }
+ },true);
+ document.addEventListener('click',event=>{
+  if(!tutorialModeEnabled()||!tutorialState.active)return;
+  const target=event.target?.closest?.('#foodChoose,#restChoose');
+  if(target){
+   tutorialMarkChoose(target.id==='restChoose'?'restaurant':'food');
+  }
+ },true);
  window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
  window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
 }
@@ -1385,7 +1501,7 @@ function maybeShowInCardSwipeCoach(){
  host.appendChild(coach);
 }
 
-function startFood() {
+function startFood(options={}) {
 S.foodActions = [];
 S.maybe.clear();
 S.maybeDeck = false;
@@ -1401,6 +1517,10 @@ show('food');
 drawFood();
 save();
 maybeShowInCardSwipeCoach();
+if(tutorialModeEnabled()&&tutorialState.active){
+ const resumeIndex=Number.isInteger(options?.tutorialResumeIndex)?options.tutorialResumeIndex:0;
+ tutorialEnterDecisionScreen('food',resumeIndex);
+}
 }
 function setChoiceCount(el,count){
  const value=Number(count)||0;
@@ -2803,7 +2923,7 @@ if(searchSeq===restaurantSearchSeq){
 }
 }
 }
-function openRestaurant() {
+function openRestaurant(options={}) {
 renderRestaurantSearchControl();
 S.screen = 'restaurant';
 S.restaurantActions = [];
@@ -2828,8 +2948,12 @@ const hasTypedAddress=!!String($('address')?.value||'').trim();
 if(!S.location&&!hasTypedAddress) {
  window.setTimeout(()=>{ if(S.screen==='restaurant'&&!S.location&&!String($('address')?.value||'').trim()) useLocation(); },80);
 }
+if(tutorialModeEnabled()&&tutorialState.active){
+ const resumeIndex=Number.isInteger(options?.tutorialResumeIndex)?options.tutorialResumeIndex:0;
+ tutorialEnterDecisionScreen('restaurant',resumeIndex);
 }
-function drawRestaurants() {
+}
+function drawRestaurants()) {
 const rows = restaurantPoolFiltered();
 renderRestaurantSearchControl();
 updateRestaurantStatus();
@@ -4386,7 +4510,7 @@ function settingsView(){
  (hiddenRestaurants.length?hiddenRestaurants.map(x=>'<div class="food-row settings-hidden-row"><span><b>'+esc(x.name)+'</b><small>Hidden restaurant</small></span><button class="restore settings-inline-action" data-setting-rest="'+esc(x.id)+'">Restore</button></div>').join(''):'<p class="settings-empty">No hidden restaurants.</p>')+
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">TOOLS</div><div class="settings-actions">'+
- settingsActionButton('tutorialModeSettings','✦','Tutorial Mode — '+(S.tutorialMode?'ON':'OFF'),'Turn tutorial guidance on or off.','tutorial-action')+
+ 
 settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
  settingsActionButton('resetRestore','↺','Reset & Restore','Restore original meals or wipe all local app data.','restore-action')+
  '</div></section>'+
@@ -5243,6 +5367,7 @@ function familyShowWinner(round){
  familySetWinnerMeta(round);if(round?.snapshot?.outcome==='wheel')familyAnimateWheel(round);
 }
 function handleWinnerRestart(){
+  if(tutorialWinnerRestart())return;
   if(S.familyNormalMode==='winner'){
     const round=S.familyActiveData?.activeRound||S.familyActiveData?.lastCompletedRound||null,cmp=round?.snapshot?.compareBoth||null,session=familySessionRead(),host=session?.member?.role==='host';
     if(round?.snapshot?.outcome==='no_winner')return familyRestartFromNoWinner();
