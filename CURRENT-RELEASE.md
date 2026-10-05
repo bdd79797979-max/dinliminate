@@ -1,3 +1,16 @@
+# CURRENT RELEASE — BUILD 995 / CP995
+
+## CP995 — Tutorial State & Navigation Repair
+- Keeps the Menu button as a tutorial target without teaching the buttons inside the opened Menu.
+- Makes the first tutorial bubble explicitly teach the tutorial interaction: tap the bubble to move to the next step.
+- Adds the third Home tutorial step: “Tap At Home or Restaurant to get started.”
+- Makes every Tutorial launch start from the Front Page.
+- Prevents tutorial bubbles from covering the Meal Times/Cuisine controls or their expanded rails.
+- Makes the front-page Tutorial icon lines-only with no black circle behind it.
+- Preserves tutorial state across Choose → Winner → Start Over, returning to the same Meals or Restaurant path and resuming the next tutorial step.
+- Keeps normal Winner/Start Over behavior and Family Mode behavior unchanged outside Tutorial Mode.
+- No restaurant-photo or no-Google policy changes.
+
 # CURRENT RELEASE — BUILD 964 / CP964
 
 ## CP964 — Fast restaurant search + fresh client photo cache

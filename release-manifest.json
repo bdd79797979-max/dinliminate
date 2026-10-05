@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 992,
-  "sourceBranch": "main",
+  "build": 995,
+  "sourceBranch": "cp995-tutorial-state-repair",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP992",
-  "deploymentTrigger": "CP992-restaurant-photo-repair"
+  "checkpoint": "CP995",
+  "deploymentTrigger": "CP995-tutorial-state-repair"
 }
