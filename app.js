@@ -3347,7 +3347,7 @@ bg.className='modal-bg modal-bg-opening'+(id==='manageFoodsModal'?' manage-foods
 const modal=document.createElement('section');
 modal.id=id;
 modal.className='modal modal-opening';
-if(['manageFoodsModal','historyModal','settingsModal'].includes(id))modal.classList.add('utility-modal');
+if(['manageFoodsModal','historyModal','settingsModal','howToModal'].includes(id))modal.classList.add('utility-modal');
 if(id==='detailsModal')modal.classList.add('details-modal');
 modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');
