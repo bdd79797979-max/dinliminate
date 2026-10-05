@@ -10071,3 +10071,27 @@ button,input,select,textarea{
   background-repeat:no-repeat !important;
   background-color:#080706 !important;
 }
+
+
+/* CP1001 — sole Home photo is the supplied double-door background. */
+.app:has(#home:not(.hidden)) #home{
+  background-image:url("/assets/home-door.jpg?v=1001") !important;
+  background-size:cover !important;
+  background-position:center center !important;
+  background-repeat:no-repeat !important;
+  background-color:#080706 !important;
+}
+.app:has(#home:not(.hidden)) #home .home-card-photo{
+  background-image:none !important;
+  background-color:rgba(8,7,6,.10) !important;
+  border:1px solid rgba(224,199,151,.58) !important;
+  box-shadow:0 10px 26px rgba(0,0,0,.18) !important;
+}
+.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-overlay,
+.app:has(#home:not(.hidden)) #home .home-card-photo::before,
+.app:has(#home:not(.hidden)) #home .home-card-photo::after{
+  display:none !important;
+  content:none !important;
+  background:none !important;
+  box-shadow:none !important;
+}
