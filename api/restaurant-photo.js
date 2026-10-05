@@ -8,6 +8,7 @@ const BLOCKED_IMAGE_HINTS=/\b(?:logo|favicon|sprite|icon|avatar|placeholder|defa
 const VENUE_IMAGE_HINTS=/\b(?:exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|façade|sign|signage|location|drive[- ]?thru|drive through|parking lot|parking|street view|patio|terrace)\b/i;
 const FOOD_IMAGE_HINTS=/\b(?:food|dish|meal|burger|pizza|salad|steak|wings|tacos?|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entrée|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine)\b/i;
 const OFFICIAL_HERO_HINTS=/\b(?:hero|masthead|cover|featured|feature|banner|header|landing|main(?:[-_ ]?(?:image|photo|picture))?|primary(?:[-_ ]?(?:image|photo|picture))?)\b/i;
+const OFFICIAL_HERO_REJECT_HINTS=/\b(?:menu(?:board|boards|page|item)?|menu[-_ ]?board|food[-_ ]?menu|menu[-_ ]?cover|flyer|promo(?:tion)?|poster|collage|montage|mosaic|screenshot|screen[-_ ]?shot|social[-_ ]?image|sharing[-_ ]?image|coupon|special[-_ ]?graphic|advert(?:isement)?|template|graphic|composite|photo[-_ ]?grid|multi[-_ ]?photo|multi[-_ ]?panel|four[-_ ]?panel|2x2|3x3|contact[-_ ]?sheet|story[-_ ]?grid)\b/i;
 const PHOTO_GRAPHIC_HINTS=/\b(?:menu(?:board|boards|page|item)?|menu[-_ ]?board|food[-_ ]?menu|menu[-_ ]?cover|flyer|promo(?:tion)?|poster|collage|montage|mosaic|screenshot|screen[-_ ]?shot|social[-_ ]?image|sharing[-_ ]?image|banner|coupon|special[-_ ]?graphic|advert(?:isement)?|template|graphic|composite|photo[-_ ]?grid|multi[-_ ]?photo|multi[-_ ]?panel|four[-_ ]?panel|2x2|3x3|contact[-_ ]?sheet|story[-_ ]?grid)\b/i;
 const PHOTO_CONTEXT_HINTS=/\b(?:photo|photos|photograph|gallery|dining|interior|exterior|outside|storefront|patio|restaurant|burger|pizza|tacos?|steak|wings|chicken|fries|dessert|sandwich|plate)\b/i;
 const LOW_QUALITY_IMAGE_HINTS=/\b(?:thumbnail|thumb|tiny|small|lowres|low[-_ ]?res|preview|sprite|tile)\b/i;
@@ -27,9 +28,9 @@ const OFFICIAL_CHAIN_HOSTS=new Set([
  'applebees.com','chilis.com','olivegarden.com','wafflehouse.com'
 ]);
 const OFFICIAL_GENERIC_ASSET_RULES=[
- [/mcdonalds\.com$/i,/\/icons\/|arches-logo|goldenarches|welcome-mcdonalds-logo|menu-category|downloadapp|restaurantlocator|iphone\.jpg/i],
- [/whataburger\.com$/i,/store-photo(?:\.|\/)|\/assets\/images\/(?:header|footer)\//i],
- [/honeybaked\.com$/i,/HBH(?:_Corp_Logo|LogoOG)|Clarence|\/Home\/|\/CMS\/(?:facebook|twitter|instagram|pintrest|youtube)\.svg|hbh-home-/i]
+ [/mcdonalds\.com$/i,/\/icons\/|arches-logo|goldenarches|welcome-mcdonalds-logo|welcome\.jpg|menu-category|downloadapp|restaurantlocator|iphone\.jpg/i],
+ [/whataburger\.com$/i,/store-photo\.79c6027b\.png|\/assets\/images\/(?:header|footer)\//i],
+ [/honeybaked\.com$/i,/HBH(?:_Corp_Logo|LogoOG)|Clarence|\/Home\/|\/CMS\/(?:facebook|twitter|instagram|pintrest|youtube)\.svg|hbh-home-|HoneyBaked-(?:Exterior|Interior)-/i]
 ];
 function officialHost(url){return hostOf(url).replace(/^www\./,'').replace(/^locations\./,'');}
 function isKnownOfficialChain(website,name='',brand=''){
@@ -396,7 +397,8 @@ function extractOfficialHeroCandidates(html,pageUrl,name,address,website){
   const add=(item,score,source)=>{
     const url=absoluteHttpsUrl(item?.url,pageUrl);
     const candidate={...item,url,score,source};
-    if(!url||seen.has(url)||isBlockedHost(url)||isOfficialGenericAsset(candidate)||isRejectedPhotoCandidate(candidate))return;
+    const combined=url+' '+String(candidate.label||'')+' '+String(candidate.context||'');
+    if(!url||seen.has(url)||isBlockedHost(url)||isOfficialGenericAsset(candidate)||BLOCKED_IMAGE_HINTS.test(url)||LOW_QUALITY_IMAGE_HINTS.test(combined)||OFFICIAL_HERO_REJECT_HINTS.test(combined))return;
     seen.add(url);out.push(candidate);
   };
 
