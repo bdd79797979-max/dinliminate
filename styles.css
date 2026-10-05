@@ -7546,8 +7546,8 @@ button,input,select,textarea{
   opacity:.78;
 }
 #food #foodMealTimeToggle.is-active{
-  color:#d7cec1!important;
-  text-shadow:none!important;
+  color:#e2c17f!important;
+  text-shadow:0 0 14px rgba(213,177,112,.16)!important;
 }
 
 /* CP838 — Meals controls and Meal Time editor use the same Add Meal visual language. */
