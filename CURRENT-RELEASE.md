@@ -1,23 +1,20 @@
-# CURRENT RELEASE — BUILD 999 / CP999
+# CURRENT RELEASE — BUILD 1000 / CP1000
 
 Date: 2026-10-05
 
-## CP999 — Tutorial Engine Stabilization
+## CP1000 — Full-Screen Home Door Background
 
-- Tutorial screen changes now use a token-guarded transition path.
-- Old Tutorial bubbles and spotlights are hidden and invalidated before another screen renders.
-- Tutorial positioning will not paint a stale bubble onto a different screen.
-- Choose button activation records the tutorial action before the normal Choose handler runs.
-- The Choose tutorial bubble can advance into the Winner tutorial without recording a fake history entry.
-- Winner → Start Over resumes the originating Meals or Restaurant tutorial.
-- Meal Times/Cuisine keep-out positioning remains intact.
-- Enter Restaurant / Enter Meals cross-path tutorial flow remains intact.
-- No restaurant-photo, Family Mode, or normal swipe behavior changes.
+- Replaces the previous Home background photos with the supplied dark-wood double-door image.
+- Uses the portrait source as a full-screen `cover` background.
+- Removes the previous Pexels and inspection-photo Home background declarations.
+- Leaves the At Home and Restaurant window-card imagery unchanged.
+- Bumps the PWA/app cache and release markers to Build 1000.
+- No Tutorial, swipe, restaurant-photo, or Family Mode behavior changes.
 
 ## Protected rollback anchors
 
+- **CP999:** `784b41c066818cc097be189ff76ab8b17b0bff72`
 - **CP998:** `d83d45dcb41f8dae9f8c3c1104aeddd74e24c6cd`
-- **CP997:** `ad8e508d87b0852ef4cb56f494c1bff9c9ee3185`
 - **CP957 restaurant-photo baseline:** `d03a75ab63f1708524f1406e33d5a09c74f689f4`
 
-Production is not verified until CP999 is deployed and browser/phone runtime certification passes.
+Production is not verified until CP1000 is deployed and browser/phone runtime certification passes.
