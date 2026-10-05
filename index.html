@@ -3,6 +3,121 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<!-- CP1012 — head-first iPhone shell.
+     Detect iPhone-sized touch screens before the stylesheet paints so the
+     physical phone always receives the full-viewport shell. Desktop/laptop
+     presentation remains unchanged. -->
+<script>
+(() => {
+  try {
+    const ua = navigator.userAgent || '';
+    const touch = Number(navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+    const sw = Number(window.screen?.width || 0);
+    const sh = Number(window.screen?.height || 0);
+    const smallTouchScreen = touch && sw > 0 && sh > 0 && Math.min(sw, sh) <= 600 && Math.max(sw, sh) <= 1024;
+    if (/iPhone|iPod/.test(ua) || smallTouchScreen) {
+      document.documentElement.setAttribute('data-dinliminate-phone','true');
+    }
+  } catch {}
+})();
+</script>
+<style>
+/* CP1012 — first-paint full iPhone shell. */
+html[data-dinliminate-phone],
+html[data-dinliminate-phone] body{
+  width:100%!important;
+  min-width:100%!important;
+  max-width:100%!important;
+  height:100%!important;
+  min-height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+html[data-dinliminate-phone] body{
+  -webkit-text-size-adjust:100%!important;
+}
+html[data-dinliminate-phone] .app{
+  position:relative!important;
+  width:100%!important;
+  min-width:100%!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+html[data-dinliminate-phone] .app-topbar{
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  z-index:80!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:env(safe-area-inset-top) 2px 0!important;
+  box-sizing:border-box!important;
+}
+html[data-dinliminate-phone] .screen{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  min-width:100%!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+html[data-dinliminate-phone] .screen.hidden{display:none!important;}
+html[data-dinliminate-phone] .screen.luxury-home{overflow:hidden!important;}
+html[data-dinliminate-phone] #home{
+  width:100%!important;
+  min-width:100%!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:calc(env(safe-area-inset-top) + 74px) 14px max(18px,calc(env(safe-area-inset-bottom) + 18px)) 14px!important;
+  box-sizing:border-box!important;
+}
+html[data-dinliminate-phone] .decision-screen{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  overflow:hidden!important;
+}
+html[data-dinliminate-phone] .winner.screen{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  overflow-y:auto!important;
+}
+html[data-dinliminate-phone] .family-screen{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+}
+html[data-dinliminate-phone] .drawer,
+html[data-dinliminate-phone] .drawer-bg,
+html[data-dinliminate-phone] .modal,
+html[data-dinliminate-phone] .modal-bg,
+html[data-dinliminate-phone] .overlay,
+html[data-dinliminate-phone] .location-permission-modal,
+html[data-dinliminate-phone] .location-permission-bg,
+html[data-dinliminate-phone] #tutorialLayer{
+  max-width:100%!important;
+  max-height:100dvh!important;
+}
+</style>
 <meta name="theme-color" content="#090909">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dinliminate">
