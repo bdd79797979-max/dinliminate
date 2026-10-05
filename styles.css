@@ -420,12 +420,11 @@
 .luxury-home h1{font-size:clamp(2rem,7.2vw,3.8rem);line-height:.98;max-width:10em;margin:7px auto 0}
 .luxury-home .sub{font-size:10px;line-height:1.35;margin:8px auto 0}
 .luxury-home .home-actions{flex:0 0 auto;width:min(100%,430px);margin:18px auto 0;gap:9px}
-.luxury-home .home-card-photo{position:relative;display:flex;align-items:flex-end;min-height:94px;height:94px;padding:0;border-radius:22px;overflow:hidden;background-image:var(--home-photo);background-size:cover;background-position:center;border:1px solid #ffffff1d;box-shadow:0 18px 45px #0009}
-.home-card-photo .home-card-overlay{position:absolute;inset:0;background:linear-gradient(90deg,#080808d9 0%,#0808087d 43%,#08080818 100%),linear-gradient(0deg,#000d 0%,transparent 58%)}
-.home-card-photo .home-card-copy{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0 15px 13px;text-align:left}
-.home-card-photo .home-card-copy strong{font-size:21px;line-height:1.05;color:#fff7e8}
-.home-card-photo .home-card-copy>span{font-size:9px;color:#d8d0c4}
-.home-card-photo .arrow{position:absolute;z-index:2;right:15px;bottom:12px;width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:#0009;border:1px solid #ffffff2b;color:#e9cf9e;font-size:21px}
+.luxury-home .home-card-choice{position:relative;display:flex;align-items:flex-end;min-height:94px;height:94px;padding:0;border-radius:22px;overflow:hidden;background:#171615;border:1px solid #ffffff1d;box-shadow:0 18px 45px #0009}
+.home-card-choice .home-card-copy{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0 15px 13px;text-align:left}
+.home-card-choice .home-card-copy strong{font-size:21px;line-height:1.05;color:#fff7e8}
+.home-card-choice .home-card-copy>span{font-size:9px;color:#d8d0c4}
+.home-card-choice .arrow{position:absolute;z-index:2;right:15px;bottom:12px;width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:#0009;border:1px solid #ffffff2b;color:#e9cf9e;font-size:21px}
 .luxury-home .home-foot{margin-top:12px;flex:0 0 auto}
 .luxury-home .home-foot .tiny.made-by{color:#c8a565;letter-spacing:.015em;font-size:8px}
 .luxury-home .home-foot .text-btn{font-size:8px;padding:2px 4px}
@@ -435,11 +434,11 @@
   .luxury-home h1{font-size:32px;max-width:11em}
   .luxury-home .sub{font-size:9px;margin-top:6px}
   .luxury-home .home-actions{margin-top:15px;gap:8px}
-  .luxury-home .home-card-photo{height:82px;min-height:82px;border-radius:19px}
-  .home-card-photo .home-card-copy strong{font-size:18px}
-  .home-card-photo .home-card-copy{padding:0 13px 11px}
-  .home-card-photo .home-card-copy>span{font-size:8px}
-  .home-card-photo .arrow{right:12px;bottom:10px;width:28px;height:28px}
+  .luxury-home .home-card-choice{height:82px;min-height:82px;border-radius:19px}
+  .home-card-choice .home-card-copy strong{font-size:18px}
+  .home-card-choice .home-card-copy{padding:0 13px 11px}
+  .home-card-choice .home-card-copy>span{font-size:8px}
+  .home-card-choice .arrow{right:12px;bottom:10px;width:28px;height:28px}
   .luxury-home .home-foot{margin-top:8px}
 }
 
@@ -447,10 +446,10 @@
 
 
 /* CP109 — final iPhone-safe Home and richer Restaurant Details */
-.luxury-home .home-card-photo{background-color:#171615}
-.luxury-home .home-card-photo::after{content:'';position:absolute;inset:1px;border-radius:20px;pointer-events:none;border:1px solid #ffffff10}
-.luxury-home .home-card-photo.food-choice{background-position:center 58%}
-.luxury-home .home-card-photo.restaurant-choice{background-position:center 50%}
+.luxury-home .home-card-choice{background-color:#171615}
+.luxury-home .home-card-choice::after{content:'';position:absolute;inset:1px;border-radius:20px;pointer-events:none;border:1px solid #ffffff10}
+.luxury-home .home-card-choice.food-choice,
+.luxury-home .home-card-choice.restaurant-choice{background-position:center}
 .restaurant-detail-summary{margin-top:13px}
 .restaurant-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .restaurant-detail-grid>div{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:11px;background:#211f1c}
@@ -463,7 +462,7 @@
 @media(max-width:390px){
   .luxury-home .home-intro{padding-top:2px}
   .luxury-home .home-actions{margin-top:12px}
-  .luxury-home .home-card-photo{height:80px;min-height:80px}
+  .luxury-home .home-card-choice{height:80px;min-height:80px}
   .luxury-home .home-foot .made-by{font-size:7.5px}
   .restaurant-detail-grid{gap:6px}
   .restaurant-detail-grid>div{padding:8px}
@@ -579,16 +578,16 @@
 .count-inline{display:inline-block;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#888!important;font-size:10px;font-weight:700;letter-spacing:.02em;box-shadow:none!important;}
 
 /* CP241 UX repair */
-.home-card-photo .home-card-overlay{z-index:1}.home-card-photo .home-card-copy,.home-card-photo .arrow{z-index:2}
+.home-card-choice .home-card-overlay{z-index:1}.home-card-choice .home-card-copy,.home-card-choice .arrow{z-index:2}
 .card-card-action{background:#171717;color:#ead9b8;border:1px solid #4a402f;box-shadow:none;border-radius:12px;min-height:34px;height:34px;padding:0 12px;font-size:10px;font-weight:850;text-decoration:none;letter-spacing:.02em}.website-action{display:inline-flex;align-items:center;justify-content:center}.card-details-action{color:#f5f1e8}
 .detail-actions-row{display:flex;gap:8px;align-items:center;margin-top:14px}.detail-hide-action,.detail-web-action{min-height:44px;height:44px;border-radius:12px;padding:0 15px;font-size:11px;font-weight:850;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}.detail-hide-action{background:#211b17;color:#f0e6d6;border:1px solid #4a3d31}.detail-web-action{background:#2a241c;color:#ead9b8;border:1px solid #7a6240}
 .settings-system-action{display:flex;width:100%;min-height:46px;align-items:center;justify-content:center;border-radius:13px;background:#1a1a1a;color:#eee;border:1px solid #343434;font-weight:850;font-size:12px}.settings-system-action.restore-action{background:#5b3fb3;color:#fff;border-color:#8166d8;box-shadow:0 10px 24px #5b3fb333}.settings-reset-app{width:100%;min-height:46px;border-radius:13px;margin-top:10px}
 .diagnosis-row.info .diagnosis-mark{background:#252627;color:#b8c4ca}.diagnosis-refresh:disabled{opacity:.62}.count-inline{display:inline-block;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#888!important;font-size:10px;font-weight:700;box-shadow:none!important}
 
 /* CP241: contain home images so they never intercept card interaction. */
-.home-card-photo{position:relative;overflow:hidden;}
+.home-card-choice{position:relative;overflow:hidden;}
 
-.home-card-photo .home-card-overlay{pointer-events:none;}
+.home-card-choice .home-card-overlay{pointer-events:none;}
 
 
 /* CP243: premium Details icon */
@@ -4953,10 +4952,10 @@ button,input,select,textarea{
   color:#c9c1b2!important;
   white-space:nowrap!important;
 }
-.luxury-home .home-card-photo{
+.luxury-home .home-card-choice{
   isolation:isolate;
 }
-.luxury-home .home-card-photo::before{
+.luxury-home .home-card-choice::before{
   content:"";
   position:absolute;
   inset:-35% -65%;
@@ -5504,7 +5503,7 @@ button,input,select,textarea{
 .details-modal.modal-open .detail-unified-title{opacity:1;transform:translateY(0)}
 
 /* Home: whole photo card is touch-responsive, not just its text. */
-.luxury-home .home-card-photo{
+.luxury-home .home-card-choice{
   touch-action:manipulation!important;
   -webkit-tap-highlight-color:transparent!important;
   cursor:pointer;
@@ -5512,7 +5511,7 @@ button,input,select,textarea{
   will-change:transform;
   transition:transform .12s ease,filter .12s ease,box-shadow .12s ease!important;
 }
-.luxury-home .home-card-photo.is-pressed{
+.luxury-home .home-card-choice.is-pressed{
   transform:translateZ(0) scale(.985)!important;
   filter:saturate(1.025) brightness(1.025);
 }
@@ -5761,7 +5760,7 @@ button,input,select,textarea{
   margin:26px auto 0!important;
   gap:18px!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo{
+.app:has(#home:not(.hidden)) #home .home-card-choice{
   min-height:92px!important;height:92px!important;
   padding:0!important;
   background-image:none!important;
@@ -5770,38 +5769,38 @@ button,input,select,textarea{
   border-radius:18px!important;
   box-shadow:none!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-overlay,
-.app:has(#home:not(.hidden)) #home .home-card-photo::before,
-.app:has(#home:not(.hidden)) #home .home-card-photo::after{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-overlay,
+.app:has(#home:not(.hidden)) #home .home-card-choice::before,
+.app:has(#home:not(.hidden)) #home .home-card-choice::after{
   display:none!important;content:none!important;background:none!important;box-shadow:none!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy{
   position:relative!important;z-index:2!important;
   padding:0 17px!important;
   align-items:flex-start!important;justify-content:center!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
   color:#fff!important;font-size:24px!important;line-height:1!important;text-shadow:none!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy>span{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
   color:#fff!important;font-size:11px!important;line-height:1.2!important;text-shadow:none!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .arrow{
+.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
   right:17px!important;bottom:50%!important;transform:translateY(50%)!important;
   width:auto!important;height:auto!important;padding:0!important;
   border:0!important;border-radius:0!important;background:none!important;
   color:#fff!important;box-shadow:none!important;font-size:30px!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo.is-pressed{
+.app:has(#home:not(.hidden)) #home .home-card-choice.is-pressed{
   transform:scale(.985)!important;filter:brightness(1.04)!important;box-shadow:none!important;
 }
 .app:has(#home:not(.hidden)) #home .home-foot{margin-top:auto!important;padding:12px 0 0!important}
 @media(max-width:390px){
   .app:has(#home:not(.hidden)) #home{padding-left:12px!important;padding-right:12px!important;padding-top:calc(env(safe-area-inset-top) + 70px)!important}
   .app:has(#home:not(.hidden)) #home .home-actions{gap:14px!important;margin-top:20px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo{height:88px!important;min-height:88px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{font-size:21px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy>span{font-size:10px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice{height:88px!important;min-height:88px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{font-size:21px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{font-size:10px!important}
 }
 
 /* CP777 — definitive Meals/Restaurants ALL · MAYBES wiring.
@@ -5870,7 +5869,7 @@ button,input,select,textarea{
   margin:24px auto 0!important;
   gap:14px!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo{
+.app:has(#home:not(.hidden)) #home .home-card-choice{
   position:relative!important;
   display:flex!important;
   align-items:flex-end!important;
@@ -5878,24 +5877,20 @@ button,input,select,textarea{
   height:96px!important;
   padding:0!important;
   overflow:hidden!important;
-  background-image:var(--home-photo)!important;
-  background-size:cover!important;
-  background-position:center!important;
+  background-image:none!important;
   background-color:#171615!important;
   border:1px solid rgba(255,255,255,.28)!important;
   border-radius:20px!important;
   box-shadow:none!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo.food-choice{background-position:center 58%!important}
-.app:has(#home:not(.hidden)) #home .home-card-photo.restaurant-choice{background-position:center 50%!important}
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-overlay{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-overlay{
   display:block!important;
   position:absolute!important;
   inset:0!important;
   background:linear-gradient(90deg,rgba(8,8,8,.72) 0%,rgba(8,8,8,.36) 48%,rgba(8,8,8,.06) 100%),linear-gradient(0deg,rgba(0,0,0,.66) 0%,transparent 62%)!important;
   z-index:1!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy{
   position:relative!important;
   z-index:2!important;
   display:flex!important;
@@ -5905,19 +5900,19 @@ button,input,select,textarea{
   padding:0 15px 13px!important;
   text-align:left!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
   color:#fff!important;
   font-size:21px!important;
   line-height:1.05!important;
   text-shadow:0 2px 12px rgba(0,0,0,.45)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy>span{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
   color:#f0e9df!important;
   font-size:10px!important;
   line-height:1.2!important;
   text-shadow:0 2px 10px rgba(0,0,0,.42)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .arrow{
+.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
   position:absolute!important;
   z-index:2!important;
   right:14px!important;
@@ -5932,7 +5927,7 @@ button,input,select,textarea{
   color:#f2d59b!important;
   font-size:21px!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo::after{
+.app:has(#home:not(.hidden)) #home .home-card-choice::after{
   content:""!important;
   position:absolute!important;
   inset:1px!important;
@@ -5950,9 +5945,9 @@ button,input,select,textarea{
   .app:has(#home:not(.hidden)) .app-topbar{left:12px!important;right:12px!important}
   .app:has(#home:not(.hidden)) #home{padding-left:0!important;padding-right:0!important;padding-top:calc(env(safe-area-inset-top) + 68px)!important}
   .app:has(#home:not(.hidden)) #home .home-actions{margin-top:18px!important;gap:12px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo{height:84px!important;min-height:84px!important;border-radius:18px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{font-size:19px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy>span{font-size:9px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice{height:84px!important;min-height:84px!important;border-radius:18px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{font-size:19px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{font-size:9px!important}
 }
 
 /* CP781 — identical Meals/Restaurants ALL · MAYBES control.
@@ -6204,21 +6199,21 @@ button,input,select,textarea{
   color:#f0e7d8!important;
   text-shadow:0 2px 14px rgba(0,0,0,.76)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo{
+.app:has(#home:not(.hidden)) #home .home-card-choice{
   border-color:rgba(221,194,139,.48)!important;
   box-shadow:inset 0 1px 0 rgba(255,248,226,.17)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
   color:#fff8e9!important;
   text-shadow:
     0 2px 13px rgba(0,0,0,.80),
     0 1px 0 rgba(222,194,137,.18)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy>span{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
   color:#f0e5d2!important;
   text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .arrow{
+.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
   background:rgba(8,8,8,.50)!important;
   border-color:rgba(223,194,137,.54)!important;
   color:#f2d59b!important;
@@ -6240,7 +6235,7 @@ button,input,select,textarea{
     font-size:9px!important;
     letter-spacing:.18em!important;
   }
-  .app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{
+  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
     letter-spacing:.01em!important;
   }
 }
@@ -6270,7 +6265,7 @@ button,input,select,textarea{
   opacity:.92!important;
 }
 
-.app:has(#home:not(.hidden)) #home .home-card-photo{
+.app:has(#home:not(.hidden)) #home .home-card-choice{
   border:1px solid rgba(226,200,150,.58)!important;
   border-radius:21px!important;
   box-shadow:
@@ -6280,7 +6275,7 @@ button,input,select,textarea{
   transition:transform .16s ease,filter .16s ease,box-shadow .16s ease,border-color .16s ease!important;
 }
 
-.app:has(#home:not(.hidden)) #home .home-card-photo::before{
+.app:has(#home:not(.hidden)) #home .home-card-choice::before{
   content:""!important;
   position:absolute!important;
   inset:-80% -75%!important;
@@ -6302,14 +6297,14 @@ button,input,select,textarea{
   transition:opacity .08s ease!important;
 }
 
-.app:has(#home:not(.hidden)) #home .home-card-photo:active{
+.app:has(#home:not(.hidden)) #home .home-card-choice:active{
   transform:scale(.987)!important;
   border-color:rgba(239,215,171,.76)!important;
   box-shadow:
     inset 0 1px 0 rgba(255,249,232,.30),
     0 9px 26px rgba(0,0,0,.30)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo:active::before{
+.app:has(#home:not(.hidden)) #home .home-card-choice:active::before{
   opacity:.82!important;
   animation:cp789HomePressSheen .62s cubic-bezier(.22,.65,.27,1) both!important;
 }
@@ -6318,19 +6313,19 @@ button,input,select,textarea{
   100%{transform:translateX(62%) rotate(8deg)}
 }
 
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
   font-size:22px!important;
   font-weight:900!important;
   letter-spacing:.01em!important;
   color:#fff9ed!important;
   text-shadow:0 2px 15px rgba(0,0,0,.84),0 1px 0 rgba(226,198,143,.22)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy>span{
+.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
   color:#f3e7d1!important;
   text-shadow:0 2px 12px rgba(0,0,0,.82)!important;
 }
 
-.app:has(#home:not(.hidden)) #home .home-card-photo .arrow{
+.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
   right:12px!important;
   bottom:11px!important;
   width:27px!important;
@@ -6342,7 +6337,7 @@ button,input,select,textarea{
   font-size:19px!important;
   box-shadow:inset 0 1px 0 rgba(255,249,232,.10),0 3px 10px rgba(0,0,0,.28)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-photo .arrow:active{
+.app:has(#home:not(.hidden)) #home .home-card-choice .arrow:active{
   transform:scale(.94)!important;
 }
 
@@ -6382,8 +6377,8 @@ button,input,select,textarea{
 
 @media(max-width:390px){
   .app:has(#home:not(.hidden)) .app-topbar .brand{font-size:20px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo{border-radius:19px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-photo .home-card-copy strong{font-size:20px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice{border-radius:19px!important}
+  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{font-size:20px!important}
   .app:has(#home:not(.hidden)) .app-topbar #menu{width:42px!important;height:42px!important;top:8px!important}
 }
 
@@ -6435,7 +6430,7 @@ button,input,select,textarea{
   align-items:stretch!important;
   gap:10px!important;
 }
-.luxury-home .home-card-photo{
+.luxury-home .home-card-choice{
   width:100%!important;
   height:clamp(270px,38svh,330px)!important;
   min-height:0!important;
@@ -6443,26 +6438,26 @@ button,input,select,textarea{
   display:flex!important;
   align-items:flex-end!important;
 }
-.luxury-home .home-card-photo .home-card-copy{
+.luxury-home .home-card-choice .home-card-copy{
   padding:0 13px 14px!important;
 }
-.luxury-home .home-card-photo .home-card-copy strong{
+.luxury-home .home-card-choice .home-card-copy strong{
   font-size:clamp(16px,4.7vw,22px)!important;
   line-height:1.02!important;
 }
-.luxury-home .home-card-photo .home-card-copy>span{
+.luxury-home .home-card-choice .home-card-copy>span{
   font-size:8px!important;
 }
-.luxury-home .home-card-photo .arrow{
+.luxury-home .home-card-choice .arrow{
   right:12px!important;
   bottom:11px!important;
   width:30px!important;
   height:30px!important;
 }
-.luxury-home .home-card-photo.food-choice{
+.luxury-home .home-card-choice.food-choice{
   background-position:center 52%!important;
 }
-.luxury-home .home-card-photo.restaurant-choice{
+.luxury-home .home-card-choice.restaurant-choice{
   background-position:center!important;
 }
 
@@ -6472,15 +6467,15 @@ button,input,select,textarea{
     gap:8px!important;
     margin-top:15px!important;
   }
-  .luxury-home .home-card-photo{
+  .luxury-home .home-card-choice{
     height:clamp(275px,35svh,305px)!important;
     min-height:275px!important;
     border-radius:19px!important;
   }
-  .luxury-home .home-card-photo .home-card-copy{
+  .luxury-home .home-card-choice .home-card-copy{
     padding:0 11px 12px!important;
   }
-  .luxury-home .home-card-photo .home-card-copy strong{
+  .luxury-home .home-card-choice .home-card-copy strong{
     font-size:18px!important;
   }
 }
@@ -7198,10 +7193,10 @@ button,input,select,textarea{
   text-shadow:0 2px 22px #000b,0 0 1px #fff8;
   -webkit-text-stroke:.35px rgba(235,213,171,.22);
 }
-.luxury-home .home-card-photo{
+.luxury-home .home-card-choice{
   box-shadow:0 18px 45px #0009,0 0 0 1px #ffffff08;
 }
-.luxury-home .home-card-photo.is-pressed{
+.luxury-home .home-card-choice.is-pressed{
   box-shadow:0 12px 30px #000a,0 0 0 1px #e2c98d1c;
   filter:saturate(1.035) brightness(1.025);
 }
@@ -7844,39 +7839,6 @@ button,input,select,textarea{
 }
 
 /* CP891 — source cleanup: legacy menu override layers removed; CP889 remains canonical. */
-
-
-/* CP896 — canonical Home image surfaces.
-   The new door image is the full Home canvas. AT HOME and RESTAURANT use
-   separate replacement photos only inside their window panels. */
-.app:has(#home:not(.hidden)) #home{
-  background:transparent !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-photo{
-  background-image:var(--home-photo) !important;
-  background-size:cover !important;
-  background-repeat:no-repeat !important;
-  background-position:center !important;
-  background-color:#171615 !important;
-  overflow:hidden !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-overlay{
-  display:block !important;
-  position:absolute !important;
-  inset:0 !important;
-  background:
-    linear-gradient(90deg,rgba(5,5,5,.72) 0%,rgba(5,5,5,.34) 48%,rgba(5,5,5,.08) 100%),
-    linear-gradient(0deg,rgba(0,0,0,.48),transparent 62%) !important;
-  pointer-events:none !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-photo.food-choice{
-  background-position:center 58% !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-photo.restaurant-choice{
-  background-position:center 52% !important;
-}
-
-
 
 
 /* CP900 — inline Meal Time editor inside Add/Edit Meal.
@@ -10063,35 +10025,13 @@ button,input,select,textarea{
 }
 
 
-/* CP1000 — user-selected full-screen double-door Home background. */
+
+
+/* CP1002 — the user's original uploaded door image is the sole Home photo. */
 .app:has(#home:not(.hidden)) #home{
-  background-image:url("/assets/home-door.jpg?v=1000") !important;
+  background-image:url("https://5978585a-d6fe-4bb2-80bc-44a4820ec50a.sandbox.floot.app/_cdn/static/e65e43d3-0681-4bce-b1de-2f9d9b34e0ec-dinliminate-home-door-original.jpg") !important;
   background-size:cover !important;
   background-position:center center !important;
   background-repeat:no-repeat !important;
   background-color:#080706 !important;
-}
-
-
-/* CP1001 — sole Home photo is the supplied double-door background. */
-.app:has(#home:not(.hidden)) #home{
-  background-image:url("/assets/home-door.jpg?v=1001") !important;
-  background-size:cover !important;
-  background-position:center center !important;
-  background-repeat:no-repeat !important;
-  background-color:#080706 !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-photo{
-  background-image:none !important;
-  background-color:rgba(8,7,6,.10) !important;
-  border:1px solid rgba(224,199,151,.58) !important;
-  box-shadow:0 10px 26px rgba(0,0,0,.18) !important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-photo .home-card-overlay,
-.app:has(#home:not(.hidden)) #home .home-card-photo::before,
-.app:has(#home:not(.hidden)) #home .home-card-photo::after{
-  display:none !important;
-  content:none !important;
-  background:none !important;
-  box-shadow:none !important;
 }

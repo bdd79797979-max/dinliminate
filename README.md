@@ -58,3 +58,7 @@ Historical checkpoint detail remains available in Git history and preserved bran
 Repository-level checks should cover JavaScript syntax, release/cache-version consistency, tutorial state hooks, restaurant-photo source policy, and regression-sensitive swipe/navigation invariants.
 
 Real iPhone Safari/PWA checks are still required for touch, GPS, installation, keyboard behavior, image loading, memory, and deployment verification.
+
+
+## CP1002 Home background cleanup
+The Home page uses the original uploaded double-door JPEG as its only Home photo. At Home and Restaurant cards are photo-free, and the obsolete bundled Home door asset was removed.
