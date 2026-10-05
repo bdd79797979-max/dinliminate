@@ -630,9 +630,10 @@ function restaurantImmediatePhoto(row){
  const rowKey=String(row?.id||row?.canonicalId||'').trim();
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
  if(cached?.url)return touchRestaurantPhotoMemoryCache(rowKey,cached).url;
- // Google Places content is loaded on demand and is never used as an image src
- // directly, so the browser cannot silently prefetch/cache Google content.
- return RESTAURANT_NEUTRAL_IMAGE;
+ // Keep the card photo-filled while the exact Google/non-Google resolver runs.
+ // The category fallback is intentional; the building illustration is reserved
+ // for internal/non-card fallback cases and should not appear on restaurant cards.
+ return restaurantFallbackImage(row);
 }
 function restaurantCardFallbackImage(row){
  const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
@@ -3203,7 +3204,7 @@ const nextMaybeBadge=nextRow?._maybe?'<span class="maybe-stamp restaurant-maybe-
 const nextDetailsAction='<span class="restaurant-card-utility restaurant-card-details-utility next-card-details" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 const nextMetaRow=nextRow?'<div class="restaurant-card-meta-row"><span class="restaurant-card-meta">'+esc(nextCategory)+'</span>'+nextDetailsAction+'</div>':'';
 $('restStage').innerHTML =
-'<div class="restaurant-card-stack"><article class="card next-card '+(nextRow?'':'hidden')+'" id="restaurantNextCard" aria-hidden="true"><img src="'+esc(nextImage)+'" data-restaurant-photo-key="'+esc(nextRow?.id||'')+'" data-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" data-final-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" alt="'+esc(nextRow?.name||'')+'"><div class="shade"></div>'+ (nextRow?'<div class="restaurant-card-photo-ui">'+nextMaybeBadge+'</div><div class="card-copy next-card-copy">'+nextMetaRow+'<h3>'+esc(nextRow?.name||'')+'</h3>'+nextCardLocation+'</div>':'') +'<div class="restaurant-photo-credit" aria-live="polite"></div></article><article class="card" id="restaurantCard"><img src="'+esc(image)+'" data-restaurant-photo-key="'+esc(row.id||'')+'" data-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" data-final-fallback="'+esc(RESTAURANT_NEUTRAL_IMAGE)+'" alt="'+esc(row.name)+'"><div class="shade"></div><div class="restaurant-card-photo-ui">'+restaurantMaybeBadge+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy">'+cardUtilityRow+'<h3>'+esc(row.name)+'</h3>'+cardLocation+'</div></div></article></div>'+'<div class="swipe-actions unified-swipe-actions" aria-label="Restaurant decision controls"><button class="round-action round-back secondary" id="restBack" aria-label="Back"><span>↶</span></button><button class="round-action round-cut cut" id="restCut" aria-label="Cut"><span>✕</span></button><button class="round-action round-maybe maybe" id="restMaybe" aria-label="Maybe"><span>♥</span></button><button class="round-action round-choose choose" id="restChoose" aria-label="Choose this restaurant"><span>✓</span></button></div>';
+'<div class="restaurant-card-stack"><article class="card next-card '+(nextRow?'':'hidden')+'" id="restaurantNextCard" aria-hidden="true"><img src="'+esc(nextImage)+'" data-restaurant-photo-key="'+esc(nextRow?.id||'')+'" data-fallback="'+esc(nextRow?restaurantFallbackImage(nextRow):restaurantFallbackImage(row))+'" data-final-fallback="'+esc(nextRow?restaurantFallbackImage(nextRow):restaurantFallbackImage(row))+'" alt="'+esc(nextRow?.name||'')+'"><div class="shade"></div>'+ (nextRow?'<div class="restaurant-card-photo-ui">'+nextMaybeBadge+'</div><div class="card-copy next-card-copy">'+nextMetaRow+'<h3>'+esc(nextRow?.name||'')+'</h3>'+nextCardLocation+'</div>':'') +'<div class="restaurant-photo-credit" aria-live="polite"></div></article><article class="card" id="restaurantCard"><img src="'+esc(image)+'" data-restaurant-photo-key="'+esc(row.id||'')+'" data-fallback="'+esc(restaurantFallbackImage(row))+'" data-final-fallback="'+esc(restaurantFallbackImage(row))+'" alt="'+esc(row.name)+'"><div class="shade"></div><div class="restaurant-card-photo-ui">'+restaurantMaybeBadge+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy">'+cardUtilityRow+'<h3>'+esc(row.name)+'</h3>'+cardLocation+'</div></div></article></div>'+'<div class="swipe-actions unified-swipe-actions" aria-label="Restaurant decision controls"><button class="round-action round-back secondary" id="restBack" aria-label="Back"><span>↶</span></button><button class="round-action round-cut cut" id="restCut" aria-label="Cut"><span>✕</span></button><button class="round-action round-maybe maybe" id="restMaybe" aria-label="Maybe"><span>♥</span></button><button class="round-action round-choose choose" id="restChoose" aria-label="Choose this restaurant"><span>✓</span></button></div>';
 const current = rows[S.restaurantIndex];
 const restBackButton=$('restBack');if(restBackButton){const familyBack=familyIsBrowseStage('restaurant')&&!familyBrowseSubmitted();restBackButton.disabled=!familyBack&&S.restaurantActions.length===0;restBackButton.setAttribute('aria-disabled',String(!familyBack&&S.restaurantActions.length===0));}
 bindCardButton('restBack', restaurantBack);
@@ -3212,7 +3213,7 @@ bindCardButton('restMaybe', () => restaurantMaybe(current));
 bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');}else winner(current)});
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
-bindImageFallback('#restStage img',restaurantFallback(row),RESTAURANT_NEUTRAL_IMAGE);
+bindImageFallback('#restStage img',restaurantFallback(row),restaurantFallback(row));
  bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
 const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
