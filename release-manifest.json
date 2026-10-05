@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 994,
-  "sourceBranch": "cp994-tutorial-mode",
+  "build": 995,
+  "sourceBranch": "cp995-tutorial-state-repair",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP994",
-  "deploymentTrigger": "CP994-tutorial-mode"
+  "checkpoint": "CP995",
+  "deploymentTrigger": "CP995-tutorial-state-repair"
 }
