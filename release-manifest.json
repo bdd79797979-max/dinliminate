@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 995,
+  "build": 996,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP995",
-  "deploymentTrigger": "CP995-tutorial-state-repair"
+  "checkpoint": "CP996",
+  "deploymentTrigger": "CP996-tutorial-launch-repair"
 }

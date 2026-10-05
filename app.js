@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '995';
+let APP_BUILD = '996';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -4511,6 +4511,7 @@ function settingsView(){
  '<section class="settings-section"><div class="settings-section-kicker">TOOLS</div><div class="settings-actions">'+
  
 settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
+ settingsActionButton('tutorialModeSettings','✦','Tutorial Mode','Walk through Home, Meals, Restaurants, and the Menu again.','tutorial-action')+
  settingsActionButton('resetRestore','↺','Reset & Restore','Restore original meals or wipe all local app data.','restore-action')+
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">YOUR DATA</div><div class="settings-actions settings-actions-utility">'+
@@ -4615,7 +4616,7 @@ async function appDiagnosisView(existingModal){
   const sectionLabels={core:'Core app',food:'Meal system',restaurant:'Restaurant system',runtime:'iPhone & PWA',release:'Build & launch'};
   try{
    /* Core app structure */
-   const coreRequired=['home','food','restaurant','winner','menu','foodStart','restStart','addToPhone','shareApp'];
+   const coreRequired=['home','food','restaurant','winner','menu','foodStart','restStart','addToPhone','shareApp','tutorialModeToggle','tutorialLayer'];
    const coreMissing=coreRequired.filter(id=>!$(id));
    coreMissing.length?fail('core','Home & navigation contract','Missing '+coreMissing.length+' required core element(s): '+coreMissing.join(', '),'Repair the missing shell element before relying on later checks.'):pass('core','Home & navigation contract','Home, Meal, Restaurant, Winner, Menu, and both Home utility actions are present.');
    const navLabels=[...document.querySelectorAll('#drawer-nav .drawer-row')].map(x=>x.textContent?.trim()).join(' ');
@@ -4623,11 +4624,11 @@ async function appDiagnosisView(existingModal){
    if(drawerSource.includes('Manage Meals')&&drawerSource.includes('History')&&drawerSource.includes('Settings')&&drawerSource.includes('Back to Start')&&!drawerSource.includes('Restaurants</b>'))pass('core','Navigation menu','Top-level navigation uses Manage Meals, History, Settings, and Back to Start.','Restaurants remain part of the dedicated Restaurant flow rather than a top-level menu item.');
    else warn('core','Navigation menu','Top-level navigation could not be fully verified from the current DOM.','Open the menu and rerun diagnosis.');
    const homeActions=[...document.querySelectorAll('[data-home-action]')];
-   homeActions.length===2&&homeActions.every(x=>x.type==='button')?pass('core','Home utility actions','Add-to-phone and Share are separate icon actions with button semantics.','Both controls are intentionally discreet at the bottom of Home.'):fail('core','Home utility actions','The Home utility action contract is incomplete.','Expected exactly two data-home-action buttons.');
+   homeActions.length===3&&homeActions.every(x=>x.type==='button')?pass('core','Home utility actions','Add-to-phone, Share, and Tutorial are separate icon actions with button semantics.','All three Home utility actions share the same discreet icon treatment.'):fail('core','Home utility actions','The Home utility action contract is incomplete.','Expected exactly three data-home-action buttons.');
    const addIcon=$('addToPhone')?.querySelector('.phone-plus-icon'),shareIcon=$('shareApp')?.querySelector('.share-icon');
    addIcon&&shareIcon?pass('core','Home utility icons','Premium phone-plus and share icons are present.'):fail('core','Home utility icons','One or more Home utility icons are missing.','Restore the iPhone-plus and share artwork.');
    const actionHandlerSource=String(homeActionHandler?.toString?.()||'');
-   actionHandlerSource.includes("action==='add'")&&actionHandlerSource.includes("action==='share'")?pass('core','Home action routing','Both icon actions have independent click routing.'):fail('core','Home action routing','Home action routing is incomplete.','Both Add and Share must be routed through the Home action handler.');
+   actionHandlerSource.includes("action==='add'")&&actionHandlerSource.includes("action==='share'")&&actionHandlerSource.includes("action==='tutorial'")?pass('core','Home action routing','Add-to-phone, Share, and Tutorial each have independent click routing.'):fail('core','Home action routing','Home action routing is incomplete.','Add, Share, and Tutorial must all route through the Home action handler.');
    
    /* Meal system */
    const foods=getDefaultFoods();
@@ -4955,6 +4956,7 @@ const homeActionHandler = (event) => {
  const action = button.dataset.homeAction;
  if(action==='add') addToPhoneFlow();
  else if(action==='share') shareApp();
+ else if(action==='tutorial') startTutorialFromHome();
 };
 document.addEventListener('click', homeActionHandler, true);
 function bindHomeCardPress(id){
