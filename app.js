@@ -433,6 +433,7 @@ function swapImageWhenReady(img,url){
  });
 }
 const restaurantPhotoInflight=new Map();
+const restaurantGooglePhotoInflight=new Map();
 const restaurantPhotoCache=new Map();
 const restaurantPhotoMissCache=new Map();
 const RESTAURANT_PHOTO_MEMORY_CACHE_MAX=18;
@@ -565,6 +566,36 @@ function restaurantFallbackImage(row){
  }
  return imageProxyUrl(REST_QUICK_IMAGES.American);
 }
+function restaurantGooglePhotoEndpointUrl(row){
+ if(!row)return '';
+ const params=new URLSearchParams();
+ if(row.name)params.set('name',String(row.name));
+ if(row.address)params.set('address',String(row.address));
+ if(row.brand)params.set('brand',String(row.brand));
+ if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
+ if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
+ const placeId=restaurantGooglePlaceId(row);
+ if(placeId)params.set('placeId',placeId);
+ params.set('resolver','google-v1');
+ return '/api/google-restaurant-photo?'+params.toString();
+}
+function restaurantGooglePlaceId(row){
+ const key='dinliminate.google.placeids.v1';
+ try{
+  const raw=localStorage.getItem(key),data=raw?JSON.parse(raw):{};
+  const id=String(data?.[String(row?.id||row?.canonicalId||'')]||'').trim();
+  return /^ChI[A-Za-z0-9_-]+$/.test(id)?id:'';
+ }catch{return ''}
+}
+function rememberRestaurantGooglePlaceId(row,placeId){
+ const id=String(placeId||'').trim();if(!row||!/^ChI[A-Za-z0-9_-]+$/.test(id))return;
+ const key='dinliminate.google.placeids.v1';
+ try{
+  const raw=localStorage.getItem(key),data=raw?JSON.parse(raw):{};
+  data[String(row.id||row.canonicalId||'')]=id;
+  localStorage.setItem(key,JSON.stringify(data));
+ }catch{}
+}
 function restaurantPhotoEndpointUrl(row){
  if(!row)return '';
  const params=new URLSearchParams();
@@ -664,13 +695,40 @@ async function loadRestaurantPhoto(row){
  }
  try{return await pending;}catch{return null;}
 }
+async function loadGoogleRestaurantPhoto(row){
+ if(!row)return null;
+ const rowKey=String(row.id||row.canonicalId||'').trim();if(!rowKey)return null;
+ const requestUrl=restaurantGooglePhotoEndpointUrl(row);
+ if(!requestUrl)return null;
+ let pending=restaurantGooglePhotoInflight.get(rowKey);
+ if(pending)return pending;
+ pending=(async()=>{
+  const res=await fetch(requestUrl,{cache:'no-store'});
+  if(!res.ok)return null;
+  const blob=await res.blob();
+  if(!blob.type.startsWith('image/'))return null;
+  const attributions=decodePhotoAttributions(res.headers.get('X-Restaurant-Photo-Attributions'));
+  const sourceName=String(res.headers.get('X-Restaurant-Photo-Source')||'').trim();
+  const placeId=String(res.headers.get('X-Restaurant-Google-Place-Id')||'').trim();
+  if(placeId)rememberRestaurantGooglePlaceId(row,placeId);
+  if(sourceName)row.photoSource=sourceName;
+  return {url:URL.createObjectURL(blob),attributions,source:sourceName,cacheable:false};
+ })().finally(()=>restaurantGooglePhotoInflight.delete(rowKey));
+ restaurantGooglePhotoInflight.set(rowKey,pending);
+ try{return await pending;}catch{return null;}
+}
+async function loadRestaurantPhotoPreferred(row){
+ const google=await loadGoogleRestaurantPhoto(row);
+ if(google?.url)return google;
+ return loadRestaurantPhoto(row);
+}
 async function hydrateRestaurantPhoto(row,scope){
  if(!row)return;
  const rowKey=String(row.id||row.canonicalId||'').trim();
  if(!rowKey)return;
  const imgs=[...document.querySelectorAll(scope+' img[data-restaurant-photo-key]')].filter(img=>img.dataset.restaurantPhotoKey===rowKey);
  if(!imgs.length)return;
- const data=await loadRestaurantPhoto(row);
+ const data=await loadRestaurantPhotoPreferred(row);
  if(!data?.url)return;
  imgs.forEach(async img=>{
   if(!img.isConnected)return;
@@ -689,33 +747,11 @@ async function hydrateRestaurantPhoto(row,scope){
 async function primeRestaurantPhotosBeforeFirstPaint(rows,startIndex=0){
  const pool=Array.isArray(rows)?rows:[];
  if(navigator.onLine===false)return;
- const targets=[];
- for(let offset=0;offset<=RESTAURANT_PHOTO_PREFETCH_COUNT;offset++){
-  const row=pool[startIndex+offset];
-  if(row)targets.push(row);
- }
- if(!targets.length)return;
- const promises=targets.map(async row=>{
-  try{await hydrateRestaurantWebsite(row,'');}catch{}
-  return loadRestaurantPhoto(row).catch(()=>null);
- });
- const started=Date.now();
- try{
-  await Promise.race([
-   promises[0],
-   new Promise(resolve=>window.setTimeout(resolve,RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT))
-  ]);
-  const elapsed=Date.now()-started;
-  const remaining=Math.max(0,RESTAURANT_PHOTO_NEAR_READY_TIMEOUT-Math.max(0,elapsed));
-  if(promises[1]&&remaining>0){
-   await Promise.race([
-    promises[1],
-    new Promise(resolve=>window.setTimeout(resolve,remaining))
-   ]);
-  }
- }catch{}
+ const row=pool[startIndex];
+ if(!row)return;
+ try{await hydrateRestaurantWebsite(row,'');}catch{}
+ await loadRestaurantPhotoPreferred(row).catch(()=>null);
 }
-
 let restaurantPhotoPrefetchTimer=0;
 let restaurantPhotoPrefetchToken=0;
 function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETCH_COUNT){
@@ -3101,13 +3137,11 @@ if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantInde
 const row = rows[S.restaurantIndex];
 const category = restaurantCategory(row);
 const restaurantFallback = restaurantImmediatePhoto;
-const hasOfficialPhotoContext=!!(restaurantWebsiteDirect(row)||cachedRestaurantLocationPage(row));
-const image = hasOfficialPhotoContext ? restaurantFallback(row) : RESTAURANT_NEUTRAL_IMAGE;
+const image = restaurantFallback(row);
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
 const nextRow = rows[S.restaurantIndex + 1];
-const nextHasOfficialPhotoContext=!!(nextRow&&(restaurantWebsiteDirect(nextRow)||cachedRestaurantLocationPage(nextRow)));
-const nextImage = nextHasOfficialPhotoContext ? restaurantFallback(nextRow) : RESTAURANT_NEUTRAL_IMAGE;
+const nextImage = restaurantFallback(nextRow);
 const shortAddress = row.address ? esc(String(row.address).split(',').slice(0,2).join(', ')) : '';
  const cardLocation = (shortAddress || distanceLabel) ? '<div class="restaurant-card-location-distance" title="'+esc(row.address||'')+'">'+[shortAddress,distanceLabel?esc(distanceLabel):''].filter(Boolean).join(' <span aria-hidden="true">•</span> ')+'</div>' : '';
 const cardDetailsAction = '<button class="restaurant-card-utility restaurant-card-details-utility" id="restDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
