@@ -9850,3 +9850,124 @@ button,input,select,textarea{
 #food .swipe-card-stack>.next-card,#restaurant .restaurant-card-stack>.next-card{transform:none!important;transition:none!important;}
 #food .swipe-card-stack>.next-card img,#restaurant .restaurant-card-stack>.next-card img{transform:none!important;transition:none!important;}
 
+
+/* CP987 — final audit UI: identical lines-only hamburger menus, explicit Menu hint, and restaurant photo pinch zoom. */
+.menu,
+.decision-menu,
+.winner-menu,
+#menu,
+#familyMenu,
+#foodMenu,
+#restaurantMenu,
+#winnerMenu{
+  width:40px!important;
+  min-width:40px!important;
+  height:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  color:transparent!important;
+  display:grid!important;
+  place-items:center!important;
+  align-content:center!important;
+  gap:4px!important;
+  position:relative!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.menu span,
+.decision-menu span,
+.winner-menu span,
+#menu span,
+#familyMenu span,
+#foodMenu span,
+#restaurantMenu span,
+#winnerMenu span{
+  display:block!important;
+  width:18px!important;
+  height:1.8px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:linear-gradient(180deg,#fff4c5 0%,#e6bd70 34%,#9a671f 68%,#f8df9d 100%)!important;
+  box-shadow:0 0 7px rgba(214,183,120,.28),0 1px 1px rgba(0,0,0,.55)!important;
+}
+.menu::before,.menu::after,
+.decision-menu::before,.decision-menu::after,
+.winner-menu::before,.winner-menu::after,
+#menu::before,#menu::after,
+#familyMenu::before,#familyMenu::after,
+#foodMenu::before,#foodMenu::after,
+#restaurantMenu::before,#restaurantMenu::after,
+#winnerMenu::before,#winnerMenu::after,
+.interior-menu::after{content:none!important;display:none!important}
+.menu:hover,
+.menu:active,
+.decision-menu:hover,
+.decision-menu:active,
+.winner-menu:hover,
+.winner-menu:active,
+#menu:hover,#menu:active,
+#familyMenu:hover,#familyMenu:active,
+#foodMenu:hover,#foodMenu:active,
+#restaurantMenu:hover,#restaurantMenu:active,
+#winnerMenu:hover,#winnerMenu:active{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.menu:active,.decision-menu:active,.winner-menu:active,
+#menu:active,#familyMenu:active,#foodMenu:active,#restaurantMenu:active,#winnerMenu:active{
+  transform:scale(.94)!important;
+}
+.menu-hint{
+  position:fixed;
+  z-index:95;
+  padding:6px 10px;
+  border:1px solid rgba(214,183,120,.62);
+  border-radius:9px;
+  background:rgba(10,10,9,.94);
+  color:#fffaf0;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  opacity:0;
+  transform:translateY(-3px);
+  transition:opacity .14s ease,transform .14s ease;
+  pointer-events:none;
+  box-shadow:0 8px 20px rgba(0,0,0,.36);
+}
+.menu-hint.is-visible{opacity:1;transform:none}
+.modal-close{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+.confirm-hero .modal-close{width:34px!important;height:34px!important}
+.confirm-actions button:focus-visible,.confirm-hero .modal-close:focus-visible{outline:2px solid #bfa16b;outline-offset:2px}
+#restaurant .restaurant-card-stack img.restaurant-photo-zoomable,
+#detailsModal .restaurant-detail-hero img.restaurant-photo-zoomable,
+#winner img.restaurant-photo-zoomable{
+  touch-action:none!important;
+  transform-origin:center center!important;
+  will-change:transform;
+}
+.luxury-home #addToPhone,
+.luxury-home #shareApp{
+  background:transparent!important;
+  background-image:none!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.luxury-home #addToPhone:hover,
+.luxury-home #shareApp:hover{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
