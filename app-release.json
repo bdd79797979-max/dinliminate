@@ -17,5 +17,7 @@
   "restoreDefaults": "built-in-meals-only-custom-content-and-user-restaurant-data-preserved",
   "restaurantSearch": "r34-radius-expansion-supplemental-overpass-distance-ranked-google",
   "restaurantPhoto": "google-primary-exact-match-retry-address-phone-fallback-v2",
-  "restaurantPhotoCache": "v9-reliability-non-google-only"
+  "restaurantPhotoCache": "v9-reliability-non-google-only",
+  "googleSearchFieldMask": "restaurant-search-does-not-request-photo-media-fields",
+  "radiusStrategy": "25-50-mile-supplemental-overpass;100-mile-wide-coverage"
 }
