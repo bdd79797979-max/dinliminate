@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 993,
-  "sourceBranch": "main",
+  "build": 994,
+  "sourceBranch": "cp994-tutorial-mode",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP993",
-  "deploymentTrigger": "CP993-restaurant-photo-card-handoff"
+  "checkpoint": "CP994",
+  "deploymentTrigger": "CP994-tutorial-mode"
 }
