@@ -107,3 +107,8 @@ Vercel is the official runtime target. The current connected Vercel account has 
 - Restaurant cards now point directly at the restaurant-photo resolver on first paint instead of using category stock photography as the primary card source.
 - The resolver remains responsible for official-location, official-site, exact public venue, OSM, exact-search, and final fallback ordering.
 - CP992 remains the backend/source-ladder checkpoint.
+
+
+## CP994 — Tutorial Mode
+
+Rebuilt onboarding as screen-specific Tutorial Mode bubbles anchored to real controls. Bubbles stay clear of their target, advance on tap, and cover Home, Meals, Restaurants, and Menu in interface order. The CP991 slideshow tutorial was removed. Tutorial Mode is available from the Home tutorial icon and Settings.
