@@ -699,6 +699,118 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
  }catch{}
  return null;
 }
+const DIRECTORY_STATE_NAMES=[
+ ['alabama','al'],['alaska','ak'],['arizona','az'],['arkansas','ar'],['california','ca'],['colorado','co'],
+ ['connecticut','ct'],['delaware','de'],['florida','fl'],['georgia','ga'],['hawaii','hi'],['idaho','id'],
+ ['illinois','il'],['indiana','in'],['iowa','ia'],['kansas','ks'],['kentucky','ky'],['louisiana','la'],
+ ['maine','me'],['maryland','md'],['massachusetts','ma'],['michigan','mi'],['minnesota','mn'],['mississippi','ms'],
+ ['missouri','mo'],['montana','mt'],['nebraska','ne'],['nevada','nv'],['new hampshire','nh'],['new jersey','nj'],
+ ['new mexico','nm'],['new york','ny'],['north carolina','nc'],['north dakota','nd'],['ohio','oh'],['oklahoma','ok'],
+ ['oregon','or'],['pennsylvania','pa'],['rhode island','ri'],['south carolina','sc'],['south dakota','sd'],
+ ['tennessee','tn'],['texas','tx'],['utah','ut'],['vermont','vt'],['virginia','va'],['washington','wa'],
+ ['west virginia','wv'],['wisconsin','wi'],['wyoming','wy'],['district of columbia','dc']
+];
+const DIRECTORY_BLOCKED_HOSTS=new Set([
+ 'yelp.com','www.yelp.com','grubhub.com','www.grubhub.com','doordash.com','www.doordash.com',
+ 'ubereats.com','www.ubereats.com','postmates.com','www.postmates.com','seamless.com','www.seamless.com'
+]);
+function directoryLocation(address){
+ const raw=String(address||'').trim();
+ const parts=raw.split(',').map(x=>x.trim()).filter(Boolean);
+ let state='';
+ const stateZip=raw.match(/(?:^|[ ,])([A-Za-z]{2})\s+\d{5}(?:-\d{4})?/);
+ if(stateZip)state=String(stateZip[1]).toLowerCase();
+ if(!state){
+  const lower=parts.map(x=>x.toLowerCase());
+  const hit=DIRECTORY_STATE_NAMES.find(([name])=>lower.some(p=>p===name||p.startsWith(name+' ')));
+  state=hit?.[1]||'';
+ }
+ let city='';
+ if(parts.length>=2){
+  const idx=parts.findIndex(p=>/^\d{5}(?:-\d{4})?$/.test(p));
+  if(idx>=1)city=parts[idx-1];
+  else{
+   const stateIdx=parts.findIndex(p=>/^([A-Za-z]{2})(?:\s+\d{5})?$/i.test(p)||DIRECTORY_STATE_NAMES.some(([name])=>p.toLowerCase().startsWith(name)));
+   if(stateIdx>=1)city=parts[stateIdx-1];
+   else city=parts[parts.length-2]||'';
+  }
+ }
+ city=normalizeMatchText(city);
+ return {state,city};
+}
+function directorySlugVariants(name){
+ const base=normalizeMatchText(name).replace(/\s+/g,'-');
+ const noThe=base.replace(/^the-/,'');
+ const variants=[base,noThe];
+ for(const item of [base,noThe]){
+  if(item){
+   variants.push(item+'-');
+   variants.push(item+'s');
+   variants.push(item+'s-');
+   if(item.endsWith('s'))variants.push(item.slice(0,-1)+'-');
+  }
+ }
+ return [...new Set(variants.filter(Boolean))].slice(0,8);
+}
+function directoryCandidateUrls(name,address){
+ const {state,city}=directoryLocation(address);
+ if(!state||!city)return[];
+ const citySlug=city.replace(/\s+/g,'-');
+ const urls=[];
+ for(const slug of directorySlugVariants(name)){
+  urls.push('https://www.restaurantji.com/'+state+'/'+citySlug+'/'+slug+'/');
+  urls.push('https://restaurantguru.com/'+slug.replace(/-+$/,'')+'-'+citySlug);
+ }
+ return [...new Set(urls)];
+}
+function extractDirectoryWebsiteCandidates(html,pageUrl){
+ const out=[],seen=new Set();
+ const re=/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/ig;
+ let m;
+ while((m=re.exec(String(html||'')))&&out.length<20){
+  const label=String(m[2]||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  if(!/\b(?:official\s+)?website|official\s+site|homepage\b/i.test(label))continue;
+  let href='';
+  try{href=new URL(m[1],pageUrl).toString();}catch{continue}
+  if(!/^https:\/\//i.test(href))continue;
+  const host=hostOf(href);
+  if(!host||PHOTO_DISCOVERY_HOSTS.has(discoveryHost(href))||DIRECTORY_BLOCKED_HOSTS.has(host)||isBlockedHost(href)||seen.has(href))continue;
+  seen.add(href);out.push(href);
+ }
+ return out;
+}
+async function fastDirectoryPhotoSources(name,address,phone=''){
+ const urls=directoryCandidateUrls(name,address);
+ if(!urls.length)return null;
+ const settled=await Promise.allSettled(urls.slice(0,12).map(async url=>{
+  const html=await fetchText(url,{},1600,1200000);
+  if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
+  return {url,html};
+ }));
+ const pages=settled.filter(x=>x.status==='fulfilled'&&x.value).map(x=>x.value);
+ if(!pages.length)return null;
+ for(const page of pages){
+  const websiteCandidates=extractDirectoryWebsiteCandidates(page.html,page.url);
+  for(const website of websiteCandidates.slice(0,4)){
+   const official=await fastOfficialVenuePhoto(name,address,website,phone);
+   if(official)return {official};
+  }
+ }
+ for(const page of pages){
+  const candidates=extractVenueImageCandidates(page.html,page.url,name,address,'')
+   .filter(item=>item.score>=38&&item.score>0&&hasVenueSignal(item))
+   .slice(0,8);
+  const attempts=await Promise.allSettled(candidates.map(async candidate=>{
+   try{return {media:await fetchImage(candidate.url,{'Referer':page.url},2200)}}catch{return null;}
+  }));
+  for(const hit of attempts){
+   if(hit.status==='fulfilled'&&hit.value){
+    return {publicPhoto:{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:page.url,sourceName:hostOf(page.url)}};
+   }
+  }
+ }
+ return null;
+}
 async function findVerifiedRestaurantPages(name,address,website){
   const safeName=String(name||'').replace(/"/g,''),safeAddress=String(address||'').replace(/"/g,''),websiteHost=hostOf(website);
   const official=await officialRestaurantPages(name,address,website);
@@ -820,12 +932,15 @@ module.exports=async function handler(req,res){
   const osmExact=q.osmExact==='1';
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
-    // CP973: resolve the official venue first, with a short fast-path budget.
-    // Exact OSM/public sources are fallbacks, never preferred over a working
-    // restaurant website.
+    // CP976: if provider data has no website, use exact public venue pages
+    // to discover the restaurant's own site before public-photo fallback.
+    let fastDirectory=null;
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
+    }else{
+      fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
+      if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
     }
 
     // A direct exact-POI image is the fastest trustworthy fallback when the
@@ -844,6 +959,7 @@ module.exports=async function handler(req,res){
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
+    if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
 
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
 
