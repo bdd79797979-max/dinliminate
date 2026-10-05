@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '994';
+let APP_BUILD = '995';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -105,7 +105,7 @@ mealTimeCutsCollapsed:true,
 mealTimeFilters:new Set(['Breakfast','Lunch / Dinner','Snacks / Desserts']),
 mealTimeSettings:{custom:[],names:{},order:[],disabled:new Set()},
 familyNormalMode:'idle',familyDecisionType:'',familyNormalRoundId:'',familyNormalStage:0,familyNormalAutoResume:false,familyNormalVoteBusy:false,familyActiveData:null,familyVotedIds:new Set(),familyPollTimer:0,familyPollBusy:false,familyCompareBothMode:'',familyCompareBothGroupId:'',familyCompareBothMealWinner:null,familyBrowseHistory:[],
-tutorialMode:(()=>{try{return localStorage.getItem('dinliminate.tutorialMode.v1')==='1'}catch{return false}})()
+tutorialMode:false
 };
 const IMAGE_PROXY_HOSTS=new Set(['images.pexels.com','images.unsplash.com','commons.wikimedia.org','upload.wikimedia.org','static.wixstatic.com','static.spotapps.co','www.goodnes.com','hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','www.southernliving.com','southernbite.com','snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com','slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com','kookycrunch.com','cdn.apartmenttherapy.info','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.africanbites.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','www.sugardale.com','myhomemaderecipe.com','www.finedininglovers.com']);
 function imageProxyUrl(raw){
@@ -952,7 +952,6 @@ $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'rest
 window.scrollTo?.(0,0);
 }
 
-const TUTORIAL_MODE_KEY='dinliminate.tutorialMode.v1';
 const tutorialState={
  active:false,
  screen:'',
@@ -1031,7 +1030,7 @@ function tutorialStepsForScreen(screen){
   {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#mealTimeQuick']},
   {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodQuick']},
   {target:'#foodMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining meals and Maybes. See how many choices remain.'},
-  {target:'#foodMenu',title:'Menu',body:'Open the app menu.',avoid:['#drawer']}
+  {target:'#foodMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']}
  ];
  if(screen==='restaurant')return[
   {target:'#locate',title:'Current Location',body:'Use your current location.'},
@@ -1045,7 +1044,7 @@ function tutorialStepsForScreen(screen){
   {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
-  {target:'#restaurantMenu',title:'Menu',body:'Open the app menu.',avoid:['#drawer']}
+  {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']}
  ];
  return[];
 }
