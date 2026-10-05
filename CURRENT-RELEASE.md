@@ -1,21 +1,20 @@
-# CURRENT RELEASE — BUILD 1008 / CP1008
+# CURRENT RELEASE — BUILD 1009 / CP1009
 
 Date: 2026-10-05
 
-## CP1008 — Managed Meal + Restaurant Image Cache
+## CP1009 — True Full iPhone Viewport Shell
 
-- Image caching is now size-managed rather than unlimited.
-- The shared image cache has a **75 MiB upper budget** and trims back to **60 MiB** when the budget is exceeded.
-- Least-recently-used images are evicted first, so frequently viewed meal and restaurant photos stay available longer.
-- Cache usage metadata is persisted in IndexedDB and reconciled on service-worker activation.
-- Oversized single image responses are not admitted when they exceed the cache budget.
-- The existing image cache name is retained so the change does not intentionally throw away the current photo working set.
-- The shell/data/restaurant behavior is otherwise unchanged.
+- The mobile app shell is pinned directly to the live viewport.
+- The active Home, Meals, Restaurants, Winner, and Family screens now own the full viewport instead of relying on document-flow height.
+- The Home top bar overlays the full-screen Home canvas, so the supplied door background can extend behind it.
+- Existing interior screen geometry is preserved; this is a shell/viewport adaptation, not a redesign of Meals, Restaurants, Winner, or Menu.
+- Mobile horizontal overflow is locked at the shell level while scrollable supporting screens retain vertical scrolling.
+- Asset versions are bumped to prevent phones from retaining the earlier viewport CSS.
 
 ## Recovery anchors
 
+- **CP1008:** `c372191320df07db864508783ccc7dfa521e4aa3`
 - **CP1007:** `00e7ebed09ed0558853d1b7fcb8f872866cf7038`
 - **CP1006:** `a2d3fc659cafc699aa27db817f29d676a8db5b86`
-- **CP1005:** `3dd492653be3bfa620229df6d16bbbcb8fb036f3`
 
-Production remains unverified because the current Vercel deployment limit is exhausted.
+Production verification will follow the new deployment.
