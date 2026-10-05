@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 981,
+  "build": 982,
   "sourceBranch": "main",
-  "checkpoint": "CP981",
-  "deploymentTrigger": "CP981-clean-home-add-share",
+  "checkpoint": "CP982",
+  "deploymentTrigger": "CP982-restaurant-photo-quality",
   "vercelProductionVerified": false,
   "swipeAudit": "CP952-restore-simple-meal-swipe",
   "visualParity": "CP952-restaurant-maybe-state-parity",
