@@ -3341,7 +3341,8 @@ button,input,select,textarea{
 
 /* CP699 — discreet Home install/share actions. */
 .luxury-home #addToPhone,
-.luxury-home #shareApp{
+.luxury-home #shareApp,
+.luxury-home #tutorialModeToggle{
   color:#aaa39a!important;
   background:transparent!important;
   background-image:none!important;
@@ -3349,9 +3350,13 @@ button,input,select,textarea{
   box-shadow:none!important;
 }
 .luxury-home #addToPhone:hover,
-.luxury-home #shareApp:hover{
+.luxury-home #shareApp:hover,
+.luxury-home #tutorialModeToggle:hover,
+.luxury-home #tutorialModeToggle:active,
+.luxury-home #tutorialModeToggle:focus{
   color:#d7c7aa!important;
   background:transparent!important;
+  background-image:none!important;
   border-color:transparent!important;
   box-shadow:none!important;
 }
@@ -10030,6 +10035,19 @@ button,input,select,textarea{
 .tutorial-bubble::after{content:"";position:absolute;width:10px;height:10px;background:#171511;border-left:1px solid rgba(214,181,111,.86);border-top:1px solid rgba(214,181,111,.86);transform:rotate(45deg)}
 .tutorial-bubble[data-side="top"]::after{left:50%;bottom:-6px;margin-left:-5px;transform:rotate(225deg)}.tutorial-bubble[data-side="bottom"]::after{left:50%;top:-6px;margin-left:-5px}.tutorial-bubble[data-side="left"]::after{right:-6px;top:50%;margin-top:-5px;transform:rotate(135deg)}.tutorial-bubble[data-side="right"]::after{left:-6px;top:50%;margin-top:-5px;transform:rotate(-45deg)}
 .tutorial-mode-toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 22px);z-index:10060;transform:translate(-50%,8px);padding:7px 11px;border:1px solid rgba(214,181,111,.62);border-radius:11px;background:rgba(20,18,15,.95);color:#f2e5c8;box-shadow:0 8px 24px rgba(0,0,0,.35);font-size:10px;font-weight:800;letter-spacing:.06em;opacity:0;transition:opacity .14s ease,transform .14s ease;pointer-events:none}.tutorial-mode-toast.is-visible{opacity:1;transform:translate(-50%,0)}
-.luxury-home .tutorial-mode-toggle{color:#d7bc7f!important}.tutorial-action .settings-action-icon{color:#e5c982}
+.luxury-home .tutorial-mode-toggle{color:#d7bc7f!important}
+.settings-action.tutorial-action{
+ background:linear-gradient(145deg,#18324a,#101d2a)!important;
+ border-color:#4b7699!important;
+ box-shadow:0 8px 24px rgba(12,32,52,.50)!important;
+ color:#f1f5f8!important;
+}
+.settings-action.tutorial-action .settings-action-icon{
+ background:#244765;
+ border-color:#6f9fca;
+ color:#d7ecff;
+}
+.settings-action.tutorial-action .settings-action-copy small{color:#b7d0e2}
+.tutorial-action .settings-action-icon{color:#d7ecff}
 @media(max-width:390px){.tutorial-bubble{width:min(286px,calc(100vw - 20px));padding:12px 14px}.tutorial-bubble-body{font-size:13.5px}.luxury-home .home-foot-actions{gap:6px}}
 @media(prefers-reduced-motion:reduce){.tutorial-spotlight,.tutorial-bubble,.tutorial-mode-toast{transition:none!important}}
