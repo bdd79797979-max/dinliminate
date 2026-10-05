@@ -1,28 +1,17 @@
-# CURRENT SAVEPOINT — BUILD 1004 / CP1004
+# CURRENT SAVEPOINT — BUILD 1005 / CP1005
 
 Date: 2026-10-05
 
-Working branch: `main`
+Working branch: `cp1005-buttermilk-swipe-speed`
 
-## CP1004 — Menu / Modal Flash Hardening
+## CP1005 — Buttermilk Image / Faster Swipe Response
 
-- Modal backdrops are opaque on their first paint, preventing the previous screen from showing through during drawer/modal replacement.
-- Existing modal motion and screen designs remain unchanged.
-- Mobile CSS and service-worker cache versions were bumped to force the corrected shell onto devices.
-- Rollback: CP1003.
+- Buttermilk & Cornbread now uses a clearer glass-of-buttermilk image from Wikimedia Commons.
+- Short fast flicks now commit at 0.55 px/ms instead of 0.62 px/ms.
+- Fast swipe handoff animation is slightly quicker; normal swipe distance and card geometry are unchanged.
+- Mobile script/cache versions were bumped for the new meal image and swipe behavior.
 
-## CP1003 — Full iPhone Viewport Adaptation
+## Recovery anchor
 
-- Complete iPhone dynamic viewport.
-- Safe-area padding moved into the shared top bar instead of outside the app canvas.
-- Screens are edge-to-edge horizontally while preserving their existing 14px content geometry.
-- Meals, Restaurants, Winner, and Menu designs remain unchanged.
-- CP1002 remains the rollback for the preceding Home image work.
+- **CP1004:** `5be54139f2b30fc23e473fcb54e2fa28c2399246`
 
-## Recovery anchors
-
-### CP1002
-`d28e4bb31d887b286659cd3c78a7f625b5e0f7ce`
-
-### CP999
-`784b41c066818cc097be189ff76ab8b17b0bff72`
