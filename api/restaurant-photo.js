@@ -1032,14 +1032,6 @@ module.exports=async function handler(req,res){
     if(fastKnown)return sendMedia(res,fastKnown);
     if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
 
-    // OSM exact-POI image is a later fallback after exact/reputable venue photos.
-    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
-      try{
-        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
-        return sendMedia(res,{media,source:'osm-exact-poi'});
-      }catch{}
-    }
-
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
 
     // Continue searching the restaurant's own website before leaving the
@@ -1065,6 +1057,14 @@ module.exports=async function handler(req,res){
       for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
         return sendMedia(res,{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
       }
+    }
+
+    // OSM exact-POI image is a later fallback after the verified public-site layer.
+    if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
+      try{
+        const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
+        return sendMedia(res,{media,source:'osm-exact-poi'});
+      }catch{}
     }
 
     // Last discovery layer: Bing Images, but only after exact host-page
