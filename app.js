@@ -2079,7 +2079,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   const width=cardWidth();
   const exitDistance=Math.max(Math.ceil(window.innerWidth*1.25),Math.ceil(width*1.45),560);
   const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(205-(magnitude*38),145,205));
+  const duration=Math.round(clamp(198-(magnitude*42),132,198));
   const direction=dx<0?-1:1;
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
@@ -2136,7 +2136,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   const speed=Number.isFinite(velocityX)?velocityX/1000:0;
   swipeThreshold=clamp(Math.round(cardWidth()*.23),76,118);
   const distanceCommit=Math.abs(dx)>=swipeThreshold;
-  const flickCommit=Math.abs(dx)>=52&&Math.abs(speed)>=.62;
+  const flickCommit=Math.abs(dx)>=52&&Math.abs(speed)>=.55;
   if(distanceCommit||flickCommit)commit(dx,speed);
   else{
    phase='idle';
