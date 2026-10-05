@@ -12,7 +12,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '986';
+let APP_BUILD = '987';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -416,7 +416,7 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='986';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='987';
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v5';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
@@ -1504,6 +1504,33 @@ function prepareFoodNextCard(){
  nimg.style.transform='none';
  nimg.src=foodPhoto(next);
 }
+function bindRestaurantPhotoPinch(target){
+  const img=target?.tagName==='IMG'?target:target?.querySelector?.('img');
+  if(!img)return;
+  if(img.dataset.restaurantPinchBound==='1'){img.style.transform='none';return;}
+  img.dataset.restaurantPinchBound='1';
+  img.classList.add('restaurant-photo-zoomable');
+  img.style.touchAction='none';
+  img.style.transformOrigin='center center';
+  const surface=img.closest('.card')||img,points=new Map();let scale=1,startDistance=0,startScale=1,pinching=false;
+  const distance=()=>{const p=[...points.values()];return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);};
+  const apply=()=>{img.style.transform=scale<=1.01?'none':'scale('+scale.toFixed(3)+')';};
+  const finishPointer=e=>{points.delete(e.pointerId);if(points.size<2){pinching=false;if(scale<=1.01){scale=1;apply();}}};
+  surface.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch'||!e.target.closest?.('img'))return;
+    points.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(points.size===2){pinching=true;startDistance=Math.max(1,distance());startScale=scale;e.preventDefault();}
+  },{passive:false});
+  surface.addEventListener('pointermove',e=>{
+    if(!pinching||e.pointerType!=='touch')return;
+    const p=points.get(e.pointerId);if(!p)return;
+    p.x=e.clientX;p.y=e.clientY;
+    const d=distance();if(!d)return;
+    scale=Math.max(1,Math.min(3.5,startScale*(d/startDistance)));apply();e.preventDefault();
+  },{passive:false});
+  surface.addEventListener('pointerup',finishPointer,{passive:true});
+  surface.addEventListener('pointercancel',finishPointer,{passive:true});
+}
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
@@ -1724,7 +1751,10 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   }
  };
  card.onpointerdown=e=>{
-  if(e.isPrimary===false)return;
+  if(e.isPrimary===false){
+    if(active&&!committed){active=false;committed=false;hapticTriggered=false;velocityX=0;cleanup();settleBack();}
+    return;
+  }
   if(e.button!=null&&e.button!==0)return;
   if(e.target.closest?.('button,a,input,select'))return;
   downX=e.clientX;
@@ -1807,7 +1837,7 @@ const restoreFocus=document.activeElement instanceof HTMLElement ? document.acti
 const bg=document.createElement('div'); bg.id='appConfirmModalBg'; bg.className='modal-bg';
 const modal=document.createElement('section'); modal.id='appConfirmModal'; modal.className='modal confirm-modal';
 modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-labelledby','appConfirmTitle'); modal.setAttribute('aria-describedby','appConfirmMessage');
-modal.innerHTML='<div class="confirm-hero"><span class="confirm-mark" aria-hidden="true">×</span><div><small>CONFIRM ACTION</small><h3 id="appConfirmTitle">'+esc(title)+'</h3></div><button class="menu" type="button" id="appConfirmClose" aria-label="Close confirmation">×</button></div>'+
+modal.innerHTML='<div class="confirm-hero"><span class="confirm-mark" aria-hidden="true">×</span><div><small>CONFIRM ACTION</small><h3 id="appConfirmTitle">'+esc(title)+'</h3></div><button class="modal-close" type="button" id="appConfirmClose" aria-label="Close confirmation">×</button></div>'+
 '<div class="confirm-copy" id="appConfirmMessage">'+esc(message)+'</div>'+
 '<div class="confirm-actions"><button type="button" class="secondary" id="appConfirmCancel">Cancel</button><button type="button" class="danger-action" id="appConfirmOk">'+esc(confirmLabel)+'</button></div>';
 document.body.append(bg,modal);
@@ -2627,6 +2657,7 @@ bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
 bindImageFallback('#restStage img',restaurantFallback(row),RESTAURANT_NEUTRAL_IMAGE);
+ bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
 const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
@@ -3188,6 +3219,7 @@ if(hungry){
 }else{
   if(!(chosenFromWheel && $('celebration') && !$('celebration').classList.contains('hidden')))triggerCelebration(chosenFromWheel);
   hydrateRestaurantPhoto(item,'#winner');
+  bindRestaurantPhotoPinch(winImg);
 }
 save();
 }
@@ -3207,7 +3239,7 @@ modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');
 modal.setAttribute('aria-labelledby',id+'Title');
 modal.setAttribute('tabindex','-1');
-modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="menu" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
+modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
 document.body.append(bg,modal);
 requestAnimationFrame(()=>{
  bg.classList.add('modal-bg-open');
@@ -3371,6 +3403,7 @@ const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="de
  const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHideRestaurant" type="button" aria-label="Hide this restaurant"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Restaurant</span></button></div>';
  const body='<div class="detail-unified detail-restaurant"><div class="detail-hero detail-restaurant-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-restaurant-photo-key="'+esc(item.id||item.canonicalId||'')+'" data-final-fallback="'+esc(restaurantFallbackImage(item))+'" alt="'+esc(item.name)+'"><div class="restaurant-photo-credit" aria-live="polite"></div></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">RESTAURANT</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+'</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+infoRows+'</section>'+hoursSection+'<section class="detail-section"><div class="detail-section-title">Contact</div>'+contactRows+'</section>'+notesSection+'<section class="detail-utility-actions"><a class="detail-utility-action" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'">Website</a>'+callAction+directionsAction+'</section>'+hide+'</div>';
  const modal=openModal('detailsModal','Restaurant Details',body);
+ bindRestaurantPhotoPinch(modal.querySelector('.detail-restaurant-hero img'));
  bindImageFallback('#detailsModal img',image,restaurantFallbackImage(item));
  bindDetailNotes(modal,item,'restaurant');
  const detailHideRestaurant=$('detailHideRestaurant');
@@ -4503,52 +4536,80 @@ const text='Tonight: '+S.winnerItem.name;
 if(navigator.share){navigator.share({title:'Dinliminate',text}).catch(()=>{});}
 else if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>appToast('Decision copied.')).catch(()=>{});
 }
+async function clearAllDinliminateStorage(){
+  try{
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith('dinliminate.'))keys.push(key);}
+    keys.forEach(key=>localStorage.removeItem(key));
+  }catch{}
+  try{restaurantWebsiteCache.clear();restaurantWebsiteInflight.clear();}catch{}
+  try{
+    restaurantPhotoCache.forEach(data=>{if(String(data?.url||'').startsWith('blob:')){try{URL.revokeObjectURL(data.url)}catch{}}});
+    restaurantPhotoCache.clear();restaurantPhotoMissCache.clear();restaurantPhotoInflight.clear();restaurantPhotoStoragePromise=null;
+  }catch{}
+  try{storedPhotoIds.clear();}catch{}
+  try{
+    const db=await openPhotoDB();
+    await new Promise(resolve=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite');
+      tx.objectStore(PHOTO_STORE).clear();
+      tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve;
+    });
+  }catch{}
+  try{
+    if('caches' in window){
+      const names=await caches.keys();
+      await Promise.all(names.filter(name=>name.startsWith('dinliminate')).map(name=>caches.delete(name)));
+    }
+  }catch{}
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg=>reg.unregister()));
+    }
+  }catch{}
+}
 function resetRound(){
-S.hungryWheelSpinToken++;
-S.hungryWheelSpinning=false;
-S.hungryWheelChoice=null;
-S.hungryWheelRotation=0;
-S.hungryWheelDisplayItems=null;
-S.hungryWheelLandedId=null;
-S.hungryWheelSpinPhase='idle';
-S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
-S.winnerItem=null; S.winnerType='food'; S.foodActions=[]; S.restaurantActions=[];
-S.maybe.clear(); S.foodMaybeRound=false; S.cutCats.clear(); S.foodCuts.clear(); S.restaurantCuts.clear(); S.restaurantMaybeRound=false;
-S.pool=[]; S.restaurantPool=[]; S.restaurantSearchOrigin=null; S.index=0; S.restaurantIndex=0; S.saved=false;
-try{localStorage.removeItem(KEY);}catch{}
-home();
+  S.hungryWheelSpinToken++;S.hungryWheelSpinning=false;S.hungryWheelChoice=null;S.hungryWheelRotation=0;S.hungryWheelDisplayItems=null;S.hungryWheelLandedId=null;S.hungryWheelSpinPhase='idle';S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
+  S.winnerItem=null;S.winnerType='food';S.foodActions=[];S.restaurantActions=[];S.maybe.clear();S.foodMaybeRound=false;S.cutCats.clear();S.foodCuts.clear();S.restaurantCuts.clear();S.restaurantMaybeRound=false;
+  S.pool=[];S.restaurantPool=[];S.restaurantSearchOrigin=null;S.index=0;S.restaurantIndex=0;S.restaurantQuery='';S.restaurantSearchKey='';S.restaurantSearchDegraded=false;S.saved=false;
+  try{localStorage.removeItem(KEY);}catch{}
+  home();
 }
 function resetRestoreView(){
- document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();
- removeFoodOverlays();
- const body='<div class="reset-restore-view"><div class="reset-restore-hero"><span class="manage-kicker">RESET &amp; RESTORE</span><h4>Choose what to return.</h4><p>Restore the original meal catalog without touching your custom meals, or start fresh by clearing all local app data.</p></div><div class="reset-restore-actions"><button class="reset-restore-option restore-action" id="restoreDefaultsOption" type="button"><span class="reset-restore-icon">↺</span><span><b>Restore Defaults</b><small>Return built-in meals to their original state and recover deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, and notes remain.</small></span><span>›</span></button><button class="reset-restore-option reset-action" id="fullResetOption" type="button"><span class="reset-restore-icon">×</span><span><b>Full Reset</b><small>Erase meals, Custom Cuisine Cuts, history, notes, hidden choices, saved state, and device-stored photos.</small></span><span>›</span></button></div></div>';
- const modal=openModal('resetRestoreModal','Reset & Restore',body);
- $('restoreDefaultsOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await systemRestoreFlow();};
- $('fullResetOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await resetAppDataFlow();};
+  document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();removeFoodOverlays();
+  const body='<div class="reset-restore-view"><div class="reset-restore-hero"><span class="manage-kicker">RESET &amp; RESTORE</span><h4>Choose what to return.</h4><p>Restore the original built-in meals without changing your custom meals or restaurant data, or start completely fresh by clearing all Dinliminate data on this device.</p></div><div class="reset-restore-actions"><button class="reset-restore-option restore-action" id="restoreDefaultsOption" type="button"><span class="reset-restore-icon">↺</span><span><b>Restore Defaults</b><small>Return built-in meals to their original catalog state and recover deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, notes, Restaurant choices, and location settings remain.</small></span><span>›</span></button><button class="reset-restore-option reset-action" id="fullResetOption" type="button"><span class="reset-restore-icon">×</span><span><b>Full Reset</b><small>Erase all Dinliminate data stored on this device, including meals, choices, history, notes, custom photos, restaurant caches, and Family Mode session data.</small></span><span>›</span></button></div></div>';
+  const modal=openModal('resetRestoreModal','Reset & Restore',body);
+  $('restoreDefaultsOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await systemRestoreFlow();};
+  $('fullResetOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await resetAppDataFlow();};
 }
 async function resetAppDataFlow(){
-if(!await appConfirm('Reset all app data?', 'This permanently removes custom meals, history, hidden choices, saved round state, and device-stored app preferences.', 'Reset Everything'))return;
-S.hidden.clear(); S.deleted.clear(); S.deletedCustomMeals=[]; S.customQuickCuts=[]; S.hiddenRestaurants={}; S.cutCats.clear(); S.foodCuts.clear(); S.maybe.clear(); S.foodMaybeRound=false; S.restaurantCuts.clear(); S.restaurantMaybeRound=false;
-S.mealTimeSettings={custom:[],names:{},order:DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),disabled:new Set()};S.mealTimeFilters=new Set(mealTimeNames());
-S.pool=[]; S.restaurantPool=[]; S.index=0; S.restaurantIndex=0; S.foodActions=[]; S.restaurantActions=[]; S.winnerItem=null; S.winnerType='food'; S.location=null; S.locationSource='none'; S.locationFreshAt=null; S.restaurantSearchOrigin=null; S.restaurantSearchKey=''; S.restaurantQuery=''; S.restaurantSearchDegraded=false; S.storageWarning=false; S.saved=false; S.custom=[];
-try{localStorage.removeItem(KEY);localStorage.removeItem(HISTORY_KEY);localStorage.removeItem(ITEM_NOTES_KEY);}catch{}
-try{const db=await openPhotoDB(); await new Promise(resolve=>{const tx=db.transaction(PHOTO_STORE,'readwrite'); tx.objectStore(PHOTO_STORE).clear(); tx.oncomplete=resolve; tx.onerror=resolve;});}catch{}
-home();
+  if(!await appConfirm('Reset all app data?','This permanently removes all Dinliminate data stored on this device, including custom meals, history, hidden choices, notes, saved state, custom photos, restaurant photo cache, and Family Mode session data.','Reset Everything'))return;
+  await clearAllDinliminateStorage();
+  S.hidden.clear();S.deleted.clear();S.deletedCustomMeals=[];S.customQuickCuts=[];S.hiddenRestaurants={};S.cutCats.clear();S.foodCuts.clear();S.maybe.clear();S.foodMaybeRound=false;S.restaurantCuts.clear();S.restaurantMaybeRound=false;
+  S.mealTimeSettings={custom:[],names:{},order:DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),disabled:new Set()};S.mealTimeFilters=new Set(mealTimeNames());
+  S.pool=[];S.restaurantPool=[];S.index=0;S.restaurantIndex=0;S.foodActions=[];S.restaurantActions=[];S.winnerItem=null;S.winnerType='food';S.location=null;S.locationSource='none';S.locationFreshAt=null;S.restaurantSearchOrigin=null;S.restaurantSearchKey='';S.restaurantQuery='';S.restaurantSearchDegraded=false;S.storageWarning=false;S.saved=false;S.custom=[];S.notes={};
+  S.familyNormalMode='idle';S.familyDecisionType='';S.familyNormalRoundId='';S.familyNormalStage=0;S.familyNormalAutoResume=false;S.familyActiveData=null;S.familyVotedIds=new Set();S.familyBrowseHistory=[];
+  window.location.reload();
 }
 async function systemRestoreFlow(){
-if(!await appConfirm('Restore built-in defaults?','This returns every built-in meal to its original catalog state and recovers deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, and notes stay on this device.','Restore Defaults'))return;
- const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
- const builtInOverrides=S.custom.filter(x=>defaultIds.has(String(x.id)));
- for(const item of builtInOverrides){
-  if(String(item.image||'').startsWith('idb:')){await deleteStoredPhoto(item.id);storedPhotoIds.delete(item.id);}
- }
- S.custom=S.custom.filter(x=>!defaultIds.has(String(x.id)));
- S.deleted.clear();
- S.hidden.clear();S.hiddenRestaurants={};S.cutCats.clear();S.foodCuts.clear();S.maybe.clear();S.foodMaybeRound=false;S.restaurantCuts.clear();S.restaurantMaybeRound=false;
- S.pool=[];S.restaurantPool=[];S.index=0;S.restaurantIndex=0;S.foodActions=[];S.restaurantActions=[];S.winnerItem=null;S.winnerType='food';S.location=null;S.locationSource='none';S.locationFreshAt=null;S.restaurantSearchOrigin=null;S.restaurantSearchKey='';S.restaurantQuery='';S.restaurantSearchDegraded=false;S.storageWarning=false;S.saved=false;
- buildFood();foodQuick();save();
- document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();document.querySelector('#resetRestoreModal')?.remove();document.querySelector('#resetRestoreModalBg')?.remove();document.querySelector('#drawer')?.classList.add('hidden');document.querySelector('#drawerBg')?.classList.add('hidden');
- home();
+  if(!await appConfirm('Restore built-in defaults?','This returns built-in meals to their original catalog state and recovers deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, notes, Restaurant choices, and location settings stay on this device.','Restore Defaults'))return;
+  const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
+  const builtInOverrides=S.custom.filter(x=>defaultIds.has(String(x.id)));
+  for(const item of builtInOverrides){
+    const photos=mealPhotoList(item);
+    for(let i=0;i<photos.length;i++){
+      const key=mealPhotoStorageKey(item.id,i);
+      if(String(photos[i]||'').startsWith('data:image/')||storedPhotoIds.has(key)){try{await deleteStoredPhoto(key)}catch{}storedPhotoIds.delete(key);}
+    }
+  }
+  S.custom=S.custom.filter(x=>!defaultIds.has(String(x.id)));
+  S.deleted=new Set([...S.deleted].filter(id=>!defaultIds.has(String(id))));
+  S.hidden=new Set([...S.hidden].filter(id=>!defaultIds.has(String(id))));
+  S.maybe.clear();S.foodMaybeRound=false;S.foodActions=[];S.pool=[];S.index=0;S.winnerItem=null;S.winnerType='food';
+  buildFood();foodQuick();save();
+  document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();document.querySelector('#resetRestoreModal')?.remove();document.querySelector('#resetRestoreModalBg')?.remove();document.querySelector('#drawer')?.classList.add('hidden');document.querySelector('#drawerBg')?.classList.add('hidden');
+  home();
 }
 const homeActionHandler = (event) => {
  const button = event.target.closest?.('[data-home-action]');
@@ -4579,26 +4640,25 @@ bindCardButton('foodBack',foodBack);
 document.querySelectorAll('[data-home]').forEach(btn => btn.onclick = home);
 bindHomeCardPress('foodStart');bindHomeCardPress('restStart');
 let drawerCloseTimer=0;
-const closeDrawer=()=>{
- clearTimeout(drawerCloseTimer);
- const drawer=$('drawer'),bg=$('drawerBg');
- drawer?.classList.remove('is-open');
- bg?.classList.remove('is-open');
- ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
- drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
+const showMenuHint=(trigger)=>{
+  document.querySelector('#menuHint')?.remove();if(!trigger)return;
+  const rect=trigger.getBoundingClientRect(),hint=document.createElement('div');hint.id='menuHint';hint.className='menu-hint';hint.textContent='Menu';
+  hint.style.top=Math.min(window.innerHeight-38,Math.max(8,rect.bottom+7))+'px';hint.style.right=Math.max(8,window.innerWidth-rect.right)+'px';
+  document.body.appendChild(hint);requestAnimationFrame(()=>hint.classList.add('is-visible'));window.setTimeout(()=>hint.remove(),1800);
 };
-const openDrawer=()=>{
- clearTimeout(drawerCloseTimer);
- const drawer=$('drawer'),bg=$('drawerBg');
- drawer?.classList.remove('hidden');
- bg?.classList.remove('hidden');
- requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
- ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+const closeDrawer=(immediate=false)=>{
+  clearTimeout(drawerCloseTimer);const drawer=$('drawer'),bg=$('drawerBg');
+  drawer?.classList.remove('is-open');bg?.classList.remove('is-open');document.querySelector('#menuHint')?.remove();
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
+  if(immediate){drawer?.classList.add('hidden');bg?.classList.add('hidden');return;}
+  drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
 };
-const appMenu = $('menu'); if (appMenu) {appMenu.setAttribute('aria-expanded','false');appMenu.onclick = openDrawer;}
-const foodMenu = $('foodMenu'); if (foodMenu) {foodMenu.setAttribute('aria-expanded','false');foodMenu.onclick = openDrawer;}
-const restaurantMenu = $('restaurantMenu'); if (restaurantMenu) {restaurantMenu.setAttribute('aria-expanded','false');restaurantMenu.onclick = openDrawer;}
-const winnerMenu = $('winnerMenu'); if (winnerMenu) {winnerMenu.setAttribute('aria-expanded','false');winnerMenu.onclick = openDrawer;}
+const openDrawer=(event)=>{
+  clearTimeout(drawerCloseTimer);showMenuHint(event?.currentTarget);const drawer=$('drawer'),bg=$('drawerBg');
+  drawer?.classList.remove('hidden');bg?.classList.remove('hidden');
+  requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+};
 function decisionBackHome(){
  S.familyNormalMode='idle';
  S.familyNormalAutoResume=false;
@@ -4616,7 +4676,8 @@ const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaur
 $('drawerClose').onclick = closeDrawer;
 $('drawerBg').onclick = closeDrawer;
 const navigateFromDrawer=(navigate)=>{
-  try{navigate?.();}finally{closeDrawer();}
+  closeDrawer(true);
+  try{navigate?.();}catch{}
 };
 $('manage').onclick = () => navigateFromDrawer(manageFoodsView);
 $('settings').onclick = () => navigateFromDrawer(settingsView);
@@ -4761,7 +4822,7 @@ $('hungryMysteryChoose').onclick = () => {
 };
 $('details').onclick = () => S.winnerItem && detailsSheet(S.winnerItem, S.winnerType || 'food');
 $('share').onclick = shareWinner;
-$('restart').onclick = ()=>S.familyNormalMode==='winner'?(S.familyActiveData?.activeRound?.snapshot?.outcome==='no_winner'?familyRestartFromNoWinner():familyDismissWinner()):resetRound;
+$('restart').onclick = handleWinnerRestart;
 const updateOffline = () => $('offlineIndicator')?.classList.toggle('hidden', navigator.onLine !== false);
 window.addEventListener('online', updateOffline);
 window.addEventListener('offline', updateOffline);
@@ -4960,8 +5021,18 @@ function familyDecisionBack(type){familyNormalBack(type);}
 function familyShowWinner(round){
  const item=round?.winnerItem,id=String(round?.id||'');if(!item)return;if(S.familyNormalMode==='winner'&&S.familyNormalRoundId===id&&S.screen==='winner')return;
  const cmp=round?.snapshot?.compareBoth||null;S.familyActiveData={...(S.familyActiveData||{}),activeRound:round,lastCompletedRound:round};S.familyNormalMode='winner';S.familyNormalRoundId=id;S.familyDecisionType=round.decisionType==='restaurant'?'restaurant':'meal';S.familyNormalAutoResume=true;winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true});
- const b=$('restart'),host=familySessionRead()?.member?.role==='host';if(b){b.disabled=false;if(cmp?.mode==='compare_both'&&cmp.track==='meal'){b.textContent=host?'CONTINUE TO RESTAURANT':'WAITING FOR HOST';b.onclick=host?()=>familyContinueCompareRestaurant(round):familyDismissWinner;}else if(cmp?.mode==='compare_both'&&cmp.track==='restaurant'){b.textContent=host?'COMPARE THE TWO':'WAITING FOR HOST';b.onclick=host?()=>familyCreateCompareFinal(round):familyDismissWinner;}else{b.textContent=host?'START OVER':'BACK TO FAMILY';b.onclick=host?familyRestartAfterWinner:familyDismissWinner;}}
+ const b=$('restart'),host=familySessionRead()?.member?.role==='host';if(b){b.disabled=false;if(cmp?.mode==='compare_both'&&cmp.track==='meal')b.textContent=host?'CONTINUE TO RESTAURANT':'WAITING FOR HOST';else if(cmp?.mode==='compare_both'&&cmp.track==='restaurant')b.textContent=host?'COMPARE THE TWO':'WAITING FOR HOST';else b.textContent=host?'START OVER':'BACK TO FAMILY';}
  familySetWinnerMeta(round);if(round?.snapshot?.outcome==='wheel')familyAnimateWheel(round);
+}
+function handleWinnerRestart(){
+  if(S.familyNormalMode==='winner'){
+    const round=S.familyActiveData?.activeRound||S.familyActiveData?.lastCompletedRound||null,cmp=round?.snapshot?.compareBoth||null,session=familySessionRead(),host=session?.member?.role==='host';
+    if(round?.snapshot?.outcome==='no_winner')return familyRestartFromNoWinner();
+    if(cmp?.mode==='compare_both'&&cmp.track==='meal')return host?familyContinueCompareRestaurant(round):familyDismissWinner();
+    if(cmp?.mode==='compare_both'&&cmp.track==='restaurant')return host?familyCreateCompareFinal(round):familyDismissWinner();
+    return host?familyRestartAfterWinner():familyDismissWinner();
+  }
+  return resetRound();
 }
 function familyDismissWinner(){const s=familySessionRead();if(s)familySessionWrite({...s,dismissedWinnerRoundId:S.familyNormalRoundId,lastWinnerItem:S.winnerItem||s.lastWinnerItem||null});S.familyNormalMode='idle';S.familyNormalAutoResume=true;show('family');familyRefreshState();}
 
