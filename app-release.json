@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1005,
+  "build": 1006,
   "sourceBranch": "main",
-  "checkpoint": "CP1005",
-  "deploymentTrigger": "CP1005-buttermilk-swipe-speed",
+  "checkpoint": "CP1006",
+  "deploymentTrigger": "CP1006-full-iphone-viewport-fix",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "resolver-backed-card-handoff",
   "photoPolicy": "no-google",
-  "onboarding": "CP1004-menu-modal-flash"
+  "onboarding": "CP1006-full-iphone-viewport-fix"
 }
