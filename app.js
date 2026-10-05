@@ -945,6 +945,21 @@ S.restaurantMaybeRound = !!d.restaurantMaybeRound;
 S.restaurantPool = Array.isArray(d.restaurantPool) ? d.restaurantPool : [];
 S.custom = Array.isArray(d.custom) ? d.custom.map(item=>({...item,images:mealPhotoList(item)})) : [];
 S.customQuickCuts = Array.isArray(d.customQuickCuts) ? d.customQuickCuts : [];
+
+// CP1028 — repair the known historical Buttermilk & Cornbread override.
+// An older saved record could carry a generic fallback photo under the same
+// built-in id, which then masked the current catalog photo.
+const builtInButtermilkCornbread=S.custom.find(item=>String(item.id)==='buttermilk-cornbread');
+if(builtInButtermilkCornbread){
+ const savedName=normKey(builtInButtermilkCornbread.name);
+ const savedImage=String(builtInButtermilkCornbread.image||'');
+ const hasWrongFallback=/6287520|pasta|spaghetti/i.test(savedImage);
+ if(!savedImage||hasWrongFallback||savedName==='buttermilk cornbread'){
+  builtInButtermilkCornbread.name='Buttermilk & Cornbread';
+  builtInButtermilkCornbread.image='https://images.pexels.com/photos/18852480/pexels-photo-18852480.jpeg?auto=compress&cs=tinysrgb&w=1200';
+  builtInButtermilkCornbread.images=[builtInButtermilkCornbread.image];
+ }
+}
 S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals.map(item=>({...item,images:mealPhotoList(item)})) : [];
 S.winnerType = d.winnerType || 'food';
 S.restaurantSearchOrigin = d.restaurantSearchOrigin && Number.isFinite(Number(d.restaurantSearchOrigin.lat)) && Number.isFinite(Number(d.restaurantSearchOrigin.lon)) ? {lat:Number(d.restaurantSearchOrigin.lat),lon:Number(d.restaurantSearchOrigin.lon)} : null;
