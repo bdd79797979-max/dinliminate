@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1006,
+  "build": 1007,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1006",
-  "deploymentTrigger": "CP1006-full-iphone-viewport-fix"
+  "checkpoint": "CP1007",
+  "deploymentTrigger": "CP1007-cornbread-buttermilk-reference"
 }
