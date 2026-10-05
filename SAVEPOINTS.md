@@ -1,16 +1,18 @@
-# CURRENT SAVEPOINT — BUILD 1009 / CP1009
+# CURRENT SAVEPOINT — BUILD 1010 / CP1010
 
 Date: 2026-10-05
 
-Working branch: `cp1009-true-iphone-viewport-shell`
+Working branch: `cp1010-device-aware-iphone-shell`
 
-## CP1009 — True Full iPhone Viewport Shell
+## CP1010
 
-- Pins the mobile app to `100vw × 100dvh`.
-- Pins the active screen to the same viewport.
-- Keeps the Home door background behind the Home top bar.
-- Does not redesign the existing screen interiors.
+- Keeps desktop/laptop centered side bands.
+- Adds a second mobile gate for coarse/no-hover touch environments up to 1024px, covering wider phone layout viewports.
+- Pins the app and active screens to the full phone viewport.
+- Keeps the supplied Home door background edge-to-edge.
+- Preserves existing Meals, Restaurants, Winner, Family, and Menu interiors.
+- Aligns service-worker asset versioning to build 1010 and removes the first-load build-version race.
 
 ## Recovery anchor
 
-- **CP1008:** `c372191320df07db864508783ccc7dfa521e4aa3`
+- **CP1009:** `f06e1ba973c45fa8021f87ed52a049c2998f3211`
