@@ -1,3 +1,4 @@
+// CP1013 final system reset/restore sync — do not alter CP1012/main recovery baseline.
 // CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
 // CP950 final tree sync: Meal swipe gate removed; keep this commit as the deploy source of truth.
 
