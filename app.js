@@ -3217,7 +3217,7 @@ const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
   stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=hydrateRestaurantWebsite(nextRow,'#restStage #restaurantNextCard').then(()=>loadRestaurantPhoto(nextRow)).then(async data=>{
+  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhotoPreferred(nextRow).then(async data=>{
    if(!data?.url)return null;
    if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
    if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
@@ -3230,11 +3230,11 @@ if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
    return data.url;
   }).catch(()=>null);
 }
-hydrateRestaurantWebsite(row,'#restStage #restaurantCard')
- .finally(()=>hydrateRestaurantPhoto(row,'#restStage #restaurantCard'));
+hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
+hydrateRestaurantWebsite(row,'#restStage #restaurantCard').catch(()=>{});
 if(nextRow){
- hydrateRestaurantWebsite(nextRow,'#restStage #restaurantNextCard')
-  .finally(()=>hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard'));
+ hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
+ hydrateRestaurantWebsite(nextRow,'#restStage #restaurantNextCard').catch(()=>{});
 }
 prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
 maybeShowInCardSwipeCoach();
