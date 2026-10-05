@@ -7,12 +7,12 @@ const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi
 const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chick-fil-A","Popeyes","Subway","Sonic","Arby's","Whataburger","Five Guys","Raising Cane's","Wingstop","Bojangles","Cook Out","Dairy Queen","Zaxby's","Church's Chicken","Captain D's","Long John Silver's","Jimmy John's","Jersey Mike's","Firehouse Subs","Little Caesars","Domino's","Papa John's","Pizza Hut","Marco's Pizza","Krystal","Steak 'n Shake","White Castle","Freddy's","In-N-Out","Carl's Jr.","Panda Express","Jack in the Box","Hardee's","Del Taco","Checkers","Rally's"];
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
-const SEARCH_BUDGET_MS=3000;
-const WIDE_DISCOVERY_RESERVE_MS=700;
+const SEARCH_BUDGET_MS=7500;
+const WIDE_DISCOVERY_RESERVE_MS=4500;
 const WIDE_RADIUS_THRESHOLD=50;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2300;
-const WIDE_DISCOVERY_TIMEBOX_MS=2600;
+const WIDE_PRIMARY_TIMEBOX_MS=2200;
+const WIDE_DISCOVERY_TIMEBOX_MS=5000;
 const OVERPASS_HTTP_TIMEOUT_MS=2500;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
@@ -1196,11 +1196,22 @@ if(mode==='search'){
   ];
  let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   const wideWinner=await firstProviderWithRows(primaryPromise,Math.min(WIDE_PRIMARY_TIMEBOX_MS,Math.max(1500,primaryBudget-(Date.now()-startedAt))));
-   fastProvider=wideWinner.provider;
-   primaryBatch=wideWinner.value;
+   // Wide searches need two independent discovery layers to preserve the full
+   // requested radius. ArcGIS stays capped at 50 miles for fast local context,
+   // while Photon performs the 100-mile ring expansion in parallel.
+   const wideTasks=[
+     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
+     withinBudget(photonWidePlaces(lat,lon,radius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out')
+   ];
+   const settled=await Promise.allSettled(wideTasks);
+   const arc=settled[0],wp=settled[1];
+   primaryBatch={
+     arcgis:arc,
+     widePhoton:wp
+   };
+   fastProvider='wide';
    const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
-   parallelWide=discoveryRemaining>250
+   parallelWide=discoveryRemaining>500
      ? await withinBudget(discoveryPromise,Math.min(WIDE_DISCOVERY_TIMEBOX_MS,discoveryRemaining),'Wide radius discovery timed out')
      : {__timeout:true,reason:'Wide radius discovery deferred'};
  }else{
@@ -1217,7 +1228,15 @@ if(mode==='search'){
  let arcgisResult={status:'rejected',reason:new Error('ArcGIS not selected')};
  let googleResult={status:'rejected',reason:new Error('Google not selected')};
  let widePhotonResult={status:'rejected',reason:new Error('Wide Photon provider not used')};
- if(Array.isArray(primaryBatch)){
+ if(wideSearch){
+   if(primaryBatch?.arcgis?.status==='fulfilled')arcgisResult=primaryBatch.arcgis;
+   else if(primaryBatch?.arcgis?.reason)arcgisResult={status:'rejected',reason:primaryBatch.arcgis.reason};
+   if(primaryBatch?.widePhoton?.status==='fulfilled'){
+     widePhotonResult=primaryBatch.widePhoton;
+   }else if(primaryBatch?.widePhoton?.reason){
+     widePhotonResult={status:'rejected',reason:primaryBatch.widePhoton.reason};
+   }
+ }else if(Array.isArray(primaryBatch)){
    photonResult=primaryBatch[0]||photonResult;
    arcgisResult=primaryBatch[1]||arcgisResult;
    googleResult=primaryBatch[2]||googleResult;
