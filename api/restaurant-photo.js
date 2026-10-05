@@ -353,7 +353,85 @@ function normalizeMatchText(text){
   return String(text||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 }
 
-function significantNameTokens(name){
+function significantNameTokens
+
+function extractOfficialHeroCandidates(html,pageUrl,name,address,website){
+  const out=[],seen=new Set();
+  const add=(item,score,source)=>{
+    const url=absoluteHttpsUrl(item?.url,pageUrl);
+    if(!url||seen.has(url)||isBlockedHost(url)||isRejectedPhotoCandidate(item))return;
+    seen.add(url);
+    out.push({...item,url,score,source});
+  };
+
+  extractMetaImages(html,pageUrl).forEach((url,index)=>{
+    const label='official website primary image';
+    const item={url,label,context:[label,name,address].filter(Boolean).join(' ')};
+    add(item,1000-(index*4),'official-hero-meta');
+  });
+
+  extractImgCandidates(html,pageUrl).forEach((item,index)=>{
+    const hay=normalizeMatchText([item.label,item.url].filter(Boolean).join(' '));
+    const context=normalizeMatchText(item.context||'');
+    let score=420-Math.min(60,index);
+    if(OFFICIAL_HERO_HINTS.test(hay))score+=320;
+    if(VENUE_IMAGE_HINTS.test(context))score+=100;
+    if(FOOD_IMAGE_HINTS.test(context))score-=20;
+    if(PHOTO_GRAPHIC_HINTS.test(hay))score-=700;
+    const w=Number(item.width)||0,h=Number(item.height)||0;
+    if(w&&h){
+      const pixels=w*h,ratio=w/h;
+      if(pixels>=500000)score+=70;
+      if(ratio>=1.05&&ratio<=2.3)score+=35;
+      if(ratio<0.65||ratio>2.9)score-=90;
+    }
+    add(item,score,'official-hero-img');
+  });
+
+  extractStyleImageCandidates(html,pageUrl).forEach((item,index)=>{
+    const hay=normalizeMatchText([item.context,item.url].filter(Boolean).join(' '));
+    let score=260-Math.min(40,index);
+    if(OFFICIAL_HERO_HINTS.test(hay))score+=300;
+    if(VENUE_IMAGE_HINTS.test(hay))score+=80;
+    if(PHOTO_GRAPHIC_HINTS.test(hay))score-=700;
+    add(item,score,'official-hero-background');
+  });
+
+  return out.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+}
+
+function officialWebsitePageLooksLocal(html,name,address){
+  const source=String(html||'');
+  const hay=normalizeMatchText(source.slice(0,1400000));
+  const tokens=significantNameTokens(name);
+  if(!tokens.length)return false;
+  const nameHits=tokens.filter(t=>hay.includes(t)).length;
+  if(nameHits/tokens.length<0.9)return false;
+  if(structuredRestaurantMatches(source,name,address))return true;
+  const rawAddress=String(address||'');
+  const number=(rawAddress.match(/\b\d{1,6}\b/)||[])[0];
+  if(number&&hay.includes(normalizeMatchText(number)))return true;
+  const locTokens=normalizeMatchText(rawAddress).split(' ').filter(t=>t.length>=4&&!/^\d+$/.test(t)).slice(-5);
+  return locTokens.filter(t=>hay.includes(t)).length>=1;
+}
+
+async function tryOfficialHeroPage(pageUrl,name,address,website,source='official-website-hero'){
+  const page=absoluteHttpsUrl(pageUrl);
+  if(!page||isBlockedHost(page))return null;
+  try{
+    const html=await fetchText(page,{},2600,1800000);
+    if(!html)return null;
+    const candidates=extractOfficialHeroCandidates(html,page,name,address,website);
+    for(const candidate of candidates.slice(0,10)){
+      try{
+        const media=await fetchImage(candidate.url,{'Referer':page},2600);
+        return {media,source:candidate.source=== 'official-hero-meta' ? source : source,sourceUrl:page,sourceName:hostOf(page)};
+      }catch{}
+    }
+  }catch{}
+  return null;
+}
+(name){
   const stop=new Set(['the','a','an','restaurant','restaurants','llc','inc','co','company','and','of','at','in']);
   return normalizeMatchText(name).split(' ').filter(t=>t.length>=3&&!stop.has(t));
 }
@@ -707,22 +785,29 @@ async function officialRestaurantPages(name,address,website){
     return pages.slice(0,12);
   }catch{return []}
 }
-async function fastOfficialVenuePhoto(name,address,website){
+async function fastOfficialVenuePhoto(name,address,website,officialLocationPage=''){
+ const locationPage=absoluteHttpsUrl(officialLocationPage);
+ if(locationPage){
+  try{
+   const html=await fetchText(locationPage,{},2400,1800000);
+   if(html&&pageMatchesRestaurant(html,name,address)){
+    const hero=await tryOfficialHeroPage(locationPage,name,address,website,'official-location-hero');
+    if(hero)return hero;
+   }
+  }catch{}
+ }
  const official=absoluteHttpsUrl(website);
  if(!official||isBlockedHost(official))return null;
  try{
   const html=await fetchText(official,{},2200,1800000);
-  if(!html)return null;
-  const candidates=extractVenueImageCandidates(html,official,name,address,official)
-    .filter(item=>item.score>=45&&item.score>0&&hasVenueSignal(item))
-    .slice(0,6);
-  const attempts=await Promise.allSettled(candidates.map(async candidate=>{
-   try{return {media:await fetchImage(candidate.url,{'Referer':official},2600),candidate};}catch{return null;}
-  }));
-  for(const hit of attempts){
-   if(hit.status==='fulfilled'&&hit.value){
-    return {media:hit.value.media,source:'official-fast-path',sourceUrl:official,sourceName:hostOf(official)};
-   }
+  if(html&&officialWebsitePageLooksLocal(html,name,address)){
+   const hero=await tryOfficialHeroPage(official,name,address,official,'official-website-hero');
+   if(hero)return hero;
+  }
+  const discovered=await discoverOfficialLocationPages(name,address,official);
+  for(const page of discovered.slice(0,6)){
+   const hero=await tryOfficialHeroPage(page.url,name,address,official,'official-location-hero');
+   if(hero)return hero;
   }
  }catch{}
  return null;
@@ -1005,19 +1090,20 @@ module.exports=async function handler(req,res){
   const address=String(q.address||'').trim().slice(0,240);
   const website=String(q.website||'').trim().slice(0,700);
   const officialWebsite=String(q.officialWebsite||website).trim().slice(0,700);
+  const officialLocationPage=String(q.officialLocationPage||'').trim().slice(0,1000);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
-    if(officialWebsite){
-      const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite);
+    // 1) The restaurant's own exact location page or verified local website hero.
+    if(officialWebsite||officialLocationPage){
+      const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,officialLocationPage);
       if(fastOfficial)return sendMedia(res,fastOfficial);
     }
-    const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
-    if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
-    const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite);
-    if(fastKnown)return sendMedia(res,fastKnown);
+
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
+
+    // 2) Other photos from the restaurant's own verified website/location pages.
     for(const entry of pages.official){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
         .filter(item=>item.score>=65&&item.score>0&&hasVenueSignal(item));
@@ -1028,14 +1114,26 @@ module.exports=async function handler(req,res){
         return sendMedia(res,{media:hit.value.media,source:'official-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
       }
     }
+
+    // 3) Known exact venue/public-venue paths.
+    const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
+    if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
+    const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite);
+    if(fastKnown)return sendMedia(res,fastKnown);
+
+    // 4) Exact public venue image discovered by Bing Images, with host-page verification.
     const bingImage=await exactImageFromBing(name,address,officialWebsite);
     if(bingImage)return sendMedia(res,bingImage);
+
+    // 5) Exact OSM POI image as a later fallback.
     if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
       try{
         const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},4000);
         return sendMedia(res,{media,source:'osm-exact-poi'});
       }catch{}
     }
+
+    // 6) Remaining verified public venue pages.
     for(const entry of pages.public){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
         .filter(item=>item.score>=65&&item.score>0&&hasVenueSignal(item));
@@ -1046,6 +1144,7 @@ module.exports=async function handler(req,res){
         return sendMedia(res,{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
       }
     }
+
     return json(res,404,{ok:false,error:'No verified venue photo was found from the allowed non-Google sources'});
   }catch(e){
     console.error('dinliminate-restaurant-photo',e);
@@ -1056,6 +1155,9 @@ module.exports=async function handler(req,res){
 module.exports._test={
   absoluteHttpsUrl,
   extractMetaImages,
+  extractOfficialHeroCandidates,
+  officialWebsitePageLooksLocal,
+  tryOfficialHeroPage,
   extractBingWebResultUrls,
   extractJsonLdImageCandidates,
   extractImgCandidates,
