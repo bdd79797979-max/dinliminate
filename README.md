@@ -5,8 +5,8 @@ Dinliminate is a phone-first meal and restaurant decision app built around fast,
 ## Current release
 
 - **Version:** 1.0
-- **Build:** 995
-- **Checkpoint:** CP995
+- **Build:** 996
+- **Checkpoint:** CP996
 - **Source:** `main`
 - **Release state:** candidate source; production verification is still pending because the connected Vercel account has exhausted its Hobby daily deployment allowance.
 - **Photo policy:** restaurant photography uses the no-Google resolver/source ladder.
@@ -28,7 +28,7 @@ The large single-file runtime is intentional for now. Do not split or broadly re
 
 ## CP995 highlights
 
-CP995 repaired Tutorial Mode state and navigation without changing the restaurant-photo policy. Tutorial launches begin from Home, teach the Menu button without teaching its inner buttons, avoid covering Meal Times/Cuisine controls, and preserve the tutorial across Choose → Winner → Start Over.
+CP996 restores Settings → Tutorial Mode, fixes the Home Tutorial launch wiring, and makes Add to phone, Share, and Tutorial visually consistent while preserving CP995 Tutorial Mode state/navigation.
 
 ## Restaurant photo rule
 
