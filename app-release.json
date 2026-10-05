@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 996,
+  "build": 997,
   "sourceBranch": "main",
-  "checkpoint": "CP996",
-  "deploymentTrigger": "CP996-tutorial-launch-repair",
+  "checkpoint": "CP997",
+  "deploymentTrigger": "CP997-full-tutorial-flow",
   "vercelProductionVerified": false,
   "swipeAudit": "CP989-food-handoff-plus-ui-regression-fix",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "resolver-backed-card-handoff",
   "photoPolicy": "no-google",
-  "onboarding": "CP996-tutorial-launch-repair"
+  "onboarding": "CP997-full-tutorial-flow"
 }
