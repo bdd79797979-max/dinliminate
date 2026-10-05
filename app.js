@@ -418,7 +418,7 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='973';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='976';
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v5';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
