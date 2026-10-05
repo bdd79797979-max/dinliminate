@@ -1,6 +1,13 @@
-# CURRENT RELEASE — BUILD 1004 / CP1004
+# CURRENT RELEASE — BUILD 1005 / CP1005
 
 Date: 2026-10-05
+
+## CP1005 — Buttermilk Image / Faster Swipe Response
+
+- Replaced the **Buttermilk & Cornbread** meal image with a clearer Wikimedia Commons photo centered on a glass of buttermilk.
+- Reduced the minimum flick-speed needed for a short, fast swipe from 0.62 px/ms to 0.55 px/ms.
+- Made the fast-swipe exit handoff slightly quicker without changing the normal swipe distance or card layout.
+- Refreshed the app/meal script URLs and service-worker shell cache so phone/PWA clients can receive the new behavior.
 
 ## CP1004 — Menu / Modal Flash Hardening
 
