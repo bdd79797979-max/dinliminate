@@ -1,16 +1,16 @@
-# CURRENT SAVEPOINT — BUILD 1008 / CP1008
+# CURRENT SAVEPOINT — BUILD 1009 / CP1009
 
 Date: 2026-10-05
 
-Working branch: `cp1008-managed-image-cache`
+Working branch: `cp1009-true-iphone-viewport-shell`
 
-## CP1008 — Managed Meal + Restaurant Image Cache
+## CP1009 — True Full iPhone Viewport Shell
 
-- Keeps meal and restaurant photos in the existing image cache while adding a storage budget.
-- Uses a 75 MiB ceiling and evicts least-recently-used entries back to 60 MiB.
-- Uses persistent IndexedDB metadata so image usage survives service-worker restarts.
-- Does not impose a hard photo-count limit.
+- Pins the mobile app to `100vw × 100dvh`.
+- Pins the active screen to the same viewport.
+- Keeps the Home door background behind the Home top bar.
+- Does not redesign the existing screen interiors.
 
 ## Recovery anchor
 
-- **CP1007:** `00e7ebed09ed0558853d1b7fcb8f872866cf7038`
+- **CP1008:** `c372191320df07db864508783ccc7dfa521e4aa3`
