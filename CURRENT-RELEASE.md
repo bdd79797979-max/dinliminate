@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 995 / CP995
+# CURRENT RELEASE — BUILD 996 / CP996
 
 Date: 2026-10-05
 
@@ -9,23 +9,22 @@ Date: 2026-10-05
 - Reason: the connected Vercel Hobby deployment allowance is currently exhausted.
 - Restaurant photo policy: **no Google photo/API credentials**
 
-## CP995 — Tutorial State & Navigation Repair
+## CP996 — Tutorial Launch & Home Icon Repair
 
-- Tutorial launches always begin from the Home screen.
-- The first bubble teaches that the bubble itself advances the tutorial.
-- The Home opening sequence ends with: “Tap At Home or Restaurant to get started.”
-- The Menu button is a tutorial target; buttons inside the opened Menu are not tutorial steps.
-- Tutorial bubbles avoid the Meal Times/Cuisine controls and their visible rails.
-- Choose → Winner → Start Over returns to the same Meals/Restaurant path and resumes the tutorial.
-- Normal Start Over and Family Mode behavior remain unchanged outside Tutorial Mode.
-- The Home Tutorial icon has no black circle/background enclosure.
+- Restores **Settings → Tutorial Mode**.
+- Fixes the Home Tutorial icon through the shared Home action router.
+- Makes Add to phone, Share, and Tutorial share the same Home utility icon treatment.
+- Removes the Tutorial-only transparent/black styling override.
+- Preserves CP995 Tutorial Mode state/navigation and Choose → Winner → Start Over resume behavior.
+- No restaurant-photo, Family Mode, or swipe-engine runtime changes.
 
 ## Protected rollback anchors
 
-- **CP994:** `435a0312af4f137f58af6d0b4dece1e474907d71`
+- **CP995 cleanup baseline:** `49c21ad82cd47bda221146c518a643988e3d5a6d`
+- **CP995 Tutorial merge:** `e076eb98f5802aae3ff6474a23fcfb92c4276929`
 - **CP957 restaurant-photo baseline:** `d03a75ab63f1708524f1406e33d5a09c74f689f4`
 - **Recovery branch:** `recovery/cp957-before-restaurant-photo-repair`
 
-## Launch gates still open
+## Launch gate
 
-Production should not be called verified until the CP995 source is deployed successfully and the release receives browser/phone runtime certification.
+Production is not verified until CP996 is deployed and browser/phone runtime certification passes.
