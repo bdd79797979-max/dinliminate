@@ -501,6 +501,51 @@ function scoreImage(candidate,name,address,website,phone=''){
       + (phone&&String(candidate?.title||'').includes(String(phone))?18:0);
 }
 
+const PHOTO_DISCOVERY_HOSTS=new Set([
+ 'restaurantji.com','www.restaurantji.com','restaurantguru.com','www.restaurantguru.com',
+ 'tripadvisor.com','www.tripadvisor.com','tripadvisor.ca','www.tripadvisor.ca',
+ 'clarksvillenow.com','www.clarksvillenow.com','visitclarksvilletn.com','www.visitclarksvilletn.com',
+ 'usarestaurants.info','www.usarestaurants.info','yellowpages.com','www.yellowpages.com',
+ 'mapquest.com','www.mapquest.com','foursquare.com','www.foursquare.com',
+ 'facebook.com','www.facebook.com','instagram.com','www.instagram.com',
+ 'yelp.com','www.yelp.com'
+]);
+function discoveryHost(url){return hostOf(url).replace(/^www\./,'');}
+function extractSearchResultUrl(raw,base){
+ const decoded=decodeHtml(String(raw||''));
+ try{
+  const absolute=/^https?:\/\//i.test(decoded)?decoded:new URL(decoded,base||'').toString();
+  const u=new URL(absolute);
+  for(const key of ['q','url','uddg','u']){
+   const nested=u.searchParams.get(key);
+   if(nested&&/^https?:\/\//i.test(nested))return nested;
+  }
+  return absolute;
+ }catch{return ''}
+}
+function extractGenericSearchResults(html,sourceHost=''){
+ const out=[],seen=new Set();
+ const add=(raw,title='')=>{
+  const url=absoluteHttpsUrl(raw,sourceHost?('https://'+sourceHost+'/'):'');
+  if(!url)return;
+  const host=discoveryHost(url);
+  if(!host||host===sourceHost||host.includes('google.')||host.includes('bing.')||host.includes('duckduckgo.'))return;
+  if(seen.has(url))return;
+  const blockedPublic=/^(?:yelp|grubhub|doordash|ubereats|postmates|seamless)\.com$/.test(host);
+  if(blockedPublic)return;
+  seen.add(url);
+  out.push({url,title:String(title||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(),kind:PHOTO_DISCOVERY_HOSTS.has(host)?'public':'website'});
+ };
+ const anchorRe=/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/ig;
+ let m;
+ while((m=anchorRe.exec(String(html||'')))&&out.length<50)add(extractSearchResultUrl(m[1],sourceHost?('https://'+sourceHost+'/'):''),m[2]);
+ const plainRe=/(https?:\/\/[^\s"'<>]+)/ig;
+ while((m=plainRe.exec(String(html||'')))&&out.length<70)add(m[1],'');
+ return out;
+}
+function isPhotoDiscoveryHost(url){
+ return PHOTO_DISCOVERY_HOSTS.has(discoveryHost(url));
+}
 function extractBingWebResultUrls(html){
   const out=[];
   const re=/<li[^>]+class=["'][^"']*b_algo[^"']*["'][^>]*>[\s\S]*?<h2[^>]*>\s*<a[^>]+href=["']([^"']+)["']/gi;
@@ -577,6 +622,7 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
  return null;
 }
 const KNOWN_PUBLIC_PHOTO_PAGES=[
+ {names:['shelbys trio',"shelby's trio"],addressTokens:['304 n 2nd st','304 north 2nd street'],phone:'9319193373',url:'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street'},
  {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
  {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
  {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'},
@@ -654,39 +700,170 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
  }catch{}
  return null;
 }
+const DIRECTORY_STATE_NAMES=[
+ ['alabama','al'],['alaska','ak'],['arizona','az'],['arkansas','ar'],['california','ca'],['colorado','co'],
+ ['connecticut','ct'],['delaware','de'],['florida','fl'],['georgia','ga'],['hawaii','hi'],['idaho','id'],
+ ['illinois','il'],['indiana','in'],['iowa','ia'],['kansas','ks'],['kentucky','ky'],['louisiana','la'],
+ ['maine','me'],['maryland','md'],['massachusetts','ma'],['michigan','mi'],['minnesota','mn'],['mississippi','ms'],
+ ['missouri','mo'],['montana','mt'],['nebraska','ne'],['nevada','nv'],['new hampshire','nh'],['new jersey','nj'],
+ ['new mexico','nm'],['new york','ny'],['north carolina','nc'],['north dakota','nd'],['ohio','oh'],['oklahoma','ok'],
+ ['oregon','or'],['pennsylvania','pa'],['rhode island','ri'],['south carolina','sc'],['south dakota','sd'],
+ ['tennessee','tn'],['texas','tx'],['utah','ut'],['vermont','vt'],['virginia','va'],['washington','wa'],
+ ['west virginia','wv'],['wisconsin','wi'],['wyoming','wy'],['district of columbia','dc']
+];
+const DIRECTORY_BLOCKED_HOSTS=new Set([
+ 'yelp.com','www.yelp.com','grubhub.com','www.grubhub.com','doordash.com','www.doordash.com',
+ 'ubereats.com','www.ubereats.com','postmates.com','www.postmates.com','seamless.com','www.seamless.com'
+]);
+function directoryLocation(address){
+ const raw=String(address||'').trim();
+ const parts=raw.split(',').map(x=>x.trim()).filter(Boolean);
+ let state='';
+ const stateZip=raw.match(/(?:^|[ ,])([A-Za-z]{2})\s+\d{5}(?:-\d{4})?/);
+ if(stateZip)state=String(stateZip[1]).toLowerCase();
+ if(!state){
+  const lower=parts.map(x=>x.toLowerCase());
+  const hit=DIRECTORY_STATE_NAMES.find(([name])=>lower.some(p=>p===name||p.startsWith(name+' ')));
+  state=hit?.[1]||'';
+ }
+ let city='';
+ if(parts.length>=2){
+  const stateIdx=parts.findIndex(p=>/^([A-Za-z]{2})(?:\s+\d{5})?$/i.test(p)||DIRECTORY_STATE_NAMES.some(([name])=>p.toLowerCase().startsWith(name)));
+  const zipIdx=parts.findIndex(p=>/^\d{5}(?:-\d{4})?$/.test(p));
+  if(stateIdx>=1) city=parts[stateIdx-1];
+  else if(zipIdx>=2) city=parts[zipIdx-2];
+  else if(parts.length>=2) city=parts[parts.length-2]||'';
+ }
+ city=normalizeMatchText(city);
+ return {state,city};
+}
+function directorySlugVariants(name){
+ const base=normalizeMatchText(name).replace(/\s+/g,'-');
+ const noThe=base.replace(/^the-/,'');
+ const variants=[base,noThe];
+ for(const item of [base,noThe]){
+  if(item){
+   variants.push(item+'-');
+   variants.push(item+'s');
+   variants.push(item+'s-');
+   if(item.endsWith('s'))variants.push(item.slice(0,-1)+'-');
+  }
+ }
+ return [...new Set(variants.filter(Boolean))].slice(0,8);
+}
+function directoryCandidateUrls(name,address){
+ const {state,city}=directoryLocation(address);
+ if(!state||!city)return[];
+ const citySlug=city.replace(/\s+/g,'-');
+ const urls=[];
+ for(const slug of directorySlugVariants(name)){
+  urls.push('https://www.restaurantji.com/'+state+'/'+citySlug+'/'+slug+'/');
+  urls.push('https://restaurantguru.com/'+slug.replace(/-+$/,'')+'-'+citySlug);
+ }
+ return [...new Set(urls)];
+}
+function extractDirectoryWebsiteCandidates(html,pageUrl){
+ const out=[],seen=new Set();
+ const re=/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/ig;
+ let m;
+ while((m=re.exec(String(html||'')))&&out.length<20){
+  const label=String(m[2]||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  if(!/\b(?:official\s+)?website|official\s+site|homepage\b/i.test(label))continue;
+  let href='';
+  try{href=new URL(m[1],pageUrl).toString();}catch{continue}
+  if(!/^https:\/\//i.test(href))continue;
+  const host=hostOf(href);
+  if(!host||PHOTO_DISCOVERY_HOSTS.has(discoveryHost(href))||DIRECTORY_BLOCKED_HOSTS.has(host)||isBlockedHost(href)||seen.has(href))continue;
+  seen.add(href);out.push(href);
+ }
+ return out;
+}
+async function fastDirectoryPhotoSources(name,address,phone=''){
+ const urls=directoryCandidateUrls(name,address);
+ if(!urls.length)return null;
+ const settled=await Promise.allSettled(urls.slice(0,12).map(async url=>{
+  const html=await fetchText(url,{},1600,1200000);
+  if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
+  return {url,html};
+ }));
+ const pages=settled.filter(x=>x.status==='fulfilled'&&x.value).map(x=>x.value);
+ if(!pages.length)return null;
+ for(const page of pages){
+  const websiteCandidates=extractDirectoryWebsiteCandidates(page.html,page.url);
+  for(const website of websiteCandidates.slice(0,4)){
+   const official=await fastOfficialVenuePhoto(name,address,website,phone);
+   if(official)return {official};
+  }
+ }
+ for(const page of pages){
+  const candidates=extractVenueImageCandidates(page.html,page.url,name,address,'')
+   .filter(item=>item.score>=38&&item.score>0&&hasVenueSignal(item))
+   .slice(0,8);
+  const attempts=await Promise.allSettled(candidates.map(async candidate=>{
+   try{return {media:await fetchImage(candidate.url,{'Referer':page.url},2200)}}catch{return null;}
+  }));
+  for(const hit of attempts){
+   if(hit.status==='fulfilled'&&hit.value){
+    return {publicPhoto:{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:page.url,sourceName:hostOf(page.url)}};
+   }
+  }
+ }
+ return null;
+}
 async function findVerifiedRestaurantPages(name,address,website){
   const safeName=String(name||'').replace(/"/g,''),safeAddress=String(address||'').replace(/"/g,''),websiteHost=hostOf(website);
-  // Official-site discovery is the primary web path. Do it before broader
-  // search-engine work so a known restaurant website has first opportunity.
   const official=await officialRestaurantPages(name,address,website);
 
   const queries=[];
-  // Prefer reputable local tourism/publication pages before broad global directories.
-  // These pages are discovery sources; we still require exact restaurant/address
-  // verification before accepting a photo.
   if(safeName&&safeAddress)queries.push('site:visitclarksvilletn.com "'+safeName+'" "'+safeAddress+'" restaurant');
   if(safeName&&safeAddress)queries.push('site:clarksvillenow.com "'+safeName+'" "'+safeAddress+'" restaurant');
   if(safeName&&safeAddress)queries.push('"'+safeName+'" "'+safeAddress+'" restaurant');
-  if(safeName&&safeAddress)queries.push('site:tripadvisor.com "'+safeName+'" "'+safeAddress+'"');
+  if(safeName&&safeAddress)queries.push('site:restaurantji.com "'+safeName+'" "'+safeAddress+'"');
   if(safeName&&safeAddress)queries.push('site:restaurantguru.com "'+safeName+'" "'+safeAddress+'"');
+  if(safeName&&safeAddress)queries.push('site:tripadvisor.com "'+safeName+'" "'+safeAddress+'"');
 
-  const searchPages=await Promise.allSettled(
-    queries.map(q=>fetchText('https://www.bing.com/search?'+new URLSearchParams({q,mkt:'en-US',first:'1'}).toString(),{},2500,450000))
-  );
-  const candidates=[];
-  for(const page of searchPages){
-    if(page.status!=='fulfilled')continue;
-    for(const url of extractBingWebResultUrls(page.value)){
-      if(!candidates.includes(url))candidates.push(url);
-    }
+  const sources=[
+   {base:'https://www.bing.com/search',host:'bing.com'},
+   {base:'https://html.duckduckgo.com/html/',host:'html.duckduckgo.com'}
+  ];
+  const searchPages=[];
+  for(const source of sources){
+   const settled=await Promise.allSettled(
+    queries.slice(0,5).map(q=>fetchText(source.base+'?'+new URLSearchParams({q,mkt:'en-US',first:'1'}).toString(),{},2500,900000))
+   );
+   for(const p of settled)if(p.status==='fulfilled'&&p.value)searchPages.push({source,html:p.value});
   }
-  const verified=await fetchVerifiedPages(candidates.slice(0,8),name,address);
-  const officialFromSearch=verified.filter(x=>websiteHost&&sameHost(x.url,websiteHost));
-  const publicPages=verified.filter(x=>!websiteHost||!sameHost(x.url,websiteHost));
+
+  const results=[],seen=new Set();
+  for(const item of searchPages){
+   for(const hit of extractGenericSearchResults(item.html,item.source.host)){
+    if(!hit.url||seen.has(hit.url))continue;
+    seen.add(hit.url);
+    results.push(hit);
+   }
+  }
+
+  // Fetch the strongest search candidates, but verify the complete restaurant
+  // identity before any page can provide a photo.
+  const ranked=results.sort((a,b)=>{
+   const aText=normalizeMatchText(a.title+' '+a.url),bText=normalizeMatchText(b.title+' '+b.url);
+   const n=normalizeMatchText(name);
+   const ah=aText.includes(n)?20:0,bh=bText.includes(n)?20:0;
+   const ap=isPhotoDiscoveryHost(a.url)?0:12,bp=isPhotoDiscoveryHost(b.url)?0:12;
+   return (bh+bp)-(ah+ap);
+  });
+  const verified=await fetchVerifiedPages(ranked.slice(0,16).map(x=>x.url),name,address);
+
+  const officialFromSearch=verified.filter(x=>{
+   if(websiteHost)return sameHost(x.url,websiteHost);
+   return !isPhotoDiscoveryHost(x.url);
+  });
+  const publicPages=verified.filter(x=>websiteHost?sameHost(x.url,websiteHost)===false:isPhotoDiscoveryHost(x.url));
+
   const officialMerged=[...official,...officialFromSearch]
-    .filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i)
-    .slice(0,8);
-  return {official:officialMerged,public:publicPages.slice(0,8)};
+   .filter((x,i,a)=>a.findIndex(y=>sameHost(y.url,x.url))===i)
+   .slice(0,8);
+  return {official:officialMerged,public:publicPages.slice(0,10)};
 }
 
 async function bingExactImageCandidates(name,address,website,phone=''){
@@ -754,12 +931,15 @@ module.exports=async function handler(req,res){
   const osmExact=q.osmExact==='1';
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
-    // CP973: resolve the official venue first, with a short fast-path budget.
-    // Exact OSM/public sources are fallbacks, never preferred over a working
-    // restaurant website.
+    // CP976: if provider data has no website, use exact public venue pages
+    // to discover the restaurant's own site before public-photo fallback.
+    let fastDirectory=null;
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
+    }else{
+      fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
+      if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
     }
 
     // A direct exact-POI image is the fastest trustworthy fallback when the
@@ -778,6 +958,7 @@ module.exports=async function handler(req,res){
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
+    if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
 
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
 
