@@ -4183,8 +4183,14 @@ function addMealTimeInFoodEditor(name){
  if(!next){appToast('Give the new Meal Time a name.');return;}
  if(mealTimeCatalog().some(x=>normKey(x.name)===normKey(next))){appToast('That Meal Time name is already in use.');return;}
  const selected=selectedMealTimesFromEditor(),cfg=ensureMealTimeSettings(),id='meal-time-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+ const wasAllSelected=mealTimeNames().length>0&&mealTimeNames().every(time=>S.mealTimeFilters?.has(time));
  cfg.custom.push({id,name:next});cfg.order.push(id);cfg.order=[...new Set(cfg.order)];
- save();renderFoodEditorMealTimes([...selected,next]);appToast(next+' added to this meal.');
+ // A new Meal Time joins the global filter when the user was in the ALL state.
+ // When the user was intentionally narrowed to specific times, preserve that choice.
+ if(wasAllSelected){
+  S.mealTimeFilters=new Set([...(S.mealTimeFilters||[]),next]);
+ }
+ save();buildFood();foodQuick();renderMealTimeCuts();renderFoodEditorMealTimes([...selected,next]);appToast(next+' added to this meal.');
 }
 async function deleteMealTimeInFoodEditor(id){
  const item=mealTimeCatalog().find(x=>x.id===String(id));if(!item?.custom)return;
@@ -4193,6 +4199,13 @@ async function deleteMealTimeInFoodEditor(id){
  S.custom.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
  S.deletedCustomMeals?.forEach(meal=>{if(Array.isArray(meal.mealTimes))meal.mealTimes=[...new Set(meal.mealTimes.map(x=>x===replace?fallback:x).filter(Boolean))]});
  const cfg=ensureMealTimeSettings();cfg.custom=cfg.custom.filter(x=>String(x.id)!==String(id));cfg.order=cfg.order.filter(x=>String(x)!==String(id));cfg.disabled.delete(String(id));
+ // Keep the global filter synchronized with the catalog. Removing a custom
+ // Meal Time also removes it from the active filter; an empty filter means ALL.
+ const nextFilter=new Set(S.mealTimeFilters||[]);
+ nextFilter.delete(replace);
+ const remainingNames=mealTimeNames().filter(name=>name!==replace);
+ if(!nextFilter.size)remainingNames.forEach(name=>nextFilter.add(name));
+ S.mealTimeFilters=nextFilter;
  const nextSelected=selected.map(x=>x===replace?fallback:x);
  save();buildFood();foodQuick();renderMealTimeCuts();renderFoodEditorMealTimes(nextSelected);appToast(item.name+' deleted.');
 }
@@ -4206,8 +4219,28 @@ function toggleMealTimeInFoodEditor(id){
  const cfg=ensureMealTimeSettings(),key=String(id),currentlyOff=cfg.disabled.has(key);
  if(!currentlyOff&&mealTimeOptions().filter(x=>x.enabled).length<=1){appToast('Keep at least one Meal Time active.');return;}
  const selected=selectedMealTimesFromEditor(),item=mealTimeCatalog().find(x=>x.id===key),oldName=item?.name;
+ const namesBefore=mealTimeOptions().filter(x=>x.enabled).map(x=>x.name);
+ const wasAllSelected=namesBefore.length>0&&namesBefore.every(name=>S.mealTimeFilters?.has(name));
  if(currentlyOff)cfg.disabled.delete(key);
- else{cfg.disabled.add(key);if(oldName){const nextSelected=selected.filter(x=>x!==oldName);if(!nextSelected.length){cfg.disabled.delete(key);appToast('Keep at least one Meal Time selected for this meal.');return;}}}
+ else{
+  cfg.disabled.add(key);
+  if(oldName){
+   const nextSelected=selected.filter(x=>x!==oldName);
+   if(!nextSelected.length){cfg.disabled.delete(key);appToast('Keep at least one Meal Time selected for this meal.');return;}
+  }
+ }
+ // Keep the global Meal Time filter aligned with enabled catalog entries.
+ const nextFilter=new Set(S.mealTimeFilters||[]);
+ if(currentlyOff){
+  if(wasAllSelected&&oldName)nextFilter.add(oldName);
+ }else if(oldName){
+  nextFilter.delete(oldName);
+ }
+ const enabledNames=mealTimeNames();
+ const valid=new Set(enabledNames);
+ for(const name of [...nextFilter])if(!valid.has(name))nextFilter.delete(name);
+ if(!nextFilter.size)enabledNames.forEach(name=>nextFilter.add(name));
+ S.mealTimeFilters=nextFilter;
  save();buildFood();foodQuick();renderMealTimeCuts();renderFoodEditorMealTimes(selected.filter(x=>x!==oldName));
 }
 function foodEditor(item=null) {
