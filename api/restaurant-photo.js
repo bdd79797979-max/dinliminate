@@ -1147,6 +1147,7 @@ module.exports=async function handler(req,res){
   const website=String(q.website||'').trim().slice(0,700);
   const brand=String(q.brand||'').trim().slice(0,160);
   const officialWebsite=String(q.officialWebsite||website).trim().slice(0,700);
+  const phone=String(q.phone||'').trim().slice(0,80);
   const officialLocationPage=String(q.officialLocationPage||'').trim().slice(0,1000);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
