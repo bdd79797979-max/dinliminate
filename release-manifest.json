@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 985,
+  "build": 986,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP985",
-  "deploymentTrigger": "CP985-fix-menu-navigation-flash"
+  "checkpoint": "CP986",
+  "deploymentTrigger": "CP986-full-app-audit-fixes"
 }
