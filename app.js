@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '996';
+let APP_BUILD = '997';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1027,10 +1027,11 @@ function tutorialStepsForScreen(screen){
   {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
   {target:'#foodChoose',title:'Choose',body:'Tap Choose to continue.',action:'choose'},
   {target:'#foodDetails',title:'Details',body:'See more about this meal.'},
-  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#mealTimeQuick']},
-  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodQuick']},
+  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
+  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
   {target:'#foodMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining meals and Maybes. See how many choices remain.'},
-  {target:'#foodMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']}
+  {target:'#foodMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
+  {target:'#foodMenu',title:'ENTER RESTAURANT',body:'Tap this tutorial bubble to continue through the Restaurant side of Dinliminate.',action:'enter-restaurant'}
  ];
  if(screen==='restaurant')return[
   {target:'#locate',title:'Current Location',body:'Use your current location.'},
@@ -1042,9 +1043,13 @@ function tutorialStepsForScreen(screen){
   {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
   {target:'#restChoose',title:'Choose',body:'Tap Choose to continue.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
-  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick']},
+  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
-  {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']}
+  {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
+  {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this tutorial bubble to continue through the Meals side of Dinliminate.',action:'enter-food'}
+ ];
+ if(screen==='winner')return[
+  {target:'#restart',title:'START OVER',body:'Tap Start Over to return to this decision path and continue the tutorial.',action:'winner-restart'}
  ];
  return[];
 }
@@ -1066,8 +1071,12 @@ function tutorialTargetRect(step){
  if(!target)return null;
  const main=target.getBoundingClientRect();
  if(!main.width||!main.height)return null;
- const related=tutorialUnionRect([step.target,...(step.avoid||[])]);
- return related||main;
+ return main;
+}
+function tutorialBlockerRects(step){
+ return (step?.avoid||[]).map(sel=>{
+  try{return document.querySelector(sel)?.getBoundingClientRect()||null}catch{return null}
+ }).filter(r=>r&&r.width&&r.height);
 }
 function tutorialPosition(){
  const step=tutorialState.steps[tutorialState.index];
@@ -1078,18 +1087,27 @@ function tutorialPosition(){
  bubble.classList.remove('is-visible');bubble.style.visibility='hidden';bubble.dataset.side='';bubble.style.left='0px';bubble.style.top='0px';
  requestAnimationFrame(()=>{
   const bw=bubble.offsetWidth||280,bh=bubble.offsetHeight||96,vw=window.innerWidth,vh=window.innerHeight,gap=14,margin=12;
-  const intersects=(x,y)=>x<rect.right+gap&&x+bw>rect.left-gap&&y<rect.bottom+gap&&y+bh>rect.top-gap;
-  const inside=(x,y)=>x>=margin&&y>=margin&&x+bw<=vw-margin&&y+bh<=vh-margin&&!intersects(x,y);
-  const candidates=[
+  const blockers=[rect,...tutorialBlockerRects(step)];
+  const overlaps=(x,y)=>{
+   const b={left:x,top:y,right:x+bw,bottom:y+bh};
+   return blockers.some(r=>b.left<r.right+gap&&b.right>r.left-gap&&b.top<r.bottom+gap&&b.bottom>r.top-gap);
+  };
+  const inside=(x,y)=>x>=margin&&y>=margin&&x+bw<=vw-margin&&y+bh<=vh-margin&&!overlaps(x,y);
+  const raw=[
    {side:'top',x:rect.left+rect.width/2-bw/2,y:rect.top-bh-gap},
    {side:'bottom',x:rect.left+rect.width/2-bw/2,y:rect.bottom+gap},
    {side:'left',x:rect.left-bw-gap,y:rect.top+rect.height/2-bh/2},
-   {side:'right',x:rect.right+gap,y:rect.top+rect.height/2-bh/2}
+   {side:'right',x:rect.right+gap,y:rect.top+rect.height/2-bh/2},
+   {side:'top-left',x:rect.left-bw-gap,y:rect.top-bh-gap},
+   {side:'top-right',x:rect.right+gap,y:rect.top-bh-gap},
+   {side:'bottom-left',x:rect.left-bw-gap,y:rect.bottom+gap},
+   {side:'bottom-right',x:rect.right+gap,y:rect.bottom+gap},
+   {side:'bottom-safe',x:vw/2-bw/2,y:vh-bh-margin}
   ];
-  let picked=candidates.find(c=>inside(c.x,c.y));
+  let picked=raw.find(c=>inside(c.x,c.y));
   if(!picked){
-   const safe=candidates.map(c=>({...c,x:Math.max(margin,Math.min(c.x,vw-bw-margin)),y:Math.max(margin,Math.min(c.y,vh-bh-margin))}));
-   picked=safe.find(c=>!intersects(c.x,c.y))||safe[0];
+   const safe=raw.map(c=>({...c,x:Math.max(margin,Math.min(c.x,vw-bw-margin)),y:Math.max(margin,Math.min(c.y,vh-bh-margin))}));
+   picked=safe.find(c=>!overlaps(c.x,c.y))||safe[safe.length-1];
   }
   bubble.dataset.side=picked.side;bubble.style.left=picked.x+'px';bubble.style.top=picked.y+'px';bubble.style.visibility='visible';
   requestAnimationFrame(()=>bubble.classList.add('is-visible'));
@@ -1107,7 +1125,7 @@ function renderTutorialStep(){
 }
 function startTutorialForScreen(screen,force=false,options={}){
  if(!force&&!tutorialModeEnabled())return;
- const normalized=['home','food','restaurant'].includes(screen)?screen:'';
+ const normalized=['home','food','restaurant','winner'].includes(screen)?screen:'';
  if(!normalized){return;}
  const steps=tutorialStepsForScreen(normalized);if(!steps.length){stopTutorialMode();return;}
  tutorialState.token++;
@@ -1152,6 +1170,20 @@ function tutorialWinnerRestart(){
 function tutorialOpenMenuTarget(){return;}
 function advanceTutorial(){
  const step=tutorialState.steps[tutorialState.index];
+ if(step?.action==='enter-restaurant'){
+  tutorialState.awaitingAction=false;
+  openRestaurant({tutorialResumeIndex:0});
+  return;
+ }
+ if(step?.action==='enter-food'){
+  tutorialState.awaitingAction=false;
+  startFood({tutorialResumeIndex:0});
+  return;
+ }
+ if(step?.action==='winner-restart'){
+  tutorialState.awaitingAction=true;
+  return;
+ }
  if(step?.action){return;}
  tutorialState.index++;
  if(tutorialState.index>=tutorialState.steps.length){stopTutorialMode();return;}
@@ -3491,6 +3523,9 @@ S.winnerItem = item;
 S.winnerType = explicitType || (S.screen === 'restaurant' ? 'restaurant' : 'food');
 if (item?.category !== 'Hungry' && item?.id) recordHistory(item, S.winnerType, options);
 show('winner');
+if(tutorialModeEnabled()&&tutorialState.active&&tutorialState.returnContext){
+ startTutorialForScreen('winner',true,{index:0});
+}
 const hungry = item?.category === 'Hungry';
 S.hungryWheelChoice=null;
 S.hungryWheelSpinning=false;
