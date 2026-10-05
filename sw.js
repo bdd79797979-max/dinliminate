@@ -1,4 +1,4 @@
-const CACHE='dinliminate-shell-v1008';
+const CACHE='dinliminate-shell-v1009';
 const IMAGE_CACHE='dinliminate-images-v4';
 
 // CP1008 — Managed image cache:
@@ -165,7 +165,7 @@ async function touchCachedImage(req){
   }catch{}
 }
 
-const SHELL=['./','./index.html','./styles.css?v=1007','./app.js?v=1007','./data/foods.js?v=1007','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./styles.css?v=1009','./app.js?v=1009','./data/foods.js?v=1009','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([
