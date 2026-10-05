@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1004,
+  "build": 1005,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1004",
-  "deploymentTrigger": "CP1004-menu-modal-flash"
+  "checkpoint": "CP1005",
+  "deploymentTrigger": "CP1005-buttermilk-swipe-speed"
 }
