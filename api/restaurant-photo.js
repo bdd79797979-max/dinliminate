@@ -798,11 +798,14 @@ async function fastOfficialVenuePhoto(name,address,website,officialLocationPage=
  const official=absoluteHttpsUrl(website);
  if(!official||isBlockedHost(official))return null;
  try{
-  const html=await fetchText(official,{},2200,1800000);
-  if(html&&officialWebsitePageLooksLocal(html,name,address)){
-   const hero=await tryOfficialHeroPage(official,name,address,official,'official-website-hero');
-   if(hero)return hero;
-  }
+  // The website resolver has already verified this domain against the exact
+  // restaurant identity/address. Do not require the homepage itself to repeat
+  // the street address before allowing its primary image.
+  const hero=await tryOfficialHeroPage(official,name,address,official,'official-website-hero');
+  if(hero)return hero;
+
+  // If the verified homepage does not expose a usable hero, discover an
+  // exact same-domain location page and try that next.
   const discovered=await discoverOfficialLocationPages(name,address,official);
   for(const page of discovered.slice(0,6)){
    const hero=await tryOfficialHeroPage(page.url,name,address,official,'official-location-hero');
