@@ -1,18 +1,18 @@
-# CURRENT RELEASE — BUILD 1006 / CP1006
+# CURRENT RELEASE — BUILD 1007 / CP1007
 
 Date: 2026-10-05
 
-## CP1006 — Full iPhone Viewport Fix
+## CP1007 — Buttermilk & Cornbread Reference Image
 
-- Replaces the conflicting mobile viewport rules with one final full-iPhone shell.
-- Keeps the existing 58px top-bar content height while placing the iPhone safe-area inset inside the bar.
-- Removes the old mobile app padding so screen backgrounds can reach the complete viewport.
-- Preserves existing Meals, Restaurants, Winner, Menu, and Home content/design geometry; this is a shell-only adaptation.
-- Refreshes CSS/JS/meal cache URLs and the service-worker shell version so phones receive the corrected assets.
+- Buttermilk & Cornbread now references the exact user-supplied online image of cornbread with a glass of buttermilk.
+- The image source URL is recorded in IMAGE-SOURCES.md.
+- Blogspot image hosting is included in the service-worker image cache allowlist.
+- Meal asset cache versions are bumped so phones request the updated meal record.
+- No other meal, restaurant, winner, menu, swipe, or viewport behavior is changed.
 
-## Protected rollback anchors
+## Recovery anchors
 
+- **CP1006:** `a2d3fc659cafc699aa27db817f29d676a8db5b86`
 - **CP1005:** `3dd492653be3bfa620229df6d16bbbcb8fb036f3`
-- **CP1003 viewport baseline:** `d0cd6028b0054c8467162e23302951fff44ac193`
 
-Production remains unverified until the CP1006 hosted build is browser-checked and the iPhone/PWA viewport is physically confirmed.
+Production remains unverified because the current Vercel deployment limit is exhausted.
