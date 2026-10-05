@@ -727,13 +727,11 @@ function directoryLocation(address){
  }
  let city='';
  if(parts.length>=2){
-  const idx=parts.findIndex(p=>/^\d{5}(?:-\d{4})?$/.test(p));
-  if(idx>=1)city=parts[idx-1];
-  else{
-   const stateIdx=parts.findIndex(p=>/^([A-Za-z]{2})(?:\s+\d{5})?$/i.test(p)||DIRECTORY_STATE_NAMES.some(([name])=>p.toLowerCase().startsWith(name)));
-   if(stateIdx>=1)city=parts[stateIdx-1];
-   else city=parts[parts.length-2]||'';
-  }
+  const stateIdx=parts.findIndex(p=>/^([A-Za-z]{2})(?:\s+\d{5})?$/i.test(p)||DIRECTORY_STATE_NAMES.some(([name])=>p.toLowerCase().startsWith(name)));
+  const zipIdx=parts.findIndex(p=>/^\d{5}(?:-\d{4})?$/.test(p));
+  if(stateIdx>=1) city=parts[stateIdx-1];
+  else if(zipIdx>=2) city=parts[zipIdx-2];
+  else if(parts.length>=2) city=parts[parts.length-2]||'';
  }
  city=normalizeMatchText(city);
  return {state,city};
