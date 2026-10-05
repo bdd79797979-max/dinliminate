@@ -10293,3 +10293,19 @@ button,input,select,textarea{
   background:#000c!important;
   transition:none!important;
 }
+
+
+/* CP1006 — definitive full-iPhone viewport shell. Existing screen designs remain unchanged. */
+@media(max-width:600px){
+html,body{width:100%!important;min-width:100%!important;height:100%!important;min-height:100%!important;margin:0!important;padding:0!important;overflow-x:hidden!important;}
+body{-webkit-text-size-adjust:100%;}
+.app{width:100%!important;max-width:100%!important;height:100vh!important;min-height:100vh!important;margin:0!important;padding:0!important;box-sizing:border-box!important;}
+@supports (height:100dvh){.app{height:100dvh!important;min-height:100dvh!important;}}
+.app-topbar{width:100%!important;height:calc(58px + env(safe-area-inset-top))!important;min-height:calc(58px + env(safe-area-inset-top))!important;padding:env(safe-area-inset-top) 2px 0!important;margin:0!important;box-sizing:border-box!important;flex:0 0 auto!important;}
+.screen{width:100%!important;margin:0!important;padding-left:14px!important;padding-right:14px!important;min-height:calc(100vh - 58px - env(safe-area-inset-top))!important;box-sizing:border-box!important;}
+@supports (height:100dvh){.screen{min-height:calc(100dvh - 58px - env(safe-area-inset-top))!important;}}
+.screen:not(.luxury-home){padding-bottom:env(safe-area-inset-bottom)!important;}
+.app:has(#home:not(.hidden)) .luxury-home{width:100%!important;margin:0!important;height:calc(100vh - 58px - env(safe-area-inset-top))!important;min-height:calc(100vh - 58px - env(safe-area-inset-top))!important;padding-left:2px!important;padding-right:2px!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important;}
+@supports (height:100dvh){.app:has(#home:not(.hidden)) .luxury-home{height:calc(100dvh - 58px - env(safe-area-inset-top))!important;min-height:calc(100dvh - 58px - env(safe-area-inset-top))!important;}}
+.drawer,.modal,.overlay,#tutorialLayer{max-height:100dvh!important;}
+}

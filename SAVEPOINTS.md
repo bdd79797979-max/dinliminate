@@ -1,17 +1,16 @@
-# CURRENT SAVEPOINT — BUILD 1005 / CP1005
+# CURRENT SAVEPOINT — BUILD 1006 / CP1006
 
 Date: 2026-10-05
 
-Working branch: `cp1005-buttermilk-swipe-speed`
+Working branch: `cp1006-full-iphone-viewport-fix`
 
-## CP1005 — Buttermilk Image / Faster Swipe Response
+## CP1006 — Full iPhone Viewport Fix
 
-- Buttermilk & Cornbread now uses a clearer glass-of-buttermilk image from Wikimedia Commons.
-- Short fast flicks now commit at 0.55 px/ms instead of 0.62 px/ms.
-- Fast swipe handoff animation is slightly quicker; normal swipe distance and card geometry are unchanged.
-- Mobile script/cache versions were bumped for the new meal image and swipe behavior.
+- Definitive mobile shell fix for full-width/full-height iPhone viewport use.
+- Safe-area inset is internal to the top bar; the app no longer carries legacy outer mobile padding.
+- Existing screen designs are intentionally unchanged.
+- Asset/service-worker versions are bumped to force the corrected shell onto phone/PWA clients.
 
 ## Recovery anchor
 
-- **CP1004:** `5be54139f2b30fc23e473fcb54e2fa28c2399246`
-
+- **CP1005:** `3dd492653be3bfa620229df6d16bbbcb8fb036f3`

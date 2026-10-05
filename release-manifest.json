@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1005,
+  "build": 1006,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1005",
-  "deploymentTrigger": "CP1005-buttermilk-swipe-speed"
+  "checkpoint": "CP1006",
+  "deploymentTrigger": "CP1006-full-iphone-viewport-fix"
 }
