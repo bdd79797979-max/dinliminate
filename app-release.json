@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1003,
+  "build": 1004,
   "sourceBranch": "main",
-  "checkpoint": "CP1003",
-  "deploymentTrigger": "CP1003-home-polish",
+  "checkpoint": "CP1004",
+  "deploymentTrigger": "CP1004-menu-modal-flash",
   "vercelProductionVerified": false,
   "swipeAudit": "CP989-food-handoff-plus-ui-regression-fix",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "resolver-backed-card-handoff",
   "photoPolicy": "no-google",
-  "onboarding": "CP1003-home-polish"
+  "onboarding": "CP1004-menu-modal-flash"
 }
