@@ -4,13 +4,13 @@ Date: 2026-10-05
 
 Working branch: `main`
 
-## CP1003 — Home Visual Polish
+## CP1003 — Full iPhone Viewport Adaptation
 
-- Supplied double-door image is the Home visual canvas.
-- HUNGRY? removed.
-- Home choices are photo-free translucent window panels.
-- Arrows, menu, and bottom utilities are simplified.
-- CP1002 remains the rollback anchor.
+- Complete iPhone dynamic viewport.
+- Safe-area padding moved into the shared top bar instead of outside the app canvas.
+- Screens are edge-to-edge horizontally while preserving their existing 14px content geometry.
+- Meals, Restaurants, Winner, and Menu designs remain unchanged.
+- CP1002 remains the rollback for the preceding Home image work.
 
 ## Recovery anchors
 
