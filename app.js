@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '997';
+let APP_BUILD = '998';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1025,7 +1025,7 @@ function tutorialStepsForScreen(screen){
   {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},
   {target:'#foodCut',title:'CUT',body:'Remove this meal.'},
   {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
-  {target:'#foodChoose',title:'Choose',body:'Tap Choose to continue.',action:'choose'},
+  {target:'#foodChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
   {target:'#foodDetails',title:'Details',body:'See more about this meal.'},
   {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
   {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
@@ -1041,7 +1041,7 @@ function tutorialStepsForScreen(screen){
   {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.'},
   {target:'#restCut',title:'CUT',body:'Remove this restaurant.'},
   {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
-  {target:'#restChoose',title:'Choose',body:'Tap Choose to continue.',action:'choose'},
+  {target:'#restChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
@@ -1200,7 +1200,8 @@ function bindTutorialUI(){
   toggle.addEventListener('click',event=>{
    event.preventDefault();
    event.stopPropagation();
-   startTutorialFromHome();
+   if(tutorialModeEnabled()&&tutorialState.active) stopTutorialMode();
+   else startTutorialFromHome();
   });
  }
  const toggleSettings=document.querySelector('#tutorialModeSettings');
@@ -3116,6 +3117,9 @@ function bindCardButton(id,handler){
   clearPress();
   e?.preventDefault?.();
   e?.stopPropagation?.();
+  if((id==='foodChoose'||id==='restChoose')&&typeof tutorialMarkChoose==='function'){
+   tutorialMarkChoose(id==='restChoose'?'restaurant':'food');
+  }
   try{
    const result=handler?.(e);
    if(result&&typeof result.catch==='function')result.catch(()=>{});
@@ -4991,7 +4995,10 @@ const homeActionHandler = (event) => {
  const action = button.dataset.homeAction;
  if(action==='add') addToPhoneFlow();
  else if(action==='share') shareApp();
- else if(action==='tutorial') startTutorialFromHome();
+ else if(action==='tutorial'){
+   if(tutorialModeEnabled()&&tutorialState.active) stopTutorialMode();
+   else startTutorialFromHome();
+ }
 };
 document.addEventListener('click', homeActionHandler, true);
 function bindHomeCardPress(id){

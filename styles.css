@@ -10051,3 +10051,17 @@ button,input,select,textarea{
 .tutorial-action .settings-action-icon{color:#d7ecff}
 @media(max-width:390px){.tutorial-bubble{width:min(286px,calc(100vw - 20px));padding:12px 14px}.tutorial-bubble-body{font-size:13.5px}.luxury-home .home-foot-actions{gap:6px}}
 @media(prefers-reduced-motion:reduce){.tutorial-spotlight,.tutorial-bubble,.tutorial-mode-toast{transition:none!important}}
+
+/* CP998 — Tutorial icon touch/focus parity. */
+.luxury-home #tutorialModeToggle,
+.luxury-home #tutorialModeToggle:hover,
+.luxury-home #tutorialModeToggle:active,
+.luxury-home #tutorialModeToggle:focus,
+.luxury-home #tutorialModeToggle:focus-visible{
+  background:transparent!important;
+  background-image:none!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  outline:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+}

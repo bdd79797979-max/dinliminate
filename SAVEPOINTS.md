@@ -1,23 +1,21 @@
-# CURRENT SAVEPOINT — BUILD 997 / CP997
+# CURRENT SAVEPOINT — BUILD 998 / CP998
 
 Date: 2026-10-05
 
 Working branch: `main`
 
-## CP997 — Full Tutorial Flow & Bubble Placement Repair
+## CP998 — Tutorial Toggle & Choose Advance Repair
 
-- Choose → Winner → Start Over is an explicit tutorial path.
-- Meal Times/Cuisine bubbles avoid their neighboring controls and expanded rails.
-- Meals ends with Enter Restaurant; Restaurants ends with Enter Meals.
-- Home Tutorial has the same transparent utility-icon treatment as Add to phone and Share.
-- Settings Tutorial is first under Tools with a unique blue treatment.
+- Tutorial icon starts/ends Tutorial Mode.
+- Choose reliably advances into Winner.
+- Choose wording: “Make your decision early.”
+- Tutorial Home icon has no dark focus/touch enclosure.
+- CP997 full tutorial flow remains intact.
 
 ## Recovery anchors
 
-### CP996 — immediate rollback
-`b4cbfc4f59e368acb7962a0871ae0ec7a8323a37`
+### CP997
+`ad8e508d87b0852ef4cb56f494c1bff9c9ee3185`
 
-### CP957 — restaurant-photo protection
+### CP957
 `d03a75ab63f1708524f1406e33d5a09c74f689f4`
-
-Recovery branch: `recovery/cp957-before-restaurant-photo-repair`
