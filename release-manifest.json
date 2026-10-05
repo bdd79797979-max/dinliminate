@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 974,
+  "build": 976,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP974",
-  "deploymentTrigger": "CP974-freeze-meal-waiting-card"
+  "checkpoint": "CP976",
+  "deploymentTrigger": "CP976-restaurant-photo-discovery"
 }
