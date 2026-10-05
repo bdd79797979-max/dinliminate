@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1000,
+  "build": 1001,
   "sourceBranch": "main",
-  "checkpoint": "CP1000",
-  "deploymentTrigger": "CP1000-home-door-background",
+  "checkpoint": "CP1001",
+  "deploymentTrigger": "CP1001-home-door-fix",
   "vercelProductionVerified": false,
   "swipeAudit": "CP989-food-handoff-plus-ui-regression-fix",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "resolver-backed-card-handoff",
   "photoPolicy": "no-google",
-  "onboarding": "CP1000-home-door-background"
+  "onboarding": "CP1001-home-door-fix"
 }
