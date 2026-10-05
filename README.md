@@ -101,3 +101,9 @@ Vercel is the official runtime target. The current connected Vercel account has 
 - Bumped the restaurant-photo resolver/cache namespace so stale photo misses are not reused.
 - Fixed the service worker to preserve the active restaurant-photo cache namespace.
 - No Google photo/API source was introduced.
+
+
+## CP993 — Restaurant card photo handoff
+- Restaurant cards now point directly at the restaurant-photo resolver on first paint instead of using category stock photography as the primary card source.
+- The resolver remains responsible for official-location, official-site, exact public venue, OSM, exact-search, and final fallback ordering.
+- CP992 remains the backend/source-ladder checkpoint.
