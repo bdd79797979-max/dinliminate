@@ -104,7 +104,11 @@ async function googleJson(url,options={},timeout=6500){
   }finally{clearTimeout(timer)}
 }
 async function googlePhotoMedia(photoName){
-  const budget=await reservePhotoRequest();if(!budget.ok)return null;
+  const budget=await reservePhotoRequest();
+  if(!budget.ok){
+    console.warn('dinliminate-google-photo-budget-block',{reason:budget.reason,count:budget.count||0});
+    return null;
+  }
   const url='https://places.googleapis.com/v1/'+photoName+'/media?maxHeightPx=1050&maxWidthPx=1400';
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),7000);
   try{
@@ -136,10 +140,25 @@ async function tryGoogleRestaurantPhoto(input){
   const args=input||{};
   try{
     const id=await findPlaceId(args.name,args.address,args.lat,args.lon,args.placeId);
-    if(!id)return null;
+    if(!id){
+      console.warn('dinliminate-google-photo-no-place',{name:clean(args.name,160),address:clean(args.address,240),placeId:clean(args.placeId,220)});
+      return null;
+    }
     const place=await getPlaceDetails(id);
-    if(!place||!exactPlaceMatch(place,args.name,args.address,args.lat,args.lon))return null;
-    const photos=Array.isArray(place.photos)?place.photos.slice(0,10):[];if(!photos.length)return null;
+    if(!place){
+      console.warn('dinliminate-google-photo-no-details',{name:clean(args.name,160),placeId:id});
+      return null;
+    }
+    const exact=exactPlaceMatch(place,args.name,args.address,args.lat,args.lon);
+    const photos=Array.isArray(place.photos)?place.photos.slice(0,10):[];
+    if(!exact){
+      console.warn('dinliminate-google-photo-exact-mismatch',{name:clean(args.name,160),requestedAddress:clean(args.address,240),placeId:id,formattedAddress:clean(place.formattedAddress,240),lat:place.location?.latitude,lon:place.location?.longitude});
+      return null;
+    }
+    if(!photos.length){
+      console.warn('dinliminate-google-photo-no-photos',{name:clean(args.name,160),placeId:id,formattedAddress:clean(place.formattedAddress,240)});
+      return null;
+    }
     const ranked=photos.map((p,i)=>({photo:p,score:photoQuality(p,i)})).filter(x=>x.score>-500).sort((a,b)=>b.score-a.score);
     for(const item of ranked.slice(0,2)){
       const photo=item.photo,media=await googlePhotoMedia(photo.name);if(!media)continue;
@@ -148,7 +167,16 @@ async function tryGoogleRestaurantPhoto(input){
       const attributions=[{displayName:'Google',uri:googleMapsUri||'https://www.google.com/maps'},...author];
       return {media,source:'google-places',sourceName:'Google',sourceUrl:googleMapsUri||'https://www.google.com/maps',attributions,googlePlaceId:id};
     }
-  }catch(err){if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleForMonth();}
+  }catch(err){
+    console.error('dinliminate-google-photo-error',{
+      name:clean(args?.name,160),
+      address:clean(args?.address,240),
+      status:Number(err?.status)||0,
+      body:err?.body||null,
+      message:String(err?.message||err||'unknown')
+    });
+    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleForMonth();
+  }
   return null;
 }
 function googlePhotoQuery(req){
