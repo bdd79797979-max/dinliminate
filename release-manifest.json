@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 975,
+  "build": 976,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP975",
-  "deploymentTrigger": "CP975-unify-restaurant-card-handoff"
+  "checkpoint": "CP976",
+  "deploymentTrigger": "CP976-restaurant-photo-discovery"
 }
