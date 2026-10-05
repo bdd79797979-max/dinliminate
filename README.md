@@ -101,3 +101,6 @@ Vercel is the official runtime target. The current connected Vercel account has 
 - Bumped the restaurant-photo resolver/cache namespace so stale photo misses are not reused.
 - Fixed the service worker to preserve the active restaurant-photo cache namespace.
 - No Google photo/API source was introduced.
+
+
+> CP992 browser verification preview
