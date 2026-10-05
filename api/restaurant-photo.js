@@ -491,15 +491,6 @@ function venueScore(candidate,name,address,website){
 function hasVenueSignal(candidate){
   const context=String(candidate?.context||'');
   if(candidate?.source==='meta'||candidate?.source==='jsonld')return true;
-  if(candidate?.source==='restaurantji-photo')return true;
-  // The page itself has already been verified as the exact restaurant/location.
-  // Once obvious graphics/menu assets are rejected, a normal image element on
-  // a verified official/public venue page is a valid photo candidate even when
-  // its alt text is empty or the surrounding HTML contains no venue keywords.
-  if(['img','background'].includes(candidate?.source)&&Number(candidate?.score||0)>=10)return true;
-  // Exact verified venue pages may expose their photo as an anchor to a
-  // standalone image (common in older local-news articles).
-  if(candidate?.source==='linked-image'&&Number(candidate?.score||0)>=30)return true;
   if(!context.trim())return false;
   const hay=normalizeMatchText(context);
   const venueHits=(hay.match(/exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|sign|signage|location|drive thru|parking lot|parking|street view|patio|terrace/g)||[]).length;
@@ -519,23 +510,17 @@ function extractRestaurantjiPhotoCandidates(html,pageUrl,name,address){
 }
 function extractVenueImageCandidates(html,pageUrl,name,address,website){
   const raw=[
-    ...extractRestaurantjiPhotoCandidates(html,pageUrl,name,address),
     ...extractImgCandidates(html,pageUrl),
-    ...extractLinkedImageCandidates(html,pageUrl),
     ...extractStyleImageCandidates(html,pageUrl),
     ...extractJsonLdImageCandidates(html,pageUrl)
   ];
-  const meta=extractMetaImages(html,pageUrl).map(url=>({url,context:url+' '+normalizeMatchText(name)+' restaurant',label:'open-graph image',source:'meta'}));
+  const meta=extractMetaImages(html,pageUrl).map(url=>({url,context:url+' '+normalizeMatchText(name)+' restaurant',source:'meta'}));
   const seen=new Set();
-  const pageIsDirectory=isPhotoDiscoveryHost(pageUrl);
-  const pageHost=discoveryHost(pageUrl);
   const all=[...raw,...meta].map(item=>({...item,score:venueScore(item,name,address,website)}))
     .filter(item=>{
       if(seen.has(item.url))return false;
       seen.add(item.url);
-      if(pageIsDirectory&&['meta','jsonld'].includes(item.source))return false;
-      if(LOW_TRUST_PUBLIC_PHOTO_HOSTS.has(pageHost)&&item.source!=='restaurantji-photo')return false;
-      return !isRejectedPhotoCandidate(item);
+      return !BLOCKED_IMAGE_HINTS.test(item.url);
     });
   return all.sort((a,b)=>b.score-a.score);
 }
@@ -561,10 +546,9 @@ function extractBingImageCandidates(html){
   return candidates;
 }
 
-function scoreImage(candidate,name,address,website,phone=''){
-  return venueScore({url:candidate?.contentUrl||'',context:[candidate?.title,candidate?.description,candidate?.hostPageUrl].filter(Boolean).join(' '),source:'bing'},name,address,website)
-      + (candidate?.hostPageUrl?12:0)
-      + (phone&&String(candidate?.title||'').includes(String(phone))?18:0);
+function scoreImage(candidate,name,address,website){
+  return venueScore({url:candidate?.contentUrl||'',context:[candidate?.title,candidate?.description,candidate?.hostPageUrl,candidate?.query].filter(Boolean).join(' '),source:'bing'},name,address,website)
+      + (candidate?.hostPageUrl?12:0);
 }
 
 const PHOTO_DISCOVERY_HOSTS=new Set([
@@ -751,14 +735,6 @@ function knownPublicPhotoPage(name){
  const hit=KNOWN_PUBLIC_PHOTO_PAGES.find(entry=>entry.names.some(n=>normalized===normalizeMatchText(n)||normalized.includes(normalizeMatchText(n))||normalizeMatchText(n).includes(normalized)));
  return hit?.url||'';
 }
-const KNOWN_RESTAURANT_PHOTOS=[
- {names:['shelbys trio',"shelby's trio"],addressTokens:['304 n 2nd st','304 north 2nd street'],phone:'9319193373',url:'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street'},
- {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
- {names:['mcdonalds'],addressTokens:['724 sango rd','724 sango road'],phone:'9313580259',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds/'},
- {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
- {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'},
- {names:['thirsty goat'],addressTokens:['4044 madison st','4044 madison street','madison street 4044'],phone:'9313434628',url:'https://www.restaurantji.com/tn/clarksville/the-thirsty-goat-/'}
-];
 function normalizePhoneDigits(value){return String(value||'').replace(/\D/g,'').slice(-10);}
 function compactMatchText(value){return normalizeMatchText(value).replace(/\s+/g,'');}
 function knownPublicPhotoPage(name,address='',phone=''){
