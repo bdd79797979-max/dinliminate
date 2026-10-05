@@ -9846,3 +9846,19 @@ button,input,select,textarea{
 #food #foodQuickToggle.is-open{
   color:#fff!important;
 }
+
+
+/* CP981 — Home Add to Phone / Share App use clean text-only treatment. */
+.luxury-home #addToPhone,
+.luxury-home #shareApp{
+  background:transparent!important;
+  background-image:none!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.luxury-home #addToPhone:hover,
+.luxury-home #shareApp:hover{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
