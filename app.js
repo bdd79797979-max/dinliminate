@@ -417,8 +417,8 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='987';
-const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v5';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='992';
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v6';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
 const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1600;
@@ -580,6 +580,8 @@ async function loadRestaurantPhoto(row){
   if(row.phone)params.set('phone',String(row.phone));
   const website=safeExternalUrl(row.website);
   if(website)params.set('website',website);
+  const officialLocationPage=safeExternalUrl(row.officialLocationPage||row.officialLocation||'');
+  if(officialLocationPage)params.set('officialLocationPage',officialLocationPage);
   const officialWebsite=website||safeExternalUrl(knownRestaurantWebsite(row));
   if(officialWebsite)params.set('officialWebsite',officialWebsite);
   const source=String(row.source||'');
