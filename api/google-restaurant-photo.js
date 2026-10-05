@@ -155,8 +155,15 @@ function googlePhotoQuery(req){
  const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
  return q||{};
 }
+function googleJson(res,status,payload){
+ res.statusCode=status;
+ res.setHeader?.('Content-Type','application/json; charset=utf-8');
+ res.setHeader?.('Cache-Control','no-store');
+ res.end?.(JSON.stringify(payload));
+ return res;
+}
 function sendGoogleMedia(res,found){
- if(!found?.media)return json(res,404,{ok:false,error:'No verified Google restaurant photo was found'});
+ if(!found?.media)return googleJson(res,404,{ok:false,error:'No verified Google restaurant photo was found'});
  res.setHeader?.('Content-Type',found.media.type);
  res.setHeader?.('Cache-Control','public, max-age=604800, stale-while-revalidate=2592000');
  res.setHeader?.('X-Content-Type-Options','nosniff');
@@ -173,7 +180,7 @@ async function handler(req,res){
  const q=googlePhotoQuery(req);
  const mode=String(q.mode||'photo').toLowerCase();
  if(mode==='health'){
-  return json(res,200,{
+  return googleJson(res,200,{
    ok:true,
    googlePlacesConfigured:!!GOOGLE_PLACES_API_KEY,
    durableBudgetConfigured:!!DATABASE_URL,
@@ -183,7 +190,7 @@ async function handler(req,res){
  }
  const name=clean(q.name,160);
  const address=clean(q.address,240);
- if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
+ if(!name)return googleJson(res,400,{ok:false,error:'Restaurant name is required'});
  try{
   const found=await tryGoogleRestaurantPhoto({
    name,
@@ -196,7 +203,7 @@ async function handler(req,res){
   return sendGoogleMedia(res,found);
  }catch(err){
   console.error('dinliminate-google-restaurant-photo',err);
-  return json(res,502,{ok:false,error:'Google restaurant photo lookup failed'});
+  return googleJson(res,502,{ok:false,error:'Google restaurant photo lookup failed'});
  }
 }
 handler.tryGoogleRestaurantPhoto=tryGoogleRestaurantPhoto;
