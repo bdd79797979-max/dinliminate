@@ -9971,3 +9971,7 @@ button,input,select,textarea{
   border-color:transparent!important;
   box-shadow:none!important;
 }
+
+
+/* CP988 — hard lock a card after swipe commit; only the new active card may receive input. */
+.card[data-swipe-phase="committing"],.card[data-swipe-phase="completing"]{pointer-events:none!important;user-select:none!important;cursor:default!important}
