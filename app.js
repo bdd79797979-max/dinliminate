@@ -1502,26 +1502,42 @@ function renderMealTimeCuts(){
  chips.setAttribute('aria-hidden',String(collapsed));
  toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times');
- toggle.title=collapsed?'Show Meal Times':'Hide Meal Times';
+
  const availableMealTimes=mealTimeOptions().filter(x=>x.enabled);
- const allMealTimesSelected=availableMealTimes.length>0&&availableMealTimes.every(x=>S.mealTimeFilters?.has(x.name));
- toggle.classList.toggle('is-active',allMealTimesSelected);
- toggle.setAttribute('aria-pressed',allMealTimesSelected?'true':'false');
+ const selected=new Set(S.mealTimeFilters||[]);
+ const allMealTimesSelected=availableMealTimes.length>0&&availableMealTimes.every(x=>selected.has(x.name));
+ const filterLabels=availableMealTimes.filter(x=>selected.has(x.name)).map(x=>x.name);
+ const filterSummary=filterLabels.length===0||allMealTimesSelected?'All Meal Times':filterLabels.join(', ');
+ toggle.classList.toggle('is-active',!allMealTimesSelected);
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times'+(allMealTimesSelected?'':' — '+filterSummary));
+ toggle.title=collapsed?'Show Meal Times'+(allMealTimesSelected?'':' — '+filterSummary):'Hide Meal Times'+(allMealTimesSelected?'':' — '+filterSummary);
  toggle.setAttribute('data-all-selected',allMealTimesSelected?'true':'false');
- chips.innerHTML=availableMealTimes.map(def=>def.name).map(label=>'<button class="chip meal-time-chip'+(S.mealTimeFilters?.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(S.mealTimeFilters?.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
+ toggle.setAttribute('data-filtered',allMealTimesSelected?'false':'true');
+
+ chips.innerHTML=availableMealTimes.map(def=>def.name).map(label=>'<button class="chip meal-time-chip'+(selected.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(selected.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
  chips.querySelectorAll('[data-meal-time]').forEach(btn=>{
   btn.onclick=()=>{
    const label=btn.dataset.mealTime;
-   if(S.mealTimeFilters.has(label)){
-    if(S.mealTimeFilters.size===1){
-     S.mealTimeFilters = new Set(mealTimeNames());
+   const next=new Set(S.mealTimeFilters||[]);
+
+   // With every Meal Time selected, the first tap is a direct filter:
+   // tap Breakfast -> Breakfast only. Further taps can add/remove times.
+   if(allMealTimesSelected){
+    next.clear();
+    next.add(label);
+   }else if(next.has(label)){
+    if(next.size===1){
+     // Never allow an empty Meal Time filter; the last active time resets to all.
+     next.clear();
+     mealTimeNames().forEach(name=>next.add(name));
     }else{
-     S.mealTimeFilters.delete(label);
+     next.delete(label);
     }
    }else{
-    S.mealTimeFilters.add(label);
+    next.add(label);
    }
+
+   S.mealTimeFilters=next;
    S.index=0;
    buildFood();
    renderMealTimeCuts();
