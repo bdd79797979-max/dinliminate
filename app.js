@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '998';
+let APP_BUILD = '999';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -943,6 +943,9 @@ return true;
 } catch { return false; }
 }
 function show(screen) {
+if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&tutorialState.active&&tutorialState.screen&&tutorialState.screen!==screen){
+ tutorialInvalidateTransition('screen-change');
+}
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 S.screen = screen;
@@ -969,6 +972,17 @@ function ensureTutorialUI(){
  document.body.appendChild(layer);
 }
 function tutorialModeEnabled(){return !!S.tutorialMode}
+function tutorialHideOverlay(){
+ const layer=document.querySelector('#tutorialLayer');
+ if(layer){layer.classList.add('hidden');layer.setAttribute('aria-hidden','true');}
+ const bubble=document.querySelector('#tutorialBubble');
+ if(bubble){bubble.classList.remove('is-visible');bubble.style.visibility='hidden';}
+}
+function tutorialInvalidateTransition(reason=''){
+ tutorialState.token++;
+ tutorialHideOverlay();
+ tutorialState.awaitingAction=false;
+}
 function tutorialToast(message){
  const old=document.querySelector('#tutorialModeToast');old?.remove();
  const toast=document.createElement('div');toast.id='tutorialModeToast';toast.className='tutorial-mode-toast';toast.textContent=message;document.body.appendChild(toast);
@@ -1078,14 +1092,20 @@ function tutorialBlockerRects(step){
   try{return document.querySelector(sel)?.getBoundingClientRect()||null}catch{return null}
  }).filter(r=>r&&r.width&&r.height);
 }
-function tutorialPosition(){
+function tutorialPosition(expectedToken=tutorialState.token,retry=0){
+ if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
  const step=tutorialState.steps[tutorialState.index];
  const bubble=document.querySelector('#tutorialBubble'),spot=document.querySelector('#tutorialSpotlight');
  const rect=tutorialTargetRect(step);
- if(!bubble||!rect){advanceTutorial();return;}
+ if(!bubble||!rect){
+  if(retry<8)window.requestAnimationFrame(()=>tutorialPosition(expectedToken,retry+1));
+  else tutorialHideOverlay();
+  return;
+ }
  spot.style.left=(rect.left-6)+'px';spot.style.top=(rect.top-6)+'px';spot.style.width=(rect.width+12)+'px';spot.style.height=(rect.height+12)+'px';
  bubble.classList.remove('is-visible');bubble.style.visibility='hidden';bubble.dataset.side='';bubble.style.left='0px';bubble.style.top='0px';
  requestAnimationFrame(()=>{
+  if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
   const bw=bubble.offsetWidth||280,bh=bubble.offsetHeight||96,vw=window.innerWidth,vh=window.innerHeight,gap=14,margin=12;
   const blockers=[rect,...tutorialBlockerRects(step)];
   const overlaps=(x,y)=>{
@@ -1109,8 +1129,12 @@ function tutorialPosition(){
    const safe=raw.map(c=>({...c,x:Math.max(margin,Math.min(c.x,vw-bw-margin)),y:Math.max(margin,Math.min(c.y,vh-bh-margin))}));
    picked=safe.find(c=>!overlaps(c.x,c.y))||safe[safe.length-1];
   }
+  if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
   bubble.dataset.side=picked.side;bubble.style.left=picked.x+'px';bubble.style.top=picked.y+'px';bubble.style.visibility='visible';
-  requestAnimationFrame(()=>bubble.classList.add('is-visible'));
+  requestAnimationFrame(()=>{
+   if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
+   bubble.classList.add('is-visible');
+  });
  });
 }
 function renderTutorialStep(){
@@ -1121,22 +1145,33 @@ function renderTutorialStep(){
  const title=document.querySelector('#tutorialBubbleTitle'),body=document.querySelector('#tutorialBubbleBody');
  if(title)title.textContent=step.title;if(body)body.textContent=step.body;
  tutorialState.awaitingAction=!!step.action;
- requestAnimationFrame(tutorialPosition);
+ const expectedToken=tutorialState.token;
+ requestAnimationFrame(()=>tutorialPosition(expectedToken));
+}
+function tutorialNavigateTo(screen,index=0){
+ if(!tutorialModeEnabled()||!tutorialState.active)return;
+ const normalized=['home','food','restaurant','winner'].includes(screen)?screen:'';
+ if(!normalized)return;
+ const steps=tutorialStepsForScreen(normalized);if(!steps.length){stopTutorialMode();return;}
+ tutorialInvalidateTransition('tutorial-navigation');
+ const expectedToken=tutorialState.token;
+ tutorialState.screen=normalized;
+ tutorialState.steps=steps;
+ tutorialState.index=Math.max(0,Math.min(Number.isInteger(index)?index:0,steps.length-1));
+ tutorialState.awaitingAction=!!steps[tutorialState.index]?.action;
+ document.body.classList.add('tutorial-mode-on');
+ ensureTutorialUI();
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(expectedToken!==tutorialState.token||!tutorialState.active||S.screen!==normalized)return;
+  renderTutorialStep();
+ }));
 }
 function startTutorialForScreen(screen,force=false,options={}){
  if(!force&&!tutorialModeEnabled())return;
  const normalized=['home','food','restaurant','winner'].includes(screen)?screen:'';
  if(!normalized){return;}
- const steps=tutorialStepsForScreen(normalized);if(!steps.length){stopTutorialMode();return;}
- tutorialState.token++;
- tutorialState.active=true;
- tutorialState.screen=normalized;
- tutorialState.steps=steps;
- const nextIndex=Number.isInteger(options.index)?Math.max(0,Math.min(options.index,steps.length-1)):0;
- tutorialState.index=nextIndex;
- document.body.classList.add('tutorial-mode-on');
- ensureTutorialUI();
- renderTutorialStep();
+ const nextIndex=Number.isInteger(options.index)?Math.max(0,options.index):0;
+ tutorialNavigateTo(normalized,nextIndex);
 }
 function tutorialEnterDecisionScreen(screen,index=0){
  if(!tutorialModeEnabled()||!tutorialState.active)return;
@@ -1170,6 +1205,16 @@ function tutorialWinnerRestart(){
 function tutorialOpenMenuTarget(){return;}
 function advanceTutorial(){
  const step=tutorialState.steps[tutorialState.index];
+ if(step?.action==='choose'){
+  const sourceScreen=tutorialState.screen;
+  const item=sourceScreen==='food' ? S.pool?.[S.index] : restaurantPoolFiltered()?.[S.restaurantIndex];
+  if(item){
+   tutorialState.awaitingAction=false;
+   tutorialState.returnContext={screen:sourceScreen,index:tutorialState.index};
+   winner(item,sourceScreen==='restaurant'?'restaurant':'food',{tutorial:true});
+  }
+  return;
+ }
  if(step?.action==='enter-restaurant'){
   tutorialState.awaitingAction=false;
   openRestaurant({tutorialResumeIndex:0});
@@ -3525,7 +3570,7 @@ familyHideWinnerMeta();
 const chosenFromWheel=!!S.hungryWheelChoice && String(S.hungryWheelChoice.id)===String(item?.id);
 S.winnerItem = item;
 S.winnerType = explicitType || (S.screen === 'restaurant' ? 'restaurant' : 'food');
-if (item?.category !== 'Hungry' && item?.id) recordHistory(item, S.winnerType, options);
+if (item?.category !== 'Hungry' && item?.id && !options?.tutorial) recordHistory(item, S.winnerType, options);
 show('winner');
 if(tutorialModeEnabled()&&tutorialState.active&&tutorialState.returnContext){
  startTutorialForScreen('winner',true,{index:0});
