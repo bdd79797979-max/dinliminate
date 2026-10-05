@@ -1,16 +1,15 @@
-# CURRENT SAVEPOINT — BUILD 1006 / CP1006
+# CURRENT SAVEPOINT — BUILD 1007 / CP1007
 
 Date: 2026-10-05
 
-Working branch: `cp1006-full-iphone-viewport-fix`
+Working branch: `cp1007-cornbread-buttermilk-reference`
 
-## CP1006 — Full iPhone Viewport Fix
+## CP1007 — Buttermilk & Cornbread Reference Image
 
-- Definitive mobile shell fix for full-width/full-height iPhone viewport use.
-- Safe-area inset is internal to the top bar; the app no longer carries legacy outer mobile padding.
-- Existing screen designs are intentionally unchanged.
-- Asset/service-worker versions are bumped to force the corrected shell onto phone/PWA clients.
+- Uses the exact user-supplied online cornbread-and-buttermilk image.
+- Updates the meal asset cache version and image-host allowlist.
+- Leaves all other app behavior unchanged.
 
 ## Recovery anchor
 
-- **CP1005:** `3dd492653be3bfa620229df6d16bbbcb8fb036f3`
+- **CP1006:** `a2d3fc659cafc699aa27db817f29d676a8db5b86`
