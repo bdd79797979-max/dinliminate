@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 978,
+  "build": 979,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP978",
-  "deploymentTrigger": "CP978-fix-swipe-waiting-card-brightness"
+  "checkpoint": "CP979",
+  "deploymentTrigger": "CP979-home-metallic-gold-logo"
 }
