@@ -1,16 +1,16 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1011,
-  "sourceBranch": "main",
-  "checkpoint": "CP1011",
-  "deploymentTrigger": "CP1011-runtime-touch-viewport-fallback",
+  "build": 1012,
+  "sourceBranch": "restore-cp705-restaurant-photo-on-cp1011",
+  "checkpoint": "CP1012",
+  "deploymentTrigger": "CP1012-google-primary-photo-fallback",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
-  "photoBehavior": "resolver-backed-card-handoff",
-  "photoPolicy": "no-google",
+  "photoBehavior": "google-primary-on-demand-non-google-fallback",
+  "photoPolicy": "google-primary-no-google-photo-cache",
   "onboarding": "CP1006-full-iphone-viewport-fix",
-  "imageCache": "CP1008-size-based-lru-75mb",
+  "imageCache": "CP1008-size-based-lru-75mb-plus-google-on-demand",
   "viewportShell": "CP1011-runtime-touch-device-fallback"
 }
