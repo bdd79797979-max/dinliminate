@@ -1,20 +1,23 @@
-# CURRENT RELEASE — BUILD 1002 / CP1002
+# CURRENT RELEASE — BUILD 1003 / CP1003
 
 Date: 2026-10-05
 
-## CP1002 — Original Home Door Photo & Home Image Cleanup
+## CP1003 — Home Visual Polish
 
-- Uses the user's original uploaded double-door JPEG as the only Home background.
-- Removes the older lower-quality bundled Home door image from the repository.
-- Removes the At Home and Restaurant Home card photos and their legacy photo overlays.
-- Removes the old Home photo-oriented CSS surface in favor of photo-free choice cards.
-- Bumps app/cache/release markers to Build 1002.
+- Makes the supplied door image the visual canvas behind the top bar as well as the Home content.
+- Removes HUNGRY? from the Home hierarchy.
+- Refines the title to warm ivory and slightly smaller phone sizing.
+- Changes At Home / Restaurant to translucent door-window panels with subtle satin-gold edges.
+- Changes their arrow controls to simple gold chevrons with no circles.
+- Makes the Home menu lines-only and visually integrated with the door.
+- Makes Add to phone, Share, and Tutorial equal borderless utility controls.
+- Keeps the door image itself unchanged.
 - No Tutorial, swipe, restaurant-photo, Family Mode, meal, or restaurant-search behavior changes.
 
 ## Protected rollback anchors
 
-- **CP1001:** `d28e4bb31d887b286659cd3c78a7f625b5e0f7ce`
-- **CP1000:** `5d10195d77bff162a992cda7bf5e975bbfb87bf1`
+- **CP1002:** `d28e4bb31d887b286659cd3c78a7f625b5e0f7ce`
 - **CP999:** `784b41c066818cc097be189ff76ab8b17b0bff72`
+- **CP957 restaurant-photo baseline:** `d03a75ab63f1708524f1406e33d5a09c74f689f4`
 
-Production is not verified until CP1002 is deployed and browser/phone runtime certification passes.
+Production is not verified until CP1003 is deployed and browser/phone runtime certification passes.

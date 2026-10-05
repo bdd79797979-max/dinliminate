@@ -1,20 +1,21 @@
-# CURRENT SAVEPOINT — BUILD 1002 / CP1002
+# CURRENT SAVEPOINT — BUILD 1003 / CP1003
 
 Date: 2026-10-05
 
 Working branch: `main`
 
-## CP1002 — Original Home Door Photo & Home Image Cleanup
+## CP1003 — Home Visual Polish
 
-- Original uploaded door image is the sole Home page photo.
-- At Home and Restaurant Home cards are photo-free.
-- Obsolete Home background/card photo declarations were removed.
-- CP1001 remains the immediate rollback.
+- Supplied double-door image is the Home visual canvas.
+- HUNGRY? removed.
+- Home choices are photo-free translucent window panels.
+- Arrows, menu, and bottom utilities are simplified.
+- CP1002 remains the rollback anchor.
 
 ## Recovery anchors
 
-### CP1001
+### CP1002
 `d28e4bb31d887b286659cd3c78a7f625b5e0f7ce`
 
-### CP1000
-`5d10195d77bff162a992cda7bf5e975bbfb87bf1`
+### CP999
+`784b41c066818cc097be189ff76ab8b17b0bff72`

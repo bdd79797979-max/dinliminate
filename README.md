@@ -62,3 +62,7 @@ Real iPhone Safari/PWA checks are still required for touch, GPS, installation, k
 
 ## CP1002 Home background cleanup
 The Home page uses the original uploaded double-door JPEG as its only Home photo. At Home and Restaurant cards are photo-free, and the obsolete bundled Home door asset was removed.
+
+
+## CP1003 Home polish
+The Home screen now uses the supplied double-door image as the full-screen visual canvas. HUNGRY? was removed from the primary hierarchy; At Home and Restaurant are transparent window-style choices; their photo layers are removed; the arrows are simple chevrons; the Home menu is lines-only; and Add to phone, Share, and Tutorial are equal, borderless utility controls.
