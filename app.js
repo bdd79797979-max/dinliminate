@@ -465,8 +465,8 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='official-first-v1';
-const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v8-official-first';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='restaurant-reliability-v2';
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v9-reliability';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
 const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1600;
