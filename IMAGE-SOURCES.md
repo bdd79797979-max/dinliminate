@@ -6,10 +6,9 @@ All built-in image URLs must use HTTPS.
 
 ### Meal imagery
 
-### CP1027–CP1028 Buttermilk meals
-The built-in **Buttermilk** meal uses the Wikimedia Commons **Buttermilk12.jpg** image (own-work photo by DeargDoom1991), licensed under the stated Wikimedia Commons license; the app references it through the Commons Special:FilePath endpoint.
-The built-in **Buttermilk & Cornbread** meal uses a Pexels-hosted image from Pexels photo **18852480**. Pexels identifies the image as free to use under its license.
-The older CP1007 Blogspot image reference was retired because that source was no longer reliably accessible.
+### CP1031–CP1032 Buttermilk & Cornbread
+The built-in catalog contains **Buttermilk & Cornbread** only; the standalone **Buttermilk** meal was removed.
+The current image is the **Cornbread & Buttermilk** photograph from *Our State* (photograph by Tim Robison), which specifically depicts cornbread with buttermilk. Usage rights should be reviewed before public distribution.
 Meal images are tied to the meal catalog and should be dish-specific. Third-party image sources require the appropriate rights/usage review before public distribution.
 
 ### Restaurant imagery — no Google photos
