@@ -1504,6 +1504,32 @@ function prepareFoodNextCard(){
  nimg.style.transform='none';
  nimg.src=foodPhoto(next);
 }
+function bindRestaurantPhotoPinch(target){
+  const img=target?.tagName==='IMG'?target:target?.querySelector?.('img');
+  if(!img||img.dataset.restaurantPinchBound==='1')return;
+  img.dataset.restaurantPinchBound='1';
+  img.classList.add('restaurant-photo-zoomable');
+  img.style.touchAction='none';
+  img.style.transformOrigin='center center';
+  const points=new Map();let scale=1,startDistance=0,startScale=1,pinching=false;
+  const distance=()=>{const p=[...points.values()];return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);};
+  const apply=()=>{img.style.transform=scale<=1.01?'none':'scale('+scale.toFixed(3)+')';};
+  const finishPointer=e=>{points.delete(e.pointerId);if(points.size<2){pinching=false;if(scale<=1.01){scale=1;apply();}}};
+  img.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch')return;
+    points.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(points.size===2){pinching=true;startDistance=Math.max(1,distance());startScale=scale;e.preventDefault();}
+  },{passive:false});
+  img.addEventListener('pointermove',e=>{
+    if(!pinching||e.pointerType!=='touch')return;
+    const p=points.get(e.pointerId);if(!p)return;
+    p.x=e.clientX;p.y=e.clientY;
+    const d=distance();if(!d)return;
+    scale=Math.max(1,Math.min(3.5,startScale*(d/startDistance)));apply();e.preventDefault();
+  },{passive:false});
+  img.addEventListener('pointerup',finishPointer,{passive:true});
+  img.addEventListener('pointercancel',finishPointer,{passive:true});
+}
 function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
@@ -1724,7 +1750,10 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   }
  };
  card.onpointerdown=e=>{
-  if(e.isPrimary===false)return;
+  if(e.isPrimary===false){
+    if(active&&!committed){active=false;committed=false;hapticTriggered=false;velocityX=0;cleanup();settleBack();}
+    return;
+  }
   if(e.button!=null&&e.button!==0)return;
   if(e.target.closest?.('button,a,input,select'))return;
   downX=e.clientX;
@@ -2627,6 +2656,7 @@ bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
 bindImageFallback('#restStage img',restaurantFallback(row),RESTAURANT_NEUTRAL_IMAGE);
+ bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
 const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
@@ -3188,6 +3218,7 @@ if(hungry){
 }else{
   if(!(chosenFromWheel && $('celebration') && !$('celebration').classList.contains('hidden')))triggerCelebration(chosenFromWheel);
   hydrateRestaurantPhoto(item,'#winner');
+  bindRestaurantPhotoPinch(winImg);
 }
 save();
 }
@@ -3371,6 +3402,7 @@ const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="de
  const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHideRestaurant" type="button" aria-label="Hide this restaurant"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Restaurant</span></button></div>';
  const body='<div class="detail-unified detail-restaurant"><div class="detail-hero detail-restaurant-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-restaurant-photo-key="'+esc(item.id||item.canonicalId||'')+'" data-final-fallback="'+esc(restaurantFallbackImage(item))+'" alt="'+esc(item.name)+'"><div class="restaurant-photo-credit" aria-live="polite"></div></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">RESTAURANT</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+'</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+infoRows+'</section>'+hoursSection+'<section class="detail-section"><div class="detail-section-title">Contact</div>'+contactRows+'</section>'+notesSection+'<section class="detail-utility-actions"><a class="detail-utility-action" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'">Website</a>'+callAction+directionsAction+'</section>'+hide+'</div>';
  const modal=openModal('detailsModal','Restaurant Details',body);
+ bindRestaurantPhotoPinch(modal.querySelector('.detail-restaurant-hero img'));
  bindImageFallback('#detailsModal img',image,restaurantFallbackImage(item));
  bindDetailNotes(modal,item,'restaurant');
  const detailHideRestaurant=$('detailHideRestaurant');
