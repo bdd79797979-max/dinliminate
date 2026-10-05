@@ -2,12 +2,12 @@
   "name": "Dinliminate",
   "version": "1.0",
   "build": 995,
-  "sourceBranch": "cp995-tutorial-state-repair",
+  "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "netlify": "dinliminate22 preview",
+  "netlify": "legacy/backup configuration",
   "checkpoint": "CP995",
   "deploymentTrigger": "CP995-tutorial-state-repair"
 }
