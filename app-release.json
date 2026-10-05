@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 992,
+  "build": 993,
   "sourceBranch": "main",
-  "checkpoint": "CP992",
-  "deploymentTrigger": "CP992-restaurant-photo-repair",
+  "checkpoint": "CP993",
+  "deploymentTrigger": "CP993-restaurant-photo-card-handoff",
   "vercelProductionVerified": false,
   "swipeAudit": "CP989-food-handoff-plus-ui-regression-fix",
   "visualParity": "CP952-restaurant-maybe-state-parity",
-  "photoBehavior": "exact-location-first-fallback-chain",
+  "photoBehavior": "resolver-backed-card-handoff",
   "photoPolicy": "no-google",
   "onboarding": "CP991-first-run-popup-feature-cards"
 }
