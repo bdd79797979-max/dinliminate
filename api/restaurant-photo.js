@@ -819,7 +819,7 @@ async function officialRestaurantPages(name,address,website){
     return pages.slice(0,12);
   }catch{return []}
 }
-async function fastOfficialVenuePhoto(name,address,website,officialLocationPage='',brand=''){
+async function fastOfficialVenuePhoto(name,address,website,officialLocationPage='',brand='',phone=''){
  const suppliedLocation=absoluteHttpsUrl(officialLocationPage);
  if(suppliedLocation){
   const exact=await tryOfficialHeroPage(suppliedLocation,name,address,website,'official-location-hero',true);
@@ -915,8 +915,8 @@ async function fastKnownRestaurantPhoto(name,address){
  }catch{}
  return null;
 }
-async function fastKnownPublicPhoto(name,address,website){
- const hint=knownPublicPhotoPage(name);
+async function fastKnownPublicPhoto(name,address,website,phone=''){
+ const hint=knownPublicPhotoPage(name,address,phone);
  if(!hint)return null;
  try{
   const html=await fetchText(hint,{},2200,1500000);
@@ -1166,7 +1166,7 @@ module.exports=async function handler(req,res){
     }
     // 1. Restaurant's own exact local website/location photo.
     if(officialWebsite||officialLocationPage){
-      const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,officialLocationPage,brand);
+      const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,officialLocationPage,brand,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
     }
 
@@ -1188,7 +1188,7 @@ module.exports=async function handler(req,res){
     // 3. Known exact venue/public photo paths.
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
     if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
-    const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite);
+    const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
 
     // 4. Trusted exact local/public venue pages. Local news is preferred here.
@@ -1212,7 +1212,7 @@ module.exports=async function handler(req,res){
     }
 
     // 6. Image search is last among exact-photo discovery paths.
-    const bingImage=await exactImageFromBing(name,address,officialWebsite);
+    const bingImage=await exactImageFromBing(name,address,officialWebsite,phone);
     if(bingImage)return sendMedia(res,bingImage);
 
     return json(res,404,{ok:false,error:'No verified venue photo was found from the allowed non-Google sources'});
