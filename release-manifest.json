@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 976,
+  "build": 978,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP976",
-  "deploymentTrigger": "CP976-restaurant-photo-discovery"
+  "checkpoint": "CP978",
+  "deploymentTrigger": "CP978-fix-swipe-waiting-card-brightness"
 }
