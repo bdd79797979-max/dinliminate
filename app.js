@@ -946,9 +946,13 @@ S.restaurantPool = Array.isArray(d.restaurantPool) ? d.restaurantPool : [];
 S.custom = Array.isArray(d.custom) ? d.custom.map(item=>({...item,images:mealPhotoList(item)})) : [];
 S.customQuickCuts = Array.isArray(d.customQuickCuts) ? d.customQuickCuts : [];
 
-// CP1028 — repair the known historical Buttermilk & Cornbread override.
-// An older saved record could carry a generic fallback photo under the same
-// built-in id, which then masked the current catalog photo.
+// CP1032 — repair historical Buttermilk overrides after catalog cleanup.
+let needsButtermilkRepairSave=false;
+const legacyStandaloneButtermilk=S.custom.find(item=>String(item.id)==='buttermilk'&&normKey(item.name)==='buttermilk');
+if(legacyStandaloneButtermilk){
+ S.custom=S.custom.filter(item=>!(String(item.id)==='buttermilk'&&normKey(item.name)==='buttermilk'));
+ needsButtermilkRepairSave=true;
+}
 const builtInButtermilkCornbread=S.custom.find(item=>String(item.id)==='buttermilk-cornbread');
 if(builtInButtermilkCornbread){
  const savedName=normKey(builtInButtermilkCornbread.name);
@@ -956,9 +960,9 @@ if(builtInButtermilkCornbread){
  const hasWrongFallback=/6287520|pasta|spaghetti/i.test(savedImage);
  if(!savedImage||hasWrongFallback||savedName==='buttermilk cornbread'){
   builtInButtermilkCornbread.name='Buttermilk & Cornbread';
-  builtInButtermilkCornbread.image='https://images.pexels.com/photos/18852480/pexels-photo-18852480.jpeg?auto=compress&cs=tinysrgb&w=1200';
+  builtInButtermilkCornbread.image='https://ourstate.s3.amazonaws.com/assets/2025/01/FEB25-PE_Cornbread-and-Buttermilk__TimRobison.jpg';
   builtInButtermilkCornbread.images=[builtInButtermilkCornbread.image];
-  save();
+  needsButtermilkRepairSave=true;
  }
 }
 S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals.map(item=>({...item,images:mealPhotoList(item)})) : [];
@@ -973,6 +977,7 @@ S.mealTimeSettings={custom:Array.isArray(d.mealTimeSettings?.custom)?d.mealTimeS
 ensureMealTimeSettings();
 const availableMealTimeNames=mealTimeNames();
 S.mealTimeFilters=new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).map(currentMealTimeName).filter(x=>availableMealTimeNames.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(availableMealTimeNames);
+if(needsButtermilkRepairSave)save();
 if(S.locationSource==='device' && S.location)S.locationSource='last';
 S.restaurantSearchDegraded = !!d.restaurantSearchDegraded;
 S.schemaVersion = STORAGE_VERSION;
