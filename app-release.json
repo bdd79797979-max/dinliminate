@@ -19,5 +19,8 @@
   "restaurantPhoto": "exact-google-current-and-two-ahead;non-google-exact-fallback-on-google-miss",
   "restaurantPhotoCache": "non-google-persistent;google-session-memory-only",
   "googleSearchFieldMask": "restaurant-search-does-not-request-photo-media-fields",
-  "radiusStrategy": "25-50-mile-supplemental-overpass;100-mile-wide-coverage"
+  "radiusStrategy": "25-50-mile-supplemental-overpass;100-mile-wide-coverage",
+  "previewDeployment": "https://dinliminate-zuv31q4ah-brian-f169.vercel.app/",
+  "previewDeploymentVerified": true,
+  "previewVerification": "restaurant-photo-lookahead-live-test;current-plus-two;no-building-while-loading"
 }
