@@ -1,11 +1,11 @@
-# Dinliminate Launch QA Gate — Build 997 / CP997
+# Dinliminate Launch QA Gate — Build 1006 / CP1006
 
 Date: 2026-10-05
 
 ## Current candidate
 
-- Release: Version 1.0 / Build 997 / CP997
-- Working branch: `main`
+- Release: Version 1.0 / Build 1006 / CP1006
+- Working branch: `cp1006-full-iphone-viewport-fix`
 - Production deployment: not yet verified
 - Restaurant photography: no Google photo/API credentials
 
@@ -32,9 +32,11 @@ Date: 2026-10-05
 
 ## Full iPhone viewport gate
 
-- App uses the full mobile dynamic viewport.
-- Shared top safe-area spacing is inside the top bar rather than outside the canvas.
-- Screen backgrounds extend edge-to-edge horizontally without shifting existing content geometry.
+- App shell is exactly full-width and full-height on mobile.
+- iPhone safe-area inset is contained inside the shared top bar.
+- Screen canvases reach the viewport edges without the legacy outer 14px app padding.
+- Home background reaches the full mobile app canvas.
+- No content/design changes are made to Meals, Restaurants, Winner, or Menu.
 
 ## Home image gate
 
