@@ -432,7 +432,7 @@ function extractOfficialHeroCandidates(html,pageUrl,name,address,website){
     add(item,score,'official-hero-background');
   });
 
-  return out.sort((a,b)=>Number(b.score||0)-Number(a.score||0);
+  return out.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
 }
 
 function officialWebsitePageLooksLocal(html,name,address){
