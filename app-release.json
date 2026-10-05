@@ -1,16 +1,18 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1011,
-  "sourceBranch": "main",
-  "checkpoint": "CP1011",
-  "deploymentTrigger": "CP1011-runtime-touch-viewport-fallback",
+  "build": 1013,
+  "sourceBranch": "cp1013-system-reset-restore",
+  "checkpoint": "CP1013",
+  "deploymentTrigger": "CP1013-system-reset-restore",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
-  "photoBehavior": "resolver-backed-card-handoff",
-  "photoPolicy": "no-google",
+  "photoBehavior": "google-primary-on-demand-non-google-fallback",
+  "photoPolicy": "google-primary-no-google-photo-cache",
   "onboarding": "CP1006-full-iphone-viewport-fix",
-  "imageCache": "CP1008-size-based-lru-75mb",
-  "viewportShell": "CP1011-runtime-touch-device-fallback"
+  "imageCache": "CP1008-size-based-lru-75mb-plus-google-on-demand",
+  "viewportShell": "CP1011-runtime-touch-device-fallback",
+  "systemReset": "full-reset-clears-local-storage-session-photo-db-caches-and-service-worker",
+  "restoreDefaults": "built-in-meals-only-custom-content-and-user-restaurant-data-preserved"
 }
