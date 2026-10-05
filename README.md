@@ -5,8 +5,8 @@ Dinliminate is a phone-first dinner decision app built around fast, stable meal 
 ## Current release
 
 - **Version:** 1.0
-- **Build:** 910
-- **Checkpoint:** CP910
+- **Build:** 992
+- **Checkpoint:** CP992
 - **Branch:** `main`
 - **Release state:** candidate source; Vercel production verification pending the account deployment-rate reset.
 - **Architecture:** root-level HTML/CSS/JS PWA with Vercel API routes; Netlify files remain as legacy/backup hosting configuration.
@@ -91,3 +91,13 @@ Vercel is the official runtime target. The current connected Vercel account has 
 - The first popup uses the preferred “← CUT · SWIPE · MAYBE →” lesson.
 - Settings → How Dinliminate Works reopens the same popup sequence.
 - Uses a new onboarding key so users who saw the CP990 walkthrough receive the improved popup once.
+
+
+## CP992 — Restaurant photo pipeline repair
+- Separates the official brand website from the exact restaurant location-page concept.
+- Tries an exact official location page before leaving the official domain when a brand root is supplied.
+- Keeps exact public-venue discovery available even when an official website exists.
+- Added the verified 724 Sango Rd, Clarksville McDonald’s venue page as a regression path.
+- Bumped the restaurant-photo resolver/cache namespace so stale photo misses are not reused.
+- Fixed the service worker to preserve the active restaurant-photo cache namespace.
+- No Google photo/API source was introduced.

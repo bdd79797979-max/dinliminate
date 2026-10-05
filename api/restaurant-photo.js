@@ -664,6 +664,62 @@ function extractInternalLinks(html,pageUrl,name,address){
   }
   return out.sort((a,b)=>b.score-a.score).slice(0,12).map(x=>x.url);
 }
+async function discoverOfficialLocationPages(name,address,website,phone=''){
+  const official=absoluteHttpsUrl(website);
+  if(!official||isBlockedHost(official))return [];
+  const host=hostOf(official);
+  const safeName=String(name||'').replace(/"/g,'').trim();
+  const safeAddress=String(address||'').replace(/"/g,'').trim();
+  const phoneDigits=String(phone||'').replace(/\D/g,'').slice(-10);
+  const queries=[];
+  if(safeName&&safeAddress)queries.push('"'+safeName+'" "'+safeAddress+'" site:'+host);
+  if(safeName&&phoneDigits)queries.push('"'+safeName+'" "'+phoneDigits+'" site:'+host);
+  if(safeName)queries.push('"'+safeName+'" location site:'+host);
+  const fetchSearch=async q=>{
+    const url='https://www.bing.com/search?'+new URLSearchParams({q:q,mkt:'en-US',first:'1'}).toString();
+    const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);
+    try{
+      const response=await fetch(url,{headers:{
+        Accept:'text/html,application/xhtml+xml',
+        'Accept-Language':'en-US,en;q=0.8',
+        'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; official-location-resolver)'
+      },signal:ctl.signal});
+      if(!response.ok)return '';
+      const bytes=Buffer.from(await response.arrayBuffer());
+      if(bytes.length>900000)return '';
+      return bytes.toString('utf8');
+    }catch{return ''}finally{clearTimeout(timer)}
+  };
+  const pages=await Promise.allSettled(queries.slice(0,3).map(fetchSearch));
+  const urls=[];
+  const seen=new Set();
+  for(const page of pages){
+    if(page.status!=='fulfilled'||!page.value)continue;
+    for(const url of extractBingWebResultUrls(page.value)){
+      if(seen.has(url)||!sameHost(url,official))continue;
+      const normalized=String(url).toLowerCase();
+      if(normalized===String(official).toLowerCase())continue;
+      if(isBlockedHost(url))continue;
+      seen.add(url);urls.push(url);
+      if(urls.length>=12)break;
+    }
+  }
+  const ranked=urls.sort((a,b)=>{
+    const rank=url=>{
+      const path=(()=>{try{return new URL(url).pathname.toLowerCase()}catch{return ''}})();
+      let score=0;
+      if(/\/location\//.test(path))score+=60;
+      if(/\/locations?\//.test(path))score+=55;
+      if(/\/store\//.test(path))score+=50;
+      if(/\/restaurant\//.test(path))score+=40;
+      if(/\/(?:tn|us|en-us)\//.test(path))score+=15;
+      return score;
+    };
+    return rank(b)-rank(a);
+  });
+  return await fetchVerifiedPages(ranked.slice(0,8),name,address,phone);
+}
+
 async function officialRestaurantPages(name,address,website){
   const official=absoluteHttpsUrl(website);
   if(!official||isBlockedHost(official))return [];
@@ -701,6 +757,7 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
 const KNOWN_PUBLIC_PHOTO_PAGES=[
  {names:['shelbys trio',"shelby's trio"],addressTokens:['304 n 2nd st','304 north 2nd street'],phone:'9319193373',url:'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street'},
  {names:['mcdonalds'],addressTokens:['792 n 2nd st','792 north 2nd street'],phone:'9315520627',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds-/'},
+ {names:['mcdonalds'],addressTokens:['724 sango rd','724 sango road'],phone:'9313580259',url:'https://www.restaurantji.com/tn/clarksville/mcdonalds/'},
  {names:['subway'],addressTokens:['601 college st','601 college street','student union'],phone:'9312498572',url:'https://restaurants.subway.com/united-states/tn/clarkesville/601-college-street'},
  {names:['excell bbq','excell bar b q','excell market bar b q','excell market and bbq'],addressTokens:['3102 ashland city rd','3102 ashland city road'],phone:'9313583638',url:'https://clarksvillenow.com/local/exploring-the-clarksville-food-scene-excell-bar-b-q/'},
  {names:['thirsty goat'],addressTokens:['4044 madison st','4044 madison street','madison street 4044'],phone:'9313434628',url:'https://www.restaurantji.com/tn/clarksville/the-thirsty-goat-/'}
@@ -1013,6 +1070,7 @@ module.exports=async function handler(req,res){
   const phone=String(q.phone||'').trim().slice(0,80);
   const website=String(q.website||'').trim().slice(0,700);
   const officialWebsite=String(q.officialWebsite||website).trim().slice(0,700);
+  const officialLocationPage=String(q.officialLocationPage||'').trim().slice(0,900);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
@@ -1020,12 +1078,31 @@ module.exports=async function handler(req,res){
     // CP976: if provider data has no website, use exact public venue pages
     // to discover the restaurant's own site before public-photo fallback.
     let fastDirectory=null;
+
+    // CP992: honor an exact official location page when the caller already has one.
+    if(officialLocationPage){
+      const directLocation=await fastOfficialVenuePhoto(name,address,officialLocationPage,phone);
+      if(directLocation)return sendMedia(res,{...directLocation,source:'official-location-page'});
+    }
+
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
-    }else{
-      fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
-      if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
+
+      // CP992: an official brand root is not necessarily the exact store page.
+      // Discover and verify the location-specific page before leaving the official domain.
+      const locationPages=await discoverOfficialLocationPages(name,address,officialWebsite,phone);
+      for(const entry of locationPages){
+        const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
+          .filter(item=>item.score>=10&&item.score>0&&hasVenueSignal(item))
+          .slice(0,10);
+        const attempts=await Promise.allSettled(candidates.map(async candidate=>{
+          try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},2200)}}catch{return null}
+        }));
+        for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
+          return sendMedia(res,{media:hit.value.media,source:'official-location-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
+        }
+      }
     }
 
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
@@ -1033,6 +1110,11 @@ module.exports=async function handler(req,res){
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
+
+    // CP992: public exact-venue discovery is a fallback, never blocked by the
+    // presence of an official brand website.
+    fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
+    if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
     if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
 
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
@@ -1102,6 +1184,7 @@ module.exports._test={
   fastOfficialVenuePhoto,
   knownRestaurantPhoto,
   fastKnownRestaurantPhoto,
+  discoverOfficialLocationPages,
   knownPublicPhotoPage,
   fastKnownPublicPhoto,
   imageDimensions,
