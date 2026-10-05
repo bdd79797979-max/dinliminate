@@ -1,6 +1,14 @@
-# CURRENT RELEASE — BUILD 1003 / CP1003
+# CURRENT RELEASE — BUILD 1004 / CP1004
 
 Date: 2026-10-05
+
+## CP1004 — Menu / Modal Flash Hardening
+
+- Fixed the first-frame menu-to-modal flash on mobile by making modal backdrops opaque immediately when a modal is inserted.
+- This covers Manage Meals, Add Meal, Settings, History, and other modal handoffs instead of treating Manage Meals as a one-off.
+- Preserved the existing modal entrance motion and all existing screen designs.
+- Refreshed the stylesheet URL and service-worker shell cache so mobile/PWA clients do not retain the old opening-backdrop CSS.
+- CP1003 remains the rollback anchor.
 
 ## CP1003 — Full iPhone Viewport Adaptation
 
