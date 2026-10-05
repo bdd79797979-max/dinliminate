@@ -6,7 +6,9 @@ try{sharp=require('sharp');}catch{}
 const NO_PHOTO_HOSTS=new Set(['google.com','www.google.com','googleusercontent.com','lh3.googleusercontent.com','bing.com','www.bing.com','tse1.mm.bing.net','tse2.mm.bing.net','tse3.mm.bing.net','tse4.mm.bing.net','unsplash.com','images.unsplash.com','pexels.com','images.pexels.com','shutterstock.com','istockphoto.com','gettyimages.com','depositphotos.com','alamy.com','stock.adobe.com']);
 const BLOCKED_IMAGE_HINTS=/\b(?:logo|favicon|sprite|icon|avatar|placeholder|default[-_ ]?image|brandmark|wordmark|google[ -]?play|play[ -]?store|app[ -]?store|download[ -]?app|download|badge|payment|visa|mastercard|amex|social[ -]?media|facebook|instagram|tiktok|youtube|x[ -]?twitter)\b/i;
 const VENUE_IMAGE_HINTS=/\b(?:exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|façade|sign|signage|location|drive[- ]?thru|drive through|parking lot|parking|street view|patio|terrace)\b/i;
-const FOOD_IMAGE_HINTS=/\b(?:menu|food|dish|meal|burger|pizza|salad|steak|wings|tacos?|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entrée|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine)\b/i;
+const FOOD_IMAGE_HINTS=/\b(?:food|dish|meal|burger|pizza|salad|steak|wings|tacos?|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entrée|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine)\b/i;
+const PHOTO_GRAPHIC_HINTS=/\b(?:menu(?:board|boards|page|item)?|menu[-_ ]?board|food[-_ ]?menu|menu[-_ ]?cover|flyer|promo(?:tion)?|poster|collage|montage|mosaic|screenshot|screen[-_ ]?shot|social[-_ ]?image|sharing[-_ ]?image|banner|coupon|special[-_ ]?graphic|advert(?:isement)?|template|graphic)\b/i;
+const PHOTO_CONTEXT_HINTS=/\b(?:photo|photos|photograph|gallery|dining|interior|exterior|outside|storefront|patio|restaurant|burger|pizza|tacos?|steak|wings|chicken|fries|dessert|sandwich|plate)\b/i;
 const LOW_QUALITY_IMAGE_HINTS=/\b(?:thumbnail|thumb|tiny|small|lowres|low[-_ ]?res|preview|sprite|tile)\b/i;
 const MAX_RESTAURANT_IMAGE_DIMENSION=6000;
 const MAX_RESTAURANT_IMAGE_PIXELS=12000000;
@@ -231,7 +233,7 @@ function extractImgCandidates(html,pageUrl){
     const dims=(Number.isFinite(width)?' width '+width:'')+(Number.isFinite(height)?' height '+height:'');
     if((Number.isFinite(width)&&Number.isFinite(height))&&(width<200||height<120))continue;
     const context=[attrs.alt,attrs.title,attrs.class,attrs.id,attrs['data-caption'],attrs['data-alt'],attrs['data-filename'],nearby,url,dims].filter(Boolean).join(' ');
-    candidates.push({url,context,source:'img',width,height});
+    candidates.push({url,context,label:[attrs.alt,attrs.title,attrs.class,attrs.id,attrs['data-caption'],attrs['data-alt'],attrs['data-filename']].filter(Boolean).join(' '),source:'img',width,height});
   }
   return candidates;
 }
@@ -414,6 +416,21 @@ async function verifiedRestaurantPage(url,name,address,phone=''){
   }catch{return null}
 }
 
+function isRejectedPhotoCandidate(candidate){
+  const url=String(candidate?.url||'');
+  const label=String(candidate?.label||'');
+  const combined=url+' '+label;
+  if(PHOTO_GRAPHIC_HINTS.test(combined))return true;
+  if(LOW_QUALITY_IMAGE_HINTS.test(combined))return true;
+  if(BLOCKED_IMAGE_HINTS.test(url))return true;
+  try{
+    const u=new URL(url);
+    if(u.protocol!=='https:')return true;
+    const path=u.pathname.toLowerCase();
+    if(/(?:^|[/_-])(?:menu|menuboard|menu-board)(?:[/_.-]|$)/i.test(path))return true;
+  }catch{return true}
+  return false;
+}
 function venueScore(candidate,name,address,website){
   const context=String(candidate?.context||'')+' '+String(candidate?.url||'');
   const hay=normalizeMatchText(context);
@@ -421,22 +438,24 @@ function venueScore(candidate,name,address,website){
   const matchedName=nameTokens.filter(t=>hay.includes(t)).length;
   const addrNumber=(String(address||'').match(/\b\d{1,6}\b/)||[])[0];
   const venueHits=(normalizeMatchText(context).match(/exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|sign|signage|location|drive thru|parking lot|parking|street view|patio|terrace/g)||[]).length;
-  const foodHits=(normalizeMatchText(context).match(/menu|food|dish|meal|burger|pizza|salad|steak|wings|tacos|sushi|pasta|chicken|fries|dessert|cake|sandwich|plate|entree|appetizer|breakfast|lunch|dinner|drink|cocktail|coffee|beer|wine/g)||[]).length;
+  const contextHits=(normalizeMatchText(String(candidate?.label||candidate?.context||'')).match(PHOTO_CONTEXT_HINTS)||[]).length;
   let score=0;
   score+=matchedName*24;
   if(nameTokens.length&&matchedName===nameTokens.length)score+=70;
   if(addrNumber&&hay.includes(normalizeMatchText(addrNumber)))score+=34;
-  if(VENUE_IMAGE_HINTS.test(context))score+=Math.min(90,venueHits*22);
-  if(FOOD_IMAGE_HINTS.test(context))score-=Math.min(120,foodHits*24);
-  if(candidate.source==='img')score+=8;
-  if(candidate.source==='background')score+=3;
+  if(VENUE_IMAGE_HINTS.test(context))score+=Math.min(70,venueHits*18);
+  score+=Math.min(30,contextHits*10);
+  if(candidate.source==='img'||candidate.source==='restaurantji-photo')score+=12;
+  if(candidate.source==='jsonld')score+=10;
+  if(candidate.source==='background')score+=8;
+  if(candidate.source==='meta')score-=55;
   if(LOW_QUALITY_IMAGE_HINTS.test(String(candidate?.url||'')))score-=28;
   const websiteHost=hostOf(website);
   const candidateHost=hostOf(candidate.url);
-  if(websiteHost&&candidateHost&&(candidateHost===websiteHost||candidateHost.endsWith('.'+websiteHost)))score+=18;
+  if(websiteHost&&candidateHost&&(candidateHost===websiteHost||candidateHost.endsWith('.'+websiteHost)))score+=28;
+  if(isRejectedPhotoCandidate(candidate))return -999;
   return score;
 }
-
 function hasVenueSignal(candidate){
   const context=String(candidate?.context||'');
   if(!context.trim())return false;
@@ -456,20 +475,31 @@ function hasVenueSignal(candidate){
   return venueHits>=1 && foodHits <= (venueHits*3+4);
 }
 
+function isRestaurantjiPage(pageUrl){
+  return discoveryHost(pageUrl)==='restaurantji.com';
+}
+function extractRestaurantjiPhotoCandidates(html,pageUrl,name,address){
+  if(!isRestaurantjiPage(pageUrl))return [];
+  return extractImgCandidates(html,pageUrl).filter(item=>{
+    const path=(()=>{try{return new URL(item.url).pathname.toLowerCase()}catch{return ''}})();
+    return /(?:^|[/])(?:d|m)_[^/]*(?:_photo|_photos)\.(?:jpe?g|png|webp)$/i.test(path) && !isRejectedPhotoCandidate(item);
+  }).map(item=>({...item,source:'restaurantji-photo',label:(item.label||'')+' restaurantji photo',score:240}));
+}
 function extractVenueImageCandidates(html,pageUrl,name,address,website){
   const raw=[
+    ...extractRestaurantjiPhotoCandidates(html,pageUrl,name,address),
     ...extractImgCandidates(html,pageUrl),
     ...extractLinkedImageCandidates(html,pageUrl),
     ...extractStyleImageCandidates(html,pageUrl),
     ...extractJsonLdImageCandidates(html,pageUrl)
   ];
-  const meta=extractMetaImages(html,pageUrl).map(url=>({url,context:url+' '+normalizeMatchText(name)+' restaurant',source:'meta'}));
+  const meta=extractMetaImages(html,pageUrl).map(url=>({url,context:url+' '+normalizeMatchText(name)+' restaurant',label:'open-graph image',source:'meta'}));
   const seen=new Set();
   const all=[...raw,...meta].map(item=>({...item,score:venueScore(item,name,address,website)}))
     .filter(item=>{
       if(seen.has(item.url))return false;
       seen.add(item.url);
-      return !BLOCKED_IMAGE_HINTS.test(item.url);
+      return !isRejectedPhotoCandidate(item);
     });
   return all.sort((a,b)=>b.score-a.score);
 }
@@ -608,8 +638,8 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
   const html=await fetchText(official,{},1800,1800000);
   if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
   const candidates=extractVenueImageCandidates(html,official,name,address,official)
-    .filter(item=>item.score>=45&&item.score>0&&hasVenueSignal(item))
-    .slice(0,6);
+    .filter(item=>item.score>=18&&item.score>0&&hasVenueSignal(item))
+    .slice(0,8);
   const attempts=await Promise.allSettled(candidates.map(async candidate=>{
    try{return {media:await fetchImage(candidate.url,{'Referer':official},2200),candidate};}catch{return null;}
   }));
@@ -687,8 +717,8 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
   const html=await fetchText(hint,{},1800,1500000);
   if(!html||!pageMatchesRestaurant(html,name,address,phone))return null;
   const candidates=extractVenueImageCandidates(html,hint,name,address,website)
-    .filter(item=>item.score>=38&&item.score>0&&hasVenueSignal(item))
-    .slice(0,5);
+    .filter(item=>item.score>=24&&item.score>0&&hasVenueSignal(item))
+    .slice(0,8);
   const attempts=await Promise.allSettled(candidates.map(async candidate=>{
    try{return {media:await fetchImage(candidate.url,{'Referer':hint},2200),candidate};}catch{return null;}
   }));
@@ -797,8 +827,8 @@ async function fastDirectoryPhotoSources(name,address,phone=''){
  }
  for(const page of pages){
   const candidates=extractVenueImageCandidates(page.html,page.url,name,address,'')
-   .filter(item=>item.score>=38&&item.score>0&&hasVenueSignal(item))
-   .slice(0,8);
+   .filter(item=>item.score>=24&&item.score>0&&hasVenueSignal(item))
+   .slice(0,10);
   const attempts=await Promise.allSettled(candidates.map(async candidate=>{
    try{return {media:await fetchImage(candidate.url,{'Referer':page.url},2200)}}catch{return null;}
   }));
@@ -966,7 +996,7 @@ module.exports=async function handler(req,res){
     // official domain.
     for(const entry of pages.official){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
-        .filter(item=>item.score>=65&&item.score>0&&hasVenueSignal(item));
+        .filter(item=>item.score>=18&&item.score>0&&hasVenueSignal(item));
       const attempts=await Promise.allSettled(candidates.slice(0,8).map(async candidate=>{
         try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
@@ -978,7 +1008,7 @@ module.exports=async function handler(req,res){
     // Then use exact public restaurant pages, with venue verification.
     for(const entry of pages.public){
       const candidates=extractVenueImageCandidates(entry.html,entry.url,name,address,officialWebsite)
-        .filter(item=>item.score>=65&&item.score>0&&hasVenueSignal(item));
+        .filter(item=>item.score>=30&&item.score>0&&hasVenueSignal(item));
       const attempts=await Promise.allSettled(candidates.slice(0,8).map(async candidate=>{
         try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
