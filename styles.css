@@ -9271,6 +9271,22 @@ button,input,select,textarea{
   transform:none!important;
   opacity:.78!important;
 }
+
+/* CP986 — Meal Times and Cuisine share the same touch/open highlight. */
+#food #foodMealTimeToggle:hover,
+#food #foodMealTimeToggle:active,
+#food #foodMealTimeToggle.is-open,
+#food #foodMealTimeToggle.is-active,
+#food #foodQuickToggle:hover,
+#food #foodQuickToggle:active,
+#food #foodQuickToggle.is-open{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
+#food #foodMealTimeToggle:active,
+#food #foodQuickToggle:active{
+  opacity:.92!important;
+}
 #food .food-interior-nav .food-top-maybe{
   color:#8f8b84!important;
   font-size:9px!important;
