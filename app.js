@@ -439,7 +439,7 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='992';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='993';
 const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v6';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
@@ -559,6 +559,7 @@ function restaurantPhotoEndpointUrl(row){
   params.set('osmExact','1');
   params.set('osmImage',osmPhoto);
  }
+ if(row.googlePlaceId)params.set('placeId',String(row.googlePlaceId));
  if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
  if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
  params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
