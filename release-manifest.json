@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 988,
+  "build": 989,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP988",
-  "deploymentTrigger": "CP988-swipe-engine-v2"
+  "checkpoint": "CP989",
+  "deploymentTrigger": "CP989-restore-card-handoff-ui"
 }
