@@ -519,22 +519,37 @@ function restaurantFallbackImage(row){
  }
  return imageProxyUrl(REST_QUICK_IMAGES.American);
 }
+function restaurantPhotoEndpointUrl(row){
+ if(!row)return '';
+ const params=new URLSearchParams();
+ if(row.name)params.set('name',String(row.name));
+ if(row.address)params.set('address',String(row.address));
+ if(row.phone)params.set('phone',String(row.phone));
+ const website=safeExternalUrl(row.website);
+ if(website)params.set('website',website);
+ const officialLocationPage=safeExternalUrl(row.officialLocationPage||row.officialLocation||'');
+ if(officialLocationPage)params.set('officialLocationPage',officialLocationPage);
+ const officialWebsite=website||safeExternalUrl(knownRestaurantWebsite(row));
+ if(officialWebsite)params.set('officialWebsite',officialWebsite);
+ const source=String(row.source||'');
+ const osmPhoto=safeExternalUrl(row.photo);
+ if(source.startsWith('OpenStreetMap')&&osmPhoto){
+  params.set('osmExact','1');
+  params.set('osmImage',osmPhoto);
+ }
+ if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
+ if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
+ params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
+ return '/api/restaurant-photo?'+params.toString();
+}
 function restaurantImmediatePhoto(row){
  if(!row)return RESTAURANT_NEUTRAL_IMAGE;
- // First paint should prefer an exact venue photo already known to the app.
- const known=knownRestaurantPhotoFallback(row);
- if(known)return known;
- // A successfully resolved photo from this session should win immediately on re-render.
  const rowKey=String(row?.id||row?.canonicalId||'').trim();
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
  if(cached?.url)return touchRestaurantPhotoMemoryCache(rowKey,cached).url;
- // Restore the older direct-first behavior for provider-attached OSM/Photon venue photos.
- const raw=String(row?.photo||row?.image||'').trim();
- const source=String(row?.source||'');
- if(/^https:\/\//i.test(raw)&&(source.startsWith('OpenStreetMap')||source.startsWith('Photon POI'))){
-  return imageProxyUrl(raw);
- }
- return RESTAURANT_NEUTRAL_IMAGE;
+ // CP993: the card itself points at the photo resolver. The resolver owns
+ // official-site -> exact-public -> OSM -> exact-search fallback ordering.
+ return restaurantPhotoEndpointUrl(row)||RESTAURANT_NEUTRAL_IMAGE;
 }
 function restaurantCardFallbackImage(row){
  const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
@@ -574,26 +589,7 @@ async function loadRestaurantPhoto(row){
  if(missAt&&Date.now()-missAt<RESTAURANT_PHOTO_MISS_TTL)return null;
  let pending=restaurantPhotoInflight.get(rowKey);
  if(!pending){
-  const params=new URLSearchParams();
-  if(row.name)params.set('name',String(row.name));
-  if(row.address)params.set('address',String(row.address));
-  if(row.phone)params.set('phone',String(row.phone));
-  const website=safeExternalUrl(row.website);
-  if(website)params.set('website',website);
-  const officialLocationPage=safeExternalUrl(row.officialLocationPage||row.officialLocation||'');
-  if(officialLocationPage)params.set('officialLocationPage',officialLocationPage);
-  const officialWebsite=website||safeExternalUrl(knownRestaurantWebsite(row));
-  if(officialWebsite)params.set('officialWebsite',officialWebsite);
-  const source=String(row.source||'');
-  const osmPhoto=safeExternalUrl(row.photo);
-  if(source.startsWith('OpenStreetMap')&&osmPhoto){
-   params.set('osmExact','1');
-   params.set('osmImage',osmPhoto);
-  }
-  if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
-  if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
-  params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
-  const requestUrl='/api/restaurant-photo?'+params.toString();
+  const requestUrl=restaurantPhotoEndpointUrl(row);
   pending=(async()=>{
    const stored=await getPersistentRestaurantPhoto(row);
    if(stored)return stored;
