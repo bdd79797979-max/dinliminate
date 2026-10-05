@@ -125,3 +125,14 @@ assert.ok(css.includes('/* CP989 — restore modal close visibility')&&css.inclu
 assert.ok(css.includes('#food .meal-time-quick .meal-time-chip')&&css.includes('transform:translateY(1px) scale(.985)!important'),'Meal Time chips must share Cuisine chip touch treatment');
 assert.ok(html.includes('styles.css?v=989')&&html.includes('app.js?v=989'),'Frontend asset markers must be CP989');
 assert.equal(release.build,989,'Release build must be CP989');
+
+assert.equal(release.build,990,'Release build must be CP990');
+assert.equal(release.checkpoint,'CP990','Release checkpoint must be CP990');
+assert.ok(app.includes("let APP_BUILD = '990'"),'Runtime fallback build must be CP990');
+assert.ok(app.includes("const HOW_TO_GUIDE_KEY='dinliminate.howToGuide.v1';"),'First-run guide key must exist');
+assert.ok(app.includes('function showHowToGuide(firstRun=false){')&&app.includes('function scheduleFirstRunGuide(){'),'Reusable guide and automatic first-run launcher must exist');
+assert.ok(app.includes("localStorage.setItem(HOW_TO_GUIDE_KEY,'1')"),'Guide dismissal/completion must persist');
+assert.ok(app.includes("settingsActionButton('howToGuideSettings'")&&app.includes("$('howToGuideSettings').onclick=()=>showHowToGuide(false);"),'Settings must reopen the guide');
+assert.ok(app.includes("showHowToGuide(true);"),'First-run guide must launch');
+assert.ok(css.includes('/* CP990 — first-run How Dinliminate Works guide.')&&css.includes('.howto-slide')&&css.includes('#howToModal.utility-modal'),'Guide must have dedicated styling');
+assert.ok(html.includes('styles.css?v=990')&&html.includes('app.js?v=990'),'Frontend asset markers must match CP990');
