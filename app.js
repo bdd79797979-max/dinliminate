@@ -958,6 +958,7 @@ if(builtInButtermilkCornbread){
   builtInButtermilkCornbread.name='Buttermilk & Cornbread';
   builtInButtermilkCornbread.image='https://images.pexels.com/photos/18852480/pexels-photo-18852480.jpeg?auto=compress&cs=tinysrgb&w=1200';
   builtInButtermilkCornbread.images=[builtInButtermilkCornbread.image];
+  save();
  }
 }
 S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals.map(item=>({...item,images:mealPhotoList(item)})) : [];
