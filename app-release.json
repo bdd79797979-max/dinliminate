@@ -1,12 +1,12 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 988,
+  "build": 989,
   "sourceBranch": "main",
-  "checkpoint": "CP988",
-  "deploymentTrigger": "CP988-swipe-engine-v2",
+  "checkpoint": "CP989",
+  "deploymentTrigger": "CP989-restore-card-handoff-ui",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP988-atomic-swipe-engine-v2",
+  "swipeAudit": "CP989-food-handoff-plus-ui-regression-fix",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "immediate-safe-fallback-plus-exact-venue-page-routes",
   "photoPolicy": "no-google"

@@ -118,3 +118,10 @@ assert.ok(app.includes("if(e.isPrimary===false){")&&app.includes('settleBack();'
 assert.ok(!app.includes('<button class="menu" type="button" id="appConfirmClose'),'Confirm close must not reuse the hamburger menu class');
 assert.ok(!app.includes('<button class="menu" data-close'),'Modal close must not reuse the hamburger menu class');
 assert.ok(css.includes('background:transparent!important')&&css.includes('#familyMenu span')&&css.includes('.menu-hint'),'Hamburger presentation must be shared and boxless with Menu hint');
+
+assert.ok(app.includes("if(foodHandoff)foodSwipeHandoff=true;"),'Food swipe handoff must freeze the waiting card before redraw');
+assert.ok(app.includes("$('menu')?.addEventListener('click',openDrawer)")&&app.includes("$('foodMenu')?.addEventListener('click',openDrawer)")&&app.includes("$('restaurantMenu')?.addEventListener('click',openDrawer)")&&app.includes("$('winnerMenu')?.addEventListener('click',openDrawer)")&&app.includes("$('familyMenu')?.addEventListener('click',openDrawer)"),'All hamburger menu buttons must be directly wired');
+assert.ok(css.includes('/* CP989 — restore modal close visibility')&&css.includes('.modal-close')&&css.includes('color:#d6b778!important'),'Modal close button must remain visibly gold and not blacked out');
+assert.ok(css.includes('#food .meal-time-quick .meal-time-chip')&&css.includes('transform:translateY(1px) scale(.985)!important'),'Meal Time chips must share Cuisine chip touch treatment');
+assert.ok(html.includes('styles.css?v=989')&&html.includes('app.js?v=989'),'Frontend asset markers must be CP989');
+assert.equal(release.build,989,'Release build must be CP989');

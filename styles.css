@@ -9975,3 +9975,47 @@ button,input,select,textarea{
 
 /* CP988 — hard lock a card after swipe commit; only the new active card may receive input. */
 .card[data-swipe-phase="committing"],.card[data-swipe-phase="completing"]{pointer-events:none!important;user-select:none!important;cursor:default!important}
+
+/* CP989 — restore modal close visibility and reinforce shared Meal Time/Cuisine chip treatment. */
+.modal-close{
+  background:rgba(255,255,255,.08)!important;
+  background-color:rgba(255,255,255,.08)!important;
+  background-image:none!important;
+  border:1px solid rgba(214,183,120,.72)!important;
+  color:#d6b778!important;
+  box-shadow:0 0 10px rgba(214,183,120,.08),inset 0 1px 0 rgba(255,248,226,.12)!important;
+}
+.modal-close:hover,.modal-close:active{
+  background:rgba(255,255,255,.13)!important;
+  color:#fffaf0!important;
+  border-color:#f4f0e7!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 12px rgba(255,255,255,.08)!important;
+}
+#food .meal-time-quick .meal-time-chip{
+  border-color:rgba(214,183,120,.62)!important;
+  background:linear-gradient(145deg,#191816,#121211)!important;
+  color:#d9bd7b!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+  transition:transform .14s ease,border-color .18s ease,color .18s ease,background .18s ease,box-shadow .18s ease!important;
+}
+#food .meal-time-quick .meal-time-chip:hover,
+#food .meal-time-quick .meal-time-chip:active{
+  border-color:#f4f0e7!important;
+  background:linear-gradient(145deg,#1e1d1a,#151514)!important;
+  color:#fff!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.20),0 0 12px rgba(255,255,255,.08)!important;
+}
+#food .meal-time-quick .meal-time-chip.is-active{
+  border-color:rgba(214,183,120,.78)!important;
+  background:linear-gradient(145deg,#242018,#15130f)!important;
+  color:#e2c17f!important;
+  box-shadow:inset 0 0 0 1px rgba(214,183,120,.14),0 0 10px rgba(214,183,120,.07)!important;
+}
+#food .meal-time-quick .meal-time-chip.is-active:hover,
+#food .meal-time-quick .meal-time-chip.is-active:active{
+  border-color:#f4f0e7!important;
+  background:linear-gradient(145deg,#1e1d1a,#151514)!important;
+  color:#fff!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 12px rgba(255,255,255,.08)!important;
+}
+#food .meal-time-quick .meal-time-chip:active{transform:translateY(1px) scale(.985)!important;}

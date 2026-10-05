@@ -1670,6 +1670,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   phase='completing';
   card.dataset.swipePhase='completing';
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
+  if(foodHandoff)foodSwipeHandoff=true;
 
   if(foodHandoff){
    // Keep the promoted waiting image visually authoritative while the
@@ -4755,6 +4756,11 @@ const navigateFromDrawer=(navigate)=>{
   closeDrawer(true);
   try{navigate?.();}catch{}
 };
+$('menu')?.addEventListener('click',openDrawer);
+$('foodMenu')?.addEventListener('click',openDrawer);
+$('restaurantMenu')?.addEventListener('click',openDrawer);
+$('winnerMenu')?.addEventListener('click',openDrawer);
+$('familyMenu')?.addEventListener('click',openDrawer);
 $('manage').onclick = () => navigateFromDrawer(manageFoodsView);
 $('settings').onclick = () => navigateFromDrawer(settingsView);
 $('backToStart').onclick = () => navigateFromDrawer(home);
@@ -5144,7 +5150,7 @@ async function familyLeave(){const s=familySessionRead();if(!await appConfirm('L
 async function familyRotateCode(){const s=familySessionRead();if(!s?.token)return;try{const d=await familyApi('rotate-code',{token:s.token});familySessionWrite({...s,family:{...(s.family||{}),joinCode:d.joinCode}});await familyRefreshState();}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}}
 function familyBackFromMode(){S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyDecisionType='';S.familyVotedIds=new Set();familyResetCompareState();stopFamilyLobbyPolling();home();}
 
-$('familyMode')?.addEventListener('click',()=>navigateFromDrawer(familyOpen));$('familyBackTop')?.addEventListener('click',familyBackFromMode);$('familyMenu')?.addEventListener('click',openDrawer);
+$('familyMode')?.addEventListener('click',()=>navigateFromDrawer(familyOpen));$('familyBackTop')?.addEventListener('click',familyBackFromMode);
 $('familyCreateChoice')?.addEventListener('click',familyShowCreate);$('familyJoinChoice')?.addEventListener('click',familyShowJoin);$('familyCreateBack')?.addEventListener('click',familyShowEntry);$('familyJoinBack')?.addEventListener('click',familyShowEntry);
 $('familyCreateSubmit')?.addEventListener('click',familyCreate);$('familyJoinSubmit')?.addEventListener('click',familyJoin);$('familyLeave')?.addEventListener('click',familyLeave);$('familyCopyCode')?.addEventListener('click',familyCopyCode);$('familyShareCode')?.addEventListener('click',familyShareCode);$('familyRotateCode')?.addEventListener('click',familyRotateCode);
 $('familySetupOpen')?.addEventListener('click',()=>{const a=$('familySetupOpen')?.dataset.familyLobbyAction||'meal',r=S.familyActiveData?.lastCompletedRound;if(a==='compare-restaurant'&&r){S.familyCompareBothMode='restaurant';S.familyCompareBothMealWinner=r.winnerItem;S.familyCompareBothGroupId=String(r.snapshot?.compareBoth?.groupId||S.familyCompareBothGroupId);familyChooseNormalType('restaurant');}else if(a==='compare-final'&&r)familyCreateCompareFinal(r);else familyChooseNormalType('meal');});$('familyStartDecision')?.addEventListener('click',()=>familyChooseNormalType('restaurant'));$('familyCompareBoth')?.addEventListener('click',()=>familyChooseNormalType('both'));
