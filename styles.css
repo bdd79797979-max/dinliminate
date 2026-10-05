@@ -3340,20 +3340,20 @@ button,input,select,textarea{
 
 
 /* CP699 — discreet Home install/share actions. */
-.luxury-home #addToPhone{
-  color:#9a9389!important;
-  background:linear-gradient(180deg,#171716,#111110)!important;
-  border-color:#332f29!important;
-}
+.luxury-home #addToPhone,
 .luxury-home #shareApp{
   color:#aaa39a!important;
-  background:linear-gradient(180deg,#161615,#10100f)!important;
-  border-color:#302c27!important;
+  background:transparent!important;
+  background-image:none!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
 }
 .luxury-home #addToPhone:hover,
 .luxury-home #shareApp:hover{
   color:#d7c7aa!important;
-  border-color:#4b4134!important;
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
 }
 .add-phone-fallback{display:grid;gap:13px;padding:3px 2px 2px}
 .add-phone-fallback h4{margin:0;color:#f4eee6;font-size:23px;letter-spacing:-.04em}
@@ -9218,6 +9218,18 @@ button,input,select,textarea{
 /* CP936 — Match Meals discovery controls to Restaurant.
    Meal Times and Cuisine use the same size/weight/treatment as Restaurant Search/Cuisine.
    All Maybes keeps its live count but adopts the same restrained count scale and tone. */
+#food #foodQuickToggle{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
+#food #foodQuickToggle:hover{
+  color:#fff!important;
+}
+#food #foodQuickToggle.is-open{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
+
 #food .food-interior-nav .food-top-refine{
   appearance:none!important;
   -webkit-appearance:none!important;
@@ -9772,7 +9784,7 @@ button,input,select,textarea{
 }
 #foodQuick .photo-chip span,
 #restQuick .photo-chip span{
-  color:#d9bd7b!important;
+  color:#fff!important;
   transition:color .14s ease,text-shadow .14s ease;
 }
 #foodQuick .photo-chip:hover,
@@ -9817,48 +9829,3 @@ button,input,select,textarea{
 #food .swipe-card-stack>.next-card,#restaurant .restaurant-card-stack>.next-card{transform:none!important;transition:none!important;}
 #food .swipe-card-stack>.next-card img,#restaurant .restaurant-card-stack>.next-card img{transform:none!important;transition:none!important;}
 
-
-/* CP979 — explicitly restore the Home wordmark as polished metallic gold. */
-.app:has(#home:not(.hidden)) .app-topbar .brand{
-  background:linear-gradient(104deg,#6f4e1d 0%,#a97b2d 9%,#f7e9ba 22%,#fffdf1 29%,#c99e50 39%,#8f6827 49%,#f3d58f 59%,#fff8dc 69%,#b88a37 79%,#76531d 91%,#e5c77e 100%)!important;
-  background-size:320% 100%!important;
-  background-position:0% 50%!important;
-  -webkit-background-clip:text!important;
-  background-clip:text!important;
-  color:transparent!important;
-  -webkit-text-stroke:.22px rgba(255,247,218,.38)!important;
-  text-shadow:0 1px 0 rgba(255,248,220,.24),0 2px 7px rgba(0,0,0,.42),0 0 16px rgba(209,168,83,.16)!important;
-  filter:drop-shadow(0 2px 5px rgba(79,52,14,.28))!important;
-  animation:cp911MetallicGoldSheen 11s cubic-bezier(.35,0,.2,1) infinite!important;
-}
-
-/* CP980 — Cuisine readability and Meal/Restaurant Cuisine button parity. */
-#foodQuick .photo-chip span,
-#restQuick .photo-chip span{
-  color:#fff!important;
-  text-shadow:0 1px 4px rgba(0,0,0,.28)!important;
-}
-#food #foodQuickToggle{
-  color:#d7cec1!important;
-  text-shadow:none!important;
-}
-#food #foodQuickToggle:hover,
-#food #foodQuickToggle.is-open{
-  color:#fff!important;
-}
-
-
-/* CP981 — Home Add to Phone / Share App use clean text-only treatment. */
-.luxury-home #addToPhone,
-.luxury-home #shareApp{
-  background:transparent!important;
-  background-image:none!important;
-  border-color:transparent!important;
-  box-shadow:none!important;
-}
-.luxury-home #addToPhone:hover,
-.luxury-home #shareApp:hover{
-  background:transparent!important;
-  border-color:transparent!important;
-  box-shadow:none!important;
-}
