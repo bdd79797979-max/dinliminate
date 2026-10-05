@@ -22,6 +22,12 @@ Date: 2026-10-05
 - Settings → Tutorial Mode starts from Home.
 - Add to phone, Share, and Tutorial use the same Home utility icon styling.
 
+## Full iPhone viewport gate
+
+- App uses the full mobile dynamic viewport.
+- Shared top safe-area spacing is inside the top bar rather than outside the canvas.
+- Screen backgrounds extend edge-to-edge horizontally without shifting existing content geometry.
+
 ## Home image gate
 
 - Home page uses only the original uploaded door photo.
