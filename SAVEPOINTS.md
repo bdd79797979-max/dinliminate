@@ -2,27 +2,23 @@
 
 Date: 2026-10-05
 
-Working branch: cp995-tutorial-state-repair
+Working branch: `main`
 
-## CP995 — Tutorial State & Navigation Repair
-- CP994 preserved as rollback baseline.
-- Tutorial launch always begins on Home.
-- Menu remains a tutorial target; inner Menu buttons are not tutorial steps.
-- Home tutorial includes the required three-step opening sequence.
-- Tutorial bubble positioning avoids the target plus its related visible control rail.
-- Choose → Winner → Start Over resumes the tutorial in the same decision path.
-- Front-page Tutorial icon has no black background circle.
+## Recovery anchors
 
-Recovery target: CP995
+### CP995 — current source
+CP995 is the current merged release source.
 
-# CURRENT SAVEPOINT - BUILD 737 / CP737
+### CP994 — immediate rollback
+`435a0312af4f137f58af6d0b4dece1e474907d71`
 
-Date: 2026-10-02
+Use this as the first rollback point if CP995 tutorial/navigation changes regress.
 
-Working branch: cp728-hungry-reveal-home-polish
+### CP957 — restaurant-photo protection
+`d03a75ab63f1708524f1406e33d5a09c74f689f4`
 
-Completed:
-- Winner and Hungry windows now keep the hamburger in the top-right position used throughout the app.
-- Menu opens the same drawer as the other screens.
+Recovery branch: `recovery/cp957-before-restaurant-photo-repair`
 
-Recovery target: CP737
+## Cleanup rule
+
+Historical checkpoint branches and old verification notes are preserved in Git history. Routine work should branch from `main`, make one scoped change, verify it, and record a new checkpoint before the next surgical change.

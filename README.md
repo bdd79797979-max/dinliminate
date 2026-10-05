@@ -1,114 +1,60 @@
 # Dinliminate
 
-Dinliminate is a phone-first dinner decision app built around fast, stable meal and restaurant elimination.
+Dinliminate is a phone-first meal and restaurant decision app built around fast, simple elimination.
 
 ## Current release
 
 - **Version:** 1.0
-- **Build:** 992
-- **Checkpoint:** CP992
-- **Branch:** `main`
-- **Release state:** candidate source; Vercel production verification pending the account deployment-rate reset.
-- **Architecture:** root-level HTML/CSS/JS PWA with Vercel API routes; Netlify files remain as legacy/backup hosting configuration.
+- **Build:** 995
+- **Checkpoint:** CP995
+- **Source:** `main`
+- **Release state:** candidate source; production verification is still pending because the connected Vercel account has exhausted its Hobby daily deployment allowance.
+- **Photo policy:** restaurant photography uses the no-Google resolver/source ladder.
+- **Hosting:** Vercel is the official runtime target; Netlify remains legacy/backup configuration.
 
-## CP988 — Swipe Engine v2
+## What is active
 
-- Replaced the swipe transaction with an explicit `idle → dragging → committing → completing` state machine.
-- A committed card is immediately removed from pointer input, preventing rapid repeat-swipes of the same card.
-- Swipe exit animation starts synchronously on release and travels fully off-screen.
-- Completion follows the actual CSS transform transition with a bounded safety timeout, then applies exactly one Cut/Maybe decision.
-- Removed next-card image readiness waits from the commit path so photo work cannot hold up the outgoing card.
-- Prewarms up to three future meal images to support rapid swiping.
-- Added a CSS-level committed/completing input lock and static QA assertions for the swipe invariants.
-- CP987 remains the rollback baseline.
+The deployable app lives at the repository root.
 
-## CP910 — Surgical cleanup
-
-- Removed confirmed unused/no-op runtime variables and the stale CP693 verification marker.
-- Simplified Restaurant Search pool construction so fresh provider rows are deduped directly without an always-empty intermediate array.
-- Synchronized `index.html`, `app.js`, `sw.js`, and release metadata to build 910.
-- Kept the existing single-file runtime architecture intact; no broad refactor or file split was introduced.
-
-## Recent stability fixes
-
-- **CP909:** synchronized runtime entry, service-worker registration, and release metadata; fixed the App Diagnosis undefined-source bug.
-- **CP908:** expanded App Diagnosis with interaction-stability checks for search, swipe coaching, wheel repeat spins, restaurant photography, prefetching, and PWA versioning.
-- **CP907:** fixed Restaurant Search keyboard Enter/card-flash behavior by keeping typing state-only and preserving the active card while search runs.
-- **CP906:** isolated Hungry wheel repeat spins from stale celebration and stop callbacks.
-- **CP904:** bounded restaurant photo memory and throttled prefetch to reduce phone memory pressure.
-- **CP903:** removed Details-photo source-change flashing through preloaded image swaps.
-- **CP902:** corrected Restaurant Search/Cuisine stacking above the restaurant card stage.
-- **CP901:** removed swipe-card handoff flashing at completion.
-
-## Project structure
-
-The deployable app lives at the repository root. Key runtime files are:
-
-- `index.html` — app shell and entry points
-- `styles.css` — UI system and responsive/iPhone styling
+- `index.html` — app shell and screen markup
+- `styles.css` — visual/UI system and responsive phone styling
 - `app.js` — application runtime
-- `sw.js` — PWA service worker/cache
-- `api/` — Vercel serverless API routes
+- `sw.js` — PWA service worker and cache management
+- `api/` — Vercel serverless routes, including restaurant photography
 - `data/` — meal and restaurant taxonomy data
-- `qa/` — retained checkpoint/verification scripts
+- `qa/` — current release verification and regression checks
+
+The large single-file runtime is intentional for now. Do not split or broadly refactor `app.js` or `styles.css` as part of routine cleanup.
+
+## CP995 highlights
+
+CP995 repaired Tutorial Mode state and navigation without changing the restaurant-photo policy. Tutorial launches begin from Home, teach the Menu button without teaching its inner buttons, avoid covering Meal Times/Cuisine controls, and preserve the tutorial across Choose → Winner → Start Over.
+
+## Restaurant photo rule
+
+Restaurant cards must not use Google photo/API credentials.
+
+The resolver prefers:
+1. official restaurant website/gallery/location page
+2. exact public venue page
+3. exact OSM/Photon venue imagery
+4. tightly validated exact-restaurant search imagery
+5. safe restaurant/category fallback
+
+Exact identity validation and cached results protect against wrong-venue photos.
+
+## Recovery strategy
+
+Keep `main` as the current source of truth and preserve these rollback anchors until the current release has been physically verified:
+
+- **CP994** — immediate pre-CP995 tutorial baseline: `435a0312af4f137f58af6d0b4dece1e474907d71`
+- **CP957** — protected restaurant-photo baseline: `d03a75ab63f1708524f1406e33d5a09c74f689f4`
+- `recovery/cp957-before-restaurant-photo-repair`
+
+Historical checkpoint detail remains available in Git history and preserved branches rather than being repeated in the active README.
 
 ## Verification
 
-Repository checks for CP910 cover:
+Repository-level checks should cover JavaScript syntax, release/cache-version consistency, tutorial state hooks, restaurant-photo source policy, and regression-sensitive swipe/navigation invariants.
 
-- JavaScript syntax and source integrity
-- matching 910 asset/cache references
-- no confirmed dead cleanup targets
-- Restaurant Search preserving the active card during submit/loading
-- wheel repeat-spin reset/token isolation
-- bounded restaurant-photo caching and throttled prefetch
-- release metadata consistency
-
-Physical iPhone Safari/PWA behavior still requires a device run; repository checks cannot certify real touch, keyboard, GPS, install, or memory behavior.
-
-## Deployment
-
-Vercel is the official runtime target. The current connected Vercel account has exhausted its Hobby 24-hour deployment allowance, so the CP910 source is committed to `main` but cannot be newly deployed until that limit resets. Netlify remains available as legacy/backup configuration.
-
-
-## CP989 — Card handoff and UI regression repair
-- Restored the meal swipe handoff guard before redraw so the waiting card remains the exact next meal while the current card is recycled.
-- Wired every hamburger menu button (Home, Meals, Restaurant, Winner, Family) to the shared drawer.
-- Restyled modal close controls so the X remains visible and gold rather than blacked out.
-- Reasserted the shared Cuisine/Meal Time chip touch, color, and active-state treatment.
-- CP987 remains the clean rollback baseline; CP988 is superseded by this repair for swipe behavior.
-
-
-## CP990 — First-run How Dinliminate Works guide (superseded by CP991)
-- Added one reusable first-run walkthrough covering Home, swipe behavior, decision controls, Cuisine and Meal Times, All · Maybes, Details, Restaurants, Family Mode, and the Hungry fallback.
-- It appears once on a new install/device state, then stays out of the way.
-- Added Settings → How Dinliminate Works so the same guide can be replayed anytime.
-- Full Reset clears the Dinliminate storage prefix, so a fresh reset also gets the walkthrough again.
-
-## CP991 — First-time instruction popup
-- Reworked onboarding into a compact popup that focuses on one feature at a time.
-- Every step explains what the feature does and why it is useful, then moves forward with Next.
-- The first popup uses the preferred “← CUT · SWIPE · MAYBE →” lesson.
-- Settings → How Dinliminate Works reopens the same popup sequence.
-- Uses a new onboarding key so users who saw the CP990 walkthrough receive the improved popup once.
-
-
-## CP992 — Restaurant photo pipeline repair
-- Separates the official brand website from the exact restaurant location-page concept.
-- Tries an exact official location page before leaving the official domain when a brand root is supplied.
-- Keeps exact public-venue discovery available even when an official website exists.
-- Added the verified 724 Sango Rd, Clarksville McDonald’s venue page as a regression path.
-- Bumped the restaurant-photo resolver/cache namespace so stale photo misses are not reused.
-- Fixed the service worker to preserve the active restaurant-photo cache namespace.
-- No Google photo/API source was introduced.
-
-
-## CP993 — Restaurant card photo handoff
-- Restaurant cards now point directly at the restaurant-photo resolver on first paint instead of using category stock photography as the primary card source.
-- The resolver remains responsible for official-location, official-site, exact public venue, OSM, exact-search, and final fallback ordering.
-- CP992 remains the backend/source-ladder checkpoint.
-
-
-## CP994 — Tutorial Mode
-
-Rebuilt onboarding as screen-specific Tutorial Mode bubbles anchored to real controls. Bubbles stay clear of their target, advance on tap, and cover Home, Meals, Restaurants, and Menu in interface order. The CP991 slideshow tutorial was removed. Tutorial Mode is available from the Home tutorial icon and Settings.
+Real iPhone Safari/PWA checks are still required for touch, GPS, installation, keyboard behavior, image loading, memory, and deployment verification.
