@@ -2953,7 +2953,7 @@ if(tutorialModeEnabled()&&tutorialState.active){
  tutorialEnterDecisionScreen('restaurant',resumeIndex);
 }
 }
-function drawRestaurants()) {
+function drawRestaurants() {
 const rows = restaurantPoolFiltered();
 renderRestaurantSearchControl();
 updateRestaurantStatus();
