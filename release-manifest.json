@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 990,
+  "build": 991,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP990",
-  "deploymentTrigger": "CP990-first-run-guide"
+  "checkpoint": "CP991",
+  "deploymentTrigger": "CP991-popup-onboarding"
 }
