@@ -1,14 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1007,
+  "build": 1008,
   "sourceBranch": "main",
-  "checkpoint": "CP1007",
-  "deploymentTrigger": "CP1007-cornbread-buttermilk-reference",
+  "checkpoint": "CP1008",
+  "deploymentTrigger": "CP1008-managed-image-cache",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "resolver-backed-card-handoff",
   "photoPolicy": "no-google",
-  "onboarding": "CP1006-full-iphone-viewport-fix"
+  "onboarding": "CP1006-full-iphone-viewport-fix",
+  "imageCache": "CP1008-size-based-lru-75mb"
 }
