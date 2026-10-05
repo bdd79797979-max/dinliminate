@@ -77,3 +77,10 @@ Vercel is the official runtime target. The current connected Vercel account has 
 - Restyled modal close controls so the X remains visible and gold rather than blacked out.
 - Reasserted the shared Cuisine/Meal Time chip touch, color, and active-state treatment.
 - CP987 remains the clean rollback baseline; CP988 is superseded by this repair for swipe behavior.
+
+
+## CP990 — First-run How Dinliminate Works guide
+- Added one reusable first-run walkthrough covering Home, swipe behavior, decision controls, Cuisine and Meal Times, All · Maybes, Details, Restaurants, Family Mode, and the Hungry fallback.
+- It appears once on a new install/device state, then stays out of the way.
+- Added Settings → How Dinliminate Works so the same guide can be replayed anytime.
+- Full Reset clears the Dinliminate storage prefix, so a fresh reset also gets the walkthrough again.

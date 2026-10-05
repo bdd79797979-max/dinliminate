@@ -13,7 +13,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '988';
+let APP_BUILD = '990';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -955,7 +955,7 @@ window.scrollTo?.(0,0);
 function closeOverlays() {
 
 ['drawer','drawerBg','modal','modalBg'].forEach(id => $(id)?.classList.add('hidden'));
-['manageFoodsModal','manageFoodsModalBg','foodEditorModal','foodEditorModalBg','resetRestoreModal','resetRestoreModalBg','settingsModal','settingsModalBg','historyModal','historyModalBg','aboutModal','aboutModalBg','iphoneModal','iphoneModalBg','detailsModal','detailsModalBg'].forEach(id => $(id)?.remove());
+['manageFoodsModal','manageFoodsModalBg','foodEditorModal','foodEditorModalBg','resetRestoreModal','resetRestoreModalBg','settingsModal','settingsModalBg','historyModal','historyModalBg','aboutModal','aboutModalBg','iphoneModal','iphoneModalBg','detailsModal','detailsModalBg','howToModal','howToModalBg'].forEach(id => $(id)?.remove());
 clearSuggestions();
 }
 function home() {
@@ -1251,6 +1251,43 @@ function maybeShowInCardSwipeCoach(){
  coach.innerHTML='<span class="swipe-card-coach-cut">← CUT</span><span class="swipe-card-coach-mid">· SWIPE ·</span><span class="swipe-card-coach-maybe">MAYBE →</span>';
  host.appendChild(coach);
 }
+
+const HOW_TO_GUIDE_KEY='dinliminate.howToGuide.v1';
+function showHowToGuide(firstRun=false){
+ const slides=[
+  ['WELCOME','Dinner decisions, simplified.','Dinliminate narrows the choices until one meal or restaurant survives. You refine; Dinliminate keeps the process moving.','<div class="howto-choice-pair"><span><b>AT HOME</b><small>Your meal awaits</small></span><i>or</i><span><b>RESTAURANT</b><small>Your table awaits</small></span></div>'],
+  ['SWIPE','Swipe to refine.','Left is CUT. Right is MAYBE. Swipe the card itself, or use the matching buttons below it.','<div class="howto-swipe-demo"><span class="cut-demo">← CUT</span><strong>SWIPE</strong><span class="maybe-demo">MAYBE →</span></div>'],
+  ['CONTROLS','Four simple controls.','Back restores your last decision. Cut removes it. Maybe saves it for later. Choose makes the current card the winner.','<div class="howto-control-grid"><span><b>↶</b><small>BACK</small></span><span><b>✕</b><small>CUT</small></span><span><b>♥</b><small>MAYBE</small></span><span><b>✓</b><small>CHOOSE</small></span></div>'],
+  ['REFINE','Cuisine + Meal Times.','Cuisine narrows what sounds good. Meal Times filters when you want it. Multiple meal times can be selected, and all are selected by default.','<div class="howto-chip-demo"><span>Cuisine</span><span>Meal Times</span><span>Breakfast</span><span>Lunch / Dinner</span><span>Snacks / Desserts</span></div>'],
+  ['MAYBES + DETAILS','Keep the good options.','ALL · MAYBES brings back the choices you saved. Details gives you photos, notes, full information, and hide controls.','<div class="howto-feature-demo"><span><b>ALL · MAYBES</b><small>Revisit saved possibilities</small></span><span><b>DETAILS</b><small>More information, photos & notes</small></span></div>'],
+  ['RESTAURANTS','Find the table.','Set a location and radius, then refine the restaurants. Pinch restaurant photos to zoom. Details gives you venue actions such as Website, Call, and Directions.','<div class="howto-restaurant-demo"><span>⌖<small>LOCATION</small></span><span>◌<small>RADIUS</small></span><span>⤢<small>PINCH TO ZOOM</small></span><span>↗<small>DETAILS</small></span></div>'],
+  ['FAMILY MODE','Decide together.','Open Menu → Family Mode. Create or Join a family, then everyone makes picks. Finalists and the winner stay in the normal Dinliminate flow.','<div class="howto-family-demo"><span>MENU</span><b>→</b><span>FAMILY MODE</span><b>→</b><span>CREATE / JOIN</span></div>'],
+  ['FINISH','You are never stuck.','Choose a winner at any point. If everything is cut, Hungry mode gives you a second chance instead of leaving you with nothing.','<div class="howto-finish-demo"><span>REFINE</span><i>→</i><strong>WINNER</strong></div>']
+ ];
+ const body='<div class="howto-guide" id="howToGuide"><div class="howto-progress" id="howToProgress" aria-hidden="true"></div><div class="howto-slide-viewport" id="howToSlideViewport"></div><div class="howto-footer"><button type="button" class="howto-skip" id="howToSkip">Skip</button><div class="howto-nav"><button type="button" class="secondary howto-back" id="howToBack">Back</button><button type="button" class="detail-web-action howto-next" id="howToNext">Next</button></div></div></div>';
+ const modal=openModal('howToModal',firstRun?'Welcome to Dinliminate':'How Dinliminate Works',body);
+ let index=0;
+ const render=()=>{
+  const s=slides[index],vp=$('howToSlideViewport'),pr=$('howToProgress'),back=$('howToBack'),next=$('howToNext'),skip=$('howToSkip');
+  if(vp)vp.innerHTML='<article class="howto-slide"><div class="howto-kicker">'+esc(s[0])+'</div><h4>'+esc(s[1])+'</h4><p>'+esc(s[2])+'</p><div class="howto-visual">'+s[3]+'</div></article>';
+  if(pr)pr.innerHTML=slides.map((_,i)=>'<span class="'+(i===index?'is-active':'')+'"></span>').join('');
+  if(back)back.disabled=index===0;
+  if(next)next.textContent=index===slides.length-1?'Done':'Next';
+  if(skip)skip.textContent=index===slides.length-1?'':'Skip';
+ };
+ const finish=()=>modal.querySelector('[data-close]')?.click();
+ if(firstRun){try{localStorage.setItem(HOW_TO_GUIDE_KEY,'1')}catch{}}
+ $('howToBack').onclick=()=>{if(index>0){index--;render();}};
+ $('howToNext').onclick=()=>{if(index<slides.length-1){index++;render();}else finish();};
+ $('howToSkip').onclick=finish;
+ render();
+ return modal;
+}
+function scheduleFirstRunGuide(){
+ try{if(localStorage.getItem(HOW_TO_GUIDE_KEY))return;}catch{}
+ window.setTimeout(()=>{if(!document.querySelector('#howToModal')&&!document.querySelector('.drawer.is-open'))showHowToGuide(true);},420);
+}
+
 function startFood() {
 S.foodActions = [];
 S.maybe.clear();
@@ -3310,7 +3347,7 @@ bg.className='modal-bg modal-bg-opening'+(id==='manageFoodsModal'?' manage-foods
 const modal=document.createElement('section');
 modal.id=id;
 modal.className='modal modal-opening';
-if(['manageFoodsModal','historyModal','settingsModal'].includes(id))modal.classList.add('utility-modal');
+if(['manageFoodsModal','historyModal','settingsModal','howToModal'].includes(id))modal.classList.add('utility-modal');
 if(id==='detailsModal')modal.classList.add('details-modal');
 modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');
@@ -4252,7 +4289,8 @@ function settingsView(){
  (hiddenRestaurants.length?hiddenRestaurants.map(x=>'<div class="food-row settings-hidden-row"><span><b>'+esc(x.name)+'</b><small>Hidden restaurant</small></span><button class="restore settings-inline-action" data-setting-rest="'+esc(x.id)+'">Restore</button></div>').join(''):'<p class="settings-empty">No hidden restaurants.</p>')+
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">TOOLS</div><div class="settings-actions">'+
- settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
+ settingsActionButton('howToGuideSettings','◎','How Dinliminate Works','Walk through swiping, refining, details, restaurants, and Family Mode again.','howto-action')+
+settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
  settingsActionButton('resetRestore','↺','Reset & Restore','Restore original meals or wipe all local app data.','restore-action')+
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">YOUR DATA</div><div class="settings-actions settings-actions-utility">'+
@@ -4264,6 +4302,7 @@ function settingsView(){
  const modal=openModal('settingsModal','Settings',body);
  modal.querySelectorAll('[data-setting-rest]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.settingRest;delete S.hiddenRestaurants[id];const row=S.restaurantPool.find(x=>x.id===id);if(row)row._hidden=false;save();modal.remove();$('settingsModalBg')?.remove();settingsView();});
  $('appDiagnosis').onclick=()=>{modal.classList.add('diagnosis-modal');modal.style.minHeight='min(78svh,720px)';modal.style.maxHeight='88svh';appDiagnosisView(modal);};
+ $('howToGuideSettings').onclick=()=>showHowToGuide(false);
  $('resetRestore').onclick=()=>resetRestoreView();
  $('exportPdf').onclick=()=>exportPdfView();
  $('privacySettings').onclick=()=>privacyView();
@@ -4938,6 +4977,7 @@ show('restaurant'); restaurantQuick(); drawRestaurants();
 } else {
 home();
 }
+scheduleFirstRunGuide();
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({

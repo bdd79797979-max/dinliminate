@@ -10019,3 +10019,50 @@ button,input,select,textarea{
   box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 12px rgba(255,255,255,.08)!important;
 }
 #food .meal-time-quick .meal-time-chip:active{transform:translateY(1px) scale(.985)!important;}
+
+/* CP990 — first-run How Dinliminate Works guide. */
+.howto-guide{display:flex;flex-direction:column;min-height:clamp(430px,68svh,610px);gap:14px}
+.howto-progress{display:flex;justify-content:center;gap:5px;padding:1px 0 2px}
+.howto-progress span{width:22px;height:3px;border-radius:99px;background:#2b2925;transition:background .18s ease,width .18s ease}
+.howto-progress span.is-active{width:34px;background:linear-gradient(90deg,#96712f,#ecd394,#96712f)}
+.howto-slide-viewport{flex:1;display:flex}
+.howto-slide{width:100%;display:flex;flex-direction:column;justify-content:center;gap:10px;text-align:center;animation:howtoSlideIn .2s ease}
+.howto-kicker{color:#b79353;font-size:8px;font-weight:900;letter-spacing:.22em}
+.howto-slide h4{margin:0;color:#f4efe7;font-size:29px;line-height:1.02;letter-spacing:-.045em}
+.howto-slide p{max-width:430px;margin:0 auto;color:#9f9a92;font-size:11px;line-height:1.6}
+.howto-visual{width:100%;margin:12px auto 0;padding:18px 12px;border:1px solid #312e29;border-radius:20px;background:radial-gradient(circle at 50% 0%,rgba(230,201,145,.08),transparent 46%),linear-gradient(160deg,#191816,#10100f);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 16px 40px rgba(0,0,0,.24)}
+.howto-choice-pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.howto-choice-pair span{display:grid;gap:4px;padding:14px 9px;border:1px solid rgba(214,183,120,.42);border-radius:14px;background:rgba(255,255,255,.025)}
+.howto-choice-pair b,.howto-feature-demo b,.howto-family-demo span{color:#e4c986;font-size:10px;letter-spacing:.08em}
+.howto-choice-pair small,.howto-feature-demo small{color:#7f7a72;font-size:8px}
+.howto-choice-pair i,.howto-family-demo b,.howto-finish-demo i{color:#6b665d;font-size:10px;font-style:normal}
+.howto-swipe-demo{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.howto-swipe-demo strong{color:#f3eee4;font-size:13px;letter-spacing:.13em}
+.howto-swipe-demo span,.howto-finish-demo span,.howto-finish-demo strong{padding:10px 7px;border-radius:12px;font-size:9px;font-weight:900;letter-spacing:.09em}
+.howto-swipe-demo .cut-demo{color:#df7b72!important;border:1px solid rgba(223,123,114,.42);background:rgba(115,28,22,.14)}
+.howto-swipe-demo .maybe-demo{color:#84ca9d!important;border:1px solid rgba(132,202,157,.38);background:rgba(35,98,55,.13)}
+.howto-control-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.howto-control-grid span{display:grid;gap:7px;justify-items:center;padding:12px 4px;border:1px solid #35312b;border-radius:14px;background:rgba(255,255,255,.025)}
+.howto-control-grid b{font-size:22px;line-height:1;color:#dbc082}
+.howto-control-grid small{color:#7f7a72;font-size:8px;font-weight:850;letter-spacing:.10em}
+.howto-chip-demo{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.howto-chip-demo span{min-height:30px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid rgba(214,183,120,.62);border-radius:999px;background:linear-gradient(145deg,#191816,#121211);color:#d9bd7b;font-size:8px;font-weight:850}
+.howto-feature-demo{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.howto-feature-demo span{display:grid;gap:4px;padding:14px 10px;border:1px solid #35312b;border-radius:14px;background:rgba(255,255,255,.025)}
+.howto-restaurant-demo{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.howto-restaurant-demo span{display:grid;gap:6px;justify-items:center;padding:11px 3px;border:1px solid #35312b;border-radius:13px;color:#dbc082;font-size:18px}
+.howto-restaurant-demo small{color:#7f7a72;font-size:7px;font-weight:850;letter-spacing:.08em}
+.howto-family-demo{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px}
+.howto-finish-demo{display:flex;align-items:center;justify-content:center;gap:10px}
+.howto-finish-demo strong{border:1px solid rgba(214,183,120,.52);color:#edd091;background:rgba(214,183,120,.07)}
+.howto-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:3px;border-top:1px solid #2b2823}
+.howto-nav{display:flex;gap:7px}
+.howto-skip{min-height:44px;padding:0 5px;border:0;background:transparent;color:#777169;font:inherit;font-size:10px;font-weight:800}
+.howto-back,.howto-next{min-height:44px;min-width:74px}
+.howto-next{border-radius:13px!important;background:linear-gradient(145deg,#242018,#161411)!important;border:1px solid rgba(214,183,120,.66)!important;color:#e5cc8e!important}
+#howToModal.utility-modal{width:min(94vw,560px)!important;max-height:90svh!important}
+.settings-action.howto-action{background:linear-gradient(145deg,#272319,#171511)!important;border-color:#6d5934!important}
+.settings-action.howto-action .settings-action-icon{background:#31291b;border-color:#7d673e;color:#edd091}
+@keyframes howtoSlideIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+@media(max-width:390px){.howto-guide{min-height:clamp(400px,70svh,560px)}.howto-slide h4{font-size:25px}.howto-slide p{font-size:10px}.howto-visual{padding:14px 9px}.howto-restaurant-demo{grid-template-columns:repeat(2,1fr)}.howto-feature-demo{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.howto-slide,.howto-progress span{animation:none!important;transition:none!important}}

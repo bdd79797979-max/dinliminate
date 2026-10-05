@@ -1,13 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 989,
+  "build": 990,
   "sourceBranch": "main",
-  "checkpoint": "CP989",
-  "deploymentTrigger": "CP989-restore-card-handoff-ui",
+  "checkpoint": "CP990",
+  "deploymentTrigger": "CP990-first-run-guide",
   "vercelProductionVerified": false,
   "swipeAudit": "CP989-food-handoff-plus-ui-regression-fix",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "immediate-safe-fallback-plus-exact-venue-page-routes",
-  "photoPolicy": "no-google"
+  "photoPolicy": "no-google",
+  "onboarding": "CP990-first-run-guide-replayable-settings"
 }
