@@ -10,6 +10,7 @@ const FOOD_IMAGE_HINTS=/\b(?:food|dish|meal|burger|pizza|salad|steak|wings|tacos
 const PHOTO_GRAPHIC_HINTS=/\b(?:menu(?:board|boards|page|item)?|menu[-_ ]?board|food[-_ ]?menu|menu[-_ ]?cover|flyer|promo(?:tion)?|poster|collage|montage|mosaic|screenshot|screen[-_ ]?shot|social[-_ ]?image|sharing[-_ ]?image|banner|coupon|special[-_ ]?graphic|advert(?:isement)?|template|graphic|composite|photo[-_ ]?grid|multi[-_ ]?photo|multi[-_ ]?panel|four[-_ ]?panel|2x2|3x3|contact[-_ ]?sheet|story[-_ ]?grid)\b/i;
 const PHOTO_CONTEXT_HINTS=/\b(?:photo|photos|photograph|gallery|dining|interior|exterior|outside|storefront|patio|restaurant|burger|pizza|tacos?|steak|wings|chicken|fries|dessert|sandwich|plate)\b/i;
 const LOW_QUALITY_IMAGE_HINTS=/\b(?:thumbnail|thumb|tiny|small|lowres|low[-_ ]?res|preview|sprite|tile)\b/i;
+const LOW_TRUST_PUBLIC_PHOTO_HOSTS=new Set(['restaurantguru.com','usarestaurants.info','yellowpages.com','mapquest.com','foursquare.com']);
 const MAX_RESTAURANT_IMAGE_DIMENSION=6000;
 const MAX_RESTAURANT_IMAGE_PIXELS=12000000;
 const PHOTO_SOURCE_TIER={
@@ -538,11 +539,13 @@ function extractVenueImageCandidates(html,pageUrl,name,address,website){
   const meta=extractMetaImages(html,pageUrl).map(url=>({url,context:url+' '+normalizeMatchText(name)+' restaurant',label:'open-graph image',source:'meta'}));
   const seen=new Set();
   const pageIsDirectory=isPhotoDiscoveryHost(pageUrl);
+  const pageHost=discoveryHost(pageUrl);
   const all=[...raw,...meta].map(item=>({...item,score:venueScore(item,name,address,website)}))
     .filter(item=>{
       if(seen.has(item.url))return false;
       seen.add(item.url);
       if(pageIsDirectory&&['meta','jsonld'].includes(item.source))return false;
+      if(LOW_TRUST_PUBLIC_PHOTO_HOSTS.has(pageHost)&&item.source!=='restaurantji-photo')return false;
       return !isRejectedPhotoCandidate(item);
     });
   return all.sort((a,b)=>b.score-a.score);

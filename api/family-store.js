@@ -178,11 +178,13 @@ async function joinFamily(codeValue, nameValue) {
       'insert into family_members (member_id, family_id, display_name, token_hash, role) values ($1,$2,$3,$4,$5)',
       [memberId, family.family_id, name, hash(sessionToken), 'member']
     );
-    await event(sql, family.family_id, null, memberId, 'member_joined', {});
   } catch (err) {
     await sql.query('update family_rooms set member_count=greatest(0, member_count-1), updated_at=now() where family_id=$1', [family.family_id]);
     throw err;
   }
+  // Event logging is useful but must never strand a successfully joined member
+  // if the audit/event write has a transient failure.
+  try { await event(sql, family.family_id, null, memberId, 'member_joined', {}); } catch (_) {}
 
   const nextFamily = (await sql.query('select * from family_rooms where family_id=$1', [family.family_id]))[0];
   const member = (await sql.query('select * from family_members where member_id=$1', [memberId]))[0];
@@ -224,9 +226,6 @@ async function ensureFinalistsStage(sql,round){
  const deadline=new Date(Math.min(Date.now()+finalistMs,targetMs-2*60*1000));
  return (await sql.query("update family_rounds set status='final_swiping',current_stage=2,stage_started_at=now(),stage_deadline_at=$1,snapshot=$2::jsonb,updated_at=now() where round_id=$3 and status='finalists' returning *",
    [deadline,JSON.stringify({...snapshot,sharedMaybes:shared.map(x=>String(x.id)),finalists:finalists.map(x=>String(x.id)),round2Rule:'one_pick_per_member'}),round.round_id]))[0]||round;
-}
-function winnerScores(votes){
- const map=new Map();for(const v of votes){const id=String(v.item_id),row=map.get(id)||{choose:0,maybe:0,cut:0,score:0};if(v.choice==='choose'){row.choose++;row.score+=2}else if(v.choice==='maybe'){row.maybe++;row.score++}else row.cut++;map.set(id,row)}return map;
 }
 function winnerScores(votes){
   const map=new Map();

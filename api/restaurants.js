@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r32';
+const API_VERSION='r33';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -1186,9 +1186,9 @@ if(mode==='search'){
  // redundant Overpass discovery pass. This prevents 100-mile provider result
  // caps from replacing nearby restaurants with a biased subset of the huge box.
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
- const discoveryPromise=null;
+ const discoveryPromise=wideSearch ? wideRadiusOverpass(lat,lon,radius,searchTerm) : null;
  const primaryPromise=wideSearch
-  ? [arcgisPlaces(lat,lon,radius,searchTerm,2100)]
+  ? [arcgisPlaces(lat,lon,providerRadius,searchTerm,2100)]
   : [
     photonPlaces(lat,lon,providerRadius,searchTerm),
     arcgisPlaces(lat,lon,providerRadius,searchTerm),
@@ -1199,7 +1199,10 @@ if(mode==='search'){
    const wideWinner=await firstProviderWithRows(primaryPromise,Math.min(WIDE_PRIMARY_TIMEBOX_MS,Math.max(1500,primaryBudget-(Date.now()-startedAt))));
    fastProvider=wideWinner.provider;
    primaryBatch=wideWinner.value;
-   parallelWide={__timeout:true,reason:'Wide expansion deferred'};
+   const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
+   parallelWide=discoveryRemaining>250
+     ? await withinBudget(discoveryPromise,Math.min(WIDE_DISCOVERY_TIMEBOX_MS,discoveryRemaining),'Wide radius discovery timed out')
+     : {__timeout:true,reason:'Wide radius discovery deferred'};
  }else{
    // CP972: keep both fast primary providers. ArcGIS often supplies the
    // street number, phone, and website that Photon omits, which exact photo
