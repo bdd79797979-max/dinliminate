@@ -4789,7 +4789,7 @@ $('hungryMysteryChoose').onclick = () => {
 };
 $('details').onclick = () => S.winnerItem && detailsSheet(S.winnerItem, S.winnerType || 'food');
 $('share').onclick = shareWinner;
-$('restart').onclick = ()=>S.familyNormalMode==='winner'?(S.familyActiveData?.activeRound?.snapshot?.outcome==='no_winner'?familyRestartFromNoWinner():familyDismissWinner()):resetRound;
+$('restart').onclick = handleWinnerRestart;
 const updateOffline = () => $('offlineIndicator')?.classList.toggle('hidden', navigator.onLine !== false);
 window.addEventListener('online', updateOffline);
 window.addEventListener('offline', updateOffline);
@@ -4988,8 +4988,17 @@ function familyDecisionBack(type){familyNormalBack(type);}
 function familyShowWinner(round){
  const item=round?.winnerItem,id=String(round?.id||'');if(!item)return;if(S.familyNormalMode==='winner'&&S.familyNormalRoundId===id&&S.screen==='winner')return;
  const cmp=round?.snapshot?.compareBoth||null;S.familyActiveData={...(S.familyActiveData||{}),activeRound:round,lastCompletedRound:round};S.familyNormalMode='winner';S.familyNormalRoundId=id;S.familyDecisionType=round.decisionType==='restaurant'?'restaurant':'meal';S.familyNormalAutoResume=true;winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true});
- const b=$('restart'),host=familySessionRead()?.member?.role==='host';if(b){b.disabled=false;if(cmp?.mode==='compare_both'&&cmp.track==='meal'){b.textContent=host?'CONTINUE TO RESTAURANT':'WAITING FOR HOST';b.onclick=host?()=>familyContinueCompareRestaurant(round):familyDismissWinner;}else if(cmp?.mode==='compare_both'&&cmp.track==='restaurant'){b.textContent=host?'COMPARE THE TWO':'WAITING FOR HOST';b.onclick=host?()=>familyCreateCompareFinal(round):familyDismissWinner;}else{b.textContent=host?'START OVER':'BACK TO FAMILY';b.onclick=host?familyRestartAfterWinner:familyDismissWinner;}}
+ const b=$('restart'),host=familySessionRead()?.member?.role==='host';if(b){b.disabled=false;if(cmp?.mode==='compare_both'&&cmp.track==='meal')b.textContent=host?'CONTINUE TO RESTAURANT':'WAITING FOR HOST';else if(cmp?.mode==='compare_both'&&cmp.track==='restaurant')b.textContent=host?'COMPARE THE TWO':'WAITING FOR HOST';else b.textContent=host?'START OVER':'BACK TO FAMILY';}
  familySetWinnerMeta(round);if(round?.snapshot?.outcome==='wheel')familyAnimateWheel(round);
+}
+function handleWinnerRestart(){
+  if(S.familyNormalMode==='winner'){
+    const round=S.familyActiveData?.activeRound||S.familyActiveData?.lastCompletedRound||null,cmp=round?.snapshot?.compareBoth||null,session=familySessionRead(),host=session?.member?.role==='host';
+    if(cmp?.mode==='compare_both'&&cmp.track==='meal')return host?familyContinueCompareRestaurant(round):familyDismissWinner();
+    if(cmp?.mode==='compare_both'&&cmp.track==='restaurant')return host?familyCreateCompareFinal(round):familyDismissWinner();
+    return host?familyRestartAfterWinner():familyDismissWinner();
+  }
+  return resetRound();
 }
 function familyDismissWinner(){const s=familySessionRead();if(s)familySessionWrite({...s,dismissedWinnerRoundId:S.familyNormalRoundId,lastWinnerItem:S.winnerItem||s.lastWinnerItem||null});S.familyNormalMode='idle';S.familyNormalAutoResume=true;show('family');familyRefreshState();}
 
