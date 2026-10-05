@@ -1,30 +1,19 @@
-# CURRENT RELEASE — BUILD 997 / CP997
+# CURRENT RELEASE — BUILD 998 / CP998
 
 Date: 2026-10-05
 
-## Release state
+## CP998 — Tutorial Toggle & Choose Advance Repair
 
-- Source of truth: `main`
-- Production verification: **not yet verified**
-- Reason: the connected Vercel Hobby deployment allowance is currently exhausted.
-- Restaurant photo policy: **no Google photo/API credentials**
-
-## CP997 — Full Tutorial Flow & Bubble Placement Repair
-
-- Choose → Winner now receives an explicit Start Over tutorial step; Start Over resumes the same Meals or Restaurant path.
-- Meal Times and Cuisine bubbles avoid their neighboring controls and visible rails.
-- Meals ends with **Enter Restaurant**, which launches the Restaurant tutorial.
-- Restaurants ends with **Enter Meals**, which launches the Meals tutorial.
-- The Home Tutorial icon no longer gets a dark hover/touch box and matches Add to phone and Share.
-- Settings → Tutorial Mode remains first under Tools and uses a unique satin-blue treatment.
-- No restaurant-photo, Family Mode, or swipe-engine runtime changes.
+- Tutorial icon starts/ends Tutorial Mode.
+- Choose is captured before the premium button handler runs, so Choose advances into the Winner tutorial step.
+- Choose bubble reads: “Make your decision early.”
+- Tutorial Home icon has no dark focus/touch enclosure.
+- CP997 full tutorial flow remains intact.
 
 ## Protected rollback anchors
 
+- **CP997:** `ad8e508d87b0852ef4cb56f494c1bff9c9ee3185`
 - **CP996:** `b4cbfc4f59e368acb7962a0871ae0ec7a8323a37`
-- **CP995 cleanup:** `49c21ad82cd47bda221146c518a643988e3d5a6d`
 - **CP957 restaurant-photo baseline:** `d03a75ab63f1708524f1406e33d5a09c74f689f4`
 
-## Launch gate
-
-Production is not verified until CP997 is deployed and browser/phone runtime certification passes.
+Production is not verified until CP998 is deployed and browser/phone runtime certification passes.
