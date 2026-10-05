@@ -501,6 +501,51 @@ function scoreImage(candidate,name,address,website,phone=''){
       + (phone&&String(candidate?.title||'').includes(String(phone))?18:0);
 }
 
+const PHOTO_DISCOVERY_HOSTS=new Set([
+ 'restaurantji.com','www.restaurantji.com','restaurantguru.com','www.restaurantguru.com',
+ 'tripadvisor.com','www.tripadvisor.com','tripadvisor.ca','www.tripadvisor.ca',
+ 'clarksvillenow.com','www.clarksvillenow.com','visitclarksvilletn.com','www.visitclarksvilletn.com',
+ 'usarestaurants.info','www.usarestaurants.info','yellowpages.com','www.yellowpages.com',
+ 'mapquest.com','www.mapquest.com','foursquare.com','www.foursquare.com',
+ 'facebook.com','www.facebook.com','instagram.com','www.instagram.com',
+ 'yelp.com','www.yelp.com'
+]);
+function discoveryHost(url){return hostOf(url).replace(/^www\./,'');}
+function extractSearchResultUrl(raw,base){
+ const decoded=decodeHtml(String(raw||''));
+ try{
+  const absolute=/^https?:\/\//i.test(decoded)?decoded:new URL(decoded,base||'').toString();
+  const u=new URL(absolute);
+  for(const key of ['q','url','uddg','u']){
+   const nested=u.searchParams.get(key);
+   if(nested&&/^https?:\/\//i.test(nested))return nested;
+  }
+  return absolute;
+ }catch{return ''}
+}
+function extractGenericSearchResults(html,sourceHost=''){
+ const out=[],seen=new Set();
+ const add=(raw,title='')=>{
+  const url=absoluteHttpsUrl(raw,sourceHost?('https://'+sourceHost+'/'):'');
+  if(!url)return;
+  const host=discoveryHost(url);
+  if(!host||host===sourceHost||host.includes('google.')||host.includes('bing.')||host.includes('duckduckgo.'))return;
+  if(seen.has(url))return;
+  const blockedPublic=/^(?:yelp|grubhub|doordash|ubereats|postmates|seamless)\.com$/.test(host);
+  if(blockedPublic)return;
+  seen.add(url);
+  out.push({url,title:String(title||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(),kind:PHOTO_DISCOVERY_HOSTS.has(host)?'public':'website'});
+ };
+ const anchorRe=/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/ig;
+ let m;
+ while((m=anchorRe.exec(String(html||'')))&&out.length<50)add(extractSearchResultUrl(m[1],sourceHost?('https://'+sourceHost+'/'):''),m[2]);
+ const plainRe=/(https?:\/\/[^\s"'<>]+)/ig;
+ while((m=plainRe.exec(String(html||'')))&&out.length<70)add(m[1],'');
+ return out;
+}
+function isPhotoDiscoveryHost(url){
+ return PHOTO_DISCOVERY_HOSTS.has(discoveryHost(url));
+}
 function extractBingWebResultUrls(html){
   const out=[];
   const re=/<li[^>]+class=["'][^"']*b_algo[^"']*["'][^>]*>[\s\S]*?<h2[^>]*>\s*<a[^>]+href=["']([^"']+)["']/gi;
@@ -656,37 +701,58 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
 }
 async function findVerifiedRestaurantPages(name,address,website){
   const safeName=String(name||'').replace(/"/g,''),safeAddress=String(address||'').replace(/"/g,''),websiteHost=hostOf(website);
-  // Official-site discovery is the primary web path. Do it before broader
-  // search-engine work so a known restaurant website has first opportunity.
   const official=await officialRestaurantPages(name,address,website);
 
   const queries=[];
-  // Prefer reputable local tourism/publication pages before broad global directories.
-  // These pages are discovery sources; we still require exact restaurant/address
-  // verification before accepting a photo.
   if(safeName&&safeAddress)queries.push('site:visitclarksvilletn.com "'+safeName+'" "'+safeAddress+'" restaurant');
   if(safeName&&safeAddress)queries.push('site:clarksvillenow.com "'+safeName+'" "'+safeAddress+'" restaurant');
   if(safeName&&safeAddress)queries.push('"'+safeName+'" "'+safeAddress+'" restaurant');
-  if(safeName&&safeAddress)queries.push('site:tripadvisor.com "'+safeName+'" "'+safeAddress+'"');
+  if(safeName&&safeAddress)queries.push('site:restaurantji.com "'+safeName+'" "'+safeAddress+'"');
   if(safeName&&safeAddress)queries.push('site:restaurantguru.com "'+safeName+'" "'+safeAddress+'"');
+  if(safeName&&safeAddress)queries.push('site:tripadvisor.com "'+safeName+'" "'+safeAddress+'"');
 
-  const searchPages=await Promise.allSettled(
-    queries.map(q=>fetchText('https://www.bing.com/search?'+new URLSearchParams({q,mkt:'en-US',first:'1'}).toString(),{},2500,450000))
-  );
-  const candidates=[];
-  for(const page of searchPages){
-    if(page.status!=='fulfilled')continue;
-    for(const url of extractBingWebResultUrls(page.value)){
-      if(!candidates.includes(url))candidates.push(url);
-    }
+  const sources=[
+   {base:'https://www.bing.com/search',host:'bing.com'},
+   {base:'https://html.duckduckgo.com/html/',host:'html.duckduckgo.com'}
+  ];
+  const searchPages=[];
+  for(const source of sources){
+   const settled=await Promise.allSettled(
+    queries.slice(0,5).map(q=>fetchText(source.base+'?'+new URLSearchParams({q,mkt:'en-US',first:'1'}).toString(),{},2500,900000))
+   );
+   for(const p of settled)if(p.status==='fulfilled'&&p.value)searchPages.push({source,html:p.value});
   }
-  const verified=await fetchVerifiedPages(candidates.slice(0,8),name,address);
-  const officialFromSearch=verified.filter(x=>websiteHost&&sameHost(x.url,websiteHost));
-  const publicPages=verified.filter(x=>!websiteHost||!sameHost(x.url,websiteHost));
+
+  const results=[],seen=new Set();
+  for(const item of searchPages){
+   for(const hit of extractGenericSearchResults(item.html,item.source.host)){
+    if(!hit.url||seen.has(hit.url))continue;
+    seen.add(hit.url);
+    results.push(hit);
+   }
+  }
+
+  // Fetch the strongest search candidates, but verify the complete restaurant
+  // identity before any page can provide a photo.
+  const ranked=results.sort((a,b)=>{
+   const aText=normalizeMatchText(a.title+' '+a.url),bText=normalizeMatchText(b.title+' '+b.url);
+   const n=normalizeMatchText(name);
+   const ah=aText.includes(n)?20:0,bh=bText.includes(n)?20:0;
+   const ap=isPhotoDiscoveryHost(a.url)?0:12,bp=isPhotoDiscoveryHost(b.url)?0:12;
+   return (bh+bp)-(ah+ap);
+  });
+  const verified=await fetchVerifiedPages(ranked.slice(0,16).map(x=>x.url),name,address);
+
+  const officialFromSearch=verified.filter(x=>{
+   if(websiteHost)return sameHost(x.url,websiteHost);
+   return !isPhotoDiscoveryHost(x.url);
+  });
+  const publicPages=verified.filter(x=>websiteHost?sameHost(x.url,websiteHost)===false:isPhotoDiscoveryHost(x.url));
+
   const officialMerged=[...official,...officialFromSearch]
-    .filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i)
-    .slice(0,8);
-  return {official:officialMerged,public:publicPages.slice(0,8)};
+   .filter((x,i,a)=>a.findIndex(y=>sameHost(y.url,x.url))===i)
+   .slice(0,8);
+  return {official:officialMerged,public:publicPages.slice(0,10)};
 }
 
 async function bingExactImageCandidates(name,address,website,phone=''){
