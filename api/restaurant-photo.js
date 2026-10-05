@@ -1,3 +1,4 @@
+const { tryGoogleRestaurantPhoto } = require('../google-restaurant-photo');
 'use strict';
 
 let sharp=null;
@@ -1121,8 +1122,10 @@ async function exactImageFromBing(name,address,website,phone=''){
   return null;
 }
 function sendMedia(res,found){
+  const google=String(found?.source||'')==='google-places';
   res.setHeader?.('Content-Type',found.media.type);
-  res.setHeader?.('Cache-Control','public, max-age=604800, stale-while-revalidate=2592000');
+  res.setHeader?.('Cache-Control',google?'no-store':'public, max-age=604800, stale-while-revalidate=2592000');
+  res.setHeader?.('X-Restaurant-Photo-Cacheable',google?'0':'1');
   res.setHeader?.('X-Content-Type-Options','nosniff');
   res.setHeader?.('X-Restaurant-Photo-Source',found.source);
   if(found.media.width&&found.media.height)res.setHeader?.('X-Restaurant-Photo-Dimensions',found.media.width+'x'+found.media.height);
@@ -1147,8 +1150,20 @@ module.exports=async function handler(req,res){
   const officialLocationPage=String(q.officialLocationPage||'').trim().slice(0,1000);
   const osmImage=String(q.osmImage||'').trim().slice(0,1200);
   const osmExact=q.osmExact==='1';
+  const googleOnly=q.googleOnly==='1';
+  const skipGoogle=q.skipGoogle==='1';
+  const placeId=String(q.placeId||'').trim().slice(0,220);
+  const lat=Number(q.lat),lon=Number(q.lon);
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
+    if((!skipGoogle||googleOnly)){
+      const googlePhoto=await tryGoogleRestaurantPhoto({name,address,brand,lat,lon,placeId});
+      if(googlePhoto){
+        res.setHeader?.('X-Restaurant-Google-Place-Id',googlePhoto.googlePlaceId||'');
+        return sendMedia(res,googlePhoto);
+      }
+      if(googleOnly)return json(res,404,{ok:false,error:'No Google Places restaurant photo available'});
+    }
     // 1. Restaurant's own exact local website/location photo.
     if(officialWebsite||officialLocationPage){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,officialLocationPage,brand);
