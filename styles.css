@@ -10029,7 +10029,7 @@ button,input,select,textarea{
 
 /* CP1002 — the user's original uploaded door image is the sole Home photo. */
 .app:has(#home:not(.hidden)){
-  background-image:url("https://5978585a-d6fe-4bb2-80bc-44a4820ec50a.sandbox.floot.app/_cdn/static/e65e43d3-0681-4bce-b1de-2f9d9b34e0ec-dinliminate-home-door-original.jpg") !important;
+  background-image:url("./assets/home-door.jpg") !important;
   background-size:cover !important;
   background-position:center center !important;
   background-repeat:no-repeat !important;
@@ -10610,7 +10610,7 @@ body{-webkit-text-size-adjust:100%;}
    so keep the permanent door photo keyed to that explicit state instead of
    depending on :has() to discover the active screen. */
 .app.home-active{
-  background-image:url("https://5978585a-d6fe-4bb2-80bc-44a4820ec50a.sandbox.floot.app/_cdn/static/e65e43d3-0681-4bce-b1de-2f9d9b34e0ec-dinliminate-home-door-original.jpg") !important;
+  background-image:url("./assets/home-door.jpg") !important;
   background-size:cover !important;
   background-position:center center !important;
   background-repeat:no-repeat !important;
