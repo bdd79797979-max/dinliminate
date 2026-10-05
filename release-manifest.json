@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1002,
+  "build": 1003,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1002",
-  "deploymentTrigger": "CP1002-original-home-door-cleanup"
+  "checkpoint": "CP1003",
+  "deploymentTrigger": "CP1003-full-iphone-viewport"
 }
