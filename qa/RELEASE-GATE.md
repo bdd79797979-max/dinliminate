@@ -1,20 +1,26 @@
-# Dinliminate Launch QA Gate — Build 995 / CP995
+# Dinliminate Launch QA Gate — Build 996 / CP996
 
 Date: 2026-10-05
 
 ## Current candidate
 
-- Release: Version 1.0 / Build 995 / CP995
+- Release: Version 1.0 / Build 996 / CP996
 - Working branch: `main`
 - Production deployment: not yet verified
 - Restaurant photography: no Google photo/API credentials
 
+## Tutorial/UI gates
+
+- Home Tutorial launches through the shared Home action router.
+- Settings → Tutorial Mode starts from Home.
+- Add to phone, Share, and Tutorial use the same Home utility icon styling.
+
 ## Repository gates
 
-Before calling CP995 launch-ready:
+Before calling CP996 launch-ready:
 
 1. JavaScript syntax and data integrity pass.
-2. Build/cache/release references are synchronized to CP995.
+2. Build/cache/release references are synchronized to CP996.
 3. Tutorial state and navigation invariants remain intact.
 4. Swipe controls do not introduce card handoff or waiting-card regressions.
 5. Restaurant search/radius/deduplication behavior is checked.
@@ -29,4 +35,4 @@ Before calling CP995 launch-ready:
 
 ## Release rule
 
-Do not mark production verified until the hosted CP995 build has been deployed and the required browser/physical-device checks pass.
+Do not mark production verified until the hosted CP996 build has been deployed and the required browser/physical-device checks pass.
