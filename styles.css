@@ -9889,25 +9889,6 @@ button,input,select,textarea{
 #menu:active,#familyMenu:active,#foodMenu:active,#restaurantMenu:active,#winnerMenu:active{
   transform:scale(.94)!important;
 }
-.menu-hint{
-  position:fixed;
-  z-index:95;
-  padding:6px 10px;
-  border:1px solid rgba(214,183,120,.62);
-  border-radius:9px;
-  background:rgba(10,10,9,.94);
-  color:#fffaf0;
-  font-size:9px;
-  font-weight:900;
-  letter-spacing:.10em;
-  text-transform:uppercase;
-  opacity:0;
-  transform:translateY(-3px);
-  transition:opacity .14s ease,transform .14s ease;
-  pointer-events:none;
-  box-shadow:0 8px 20px rgba(0,0,0,.36);
-}
-.menu-hint.is-visible{opacity:1;transform:none}
 .modal-close{
   appearance:none!important;
   -webkit-appearance:none!important;
@@ -10603,4 +10584,45 @@ body{-webkit-text-size-adjust:100%;}
 .device-touch-mobile .location-permission-bg,
 .device-touch-mobile #tutorialLayer{
   max-width:100vw!important;max-height:100dvh!important;
+}
+
+/* CP1012 — waiting cards show their identity before promotion, without becoming interactive. */
+#food .next-card-copy,
+#restaurant .next-card-copy{
+  z-index:3!important;
+  pointer-events:none!important;
+}
+#food .next-card-copy h3,
+#restaurant .next-card-copy h3{
+  text-shadow:0 2px 18px #000!important;
+}
+#food .next-card .next-card-details,
+#restaurant .next-card .next-card-details{
+  pointer-events:none!important;
+  opacity:.96!important;
+}
+#food #foodNextMaybe{
+  position:absolute!important;
+  z-index:4!important;
+  left:19px!important;
+  top:19px!important;
+  pointer-events:none!important;
+}
+
+
+/* CP1019 — Google restaurant photo loading state.
+   Keep the fallback-restaurant illustration hidden while the exact Google/photo
+   chain is resolving. The illustration appears only for the true final state. */
+#restaurant .card img[data-restaurant-photo-state="loading"]{
+  background:linear-gradient(110deg,#101010 8%,#1a1a1a 18%,#101010 33%);
+  background-size:200% 100%;
+  animation:dinliminateRestaurantPhotoLoading 1.15s ease-in-out infinite;
+}
+#restaurant .card img[data-restaurant-photo-state="final-fallback"]{
+  background:none;
+  animation:none;
+}
+@keyframes dinliminateRestaurantPhotoLoading{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
 }
