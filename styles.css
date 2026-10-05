@@ -10608,3 +10608,21 @@ body{-webkit-text-size-adjust:100%;}
   top:19px!important;
   pointer-events:none!important;
 }
+
+
+/* CP1019 — Google restaurant photo loading state.
+   Keep the fallback-restaurant illustration hidden while the exact Google/photo
+   chain is resolving. The illustration appears only for the true final state. */
+#restaurant .card img[data-restaurant-photo-state="loading"]{
+  background:linear-gradient(110deg,#101010 8%,#1a1a1a 18%,#101010 33%);
+  background-size:200% 100%;
+  animation:dinliminateRestaurantPhotoLoading 1.15s ease-in-out infinite;
+}
+#restaurant .card img[data-restaurant-photo-state="final-fallback"]{
+  background:none;
+  animation:none;
+}
+@keyframes dinliminateRestaurantPhotoLoading{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
