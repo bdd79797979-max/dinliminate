@@ -1807,7 +1807,7 @@ const restoreFocus=document.activeElement instanceof HTMLElement ? document.acti
 const bg=document.createElement('div'); bg.id='appConfirmModalBg'; bg.className='modal-bg';
 const modal=document.createElement('section'); modal.id='appConfirmModal'; modal.className='modal confirm-modal';
 modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-labelledby','appConfirmTitle'); modal.setAttribute('aria-describedby','appConfirmMessage');
-modal.innerHTML='<div class="confirm-hero"><span class="confirm-mark" aria-hidden="true">×</span><div><small>CONFIRM ACTION</small><h3 id="appConfirmTitle">'+esc(title)+'</h3></div><button class="menu" type="button" id="appConfirmClose" aria-label="Close confirmation">×</button></div>'+
+modal.innerHTML='<div class="confirm-hero"><span class="confirm-mark" aria-hidden="true">×</span><div><small>CONFIRM ACTION</small><h3 id="appConfirmTitle">'+esc(title)+'</h3></div><button class="modal-close" type="button" id="appConfirmClose" aria-label="Close confirmation">×</button></div>'+
 '<div class="confirm-copy" id="appConfirmMessage">'+esc(message)+'</div>'+
 '<div class="confirm-actions"><button type="button" class="secondary" id="appConfirmCancel">Cancel</button><button type="button" class="danger-action" id="appConfirmOk">'+esc(confirmLabel)+'</button></div>';
 document.body.append(bg,modal);
@@ -3207,7 +3207,7 @@ modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');
 modal.setAttribute('aria-labelledby',id+'Title');
 modal.setAttribute('tabindex','-1');
-modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="menu" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
+modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
 document.body.append(bg,modal);
 requestAnimationFrame(()=>{
  bg.classList.add('modal-bg-open');
