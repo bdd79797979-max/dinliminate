@@ -180,12 +180,21 @@ async function handler(req,res){
  const q=googlePhotoQuery(req);
  const mode=String(q.mode||'photo').toLowerCase();
  if(mode==='health'){
+  let usage=null;
+  const sql=await budgetDb().catch(()=>null);
+  if(sql){
+   try{
+    const rows=await sql.query('SELECT request_count,disabled_until FROM '+MONTH_TABLE+' WHERE month_key=$1',[monthKey()]);
+    if(rows?.[0])usage={requestCount:Number(rows[0].request_count)||0,disabledUntil:rows[0].disabled_until||null};
+   }catch{}
+  }
   return googleJson(res,200,{
    ok:true,
    googlePlacesConfigured:!!GOOGLE_PLACES_API_KEY,
    durableBudgetConfigured:!!DATABASE_URL,
    monthlyHardLimit:DEFAULT_MONTHLY_LIMIT,
-   untrackedLimit:UNTRACKED_LIMIT
+   untrackedLimit:UNTRACKED_LIMIT,
+   usage
   });
  }
  const name=clean(q.name,160);
