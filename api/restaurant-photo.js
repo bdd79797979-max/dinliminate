@@ -85,14 +85,12 @@ async function fetchWithValidatedRedirects(start,options={},maxRedirects=4){
 async function fetchText(url,headers={},timeout=7000,maxBytes=2200000){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
   try{
-    const result=await fetchWithValidatedRedirects(url,{headers:{
+    const r=await fetch(url,{headers:{
       'Accept':'text/html,application/xhtml+xml',
       'Accept-Language':'en-US,en;q=0.8',
       'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; restaurant-photo)',
       ...headers
     },signal:ctl.signal});
-    if(!result)return '';
-    const r=result.response;
     if(!r.ok)throw new Error('Page request failed ('+r.status+').');
     const data=Buffer.from(await r.arrayBuffer());
     if(data.length>maxBytes)throw new Error('Page too large.');
@@ -215,13 +213,11 @@ async function normalizeRestaurantImage(bytes){
 async function fetchImage(url,headers={},timeout=7000){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
   try{
-    const result=await fetchWithValidatedRedirects(url,{headers:{
+    const r=await fetch(url,{headers:{
       'Accept':'image/avif,image/webp,image/apng,image/jpeg,image/png,image/gif,image/*;q=0.8',
       'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; restaurant-photo)',
       ...headers
-    },signal:ctl.signal});
-    if(!result)throw new Error('Redirect validation failed.');
-    const r=result.response;
+    },redirect:'follow',signal:ctl.signal});
     if(!r.ok)throw new Error('Image request failed ('+r.status+').');
     const type=(r.headers.get('content-type')||'image/jpeg').split(';')[0].toLowerCase();
     if(!type.startsWith('image/'))throw new Error('Image response was not an image.');
@@ -229,13 +225,7 @@ async function fetchImage(url,headers={},timeout=7000){
     const bytes=Buffer.from(await r.arrayBuffer());
     if(bytes.length<4000)throw new Error('Image response was too small.');
     if(bytes.length>10*1024*1024)throw new Error('Image is too large.');
-    const dimensions=imageDimensions(bytes,type);
-    const width=Number(dimensions.width)||0,height=Number(dimensions.height)||0;
-    if(width>MAX_RESTAURANT_IMAGE_DIMENSION||height>MAX_RESTAURANT_IMAGE_DIMENSION)throw new Error('Image dimensions are too large.');
-    if(width&&height&&(width*height)>MAX_RESTAURANT_IMAGE_PIXELS)throw new Error('Image pixel count is too large.');
-    if(width&&height&&mediaQuality(dimensions)<0)throw new Error('Image dimensions are not suitable for a restaurant card.');
-    if(await isLikelyPhotoCollage(bytes))throw new Error('Image appears to be a multi-panel or composite graphic.');
-    return await normalizeRestaurantImage(bytes);
+    return {type,bytes};
   }finally{clearTimeout(timer)}
 }
 
@@ -450,12 +440,12 @@ function pageMatchesRestaurant(html,name,address,phone=''){
   return loc.filter(t=>hay.includes(t)).length>=2;
 }
 
-async function verifiedRestaurantPage(url,name,address,phone=''){
+async function verifiedRestaurantPage(url,name,address){
   const page=absoluteHttpsUrl(url);
   if(!page||isBlockedHost(page))return null;
   try{
     const html=await fetchText(page,{},6000,1800000);
-    return strictPageMatchesRestaurant(html,name,address,phone)?html:null;
+    return pageMatchesRestaurant(html,name,address)?html:null;
   }catch{return null}
 }
 
@@ -488,15 +478,14 @@ function venueScore(candidate,name,address,website){
   if(addrNumber&&hay.includes(normalizeMatchText(addrNumber)))score+=34;
   if(VENUE_IMAGE_HINTS.test(context))score+=Math.min(70,venueHits*18);
   score+=Math.min(30,contextHits*10);
-  if(candidate.source==='img'||candidate.source==='restaurantji-photo')score+=12;
+  if(candidate.source==='img')score+=12;
   if(candidate.source==='jsonld')score+=10;
   if(candidate.source==='background')score+=8;
   if(candidate.source==='meta')score-=55;
   if(LOW_QUALITY_IMAGE_HINTS.test(String(candidate?.url||'')))score-=28;
   const websiteHost=hostOf(website);
   const candidateHost=hostOf(candidate.url);
-  if(websiteHost&&candidateHost&&(candidateHost===websiteHost||candidateHost.endsWith('.'+websiteHost)))score+=28;
-  if(isRejectedPhotoCandidate(candidate))return -999;
+  if(websiteHost&&candidateHost&&(candidateHost===websiteHost||candidateHost.endsWith('.'+websiteHost)))score+=18;
   return score;
 }
 function hasVenueSignal(candidate){
