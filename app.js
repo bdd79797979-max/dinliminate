@@ -248,6 +248,15 @@ function cachedRestaurantWebsite(row){
 function cachedRestaurantOfficialPage(row){
  return cachedRestaurantWebsiteEntry(row)?.officialPage||'';
 }
+function cachedRestaurantLocationPage(row){
+ const page=cachedRestaurantWebsiteEntry(row)?.officialPage||'';
+ if(!page)return '';
+ try{
+  const u=new URL(page);
+  const h=u.hostname.toLowerCase().replace(/^www\./,'');
+  return ['facebook.com','instagram.com'].some(x=>h===x||h.endsWith('.'+x))?'':u.href;
+ }catch{return ''}
+}
 function storeRestaurantWebsitePresence(row,presence){
  const key=restaurantWebsiteRowKey(row);
  if(!key||!presence)return;
@@ -549,7 +558,7 @@ function restaurantPhotoEndpointUrl(row){
  if(row.phone)params.set('phone',String(row.phone));
  const website=safeExternalUrl(row.website);
  if(website)params.set('website',website);
- const officialLocationPage=safeExternalUrl(row.officialLocationPage||row.officialLocation||'');
+ const officialLocationPage=safeExternalUrl(row.officialLocationPage||row.officialLocation||'')||cachedRestaurantLocationPage(row);
  if(officialLocationPage)params.set('officialLocationPage',officialLocationPage);
  const officialWebsite=website||safeExternalUrl(knownRestaurantWebsite(row));
  if(officialWebsite)params.set('officialWebsite',officialWebsite);
