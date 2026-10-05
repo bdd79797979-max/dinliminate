@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 980,
+  "build": 981,
   "sourceBranch": "main",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "dinliminate22 preview",
-  "checkpoint": "CP980",
-  "deploymentTrigger": "CP980-cuisine-text-and-button-parity"
+  "checkpoint": "CP981",
+  "deploymentTrigger": "CP981-clean-home-add-share"
 }
