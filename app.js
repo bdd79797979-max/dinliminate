@@ -582,6 +582,8 @@ function restaurantGooglePhotoEndpointUrl(row){
  return '/api/restaurant-photo?'+params.toString();
 }
 function restaurantGooglePlaceId(row){
+ const direct=String(row?.googlePlaceId||'').trim();
+ if(/^ChI[A-Za-z0-9_-]+$/.test(direct))return direct;
  const key='dinliminate.google.placeids.v1';
  try{
   const raw=localStorage.getItem(key),data=raw?JSON.parse(raw):{};
@@ -3217,7 +3219,7 @@ const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
   stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhotoPreferred(nextRow).then(async data=>{
+  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
    if(!data?.url)return null;
    if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
    if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
