@@ -10604,3 +10604,18 @@ body{-webkit-text-size-adjust:100%;}
 .device-touch-mobile #tutorialLayer{
   max-width:100vw!important;max-height:100dvh!important;
 }
+
+
+/* CP1021 — persistent Home canvas. The app JS already maintains .home-active,
+   so keep the permanent door photo keyed to that explicit state instead of
+   depending on :has() to discover the active screen. */
+.app.home-active{
+  background-image:url("https://5978585a-d6fe-4bb2-80bc-44a4820ec50a.sandbox.floot.app/_cdn/static/e65e43d3-0681-4bce-b1de-2f9d9b34e0ec-dinliminate-home-door-original.jpg") !important;
+  background-size:cover !important;
+  background-position:center center !important;
+  background-repeat:no-repeat !important;
+  background-color:#080706 !important;
+}
+.app.home-active #home{
+  background:transparent !important;
+}
