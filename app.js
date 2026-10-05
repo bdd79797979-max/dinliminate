@@ -1520,14 +1520,12 @@ function renderMealTimeCuts(){
    const label=btn.dataset.mealTime;
    const next=new Set(S.mealTimeFilters||[]);
 
-   // With every Meal Time selected, the first tap is a direct filter:
-   // tap Breakfast -> Breakfast only. Further taps can add/remove times.
-   if(allMealTimesSelected){
-    next.clear();
-    next.add(label);
-   }else if(next.has(label)){
+   // Meal Times is a true multi-select filter.
+   // All enabled times start active. Tapping a time toggles only that time,
+   // so two or more times can remain active together.
+   if(next.has(label)){
     if(next.size===1){
-     // Never allow an empty Meal Time filter; the last active time resets to all.
+     // Never allow an empty Meal Time filter; keep the full set selected.
      next.clear();
      mealTimeNames().forEach(name=>next.add(name));
     }else{
