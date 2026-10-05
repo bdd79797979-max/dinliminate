@@ -136,3 +136,14 @@ assert.ok(app.includes("settingsActionButton('howToGuideSettings'")&&app.include
 assert.ok(app.includes("showHowToGuide(true);"),'First-run guide must launch');
 assert.ok(css.includes('/* CP990 — first-run How Dinliminate Works guide.')&&css.includes('.howto-slide')&&css.includes('#howToModal.utility-modal'),'Guide must have dedicated styling');
 assert.ok(html.includes('styles.css?v=990')&&html.includes('app.js?v=990'),'Frontend asset markers must match CP990');
+
+assert.equal(release.build,991,'Release build must be CP991');
+assert.equal(release.checkpoint,'CP991','Release checkpoint must be CP991');
+assert.ok(app.includes("let APP_BUILD = '991'"),'Runtime fallback build must be CP991');
+assert.ok(app.includes("const HOW_TO_GUIDE_KEY='dinliminate.howToGuide.v2';"),'CP991 popup onboarding key must exist');
+assert.ok(app.includes("function showHowToGuide(firstRun=false){")&&app.includes("function scheduleFirstRunGuide(){"),'Reusable popup guide and first-run launcher must exist');
+assert.ok(app.includes("localStorage.setItem(HOW_TO_GUIDE_KEY,'1')"),'Popup dismissal/completion must persist');
+assert.ok(app.includes("showHowToGuide(true);")&&app.includes("settingsActionButton('howToGuideSettings'")&&app.includes("$('howToGuideSettings').onclick=()=>showHowToGuide(false);"),'Popup must auto-launch once and be replayable from Settings');
+assert.ok(css.includes('/* CP991 — compact first-time instruction popup. */')&&css.includes('.howto-popup-what')&&css.includes('.howto-popup-why'),'Popup must explain WHAT and WHY');
+assert.ok(css.includes('#howToModal.utility-modal{width:min(92vw,470px)!important;'),'Guide must use compact popup dimensions');
+assert.ok(html.includes('styles.css?v=991')&&html.includes('app.js?v=991'),'Frontend asset markers must be CP991');

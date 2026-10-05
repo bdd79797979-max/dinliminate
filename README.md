@@ -79,8 +79,15 @@ Vercel is the official runtime target. The current connected Vercel account has 
 - CP987 remains the clean rollback baseline; CP988 is superseded by this repair for swipe behavior.
 
 
-## CP990 — First-run How Dinliminate Works guide
+## CP990 — First-run How Dinliminate Works guide (superseded by CP991)
 - Added one reusable first-run walkthrough covering Home, swipe behavior, decision controls, Cuisine and Meal Times, All · Maybes, Details, Restaurants, Family Mode, and the Hungry fallback.
 - It appears once on a new install/device state, then stays out of the way.
 - Added Settings → How Dinliminate Works so the same guide can be replayed anytime.
 - Full Reset clears the Dinliminate storage prefix, so a fresh reset also gets the walkthrough again.
+
+## CP991 — First-time instruction popup
+- Reworked onboarding into a compact popup that focuses on one feature at a time.
+- Every step explains what the feature does and why it is useful, then moves forward with Next.
+- The first popup uses the preferred “← CUT · SWIPE · MAYBE →” lesson.
+- Settings → How Dinliminate Works reopens the same popup sequence.
+- Uses a new onboarding key so users who saw the CP990 walkthrough receive the improved popup once.
