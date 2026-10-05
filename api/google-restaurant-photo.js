@@ -183,7 +183,7 @@ function googlePhotoQuery(req){
  const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
  return q||{};
 }
-function googleJson(res,status,payload){
+function sendGoogleJson(res,status,payload){
  res.statusCode=status;
  res.setHeader?.('Content-Type','application/json; charset=utf-8');
  res.setHeader?.('Cache-Control','no-store');
@@ -191,7 +191,7 @@ function googleJson(res,status,payload){
  return res;
 }
 function sendGoogleMedia(res,found){
- if(!found?.media)return googleJson(res,404,{ok:false,error:'No verified Google restaurant photo was found'});
+ if(!found?.media)return sendGoogleJson(res,404,{ok:false,error:'No verified Google restaurant photo was found'});
  res.setHeader?.('Content-Type',found.media.type);
  res.setHeader?.('Cache-Control','public, max-age=604800, stale-while-revalidate=2592000');
  res.setHeader?.('X-Content-Type-Options','nosniff');
@@ -216,7 +216,7 @@ async function handler(req,res){
     if(rows?.[0])usage={requestCount:Number(rows[0].request_count)||0,disabledUntil:rows[0].disabled_until||null};
    }catch{}
   }
-  return googleJson(res,200,{
+  return sendGoogleJson(res,200,{
    ok:true,
    googlePlacesConfigured:!!GOOGLE_PLACES_API_KEY,
    durableBudgetConfigured:!!DATABASE_URL,
@@ -227,7 +227,7 @@ async function handler(req,res){
  }
  const name=clean(q.name,160);
  const address=clean(q.address,240);
- if(!name)return googleJson(res,400,{ok:false,error:'Restaurant name is required'});
+ if(!name)return sendGoogleJson(res,400,{ok:false,error:'Restaurant name is required'});
  try{
   const found=await tryGoogleRestaurantPhoto({
    name,
@@ -240,7 +240,7 @@ async function handler(req,res){
   return sendGoogleMedia(res,found);
  }catch(err){
   console.error('dinliminate-google-restaurant-photo',err);
-  return googleJson(res,502,{ok:false,error:'Google restaurant photo lookup failed'});
+  return sendGoogleJson(res,502,{ok:false,error:'Google restaurant photo lookup failed'});
  }
 }
 handler.tryGoogleRestaurantPhoto=tryGoogleRestaurantPhoto;
