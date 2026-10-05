@@ -353,7 +353,10 @@ function normalizeMatchText(text){
   return String(text||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 }
 
-function significantNameTokens
+function significantNameTokens(name){
+  const stop=new Set(['the','a','an','restaurant','restaurants','llc','inc','co','company','and','of','at','in']);
+  return normalizeMatchText(name).split(' ').filter(t=>t.length>=3&&!stop.has(t));
+}
 
 function extractOfficialHeroCandidates(html,pageUrl,name,address,website){
   const out=[],seen=new Set();
