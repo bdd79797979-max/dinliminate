@@ -1,12 +1,12 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 987,
+  "build": 988,
   "sourceBranch": "main",
-  "checkpoint": "CP987",
-  "deploymentTrigger": "CP987-full-audit-zoom-reset-menu",
+  "checkpoint": "CP988",
+  "deploymentTrigger": "CP988-swipe-engine-v2",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP952-restore-simple-meal-swipe",
+  "swipeAudit": "CP988-atomic-swipe-engine-v2",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "immediate-safe-fallback-plus-exact-venue-page-routes",
   "photoPolicy": "no-google"

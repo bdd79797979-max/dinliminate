@@ -11,6 +11,17 @@ Dinliminate is a phone-first dinner decision app built around fast, stable meal 
 - **Release state:** candidate source; Vercel production verification pending the account deployment-rate reset.
 - **Architecture:** root-level HTML/CSS/JS PWA with Vercel API routes; Netlify files remain as legacy/backup hosting configuration.
 
+## CP988 — Swipe Engine v2
+
+- Replaced the swipe transaction with an explicit `idle → dragging → committing → completing` state machine.
+- A committed card is immediately removed from pointer input, preventing rapid repeat-swipes of the same card.
+- Swipe exit animation starts synchronously on release and travels fully off-screen.
+- Completion follows the actual CSS transform transition with a bounded safety timeout, then applies exactly one Cut/Maybe decision.
+- Removed next-card image readiness waits from the commit path so photo work cannot hold up the outgoing card.
+- Prewarms up to three future meal images to support rapid swiping.
+- Added a CSS-level committed/completing input lock and static QA assertions for the swipe invariants.
+- CP987 remains the rollback baseline.
+
 ## CP910 — Surgical cleanup
 
 - Removed confirmed unused/no-op runtime variables and the stale CP693 verification marker.

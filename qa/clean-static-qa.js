@@ -85,7 +85,27 @@ assert.ok(css.includes('min-height:44px')&&css.includes('height:44px'),'Current 
 assert.ok(!html.includes('Pass Around')&&!app.includes('Pass Around')&&!app.includes('passAround'),'Pass Around must remain absent from active UI/runtime');
 assert.ok(!html.includes('All Cut')&&!html.includes('allCuts*='),'All Cut must remain absent');
 
-console.log('Dinliminate CP786 static QA: PASS');
+
+
+// CP988 swipe engine assertions
+const swipeStart=app.indexOf('function bindSwipeCard(');
+const swipeEnd=app.indexOf('function bindMealPhotoCountControls()',swipeStart);
+assert(swipeStart>=0&&swipeEnd>swipeStart,'CP988 swipe engine must have a bounded implementation');
+const swipeBody=app.slice(swipeStart,swipeEnd);
+assert(swipeBody.includes("phase='idle'")&&swipeBody.includes("phase='dragging'")&&swipeBody.includes("phase='committing'")&&swipeBody.includes("phase='completing'"),'CP988 swipe engine must use an explicit gesture state machine');
+assert(swipeBody.includes("card.style.pointerEvents='none'"),'Committed swipe card must be removed from pointer input');
+assert(swipeBody.includes("card.dataset.swipePhase='committing'"),'Committed swipe phase must be externally guarded');
+assert(swipeBody.includes("card.addEventListener('transitionend',handleTransitionEnd)"),'Swipe completion must follow the actual exit transition');
+assert(swipeBody.includes("completionTimer=window.setTimeout(completeAfterExit,duration+180)"),'Swipe completion must have a safety timeout');
+assert(!swipeBody.includes('await ensureSwipePreviewReady(next)'), 'Swipe commit must never block on next-card image preparation');
+assert(swipeBody.includes("const exitDistance=Math.max(Math.ceil(window.innerWidth*1.25)"),'Swipe exit distance must guarantee a full off-screen exit');
+assert(swipeBody.includes("function handleTransitionEnd(e)"),'Swipe engine must have a transition completion handler');
+assert(css.includes('card[data-swipe-phase="committing"]')&&css.includes('pointer-events:none!important'),'CSS must hard-lock a committed card from input');
+assert(html.includes('styles.css?v=988')&&html.includes('app.js?v=988'),'Frontend cache markers must be CP988');
+assert(app.includes("let APP_BUILD = '988'"),'Runtime fallback build must be CP988');
+
+
+console.log('Dinliminate CP988 static QA: PASS');
 console.log(JSON.stringify({build:release.build,checkpoint:release.checkpoint,foods:foods.length,api:'r27',swCache:'v786',hiddenRestaurantSearch:true,hiddenOpenAll:true}));
 
 assert.ok(html.includes('id="menu"')&&html.includes('id="foodMenu"')&&html.includes('id="restaurantMenu"')&&html.includes('id="winnerMenu"')&&html.includes('id="familyMenu"'),'All hamburger menu buttons must exist');
