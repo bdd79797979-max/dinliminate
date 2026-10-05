@@ -285,6 +285,21 @@ function restaurantOfficialPageDirect(row){
   return ['facebook.com','instagram.com'].some(x=>h===x||h.endsWith('.'+x))?page:'';
  }catch{return ''}
 }
+function cachedRestaurantLocationPage(row){
+ const entry=cachedRestaurantWebsiteEntry(row);
+ const page=safeExternalUrl(entry?.officialPage||'');
+ if(!page)return '';
+ const website=safeExternalUrl(entry?.url||row?.website||'');
+ try{
+  const ph=new URL(page).hostname.toLowerCase().replace(/^www\./,'');
+  if(['facebook.com','instagram.com','clarksvillenow.com','visitclarksvilletn.com','restaurantji.com','restaurantguru.com','yelp.com','tripadvisor.com'].some(x=>ph===x||ph.endsWith('.'+x)))return '';
+  if(website){
+   const wh=new URL(website).hostname.toLowerCase().replace(/^www\./,'');
+   if(!(ph===wh||ph.endsWith('.'+wh)||wh.endsWith('.'+ph)))return '';
+  }else return '';
+  return page;
+ }catch{return ''}
+}
 function restaurantWebsitePresentation(row){
  const website=restaurantWebsiteDirect(row);
  if(website)return{url:website,kind:'website',source:'website'};
@@ -3079,11 +3094,13 @@ if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantInde
 const row = rows[S.restaurantIndex];
 const category = restaurantCategory(row);
 const restaurantFallback = restaurantImmediatePhoto;
-const image = restaurantFallback(row);
+const hasOfficialPhotoContext=!!(restaurantWebsiteDirect(row)||cachedRestaurantLocationPage(row));
+const image = hasOfficialPhotoContext ? restaurantFallback(row) : RESTAURANT_NEUTRAL_IMAGE;
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
 const nextRow = rows[S.restaurantIndex + 1];
-const nextImage = restaurantFallback(nextRow);
+const nextHasOfficialPhotoContext=!!(nextRow&&(restaurantWebsiteDirect(nextRow)||cachedRestaurantLocationPage(nextRow)));
+const nextImage = nextHasOfficialPhotoContext ? restaurantFallback(nextRow) : RESTAURANT_NEUTRAL_IMAGE;
 const shortAddress = row.address ? esc(String(row.address).split(',').slice(0,2).join(', ')) : '';
  const cardLocation = (shortAddress || distanceLabel) ? '<div class="restaurant-card-location-distance" title="'+esc(row.address||'')+'">'+[shortAddress,distanceLabel?esc(distanceLabel):''].filter(Boolean).join(' <span aria-hidden="true">•</span> ')+'</div>' : '';
 const cardDetailsAction = '<button class="restaurant-card-utility restaurant-card-details-utility" id="restDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
@@ -3105,7 +3122,7 @@ const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
   stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
+  restaurantNextCard.__restaurantCanonicalPhotoPromise=hydrateRestaurantWebsite(nextRow,'#restStage #restaurantNextCard').then(()=>loadRestaurantPhoto(nextRow)).then(async data=>{
    if(!data?.url)return null;
    if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
    if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
