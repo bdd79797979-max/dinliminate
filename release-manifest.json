@@ -2,14 +2,14 @@
   "name": "Dinliminate",
   "version": "1.0",
   "build": 1085,
-  "sourceBranch": "cp1085-security-hardening",
+  "sourceBranch": "cp1085-ui-fixes",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1085",
-  "deploymentTrigger": "CP1085-security-hardening",
+  "checkpoint": "CP1085-UI",
+  "deploymentTrigger": "CP1085-ui-fixes",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -19,5 +19,6 @@
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
-  "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers"
+  "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
+  "uiFixes": "Meal Times/Cuisine mutual exclusion; startup flash guard; menu subview return-to-menu; restaurant card info spacing; pinch/swipe isolation; tutorial placement"
 }
