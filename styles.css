@@ -9542,6 +9542,45 @@ body:has(.app.home-active)::after{
   background:rgba(12,10,8,.54)!important;
 }
 
+.app.home-active #home .home-intro{
+  position:absolute!important;
+  top:calc(env(safe-area-inset-top) + 25.5%)!important;
+  left:0!important;
+  right:0!important;
+  z-index:10!important;
+  margin:0!important;
+  padding:0 14px!important;
+  text-align:center!important;
+}
+
+.app.home-active #home .home-intro .eyebrow{
+  display:none!important;
+}
+
+.app.home-active #home .home-intro h1{
+  margin:0!important;
+  max-width:11em!important;
+  font-size:clamp(29px,7.6vw,54px)!important;
+  line-height:.98!important;
+  letter-spacing:-.045em!important;
+  font-weight:900!important;
+  color:#fffaf3!important;
+  background:none!important;
+  -webkit-background-clip:initial!important;
+  background-clip:initial!important;
+  -webkit-text-fill-color:initial!important;
+  text-shadow:0 3px 18px rgba(0,0,0,.72)!important;
+}
+
+.app.home-active #home .home-intro .sub{
+  margin:9px auto 0!important;
+  color:#fff5e9!important;
+  font-size:13px!important;
+  line-height:1.2!important;
+  font-weight:500!important;
+  text-shadow:0 2px 9px rgba(0,0,0,.70)!important;
+}
+
 .app.home-active #home .home-choice-rail{
   position:absolute!important;
   inset:0!important;
@@ -9730,6 +9769,19 @@ body:has(.app.home-active)::after{
     top:calc(env(safe-area-inset-top) + 7px)!important;
   }
 
+  .app.home-active #home .home-intro{
+    top:calc(env(safe-area-inset-top) + 25.5%)!important;
+  }
+
+  .app.home-active #home .home-intro h1{
+    font-size:29px!important;
+  }
+
+  .app.home-active #home .home-intro .sub{
+    font-size:11px!important;
+    margin-top:8px!important;
+  }
+
   .app.home-active #home .home-choice-zone{
     top:26%!important;
     height:22%!important;
@@ -9832,6 +9884,37 @@ body:has(.app.home-active)::after{
   pointer-events:auto!important;
 }
 
+
+/* CP1115 — Home final positioning / premium polish.
+   Keep the existing door image, bottom utility row, and transparent choice
+   windows. Only refine vertical placement, typography, arrow stacking, and
+   the Home menu hitbox. */
+.app.home-active #home .home-intro{
+  top:calc(env(safe-area-inset-top) + 18.5%)!important;
+}
+
+.app.home-active #home .home-intro h1{
+  max-width:12em!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(27px,7.1vw,50px)!important;
+  line-height:.98!important;
+  letter-spacing:-.035em!important;
+  font-weight:700!important;
+  color:#fff9ef!important;
+  text-shadow:0 2px 4px rgba(0,0,0,.54),0 8px 24px rgba(0,0,0,.42)!important;
+}
+
+.app.home-active #home .home-intro .sub{
+  margin:7px auto 0!important;
+  color:#f4dfb0!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  font-weight:600!important;
+  letter-spacing:.09em!important;
+  text-shadow:0 2px 6px rgba(0,0,0,.62),0 0 12px rgba(0,0,0,.26)!important;
+}
+
 .app.home-active #home .home-choice-zone{
   top:20.5%!important;
   height:22%!important;
@@ -9885,6 +9968,18 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
+  .app.home-active #home .home-intro{
+    top:calc(env(safe-area-inset-top) + 18.5%)!important;
+  }
+
+  .app.home-active #home .home-intro h1{
+    font-size:28px!important;
+  }
+
+  .app.home-active #home .home-intro .sub{
+    font-size:10px!important;
+    margin-top:7px!important;
+  }
 
   .app.home-active #home .home-choice-zone{
     top:20.5%!important;
@@ -9913,6 +10008,36 @@ body:has(.app.home-active)::after{
     height:40px!important;
     min-height:40px!important;
   }
+}
+
+
+/* CP1116 — Apply the Home finish from a fresh stylesheet version.
+   Keep the three utility actions at the bottom. Refine only the headline,
+   tagline, choice labels/arrows, and menu edge treatment. */
+.app.home-active #home .home-intro{
+  top:calc(env(safe-area-inset-top) + 21.5%)!important;
+}
+
+.app.home-active #home .home-intro h1{
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(27px,7.1vw,50px)!important;
+  line-height:.96!important;
+  letter-spacing:-.035em!important;
+  font-weight:700!important;
+  color:#fff9ef!important;
+  text-shadow:0 2px 5px rgba(0,0,0,.55),0 10px 26px rgba(0,0,0,.38)!important;
+}
+
+.app.home-active #home .home-intro .sub{
+  margin:10px auto 0!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:12.5px!important;
+  line-height:1.15!important;
+  font-weight:600!important;
+  letter-spacing:.085em!important;
+  color:#f0d8a0!important;
+  text-shadow:0 2px 7px rgba(0,0,0,.62),0 0 14px rgba(0,0,0,.24)!important;
+}
 
 .app.home-active #home .home-choice-zone{
   top:31.5%!important;
@@ -9956,6 +10081,15 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
+  .app.home-active #home .home-intro{
+    top:calc(env(safe-area-inset-top) + 21.5%)!important;
+  }
+  .app.home-active #home .home-intro h1{
+    font-size:28px!important;
+  }
+  .app.home-active #home .home-intro .sub{
+    font-size:10.5px!important;
+  }
   .app.home-active #home .home-choice-zone{
     top:31.5%!important;
     height:18%!important;
@@ -9970,6 +10104,38 @@ body:has(.app.home-active)::after{
   .app.home-active .app-topbar #menu{
     right:10px!important;
   }
+}
+
+
+/* CP1117 — Home luxury composition.
+   Establish a single visual hierarchy in the center of the door while
+   leaving the background, logo, footer tools, and behavior untouched. */
+.app.home-active #home .home-intro{
+  top:calc(env(safe-area-inset-top) + 20.5%)!important;
+}
+
+.app.home-active #home .home-intro h1{
+  max-width:11.8em!important;
+  margin:0 auto!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(28px,6.9vw,48px)!important;
+  line-height:.97!important;
+  letter-spacing:-.028em!important;
+  font-weight:700!important;
+  color:#fffaf2!important;
+  text-shadow:0 2px 5px rgba(0,0,0,.50),0 9px 25px rgba(0,0,0,.36)!important;
+}
+
+.app.home-active #home .home-intro .sub{
+  margin:11px auto 0!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;
+  font-size:12px!important;
+  line-height:1.2!important;
+  font-weight:600!important;
+  letter-spacing:.13em!important;
+  color:#f5e4c2!important;
+  text-shadow:0 2px 7px rgba(0,0,0,.60),0 0 14px rgba(0,0,0,.22)!important;
+}
 
 .app.home-active #home .home-choice-zone{
   top:35.2%!important;
@@ -10020,6 +10186,17 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
+  .app.home-active #home .home-intro{
+    top:calc(env(safe-area-inset-top) + 20.5%)!important;
+  }
+  .app.home-active #home .home-intro h1{
+    font-size:28px!important;
+  }
+  .app.home-active #home .home-intro .sub{
+    font-size:10.5px!important;
+    letter-spacing:.12em!important;
+    margin-top:10px!important;
+  }
   .app.home-active #home .home-choice-zone{
     top:35.2%!important;
     height:18%!important;
@@ -10060,6 +10237,21 @@ body:has(.app.home-active)::after{
   .app.home-active #home #restStart{
     right:10%!important;
   }
+}
+
+
+/* CP1119 — Home luxury color finish.
+   Warm champagne-gold treatment for the primary title and bottom utilities.
+   Positioning and structure remain unchanged. */
+.app.home-active #home .home-intro h1{
+  color:#f4dfae!important;
+  background:linear-gradient(180deg,#fff8df 0%,#f1d58d 45%,#c89d4f 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  text-shadow:0 2px 5px rgba(0,0,0,.42),0 7px 20px rgba(0,0,0,.30)!important;
+  filter:drop-shadow(0 1px 1px rgba(255,245,215,.12))!important;
+}
 
 .app.home-active #home .home-foot-icon{
   color:#e8cf98!important;
@@ -10084,6 +10276,9 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
+  .app.home-active #home .home-intro h1{
+    color:#f4dfae!important;
+  }
 }
 
 
@@ -10100,6 +10295,16 @@ body:has(.app.home-active)::after{
 .app.home-active .app-topbar .dinliminate-logo-wordmark{
   font-size:12px!important;
   letter-spacing:.19em!important;
+}
+
+.app.home-active #home .home-intro h1{
+  background:linear-gradient(180deg,#fbf1d7 0%,#ead5a4 48%,#c9aa6a 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  color:#ead5a4!important;
+  text-shadow:0 2px 5px rgba(0,0,0,.40),0 7px 20px rgba(0,0,0,.28)!important;
+  filter:drop-shadow(0 1px 1px rgba(255,245,215,.08))!important;
 }
 
 .app.home-active #home .home-choice-content strong{
@@ -10255,7 +10460,7 @@ body:has(.app.home-active)::after{
   position:absolute;
   left:0;right:0;
   bottom:calc(env(safe-area-inset-bottom) + 68px);
-  z-index:35;
+  z-index:30;
   margin:0;
   padding:0 16px;
   text-align:center;
@@ -10271,10 +10476,10 @@ body:has(.app.home-active)::after{
   font-size:23px!important;
 }
 .app.home-active #home #foodStart .home-choice-content{
-  transform:translate(-5px,0)!important;
+  transform:translate(-5px,2px)!important;
 }
 .app.home-active #home #restStart .home-choice-content{
-  transform:translate(3px,0)!important;
+  transform:translate(4px,2px)!important;
 }
 @media(max-width:390px){
   .app.home-active #home .home-slogan{
@@ -10287,6 +10492,27 @@ body:has(.app.home-active)::after{
   .app.home-active #home .home-choice-arrow{
     font-size:21px!important;
   }
+  .app.home-active #home #foodStart .home-choice-content{
+    transform:translate(-3px,2px)!important;
+  }
+  .app.home-active #home #restStart .home-choice-content{
+    transform:translate(3px,2px)!important;
+  }
+}
+
+
+/* CP1144 — final Home cleanup: slogan stays above the bottom tools;
+   Home/Restaurant choices lift 2px, with Restaurant 1px farther left. */
+.app.home-active #home .home-slogan{
+  z-index:35;
+}
+.app.home-active #home #foodStart .home-choice-content{
+  transform:translate(-5px,0)!important;
+}
+.app.home-active #home #restStart .home-choice-content{
+  transform:translate(3px,0)!important;
+}
+@media(max-width:390px){
   .app.home-active #home #foodStart .home-choice-content{
     transform:translate(-3px,0)!important;
   }
