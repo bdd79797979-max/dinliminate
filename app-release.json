@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1101,
-  "sourceBranch": "cp1101-home-windows-final",
-  "checkpoint": "CP1101",
-  "deploymentTrigger": "CP1101-home-windows-final",
+  "build": 1102,
+  "sourceBranch": "cp1102-home-window-cleanup",
+  "checkpoint": "CP1102",
+  "deploymentTrigger": "CP1102-home-window-cleanup",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -31,5 +31,5 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1101 definitive transparent Home door windows, smaller labels, lower utility actions"
+  "currentBaseline": "CP1102 cleaned Home At Home/Restaurant windows: one transparent text-only surface, no legacy card styling, smaller labels, utility actions at bottom edge"
 }
