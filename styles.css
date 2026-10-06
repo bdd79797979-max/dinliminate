@@ -10543,3 +10543,23 @@ html.dinliminate-visual-mobile #tutorialLayer{
   max-height:100dvh!important;
 }
 
+
+
+/* CP1064 — Hours disclosure is independent of Cuisine disclosure. */
+#restaurant .restaurant-quick-section.is-collapsed > .restaurant-hours-quick:not(.is-rail-collapsed){
+  max-height:90px!important;
+  min-height:32px!important;
+  padding-top:5px!important;
+  padding-bottom:2px!important;
+  margin-top:0!important;
+  opacity:1!important;
+  transform:translateY(0)!important;
+  pointer-events:auto!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+#restaurant .restaurant-quick-section.is-collapsed > #restQuick{
+  max-height:0!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
