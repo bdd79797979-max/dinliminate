@@ -63,7 +63,6 @@
 .restaurant-card-stack{margin-bottom:0}
 .rest-stage>.rest-card-extra,.rest-stage>.actions{position:relative;z-index:3}
 
-.home-card{background:linear-gradient(145deg,#171717,#121212);box-shadow:0 12px 32px #0006}
 .home-icon{background:#202020;border:1px solid #2b2b2b}
 .home h1{max-width:8em}
 @media(max-width:390px){
@@ -148,7 +147,6 @@
 .home .brand-mark{margin-left:0}
 .home{padding-top:5vh}
 .home-actions{margin-top:6vh}
-.home-card{border-radius:22px}
 .home-icon{border-radius:50%}
 
 @media(max-width:390px){
@@ -350,10 +348,6 @@
 .luxury-home h1{max-width:calc(100% - 16px);width:100%;margin:16px auto 0;padding:0 4px;box-sizing:border-box;font-size:clamp(2rem,8.1vw,6.2rem);letter-spacing:-.05em;line-height:.98;overflow:visible;background:linear-gradient(120deg,#fff 12%,#e8d5ae 44%,#d98f54 70%,#fff 94%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 .luxury-home .sub{color:#aaa39a;max-width:620px}
 .luxury-home .home-actions{position:relative;z-index:2;gap:11px}
-.luxury-home .home-card{min-height:73px;background:linear-gradient(145deg,#171615,#11100f);border:1px solid #3b3428;color:#eee;box-shadow:0 16px 40px #0008}
-.luxury-home .home-card strong{color:#f6ead4}
-.luxury-home .home-card span span{color:#8e877d}
-.luxury-home .home-card .arrow{color:#bfa16b}
 .luxury-home .home-foot{position:relative;z-index:2}
 .luxury-home .home-foot .tiny{color:#5e574e}
 
@@ -413,43 +407,9 @@
 }
 
 
-/* CP109 — one-screen luxury Home */
-.luxury-home{height:calc(100svh - 58px);min-height:0;overflow:hidden;padding:0 0 max(8px,env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center}
-.luxury-home .home-intro{flex:0 0 auto;padding:0 4px}
-.luxury-home .eyebrow{margin:0 0 5px;font-size:9px}
-.luxury-home h1{font-size:clamp(2rem,7.2vw,3.8rem);line-height:.98;max-width:10em;margin:7px auto 0}
-.luxury-home .sub{font-size:10px;line-height:1.35;margin:8px auto 0}
-.luxury-home .home-actions{flex:0 0 auto;width:min(100%,430px);margin:18px auto 0;gap:9px}
-.luxury-home .home-card-choice{position:relative;display:flex;align-items:flex-end;min-height:94px;height:94px;padding:0;border-radius:22px;overflow:hidden;background:#171615;border:1px solid #ffffff1d;box-shadow:0 18px 45px #0009}
-.home-card-choice .home-card-copy{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0 15px 13px;text-align:left}
-.home-card-choice .home-card-copy strong{font-size:21px;line-height:1.05;color:#fff7e8}
-.home-card-choice .home-card-copy>span{font-size:9px;color:#d8d0c4}
-.home-card-choice .arrow{position:absolute;z-index:2;right:15px;bottom:12px;width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:#0009;border:1px solid #ffffff2b;color:#e9cf9e;font-size:21px}
-.luxury-home .home-foot{margin-top:12px;flex:0 0 auto}
-.luxury-home .home-foot .tiny.made-by{color:#c8a565;letter-spacing:.015em;font-size:8px}
-.luxury-home .home-foot .text-btn{font-size:8px;padding:2px 4px}
-
-@media(max-width:390px){
-  .luxury-home{height:calc(100svh - 58px);padding-bottom:2px}
-  .luxury-home h1{font-size:32px;max-width:11em}
-  .luxury-home .sub{font-size:9px;margin-top:6px}
-  .luxury-home .home-actions{margin-top:15px;gap:8px}
-  .luxury-home .home-card-choice{height:82px;min-height:82px;border-radius:19px}
-  .home-card-choice .home-card-copy strong{font-size:18px}
-  .home-card-choice .home-card-copy{padding:0 13px 11px}
-  .home-card-choice .home-card-copy>span{font-size:8px}
-  .home-card-choice .arrow{right:12px;bottom:10px;width:28px;height:28px}
-  .luxury-home .home-foot{margin-top:8px}
-}
-
-/* CP109 — Quick Cut imagery comes from matching dish photos */
 
 
 /* CP109 — final iPhone-safe Home and richer Restaurant Details */
-.luxury-home .home-card-choice{background-color:#171615}
-.luxury-home .home-card-choice::after{content:'';position:absolute;inset:1px;border-radius:20px;pointer-events:none;border:1px solid #ffffff10}
-.luxury-home .home-card-choice.food-choice,
-.luxury-home .home-card-choice.restaurant-choice{background-position:center}
 .restaurant-detail-summary{margin-top:13px}
 .restaurant-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .restaurant-detail-grid>div{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:11px;background:#211f1c}
@@ -462,7 +422,6 @@
 @media(max-width:390px){
   .luxury-home .home-intro{padding-top:2px}
   .luxury-home .home-actions{margin-top:12px}
-  .luxury-home .home-card-choice{height:80px;min-height:80px}
   .luxury-home .home-foot .made-by{font-size:7.5px}
   .restaurant-detail-grid{gap:6px}
   .restaurant-detail-grid>div{padding:8px}
@@ -578,16 +537,12 @@
 .count-inline{display:inline-block;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#888!important;font-size:10px;font-weight:700;letter-spacing:.02em;box-shadow:none!important;}
 
 /* CP241 UX repair */
-.home-card-choice .home-card-overlay{z-index:1}.home-card-choice .home-card-copy,.home-card-choice .arrow{z-index:2}
 .card-card-action{background:#171717;color:#ead9b8;border:1px solid #4a402f;box-shadow:none;border-radius:12px;min-height:34px;height:34px;padding:0 12px;font-size:10px;font-weight:850;text-decoration:none;letter-spacing:.02em}.website-action{display:inline-flex;align-items:center;justify-content:center}.card-details-action{color:#f5f1e8}
 .detail-actions-row{display:flex;gap:8px;align-items:center;margin-top:14px}.detail-hide-action,.detail-web-action{min-height:44px;height:44px;border-radius:12px;padding:0 15px;font-size:11px;font-weight:850;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}.detail-hide-action{background:#211b17;color:#f0e6d6;border:1px solid #4a3d31}.detail-web-action{background:#2a241c;color:#ead9b8;border:1px solid #7a6240}
 .settings-system-action{display:flex;width:100%;min-height:46px;align-items:center;justify-content:center;border-radius:13px;background:#1a1a1a;color:#eee;border:1px solid #343434;font-weight:850;font-size:12px}.settings-system-action.restore-action{background:#5b3fb3;color:#fff;border-color:#8166d8;box-shadow:0 10px 24px #5b3fb333}.settings-reset-app{width:100%;min-height:46px;border-radius:13px;margin-top:10px}
 .diagnosis-row.info .diagnosis-mark{background:#252627;color:#b8c4ca}.diagnosis-refresh:disabled{opacity:.62}.count-inline{display:inline-block;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#888!important;font-size:10px;font-weight:700;box-shadow:none!important}
 
 /* CP241: contain home images so they never intercept card interaction. */
-.home-card-choice{position:relative;overflow:hidden;}
-
-.home-card-choice .home-card-overlay{pointer-events:none;}
 
 
 /* CP243: premium Details icon */
@@ -4952,48 +4907,6 @@ button,input,select,textarea{
   color:#c9c1b2!important;
   white-space:nowrap!important;
 }
-.luxury-home .home-card-choice{
-  isolation:isolate;
-}
-.luxury-home .home-card-choice::before{
-  content:"";
-  position:absolute;
-  inset:-35% -65%;
-  z-index:1;
-  pointer-events:none;
-  transform:translateX(-55%) rotate(9deg);
-  background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,0) 44%,rgba(255,255,255,.34) 49%,rgba(255,255,255,0) 54%,transparent 61%);
-  mix-blend-mode:screen;
-  animation:homeCardSheen 5.8s ease-in-out infinite;
-}
-.luxury-home .food-choice .home-card-overlay{
-  background:
-    radial-gradient(circle at 74% 28%,rgba(247,197,103,.22),transparent 34%),
-    linear-gradient(90deg,rgba(20,12,7,.92) 0%,rgba(20,12,7,.58) 43%,rgba(10,9,8,.18) 100%),
-    linear-gradient(0deg,rgba(0,0,0,.72) 0%,transparent 62%);
-}
-.luxury-home .restaurant-choice .home-card-overlay{
-  background:
-    radial-gradient(circle at 82% 22%,rgba(117,224,255,.26),transparent 30%),
-    radial-gradient(circle at 62% 68%,rgba(215,109,255,.2),transparent 38%),
-    linear-gradient(90deg,rgba(8,7,16,.9) 0%,rgba(10,9,17,.5) 43%,rgba(7,8,12,.12) 100%),
-    linear-gradient(0deg,rgba(0,0,0,.66) 0%,transparent 62%);
-}
-.luxury-home .food-choice::after,
-.luxury-home .restaurant-choice::after{
-  border-color:rgba(255,255,255,.17)!important;
-  box-shadow:inset 0 1px 0 rgba(255,244,209,.18),0 0 28px rgba(247,197,103,.09);
-}
-.luxury-home .restaurant-choice::after{
-  box-shadow:inset 0 1px 0 rgba(223,244,255,.2),0 0 32px rgba(119,206,255,.1);
-}
-@keyframes homeCardSheen{
-  0%,20%{transform:translateX(-65%) rotate(9deg);opacity:0}
-  32%{opacity:.1}
-  48%{opacity:.62}
-  64%{transform:translateX(65%) rotate(9deg);opacity:.12}
-  100%{transform:translateX(65%) rotate(9deg);opacity:0}
-}
 .quick-label .count-inline{
   color:#79d39a!important;
   font-weight:900!important;
@@ -5502,38 +5415,7 @@ button,input,select,textarea{
 }
 .details-modal.modal-open .detail-unified-title{opacity:1;transform:translateY(0)}
 
-/* Home: whole photo card is touch-responsive, not just its text. */
-.luxury-home .home-card-choice{
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:transparent!important;
-  cursor:pointer;
-  transform-origin:center center;
-  will-change:transform;
-  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease!important;
-}
-.luxury-home .home-card-choice.is-pressed{
-  transform:translateZ(0) scale(.985)!important;
-  filter:saturate(1.025) brightness(1.025);
-}
 
-/* Home ambient light: extremely slow and subtle, with no moving photo. */
-.app:has(#home:not(.hidden))::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
-  background:radial-gradient(circle at 50% 18%,rgba(255,219,157,.065),transparent 32%),linear-gradient(180deg,transparent 0%,rgba(0,0,0,.05) 54%,rgba(0,0,0,.13) 100%);
-  opacity:.72;
-  transform:scale(1);
-  animation:cp774HomeAmbient 16s ease-in-out infinite alternate;
-}
-.app:has(#home:not(.hidden)) > *{position:relative;z-index:1}
-@keyframes cp774HomeAmbient{
-  0%{opacity:.62;transform:scale(1)}
-  50%{opacity:.76;transform:scale(1.006)}
-  100%{opacity:.66;transform:scale(1.003)}
-}
 
 @media(max-width:390px){
   .swipe-card-coach{bottom:4px!important;width:calc(100% - 18px)!important;font-size:7.6px!important}
@@ -5738,47 +5620,10 @@ button,input,select,textarea{
   margin:26px auto 0!important;
   gap:18px!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-choice{
-  min-height:92px!important;height:92px!important;
-  padding:0!important;
-  background-image:none!important;
-  background-color:transparent!important;
-  border:1px solid rgba(255,255,255,.50)!important;
-  border-radius:18px!important;
-  box-shadow:none!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-overlay,
-.app:has(#home:not(.hidden)) #home .home-card-choice::before,
-.app:has(#home:not(.hidden)) #home .home-card-choice::after{
-  display:none!important;content:none!important;background:none!important;box-shadow:none!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy{
-  position:relative!important;z-index:2!important;
-  padding:0 17px!important;
-  align-items:flex-start!important;justify-content:center!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
-  color:#fff!important;font-size:24px!important;line-height:1!important;text-shadow:none!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
-  color:#fff!important;font-size:11px!important;line-height:1.2!important;text-shadow:none!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
-  right:17px!important;bottom:50%!important;transform:translateY(50%)!important;
-  width:auto!important;height:auto!important;padding:0!important;
-  border:0!important;border-radius:0!important;background:none!important;
-  color:#fff!important;box-shadow:none!important;font-size:30px!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice.is-pressed{
-  transform:scale(.985)!important;filter:brightness(1.04)!important;box-shadow:none!important;
-}
 .app:has(#home:not(.hidden)) #home .home-foot{margin-top:auto!important;padding:12px 0 0!important}
 @media(max-width:390px){
   .app:has(#home:not(.hidden)) #home{padding-left:12px!important;padding-right:12px!important;padding-top:calc(env(safe-area-inset-top) + 70px)!important}
   .app:has(#home:not(.hidden)) #home .home-actions{gap:14px!important;margin-top:20px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice{height:88px!important;min-height:88px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{font-size:21px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{font-size:10px!important}
 }
 
 /* CP777 — definitive Meals/Restaurants ALL · MAYBES wiring.
@@ -5847,73 +5692,6 @@ button,input,select,textarea{
   margin:24px auto 0!important;
   gap:14px!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-choice{
-  position:relative!important;
-  display:flex!important;
-  align-items:flex-end!important;
-  min-height:96px!important;
-  height:96px!important;
-  padding:0!important;
-  overflow:hidden!important;
-  background-image:none!important;
-  background-color:#171615!important;
-  border:1px solid rgba(255,255,255,.28)!important;
-  border-radius:20px!important;
-  box-shadow:none!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-overlay{
-  display:block!important;
-  position:absolute!important;
-  inset:0!important;
-  background:linear-gradient(90deg,rgba(8,8,8,.72) 0%,rgba(8,8,8,.36) 48%,rgba(8,8,8,.06) 100%),linear-gradient(0deg,rgba(0,0,0,.66) 0%,transparent 62%)!important;
-  z-index:1!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy{
-  position:relative!important;
-  z-index:2!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
-  gap:2px!important;
-  padding:0 15px 13px!important;
-  text-align:left!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
-  color:#fff!important;
-  font-size:21px!important;
-  line-height:1.05!important;
-  text-shadow:0 2px 12px rgba(0,0,0,.45)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
-  color:#f0e9df!important;
-  font-size:10px!important;
-  line-height:1.2!important;
-  text-shadow:0 2px 10px rgba(0,0,0,.42)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
-  position:absolute!important;
-  z-index:2!important;
-  right:14px!important;
-  bottom:12px!important;
-  width:30px!important;
-  height:30px!important;
-  border-radius:50%!important;
-  display:grid!important;
-  place-items:center!important;
-  background:rgba(0,0,0,.42)!important;
-  border:1px solid rgba(255,255,255,.28)!important;
-  color:#f2d59b!important;
-  font-size:21px!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice::after{
-  content:""!important;
-  position:absolute!important;
-  inset:1px!important;
-  border-radius:19px!important;
-  pointer-events:none!important;
-  border:1px solid rgba(255,255,255,.08)!important;
-  z-index:3!important;
-}
 .app:has(#home:not(.hidden)) #home .home-foot{
   margin-top:auto!important;
   padding:12px 0 0!important;
@@ -5923,9 +5701,6 @@ button,input,select,textarea{
   .app:has(#home:not(.hidden)) .app-topbar{left:12px!important;right:12px!important}
   .app:has(#home:not(.hidden)) #home{padding-left:0!important;padding-right:0!important;padding-top:calc(env(safe-area-inset-top) + 68px)!important}
   .app:has(#home:not(.hidden)) #home .home-actions{margin-top:18px!important;gap:12px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice{height:84px!important;min-height:84px!important;border-radius:18px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{font-size:19px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{font-size:9px!important}
 }
 
 /* CP781 — identical Meals/Restaurants ALL · MAYBES control.
@@ -5964,9 +5739,6 @@ button,input,select,textarea{
 #restaurant #restaurantMaybeDeck > span{
   display:inline!important;
   width:auto!important;
-  min-width:0!important;
-  height:auto!important;
-  min-height:0!important;
   padding:0!important;
   margin:0!important;
   border:0!important;
@@ -6024,8 +5796,6 @@ button,input,select,textarea{
   right:0!important;
   left:auto!important;
   bottom:auto!important;
-  z-index:70!important;
-  height:100dvh!important;
   transform:translateX(104%)!important;
 }
 .app:has(#home:not(.hidden)) > #drawer.is-open{
@@ -6177,40 +5947,10 @@ button,input,select,textarea{
   color:#f0e7d8!important;
   text-shadow:0 2px 14px rgba(0,0,0,.76)!important;
 }
-.app:has(#home:not(.hidden)) #home .home-card-choice{
-  border-color:rgba(221,194,139,.48)!important;
-  box-shadow:inset 0 1px 0 rgba(255,248,226,.17)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
-  color:#fff8e9!important;
-  text-shadow:
-    0 2px 13px rgba(0,0,0,.80),
-    0 1px 0 rgba(222,194,137,.18)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
-  color:#f0e5d2!important;
-  text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
-  background:rgba(8,8,8,.50)!important;
-  border-color:rgba(223,194,137,.54)!important;
-  color:#f2d59b!important;
-  box-shadow:inset 0 1px 0 rgba(255,248,226,.10),0 4px 12px rgba(0,0,0,.36)!important;
-}
-.app:has(#home:not(.hidden))::after{
-  background:
-    radial-gradient(ellipse 78% 33% at 50% 27%,rgba(0,0,0,.16),transparent 72%),
-    linear-gradient(180deg,rgba(0,0,0,.10) 0%,rgba(0,0,0,.015) 22%,rgba(0,0,0,.04) 54%,rgba(0,0,0,.17) 100%)!important;
-  opacity:.88!important;
-  animation:none!important;
-}
 @media(max-width:390px){
   .app:has(#home:not(.hidden)) #home .home-intro .eyebrow{
     font-size:9px!important;
     letter-spacing:.18em!important;
-  }
-  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
-    letter-spacing:.01em!important;
   }
 }
 
@@ -6231,89 +5971,10 @@ button,input,select,textarea{
   filter:drop-shadow(0 3px 9px rgba(0,0,0,.68));
 }
 
-.app:has(#home:not(.hidden))::after{
-  pointer-events:none!important;
-  background:
-    radial-gradient(ellipse 72% 30% at 50% 25%,rgba(0,0,0,.24),transparent 72%),
-    linear-gradient(180deg,rgba(0,0,0,.13) 0%,rgba(0,0,0,.025) 26%,rgba(0,0,0,.04) 58%,rgba(0,0,0,.20) 100%)!important;
-  opacity:.92!important;
-}
 
-.app:has(#home:not(.hidden)) #home .home-card-choice{
-  border:1px solid rgba(226,200,150,.58)!important;
-  border-radius:21px!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,249,232,.20),
-    inset 0 -1px 0 rgba(0,0,0,.22),
-    0 12px 34px rgba(0,0,0,.24)!important;
-  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease,border-color .16s ease!important;
-}
 
-.app:has(#home:not(.hidden)) #home .home-card-choice::before{
-  content:""!important;
-  position:absolute!important;
-  inset:-80% -75%!important;
-  z-index:3!important;
-  pointer-events:none!important;
-  opacity:0!important;
-  transform:translateX(-48%) rotate(8deg)!important;
-  background:linear-gradient(
-    104deg,
-    transparent 43%,
-    rgba(255,246,220,.05) 46%,
-    rgba(245,213,151,.38) 49%,
-    rgba(255,252,238,.18) 51%,
-    rgba(255,246,220,.05) 54%,
-    transparent 57%
-  )!important;
-  mix-blend-mode:screen!important;
-  animation:none!important;
-  transition:opacity .08s ease!important;
-}
 
-.app:has(#home:not(.hidden)) #home .home-card-choice:active{
-  transform:scale(.987)!important;
-  border-color:rgba(239,215,171,.76)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,249,232,.30),
-    0 9px 26px rgba(0,0,0,.30)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice:active::before{
-  opacity:.82!important;
-  animation:cp789HomePressSheen .62s cubic-bezier(.22,.65,.27,1) both!important;
-}
-@keyframes cp789HomePressSheen{
-  0%{transform:translateX(-62%) rotate(8deg)}
-  100%{transform:translateX(62%) rotate(8deg)}
-}
 
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{
-  font-size:22px!important;
-  font-weight:900!important;
-  letter-spacing:.01em!important;
-  color:#fff9ed!important;
-  text-shadow:0 2px 15px rgba(0,0,0,.84),0 1px 0 rgba(226,198,143,.22)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy>span{
-  color:#f3e7d1!important;
-  text-shadow:0 2px 12px rgba(0,0,0,.82)!important;
-}
-
-.app:has(#home:not(.hidden)) #home .home-card-choice .arrow{
-  right:12px!important;
-  bottom:11px!important;
-  width:27px!important;
-  height:27px!important;
-  border-radius:50%!important;
-  background:rgba(8,8,8,.34)!important;
-  border:1px solid rgba(226,200,150,.46)!important;
-  color:#edd09a!important;
-  font-size:19px!important;
-  box-shadow:inset 0 1px 0 rgba(255,249,232,.10),0 3px 10px rgba(0,0,0,.28)!important;
-}
-.app:has(#home:not(.hidden)) #home .home-card-choice .arrow:active{
-  transform:scale(.94)!important;
-}
 
 .app:has(#home:not(.hidden)) .app-topbar #menu{
   width:44px!important;
@@ -6351,8 +6012,6 @@ button,input,select,textarea{
 
 @media(max-width:390px){
   .app:has(#home:not(.hidden)) .app-topbar .brand{font-size:20px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice{border-radius:19px!important}
-  .app:has(#home:not(.hidden)) #home .home-card-choice .home-card-copy strong{font-size:20px!important}
   .app:has(#home:not(.hidden)) .app-topbar #menu{width:42px!important;height:42px!important;top:8px!important}
 }
 
@@ -6397,62 +6056,6 @@ button,input,select,textarea{
 }
 
 
-/* CP792 — premium side-by-side home choices.
-   Two equal cards on phones and larger screens; preserve the existing visual treatment. */
-.luxury-home .home-actions{
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  align-items:stretch!important;
-  gap:10px!important;
-}
-.luxury-home .home-card-choice{
-  width:100%!important;
-  height:clamp(270px,38svh,330px)!important;
-  min-height:0!important;
-  border-radius:22px!important;
-  display:flex!important;
-  align-items:flex-end!important;
-}
-.luxury-home .home-card-choice .home-card-copy{
-  padding:0 13px 14px!important;
-}
-.luxury-home .home-card-choice .home-card-copy strong{
-  font-size:clamp(16px,4.7vw,22px)!important;
-  line-height:1.02!important;
-}
-.luxury-home .home-card-choice .home-card-copy>span{
-  font-size:8px!important;
-}
-.luxury-home .home-card-choice .arrow{
-  right:12px!important;
-  bottom:11px!important;
-  width:30px!important;
-  height:30px!important;
-}
-.luxury-home .home-card-choice.food-choice{
-  background-position:center 52%!important;
-}
-.luxury-home .home-card-choice.restaurant-choice{
-  background-position:center!important;
-}
-
-@media(max-width:390px){
-  .luxury-home .home-actions{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:8px!important;
-    margin-top:15px!important;
-  }
-  .luxury-home .home-card-choice{
-    height:clamp(275px,35svh,305px)!important;
-    min-height:275px!important;
-    border-radius:19px!important;
-  }
-  .luxury-home .home-card-choice .home-card-copy{
-    padding:0 11px 12px!important;
-  }
-  .luxury-home .home-card-choice .home-card-copy strong{
-    font-size:18px!important;
-  }
-}
 
 
 
@@ -6784,13 +6387,6 @@ button,input,select,textarea{
 }
 .hungry-mystery-cover.hidden{
   opacity:0;
-  transform:scale(1.045);
-  filter:blur(3px);
-}
-.hungry-mystery-seal{
-  width:64px!important;
-  height:64px!important;
-  display:grid!important;
   place-items:center!important;
   border:1px solid rgba(211,181,121,.66)!important;
   border-radius:50%!important;
@@ -7166,13 +6762,6 @@ button,input,select,textarea{
 .luxury-home h1{
   text-shadow:0 2px 22px #000b,0 0 1px #fff8;
   -webkit-text-stroke:.35px rgba(235,213,171,.22);
-}
-.luxury-home .home-card-choice{
-  box-shadow:0 18px 45px #0009,0 0 0 1px #ffffff08;
-}
-.luxury-home .home-card-choice.is-pressed{
-  box-shadow:0 12px 30px #000a,0 0 0 1px #e2c98d1c;
-  filter:saturate(1.035) brightness(1.025);
 }
 .family-entry-card,
 .family-type-option,
@@ -10083,53 +9672,6 @@ button,input,select,textarea{
   gap:9px!important;
   align-items:stretch;
 }
-.app:has(#home:not(.hidden)) .luxury-home .home-card-choice{
-  min-height:86px!important;
-  height:86px!important;
-  align-items:flex-end!important;
-  border-radius:16px!important;
-  background:rgba(10,7,5,.10)!important;
-  border:1px solid rgba(224,199,151,.62)!important;
-  box-shadow:inset 0 1px 0 rgba(255,248,233,.18),0 9px 24px rgba(0,0,0,.16)!important;
-  backdrop-filter:blur(1.5px) saturate(112%)!important;
-  -webkit-backdrop-filter:blur(1.5px) saturate(112%)!important;
-}
-.app:has(#home:not(.hidden)) .luxury-home .home-card-choice:active{
-  transform:translateY(1px)!important;
-  filter:brightness(1.025)!important;
-}
-.app:has(#home:not(.hidden)) .home-card-choice::after{
-  display:none!important;
-}
-.app:has(#home:not(.hidden)) .home-card-choice .home-card-copy{
-  padding:0 14px 14px!important;
-  gap:3px!important;
-}
-.app:has(#home:not(.hidden)) .home-card-choice .home-card-copy strong{
-  color:#f5ead8!important;
-  font-size:clamp(17px,5vw,22px)!important;
-  letter-spacing:-.01em!important;
-  text-shadow:0 2px 9px rgba(0,0,0,.55)!important;
-}
-.app:has(#home:not(.hidden)) .home-card-choice .home-card-copy>span{
-  color:#e2d6c7!important;
-  font-size:8.5px!important;
-  text-shadow:0 1px 7px rgba(0,0,0,.65)!important;
-}
-.app:has(#home:not(.hidden)) .home-card-choice .arrow{
-  width:auto!important;
-  height:auto!important;
-  right:12px!important;
-  bottom:11px!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  color:#e4c982!important;
-  font-size:29px!important;
-  line-height:1!important;
-  text-shadow:0 1px 8px rgba(0,0,0,.72)!important;
-  box-shadow:none!important;
-}
 .app:has(#home:not(.hidden)) #menu{
   width:40px!important;
   height:40px!important;
@@ -10199,13 +9741,6 @@ button,input,select,textarea{
   }
   .app:has(#home:not(.hidden)) .luxury-home .home-actions{
     margin-top:17px!important;
-  }
-  .app:has(#home:not(.hidden)) .luxury-home .home-card-choice{
-    height:82px!important;
-    min-height:82px!important;
-  }
-  .app:has(#home:not(.hidden)) .luxury-home .home-card-choice .home-card-copy{
-    padding:0 12px 12px!important;
   }
   .app:has(#home:not(.hidden)) .luxury-home .home-foot-actions{
     gap:13px!important;
@@ -10829,94 +10364,14 @@ html.dinliminate-visual-mobile .app{
     gap:5vw!important;
     align-items:center!important;
   }
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:29vh!important;
-    min-height:0!important;
-    aspect-ratio:.72!important;
-    padding:0!important;
-    overflow:visible!important;
-    background:transparent!important;
-    background-image:none!important;
-    border:0!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-overlay,
-  .app.home-active #home .home-card-choice::before,
-  .app.home-active #home .home-card-choice::after{
-    display:none!important;
-    content:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy{
-    padding:0 2px!important;
-    align-items:center!important;
-    justify-content:center!important;
-    text-align:center!important;
-    gap:5px!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#fff!important;
-    font-size:clamp(18px,5.5vw,24px)!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.55)!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    color:#fff!important;
-    font-size:clamp(9px,2.8vw,12px)!important;
-    line-height:1.25!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.55)!important;
-  }
-  .app.home-active #home .home-card-choice .arrow{
-    right:50%!important;
-    bottom:10%!important;
-    transform:translateX(50%)!important;
-    width:auto!important;
-    height:auto!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#fff!important;
-    font-size:28px!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.6)!important;
-  }
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:none!important;
-    filter:none!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
 }
 
 @media only screen and (max-width:390px){
   .app.home-active #home .home-actions{margin-top:5vh!important;padding:0 6vw!important;gap:4vw!important}
-  .app.home-active #home .home-card-choice{height:31vh!important}
 }
 
 
 /* CP1074 — align transparent Home tap windows to the door panels. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-actions{
-    position:absolute!important;
-    top:43%!important;
-    left:0!important;
-    right:0!important;
-    width:100%!important;
-    margin:0!important;
-    padding:0 7vw!important;
-    z-index:8!important;
-  }
-  .app.home-active #home .home-card-choice{
-    position:relative!important;
-    z-index:8!important;
-    pointer-events:auto!important;
-  }
-}
-@media only screen and (max-width:390px){
-  .app.home-active #home .home-actions{top:41%!important;padding:0 6vw!important}
-}
 
 
 /* CP1075 — Home hamburger matches the app-wide lines-only menu exactly. */
@@ -11111,73 +10566,6 @@ html.dinliminate-visual-mobile .app{
     z-index:8!important;
   }
 
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:100%!important;
-    min-height:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    background-image:none!important;
-    box-shadow:none!important;
-    overflow:visible!important;
-    display:grid!important;
-    place-items:center!important;
-    touch-action:manipulation!important;
-  }
-
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:translateY(1px)!important;
-    filter:brightness(1.03)!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy{
-    position:relative!important;
-    z-index:2!important;
-    width:100%!important;
-    padding:0 2px!important;
-    display:flex!important;
-    flex-direction:column!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:6px!important;
-    text-align:center!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#f8e9c9!important;
-    font-size:clamp(18px,5vw,23px)!important;
-    line-height:1.04!important;
-    letter-spacing:.015em!important;
-    text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    color:#f3eadc!important;
-    font-size:clamp(9px,2.7vw,12px)!important;
-    line-height:1.28!important;
-    text-shadow:0 2px 10px rgba(0,0,0,.82)!important;
-    max-width:18ch!important;
-  }
-  .app.home-active #home .home-card-choice .arrow{
-    position:static!important;
-    width:auto!important;
-    height:auto!important;
-    margin-top:3px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#e4c982!important;
-    font-size:30px!important;
-    line-height:.8!important;
-    transform:none!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-    box-shadow:none!important;
-  }
 
   .app.home-active #home .home-foot{
     position:absolute!important;
@@ -11246,12 +10634,6 @@ html.dinliminate-visual-mobile .app{
     height:32%!important;
     padding:0 6vw!important;
     gap:4vw!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    font-size:18px!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    font-size:8.5px!important;
   }
   .app.home-active #home .home-foot-actions{
     gap:6px!important;
@@ -11399,93 +10781,6 @@ html.dinliminate-visual-mobile .app{
 
   /* The photograph is 912x1136. With auto-height sizing, these 36% edge
      columns line up with the visible left/right glass panels on iPhone widths. */
-  .app.home-active #home .home-actions{
-    position:absolute!important;
-    top:12.5%!important;
-    left:0!important;
-    right:0!important;
-    width:100%!important;
-    height:67.5%!important;
-    margin:0!important;
-    padding:0!important;
-    display:grid!important;
-    grid-template-columns:36% 36%!important;
-    justify-content:space-between!important;
-    align-items:stretch!important;
-    gap:0!important;
-    z-index:8!important;
-  }
-
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:100%!important;
-    min-height:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    background-image:none!important;
-    box-shadow:none!important;
-    overflow:visible!important;
-    display:grid!important;
-    place-items:center!important;
-    touch-action:manipulation!important;
-  }
-
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:none!important;
-    filter:brightness(1.035)!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy{
-    position:relative!important;
-    z-index:2!important;
-    width:100%!important;
-    padding:0 2px!important;
-    display:flex!important;
-    flex-direction:column!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:5px!important;
-    text-align:center!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#f8e9c9!important;
-    font-size:clamp(18px,5vw,23px)!important;
-    line-height:1.04!important;
-    letter-spacing:.015em!important;
-    text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    color:#f3eadc!important;
-    font-size:clamp(9px,2.7vw,12px)!important;
-    line-height:1.28!important;
-    text-shadow:0 2px 10px rgba(0,0,0,.82)!important;
-    max-width:18ch!important;
-  }
-
-  .app.home-active #home .home-card-choice .arrow{
-    position:static!important;
-    width:auto!important;
-    height:auto!important;
-    margin-top:3px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#e4c982!important;
-    font-size:28px!important;
-    line-height:.8!important;
-    transform:none!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-    box-shadow:none!important;
-  }
 
   .app.home-active #home .home-foot{
     position:absolute!important;
@@ -11550,49 +10845,12 @@ html.dinliminate-visual-mobile .app{
   .app.home-active #home .home-intro{top:calc(env(safe-area-inset-top) + 56px)!important}
   .app.home-active #home .home-intro h1{font-size:22px!important}
   .app.home-active #home .home-actions{top:12.5%!important;height:67.5%!important}
-  .app.home-active #home .home-card-choice .home-card-copy strong{font-size:18px!important}
-  .app.home-active #home .home-card-choice .home-card-copy>span{font-size:8.5px!important}
   .app.home-active #home .home-foot-actions{gap:6px!important}
   .app.home-active #home .home-icon-action{width:67px!important;min-width:67px!important}
 }
 
 
-/* CP1096 — Home door windows are fully clear; text is the only painted content. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-card-choice,
-  .app.home-active #home .home-card-choice:hover,
-  .app.home-active #home .home-card-choice:focus,
-  .app.home-active #home .home-card-choice:focus-visible,
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    background:transparent!important;
-    background-color:transparent!important;
-    background-image:none!important;
-    border:0!important;
-    outline:0!important;
-    box-shadow:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-overlay,
-  .app.home-active #home .home-card-choice::before,
-  .app.home-active #home .home-card-choice::after,
-  .app.home-active #home .home-card-choice .arrow{
-    display:none!important;
-    content:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy{
-    background:transparent!important;
-    box-shadow:none!important;
-    border:0!important;
-    outline:0!important;
-  }
-}
 
-/* CP1098 — lower Home utility actions toward the bottom edge while preserving safe-area clearance. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-foot{
-    bottom:calc(env(safe-area-inset-bottom) + 3px)!important;
-  }
-}
 
 /* CP1099 — hidden Meal Times use the same crossed-out cue as Cuisine Cuts. */
 #food .meal-time-quick .meal-time-chip:not(.is-active)[data-active="false"]{
@@ -11601,52 +10859,11 @@ html.dinliminate-visual-mobile .app{
   text-decoration-color:currentColor!important;
 }
 
-/* CP1101 — definitive transparent Home windows and smaller labels. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-actions .home-card,
-  .app.home-active #home .home-actions .home-card-choice,
-  .app.home-active #home .home-actions .food-choice,
-  .app.home-active #home .home-actions .restaurant-choice{
-    appearance:none!important;
-    -webkit-appearance:none!important;
-    background:transparent!important;
-    background-color:transparent!important;
-    background-image:none!important;
-    border:0!important;
-    outline:0!important;
-    box-shadow:none!important;
-    filter:none!important;
-    border-radius:0!important;
-  }
-  .app.home-active #home .home-actions .home-card::before,
-  .app.home-active #home .home-actions .home-card::after,
-  .app.home-active #home .home-actions .home-card-choice::before,
-  .app.home-active #home .home-actions .home-card-choice::after,
-  .app.home-active #home .home-actions .home-card-choice .home-card-overlay,
-  .app.home-active #home .home-actions .home-card-choice .arrow{
-    display:none!important;
-    content:none!important;
-    background:none!important;
-    border:0!important;
-    box-shadow:none!important;
-  }
-  .app.home-active #home .home-actions .home-card-choice .home-card-copy,
-  .app.home-active #home .home-actions .home-card-choice .home-card-copy strong{
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
-    outline:0!important;
-  }
-  .app.home-active #home .home-actions .home-card-choice .home-card-copy strong{
-    font-size:15px!important;
-    line-height:1!important;
-    letter-spacing:.08em!important;
-  }
-  .app.home-active #home .home-foot{
-    bottom:env(safe-area-inset-bottom)!important;
-  }
-}
-@media only screen and (max-width:390px){
-  .app.home-active #home .home-actions .home-card-choice .home-card-copy strong{font-size:14px!important}
-  .app.home-active #home .home-foot{bottom:env(safe-area-inset-bottom)!important}
-}
+/* CP1102 — canonical Home door-window surface. */
+.luxury-home .home-card-choice,.luxury-home .home-card-choice:hover,.luxury-home .home-card-choice:active,.luxury-home .home-card-choice.is-pressed,.luxury-home .home-card-choice:focus,.luxury-home .home-card-choice:focus-visible{appearance:none!important;-webkit-appearance:none!important;background:transparent!important;background-color:transparent!important;background-image:none!important;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transform:none!important;transition:none!important}
+.luxury-home .home-card-choice::before,.luxury-home .home-card-choice::after,.luxury-home .home-card-choice .home-card-overlay,.luxury-home .home-card-choice .arrow{display:none!important;content:none!important;background:none!important;border:0!important;box-shadow:none!important}
+.luxury-home .home-card-choice .home-card-copy{background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;padding:0!important;margin:0!important;position:relative!important;z-index:2!important;width:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}
+.luxury-home .home-card-choice .home-card-copy strong{font-size:14px!important;line-height:1!important;font-weight:850!important;letter-spacing:.06em!important;color:#f8e9c9!important;text-shadow:0 2px 12px rgba(0,0,0,.72)!important;white-space:nowrap!important}
+@media only screen and (min-width:601px){.luxury-home .home-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;align-items:stretch!important}.luxury-home .home-card-choice{width:100%!important;min-height:0!important;height:clamp(220px,38svh,330px)!important;display:grid!important;place-items:center!important}}
+@media only screen and (max-width:600px){.app.home-active #home .home-actions{position:absolute!important;top:12.5%!important;left:0!important;right:0!important;width:100%!important;height:67.5%!important;margin:0!important;padding:0!important;display:grid!important;grid-template-columns:36% 36%!important;justify-content:space-between!important;align-items:stretch!important;gap:0!important;z-index:8!important}.app.home-active #home .home-card-choice{width:100%!important;min-width:0!important;height:100%!important;min-height:0!important;padding:0!important;overflow:visible!important;display:grid!important;place-items:center!important;touch-action:manipulation!important}.app.home-active #home .home-card-choice .home-card-copy{width:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}.app.home-active #home .home-card-choice .home-card-copy strong{font-size:14px!important}.app.home-active #home .home-foot{position:absolute!important;left:0!important;right:0!important;bottom:0!important;z-index:12!important;margin:0!important;padding:0 8px max(0px,env(safe-area-inset-bottom))!important;display:flex!important;justify-content:center!important;align-items:center!important}}
+@media only screen and (max-width:390px){.app.home-active #home .home-card-choice .home-card-copy strong{font-size:13px!important}.app.home-active #home .home-foot-actions{gap:6px!important}}
