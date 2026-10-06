@@ -9422,15 +9422,18 @@ html.dinliminate-visual-mobile .app{
 .app.home-active{
   position:fixed!important;
   inset:0!important;
-  width:100vw!important;
-  max-width:none!important;
+  width:min(100vw,430px)!important;
+  max-width:430px!important;
   height:100dvh!important;
   min-height:100dvh!important;
   max-height:100dvh!important;
   margin:0!important;
   padding:0!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
   overflow:hidden!important;
-  background:#080706 url("./assets/home-door.jpg?v=1106") center center / cover no-repeat!important;
+  background:#080706 url("./assets/home-door.jpg?v=1109") center center / cover no-repeat!important;
   isolation:isolate!important;
 }
 
@@ -9447,7 +9450,7 @@ body:has(.app.home-active)::after{
 .app.home-active #home{
   position:absolute!important;
   inset:0!important;
-  width:100vw!important;
+  width:100%!important;
   max-width:none!important;
   height:100dvh!important;
   min-height:100dvh!important;
@@ -9815,5 +9818,25 @@ body:has(.app.home-active)::after{
   .app.home-active #home .home-icon-label{
     font-size:7px!important;
     letter-spacing:.11em!important;
+  }
+}
+
+/* CP1109 — iPhone viewport rule.
+   Desktop browser previews remain a portrait phone-sized canvas.
+   Actual iPhone widths use the full device viewport. */
+@media only screen and (max-width:600px){
+  .app.home-active{
+    inset:0!important;
+    left:0!important;
+    right:0!important;
+    width:100vw!important;
+    max-width:none!important;
+    margin:0!important;
+    transform:none!important;
+  }
+
+  .app.home-active #home{
+    width:100vw!important;
+    max-width:none!important;
   }
 }
