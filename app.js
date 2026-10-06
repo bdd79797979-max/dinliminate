@@ -14,7 +14,8 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '1068';
+// CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
+let APP_BUILD = '1070';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1383,7 +1384,12 @@ function bindTutorialUI(){
   const target=event.target?.closest?.('#foodStart,#restStart');
   const step=tutorialState.steps[tutorialState.index];
   if(target&&step?.action==='home-choice'){
-   tutorialMarkHomeChoice(target.id==='restStart'?'restaurant':'food');
+   event.preventDefault();
+   event.stopPropagation();
+   const nextScreen=target.id==='restStart'?'restaurant':'food';
+   tutorialMarkHomeChoice(nextScreen);
+   if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+   else startFood({tutorialResumeIndex:0});
   }
  },true);
  document.addEventListener('click',event=>{
@@ -1606,19 +1612,18 @@ function renderRestaurantHours(){
 function bindRestaurantHours(){
  const toggle=$('restaurantHoursToggle');
  if(!toggle)return;
- toggle.onclick=(event)=>{
-  event.preventDefault();
-  event.stopPropagation();
-  S.restaurantHoursCollapsed=!S.restaurantHoursCollapsed;
-  renderRestaurantHours();
-  save();
+ toggle.onclick=event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   setRestaurantRefinePanel('hours');
+   save();
  };
  renderRestaurantHours();
 }
 function renderQuickCutsCollapse(kind){
  const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
  const toggle=kind==='food'?document.getElementById('foodQuickToggle'):section?.querySelector('.quick-cuts-collapse-toggle');
- const chips=kind==='food' ? document.getElementById('foodQuick') : document.getElementById('restQuick');
+ const chips=kind==='food'?document.getElementById('foodQuick'):document.getElementById('restQuick');
  if(!section||!toggle||!chips)return;
  const collapsed=!!S.quickCutsCollapsed?.[kind];
  if(kind==='food'){
@@ -1637,14 +1642,17 @@ function bindQuickCutsCollapse(kind){
  const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
  const toggle=kind==='food'?document.getElementById('foodQuickToggle'):section?.querySelector('.quick-cuts-collapse-toggle');
  if(!toggle)return;
- toggle.onclick=(event)=>{
-  event.preventDefault();
-  event.stopPropagation();
-  S.quickCutsCollapsed = {...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
-  // Cuisine and Meal Times are independent filters. Opening/closing one must
-  // never rewrite or collapse the other filter's state.
-  renderQuickCutsCollapse(kind);
-  save();
+ toggle.onclick=event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   if(kind==='restaurant'){
+     setRestaurantRefinePanel('cuisine');
+     save();
+     return;
+   }
+   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
+   renderQuickCutsCollapse(kind);
+   save();
  };
  renderQuickCutsCollapse(kind);
 }
@@ -2724,7 +2732,11 @@ function restaurantCategory(row){
  return raw&&/^(restaurant|eatery|food)$/i.test(raw)?'American':(raw||'American');
 }
 function restaurantQuickMatches(row,label){
- return restaurantCuisineTags(row).includes(label);
+ const wanted=String(label||'').trim().toLowerCase();
+ if(!wanted)return false;
+ const tags=restaurantCuisineTags(row).map(x=>String(x||'').trim().toLowerCase());
+ const category=String(restaurantCategory(row)||'').trim().toLowerCase();
+ return tags.includes(wanted)||category===wanted;
 }
 
 function restaurantCategorySearchMatches(row,tag){
@@ -3521,6 +3533,36 @@ function collapseRestaurantSearch(clear=false){
  }
  renderRestaurantSearchControl();
 }
+function setRestaurantRefinePanel(kind,open=null){
+ const searchBox=$('restaurantSearchBox');
+ const isSearchOpen=!!searchBox&&!searchBox.classList.contains('hidden');
+ const isCuisineOpen=!S.quickCutsCollapsed?.restaurant;
+ const isHoursOpen=!S.restaurantHoursCollapsed;
+ const current=kind==='search'?isSearchOpen:(kind==='cuisine'?isCuisineOpen:isHoursOpen);
+ const next=open===null?!current:!!open;
+ if(kind==='search'){
+  if(next){
+   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),restaurant:true};
+   S.restaurantHoursCollapsed=true;
+   searchBox?.classList.remove('hidden');
+  }else collapseRestaurantSearch(false);
+ }else if(kind==='cuisine'){
+  if(next){
+   collapseRestaurantSearch(false);
+   S.restaurantHoursCollapsed=true;
+   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),restaurant:false};
+  }else S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),restaurant:true};
+ }else if(kind==='hours'){
+  if(next){
+   collapseRestaurantSearch(false);
+   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),restaurant:true};
+   S.restaurantHoursCollapsed=false;
+  }else S.restaurantHoursCollapsed=true;
+ }
+ renderRestaurantSearchControl();
+ renderQuickCutsCollapse('restaurant');
+ renderRestaurantHours();
+}
 function closeRestaurantSearch(){
  collapseRestaurantSearch(true);
  drawRestaurants();
@@ -3529,50 +3571,41 @@ function closeRestaurantSearch(){
 function bindRestaurantTools(){
  bindRestaurantHours();
  const searchButton=$('restaurantSearchToggle');
- if(searchButton)searchButton.onclick=()=>{
+ if(searchButton)searchButton.onclick=event=>{
+   event.preventDefault();
+   event.stopPropagation();
    const box=$('restaurantSearchBox');
    if(!box)return;
    const willOpen=box.classList.contains('hidden');
+   setRestaurantRefinePanel('search',willOpen);
    if(willOpen){
-     S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};
-     renderQuickCutsCollapse('restaurant');
-     box.classList.remove('hidden');
      const input=$('restaurantQuery');
      if(input)input.value=S.restaurantQuery||'';
-     renderRestaurantSearchControl();
      input?.focus();
-     return;
    }
-   collapseRestaurantSearch(false);
  };
-$('restaurantQuery').oninput=()=>{
+ const queryInput=$('restaurantQuery');
+ if(queryInput)queryInput.oninput=()=>{
    const previousQuery=String(S.restaurantQuery||'').trim();
-   S.restaurantQuery=String($('restaurantQuery').value||'').trim().slice(0,100);
+   S.restaurantQuery=String(queryInput.value||'').trim().slice(0,100);
    S.restaurantIndex=0;
    save();
    if(!S.restaurantQuery && previousQuery){
-     clearTimeout(restaurantQueryTimer);
-     restaurantQueryTimer=0;
-     searchRestaurants();
-     return;
+     clearTimeout(restaurantQueryTimer); restaurantQueryTimer=0; searchRestaurants(); return;
    }
    scheduleRestaurantProviderSearch();
-};
-$('restaurantQuery').onkeydown=e=>{
+ };
+ if(queryInput)queryInput.onkeydown=e=>{
    if(e.key==='Enter'){
-     e.preventDefault();
-     e.stopPropagation();
-     clearTimeout(restaurantQueryTimer);
-     restaurantQueryTimer=0;
-     const input=e.currentTarget;
-     S.restaurantQuery=String(input?.value||'').trim().slice(0,100);
+     e.preventDefault();e.stopPropagation();
+     clearTimeout(restaurantQueryTimer);restaurantQueryTimer=0;
+     S.restaurantQuery=String(e.currentTarget?.value||'').trim().slice(0,100);
      S.restaurantIndex=0;
      if(S.restaurantQuery)searchRestaurants();
    }
  };
  renderRestaurantSearchControl();
 }
-
 let celebrationHideTimer=0;
 function hideCelebration(){
  const el=$('celebration');
