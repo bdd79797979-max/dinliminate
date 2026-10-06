@@ -5516,27 +5516,6 @@ button,input,select,textarea{
   filter:saturate(1.025) brightness(1.025);
 }
 
-/* One quiet first-visit onboarding line near the bottom. */
-.luxury-home .home-first-nudge{
-  position:absolute;
-  left:50%;
-  bottom:58px;
-  transform:translateX(-50%);
-  z-index:4;
-  color:rgba(246,232,205,.82);
-  font-family:Georgia,"Times New Roman",serif;
-  font-size:10px;
-  font-style:italic;
-  letter-spacing:.07em;
-  text-align:center;
-  text-shadow:0 2px 12px rgba(0,0,0,.72);
-  white-space:nowrap;
-  pointer-events:none;
-  opacity:1;
-  transition:opacity .48s ease,transform .48s ease;
-}
-.luxury-home .home-first-nudge.is-faded{opacity:0;transform:translateX(-50%) translateY(3px)}
-
 /* Home ambient light: extremely slow and subtle, with no moving photo. */
 .app:has(#home:not(.hidden))::after{
   content:"";
@@ -5558,7 +5537,6 @@ button,input,select,textarea{
 
 @media(max-width:390px){
   .swipe-card-coach{bottom:4px!important;width:calc(100% - 18px)!important;font-size:7.6px!important}
-  .luxury-home .home-first-nudge{bottom:52px;font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){
   .quick-section .quick-cuts-collapse-toggle::after,
@@ -5567,7 +5545,7 @@ button,input,select,textarea{
   .app:has(#home:not(.hidden))::after{
     animation:none!important;
   }
-  .swipe-card-coach,.home-first-nudge{transition:none!important}
+  .swipe-card-coach{transition:none!important}
 }
 
 
@@ -6225,10 +6203,6 @@ button,input,select,textarea{
     linear-gradient(180deg,rgba(0,0,0,.10) 0%,rgba(0,0,0,.015) 22%,rgba(0,0,0,.04) 54%,rgba(0,0,0,.17) 100%)!important;
   opacity:.88!important;
   animation:none!important;
-}
-.app:has(#home:not(.hidden)) #home .home-first-nudge{
-  color:rgba(241,225,193,.88)!important;
-  text-shadow:0 2px 13px rgba(0,0,0,.82)!important;
 }
 @media(max-width:390px){
   .app:has(#home:not(.hidden)) #home .home-intro .eyebrow{
@@ -11260,14 +11234,6 @@ html.dinliminate-visual-mobile .app{
     text-shadow:0 1px 6px rgba(0,0,0,.86)!important;
   }
 
-  .app.home-active #home .home-first-nudge{
-    left:50%!important;
-    bottom:calc(env(safe-area-inset-bottom) + 69px)!important;
-    z-index:13!important;
-    color:rgba(246,232,205,.9)!important;
-    font-size:9px!important;
-    text-shadow:0 2px 12px rgba(0,0,0,.86)!important;
-  }
 }
 
 @media only screen and (max-width:390px){
@@ -11297,4 +11263,3 @@ html.dinliminate-visual-mobile .app{
     min-width:67px!important;
   }
 }
-
