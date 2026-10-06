@@ -5487,10 +5487,9 @@ async function resetAppDataFlow(){
   window.location.reload();
 }
 async function systemRestoreFlow(){
-  if(!await appConfirm('Restore built-in defaults?','This returns every built-in meal to its original catalog data, including its name, nutrition, ingredients, recipe/notes, photos, meal times, hidden/deleted state, and current meal-choice cuts. Custom meals, Custom Cuisine Cuts, History, notes, Restaurant choices, location settings, and Family Mode remain on this device.','Restore Defaults'))return;
+  if(!await appConfirm('Restore built-in defaults?','This returns every built-in meal to its original catalog data, including its name, nutrition, ingredients, recipe data, photos, meal times, hidden/deleted state, and current meal-choice cuts. Custom meals, Custom Cuisine Cuts, History, user notes, Restaurant choices, location settings, and Family Mode remain on this device.','Restore Defaults'))return;
   const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
-  const builtInOverrides=S.custom.filter(x=>defaultIds.has(String(x.id)));
-  for(const item of builtInOverrides) await clearMealPhotoStorage(item.id);
+  for(const id of defaultIds) await clearMealPhotoStorage(id);
   S.custom=S.custom.filter(x=>!defaultIds.has(String(x.id)));
   S.deleted=new Set([...S.deleted].filter(id=>!defaultIds.has(String(id))));
   S.hidden=new Set([...S.hidden].filter(id=>!defaultIds.has(String(id))));
