@@ -11556,3 +11556,33 @@ html.dinliminate-visual-mobile .app{
   .app.home-active #home .home-icon-action{width:67px!important;min-width:67px!important}
 }
 
+
+/* CP1096 — Home door windows are fully clear; text is the only painted content. */
+@media only screen and (max-width:600px){
+  .app.home-active #home .home-card-choice,
+  .app.home-active #home .home-card-choice:hover,
+  .app.home-active #home .home-card-choice:focus,
+  .app.home-active #home .home-card-choice:focus-visible,
+  .app.home-active #home .home-card-choice:active,
+  .app.home-active #home .home-card-choice.is-pressed{
+    background:transparent!important;
+    background-color:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+  }
+  .app.home-active #home .home-card-choice .home-card-overlay,
+  .app.home-active #home .home-card-choice::before,
+  .app.home-active #home .home-card-choice::after,
+  .app.home-active #home .home-card-choice .arrow{
+    display:none!important;
+    content:none!important;
+  }
+  .app.home-active #home .home-card-choice .home-card-copy{
+    background:transparent!important;
+    box-shadow:none!important;
+    border:0!important;
+    outline:0!important;
+  }
+}
