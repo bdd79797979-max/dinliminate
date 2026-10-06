@@ -5876,7 +5876,7 @@ async function familyEnterMaybes(type){
  if(S.familyNormalMode!=='decision'||familyRoundStage()!==1||S.familyNormalVoteBusy)return;
  const s=familySessionRead(),round=S.familyActiveData?.activeRound;if(!s?.token||!round)return;S.familyNormalVoteBusy=true;
  const status=type==='meal'?'foodFamilyNormalStatus':'restaurantFamilyNormalStatus';
- try{const ids=[...(S.maybe||new Set())].map(String).filter(Boolean);familySetStatus(status,'Entering '+ids.length+' Maybes for the Family…','busy');
+ try{const ids=type==='restaurant' ? restaurantPoolFiltered().filter(x=>x?._maybe).map(x=>String(x.id||'')).filter(Boolean) : [...(S.maybe||new Set())].map(String).filter(Boolean);familySetStatus(status,'Entering '+ids.length+' Maybes for the Family…','busy');
   const d=await familyApi('enter-maybes',{token:s.token,roundId:round.id,itemIds:ids});
   if(d?.round?.status==='complete'){const r=d.round;familySessionWrite({...s,family:{...(s.family||{}),activeRoundId:null}});S.familyActiveData={...(S.familyActiveData||{}),activeRound:null,lastCompletedRound:r};r.snapshot?.outcome==='no_winner'?familyShowNoWinner(r):familyShowWinner(r);return;}
   if(d?.round?.currentStage&&Number(d.round.currentStage)!==1){familyBeginNormalDecision({...S.familyActiveData,activeRound:d.round});return;}
