@@ -93,6 +93,7 @@ assert('Family uses normal decision screens',app.includes("show('food');foodQuic
  app.includes("show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data)"));
 assert('history integrity metadata present',release.historyIntegrity&&release.historyIntegrity.length>0);
 assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs');
+assert('launch candidate metadata present',String(release.launchCandidate||'').includes('one deployment reserved for candidate verification'));
 
 const checkpointSmoke=[
  ['CP1077 Google usage','qa/google-usage-smoke.cjs'],
