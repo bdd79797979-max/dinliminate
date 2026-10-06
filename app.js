@@ -4647,7 +4647,7 @@ const body='<form class="add" id="foodEditorForm">'+
 '<label class="meal-editor-text-label">Recipe / preparation<textarea id="editFoodRecipe" placeholder="Preparation steps or recipe (optional)" rows="5">'+esc(item?.recipe||'')+'</textarea></label>'+(isEdit?'<section class="meal-editor-note-section"><div class="meal-editor-note-copy"><b>Add a note</b><small>Private to this device. Keep a reminder, favorite, or thought with this meal.</small></div><textarea id="editFoodNote" maxlength="1200" rows="3" placeholder="Write a note about this meal…">'+esc(itemNote(item,'food'))+'</textarea></section>':'')+
 '<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Add Photos</span><input id="editFoodFile" type="file" accept="image/*" multiple></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
-const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
+const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body,{returnToMenu:managerWasOpen});
 const mealTimeManageToggle=$('editMealTimesManage'),mealTimeManager=$('editFoodMealTimeManager');
 mealTimeManageToggle?.addEventListener('click',()=>{
  const open=mealTimeManager?.classList.toggle('hidden')===false;
@@ -5349,7 +5349,7 @@ async function appDiagnosisView(existingModal){
 }
 function privacyView() {
 const body = '<div class="info-copy"><h4>Privacy & Data</h4><p>Dinliminate uses your selected address or optional device location to find nearby restaurants. Location access is optional.</p><p>Restaurant/address results are retrieved through Dinliminate’s search service using third-party mapping and place providers. Your exact location or selected address is used for that search request.</p><p>Your meal choices, hidden items, history, and custom-meal information are stored on this device using browser storage. Custom food photos may be stored in IndexedDB on the device.</p><p>Restaurant and meal images may be loaded from third-party image hosts. Restaurant availability, hours, phone numbers, websites, and menu information can change and are supplied by external providers.</p></div>';
-openModal('privacyModal','Privacy',body);
+openModal('privacyModal','Privacy',body,{returnToMenu:true});
 }
 function exportHistoryPrint(scope){
  const all=readHistory();
@@ -5384,7 +5384,7 @@ function exportPdfView(){
  '<button class="settings-action export-choice" data-export-scope="all" type="button"><span class="settings-action-icon">✦</span><span class="settings-action-copy"><b>All History</b><small>'+history.length+' saved decision'+(history.length===1?'':'s')+'</small></span><span class="settings-action-chevron">›</span></button>'+
  '<button class="settings-action export-choice" data-export-scope="food" type="button"><span class="settings-action-icon">◈</span><span class="settings-action-copy"><b>Food</b><small>'+history.filter(x=>x?.type==='food').length+' saved decision'+(history.filter(x=>x?.type==='food').length===1?'':'s')+'</small></span><span class="settings-action-chevron">›</span></button>'+
  '<button class="settings-action export-choice" data-export-scope="restaurant" type="button"><span class="settings-action-icon">⌖</span><span class="settings-action-copy"><b>Restaurants</b><small>'+history.filter(x=>x?.type==='restaurant').length+' saved decision'+(history.filter(x=>x?.type==='restaurant').length===1?'':'s')+'</small></span><span class="settings-action-chevron">›</span></button></div></div>';
- const modal=openModal('exportPdfModal','Export PDF',body);
+ const modal=openModal('exportPdfModal','Export PDF',body,{returnToMenu:true});
  modal.querySelectorAll('[data-export-scope]').forEach(btn=>btn.onclick=()=>{const scope=btn.dataset.exportScope;modal.remove();$('exportPdfModalBg')?.remove();exportHistoryPrint(scope);});
 }
 let deferredInstallPrompt = null;
@@ -5485,7 +5485,7 @@ function resetRound(){
 function resetRestoreView(){
   document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();removeFoodOverlays();
   const body='<div class="reset-restore-view"><div class="reset-restore-hero"><span class="manage-kicker">RESET &amp; RESTORE</span><h4>Choose what to return.</h4><p>Restore the original built-in meals without changing your custom meals or restaurant data, or start completely fresh by clearing all Dinliminate data on this device.</p></div><div class="reset-restore-actions"><button class="reset-restore-option restore-action" id="restoreDefaultsOption" type="button"><span class="reset-restore-icon">↺</span><span><b>Restore Defaults</b><small>Return built-in meals to their original catalog state and recover deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, notes, Restaurant choices, and location settings remain.</small></span><span>›</span></button><button class="reset-restore-option reset-action" id="fullResetOption" type="button"><span class="reset-restore-icon">×</span><span><b>Full Reset</b><small>Erase all Dinliminate data stored on this device, including meals, choices, history, notes, custom photos, restaurant caches, and Family Mode session data.</small></span><span>›</span></button></div></div>';
-  const modal=openModal('resetRestoreModal','Reset & Restore',body);
+  const modal=openModal('resetRestoreModal','Reset & Restore',body,{returnToMenu:true});
   $('restoreDefaultsOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await systemRestoreFlow();};
   $('fullResetOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await resetAppDataFlow();};
 }
