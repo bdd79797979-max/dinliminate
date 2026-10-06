@@ -1347,7 +1347,9 @@ function advanceTutorial(){
  }
  if(step?.action==='enter-food'){
   tutorialState.awaitingAction=false;
-  startFood({tutorialResumeIndex:0});
+  stopTutorialMode();
+  home();
+  tutorialToast('Tutorial complete');
   return;
  }
  if(step?.action==='winner-restart'){
