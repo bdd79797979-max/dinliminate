@@ -4136,13 +4136,14 @@ function openModal(id, title, body) {
 const opener=document.activeElement;
 $(id)?.remove();
 $(id+'Bg')?.remove();
+const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].includes(id);
 const bg=document.createElement('div');
 bg.id=id+'Bg';
-bg.className='modal-bg modal-bg-opening'+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
+bg.className='modal-bg'+(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening')+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
 const modal=document.createElement('section');
 modal.id=id;
-modal.className='modal modal-opening';
-if(['manageFoodsModal','historyModal','settingsModal'].includes(id))modal.classList.add('utility-modal');
+modal.className='modal'+(isDrawerUtilityModal?' modal-open':' modal-opening');
+if(isDrawerUtilityModal)modal.classList.add('utility-modal');
 if(id==='detailsModal')modal.classList.add('details-modal');
 modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');
@@ -4150,13 +4151,14 @@ modal.setAttribute('aria-labelledby',id+'Title');
 modal.setAttribute('tabindex','-1');
 modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
 document.body.append(bg,modal);
-requestAnimationFrame(()=>{
- bg.classList.add('modal-bg-open');
- modal.classList.add('modal-open');
- modal.classList.remove('modal-opening');
-});
+if(!isDrawerUtilityModal){
+ requestAnimationFrame(()=>{
+  bg.classList.add('modal-bg-open');
+  modal.classList.add('modal-open');
+  modal.classList.remove('modal-opening');
+ });
+}
 let closed=false;
-const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].includes(id);
 const returnToMenuWithoutFlash=()=>{
  const drawer=$('drawer'),drawerBg=$('drawerBg');
  // Make the destination menu fully visible before removing the modal/backdrop.
