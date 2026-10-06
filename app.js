@@ -1159,11 +1159,11 @@ function tutorialStepsForScreen(screen){
   {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
   {target:'#foodChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
   {target:'#foodDetails',title:'Details',body:'See more about this meal.'},
-  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
-  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
+  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time. Opening this closes Cuisine.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
+  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type. Opening this closes Meal Times.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
   {target:'#foodMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining meals and Maybes. See how many choices remain.'},
   {target:'#foodMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
-  {target:'#foodMenu',title:'ENTER RESTAURANT',body:'Tap this tutorial bubble to continue through the Restaurant side of Dinliminate.',action:'enter-restaurant'}
+  {target:'#foodMenu',title:'Restaurant',body:'The Restaurant side uses the same swipe controls plus location, cuisine, and Open Now.',action:'enter-restaurant'}
  ];
  if(screen==='restaurant')return[
   {target:'#locate',title:'Current Location',body:'Use your current location.'},
@@ -1179,7 +1179,7 @@ function tutorialStepsForScreen(screen){
    {target:'#restaurantHoursToggle',title:'Open Now',body:'Show restaurants that are open now, closed now, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
   {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
-  {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this tutorial bubble to continue through the Meals side of Dinliminate.',action:'enter-food'}
+  {target:'#restaurantMenu',title:'Meals',body:'Return to the Meals side and finish the tutorial.',action:'enter-food'}
  ];
  if(screen==='winner')return[
   {target:'#restart',title:'START OVER',body:'Tap Start Over to return to this decision path and continue the tutorial.',action:'winner-restart'}
@@ -1225,7 +1225,7 @@ function tutorialPosition(expectedToken=tutorialState.token,retry=0){
  bubble.classList.remove('is-visible');bubble.style.visibility='hidden';bubble.dataset.side='';bubble.style.left='0px';bubble.style.top='0px';
  requestAnimationFrame(()=>{
   if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
-  const bw=bubble.offsetWidth||280,bh=bubble.offsetHeight||96,vw=window.innerWidth,vh=window.innerHeight,gap=14,margin=12;
+  const bw=bubble.offsetWidth||280,bh=bubble.offsetHeight||96,vw=window.innerWidth,vh=window.innerHeight,gap=step.action==='winner-restart'?30:14,margin=12;
   const blockers=[rect,...tutorialBlockerRects(step)];
   const overlaps=(x,y)=>{
    const b={left:x,top:y,right:x+bw,bottom:y+bh};
@@ -1656,8 +1656,7 @@ function bindQuickCutsCollapse(kind){
      save();
      return;
    }
-   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
-   renderQuickCutsCollapse(kind);
+   setFoodRefinePanel('cuisine');
    save();
  };
  renderQuickCutsCollapse(kind);
@@ -1733,14 +1732,28 @@ function renderMealTimeCuts(){
   };
  });
 }
+function setFoodRefinePanel(kind,open=null){
+ const isMealOpen=!S.mealTimeCutsCollapsed;
+ const isCuisineOpen=!S.quickCutsCollapsed?.food;
+ const current=kind==='meal-times'?isMealOpen:isCuisineOpen;
+ const next=open===null?!current:!!open;
+ if(kind==='meal-times'){
+  S.mealTimeCutsCollapsed=!next;
+  if(next)S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:true,restaurant:true}),food:true};
+ }else{
+  if(next)S.mealTimeCutsCollapsed=true;
+  S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:true,restaurant:true}),food:!next};
+ }
+ renderQuickCutsCollapse('food');
+ renderMealTimeCuts();
+}
 function bindMealTimeCuts(){
  const toggle=document.getElementById('foodMealTimeToggle');
  if(!toggle)return;
  toggle.onclick=(event)=>{
   event.preventDefault();
   event.stopPropagation();
-  S.mealTimeCutsCollapsed=!S.mealTimeCutsCollapsed;
-  renderMealTimeCuts();
+  setFoodRefinePanel('meal-times');
   save();
  };
  renderMealTimeCuts();
@@ -2098,11 +2111,11 @@ function bindRestaurantPhotoPinch(target){
   const surface=img.closest('.card')||img,points=new Map();let scale=1,startDistance=0,startScale=1,pinching=false;
   const distance=()=>{const p=[...points.values()];return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);};
   const apply=()=>{img.style.transform=scale<=1.01?'none':'scale('+scale.toFixed(3)+')';};
-  const finishPointer=e=>{points.delete(e.pointerId);if(points.size<2){pinching=false;if(scale<=1.01){scale=1;apply();}}};
+  const finishPointer=e=>{points.delete(e.pointerId);if(points.size<2){pinching=false;surface.dataset.restaurantPinchActive='0';if(scale<=1.01){scale=1;apply();}}};
   surface.addEventListener('pointerdown',e=>{
     if(e.pointerType!=='touch'||!e.target.closest?.('img'))return;
     points.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(points.size===2){pinching=true;startDistance=Math.max(1,distance());startScale=scale;e.preventDefault();}
+    if(points.size===2){pinching=true;surface.dataset.restaurantPinchActive='1';startDistance=Math.max(1,distance());startScale=scale;e.preventDefault();}
   },{passive:false});
   surface.addEventListener('pointermove',e=>{
     if(!pinching||e.pointerType!=='touch')return;
@@ -2367,6 +2380,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  };
 
  card.onpointerdown=e=>{
+  if(card.dataset.restaurantPinchActive==='1')return;
   if(e.isPrimary===false){
    if(phase==='dragging')cancel();
    return;
@@ -2394,6 +2408,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  };
 
  card.onpointermove=e=>{
+  if(card.dataset.restaurantPinchActive==='1'){if(phase==='dragging')cancel();return;}
   if(phase!=='dragging'||e.isPrimary===false||e.pointerId!==pointerId)return;
   const now=performance.now();
   const x=e.clientX;
@@ -2408,7 +2423,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   }
  };
 
- card.onpointerup=e=>finish(e);
+ card.onpointerup=e=>{if(card.dataset.restaurantPinchActive==='1')return;finish(e);};
  card.onpointercancel=cancel;
  card.onlostpointercapture=()=>{
   if(phase==='dragging')cancel();
@@ -4031,8 +4046,9 @@ if(hungry){
 }
 save();
 }
-function openModal(id, title, body) {
+function openModal(id, title, body, options={}) {
 const opener=document.activeElement;
+const returnToMenu=!!options.returnToMenu;
 $(id)?.remove();
 $(id+'Bg')?.remove();
 const bg=document.createElement('div');
@@ -4064,8 +4080,9 @@ const close=()=>{
  bg.classList.add('modal-bg-closing');
  window.setTimeout(()=>{
   modal.remove();bg.remove();
-  if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
+  if(!returnToMenu&&opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
   if(id==='settingsModal')removeFoodOverlays();
+  if(returnToMenu){openDrawer();return;}
   if(S.screen&&$(S.screen))show(S.screen);
  },150);
 };
@@ -4329,7 +4346,7 @@ body += '<div class="cal-cell'+todayClass+'" role="gridcell">'+dayMarkup+'</div>
 body += '</div></div><div class="history-list">';
 body += history.length ? '<div class="history-toolbar"><span class="status">'+history.length+' saved decision'+(history.length===1?'':'s')+'</span><button class="secondary" id="historyClearAll" type="button">Clear all</button></div>'+history.slice(0,30).map(x => '<button class="history-row history-open" data-history-id="'+esc(x.id)+'"><img src="'+esc(historyImageSource(x))+'" data-restaurant-photo-key="'+esc(x.type==='restaurant'?x.id:'')+'" data-final-fallback="'+(x.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(x.name)+'"><span><b>'+esc(x.name)+'</b><small>'+esc(x.date)+' · '+esc(x.type)+(x.type==='food'&&Array.isArray(x.mealTimes)&&x.mealTimes.length?' · '+esc(x.mealTimes.join(' · ')):'')+'</small></span></button>').join('') : '<p class="status">No history yet.</p>';
 body += '</div>';
-const modal = openModal('historyModal','History',body);
+const modal = openModal('historyModal','History',body,{returnToMenu:true});
 bindImageFallback('#historyModal img',FINAL_RESTAURANT_IMAGE,FINAL_RESTAURANT_IMAGE);
 for(const row of history.slice(0,30)) if(row?.type==='restaurant'&&row?.id) hydrateRestaurantPhoto(row,'#historyModal');
 $('historyStatsToggle').onclick=()=>{
@@ -5000,7 +5017,7 @@ function manageFoodsView() {
  '<div class="food-list">'+rows.map(x=>rowMarkup(x)).join('')+'</div>'+
  (deletedRows.length?'<section class="deleted-meals-section"><div class="deleted-meals-heading"><span class="manage-kicker">RECOVERY</span><h5>Deleted Meals</h5><p>Restore a deleted meal without changing the rest of your library.</p></div><div class="food-list">'+deletedRows.map(x=>rowMarkup(x,true)).join('')+'</div></section>':'')+
  '</div>';
- const modal=openModal('manageFoodsModal','Manage Meals',body);
+ const modal=openModal('manageFoodsModal','Manage Meals',body,{returnToMenu:true});
  $('openFoodEditor').onclick=()=>foodEditor();
  modal.querySelectorAll('[data-food-restore]').forEach(btn=>btn.onclick=()=>{S.hidden.delete(btn.dataset.foodRestore);buildFood();save();manageFoodsView();});
  modal.querySelectorAll('[data-food-hide]').forEach(btn=>btn.onclick=()=>{S.hidden.add(btn.dataset.foodHide);buildFood();save();manageFoodsView();});
@@ -5030,7 +5047,7 @@ settingsActionButton('tutorialModeSettings','✦','Tutorial Mode','Walk through 
  '</div></section>'+
  '<section class="settings-section settings-about-section"><div class="settings-section-kicker">ABOUT DINLIMINATE</div><div class="settings-about-copy"><p>Cut the dinner choices until one survives.</p></div><div class="about-meta"><p><span>Version</span><b>'+esc(APP_VERSION)+'</b></p><p><span>Build</span><b>'+esc(APP_BUILD)+'</b></p><p><span>Date</span><b>'+esc(new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date()))+'</b></p></div><p class="about-credit">Made by Brian Dunn for Devona Dunn</p></section>'+
  '</div>';
- const modal=openModal('settingsModal','Settings',body);
+ const modal=openModal('settingsModal','Settings',body,{returnToMenu:true});
  modal.querySelectorAll('[data-setting-rest]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.settingRest;delete S.hiddenRestaurants[id];const row=S.restaurantPool.find(x=>x.id===id);if(row)row._hidden=false;save();modal.remove();$('settingsModalBg')?.remove();settingsView();});
  $('appDiagnosis').onclick=()=>{modal.classList.add('diagnosis-modal');modal.style.minHeight='min(78svh,720px)';modal.style.maxHeight='88svh';appDiagnosisView(modal);};
  $('tutorialModeSettings').onclick=()=>{const next=!tutorialModeEnabled();modal.remove();$('settingsModalBg')?.remove();setTutorialMode(next,true);};
