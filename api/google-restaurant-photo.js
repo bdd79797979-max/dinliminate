@@ -3,6 +3,13 @@
 const { pacificMonthKey, nextPacificMonthIso, reserveGoogleSku, HARD_LIMITS, googleUsageHealth, disableGoogleSkuForMonth, googleServicesEnabled } = require('./google-usage');
 
 const GOOGLE_PLACES_API_KEY=String(process.env.GOOGLE_PLACES_API_KEY||'').trim();
+const photoRateBuckets=new Map();
+function photoRateLimited(req,key,max=24){
+  const headers=req?.headers||{},ip=String(headers['x-forwarded-for']||headers['x-real-ip']||'anon').split(',')[0].trim()||'anon';
+  const bucketKey=ip+':'+key,now=Date.now(),old=photoRateBuckets.get(bucketKey);
+  if(!old||now-old.at>60000){photoRateBuckets.set(bucketKey,{at:now,count:1});return false;}
+  old.count++;return old.count>max;
+}
 function clean(v,max=300){return String(v||'').trim().replace(/[\x00-\x1f\x7f]/g,' ').slice(0,max)}
 function normalize(v){return clean(v,1000).toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()}
 function addressNumber(v){const m=String(v||'').match(/\b\d{1,6}\b/);return m?m[0]:''}
@@ -192,6 +199,10 @@ function sendGoogleMedia(res,found){
  return res;
 }
 async function handler(req,res){
+ res.setHeader?.('Cache-Control','no-store');
+ res.setHeader?.('X-Content-Type-Options','nosniff');
+ res.setHeader?.('Referrer-Policy','no-referrer');
+ if(String(req?.method||'GET').toUpperCase()!=='GET')return sendGoogleJson(res,405,{ok:false,error:'GET required'});
  const q=googlePhotoQuery(req);
  const mode=String(q.mode||'photo').toLowerCase();
  if(mode==='health'){
@@ -204,6 +215,7 @@ async function handler(req,res){
    usageSkus:await googleUsageHealth()
   });
  }
+ if(photoRateLimited(req,mode==='health'?'health':'photo',mode==='health'?60:24))return sendGoogleJson(res,429,{ok:false,error:'Too many photo requests. Please try again shortly.'});
  const name=clean(q.name,160);
  const address=clean(q.address,240);
  if(!name)return sendGoogleJson(res,400,{ok:false,error:'Restaurant name is required'});
