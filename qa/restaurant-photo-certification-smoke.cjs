@@ -50,7 +50,7 @@ if(typeof rejected==='function'){
 
 assert('restaurant photo fetch hook available',typeof p.fetchImage==='function');
 assert('restaurant photo pipeline refuses generic fallback',
-  /function restaurantCardFallbackImage\(row\)\{return ''\;\}/.test(fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8'))
+  /function restaurantCardFallbackImage\(\)\{return ''\;\}/.test(fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8'))
 );
 
 const googleSource=fs.readFileSync(path.join(__dirname,'..','api','google-restaurant-photo.js'),'utf8');
