@@ -1,7 +1,7 @@
 'use strict';
 
 const { neon } = require('@neondatabase/serverless');
-const { pacificMonthKey, nextPacificMonthIso, reserveGoogleSku, HARD_LIMITS, googleUsageHealth, disableGoogleSkuForMonth } = require('./google-usage');
+const { pacificMonthKey, nextPacificMonthIso, reserveGoogleSku, HARD_LIMITS, googleUsageHealth, disableGoogleSkuForMonth, googleServicesEnabled } = require('./google-usage');
 
 const GOOGLE_PLACES_API_KEY=String(process.env.GOOGLE_PLACES_API_KEY||'').trim();
 const DATABASE_URL=String(
@@ -144,7 +144,7 @@ async function getPlaceDetails(placeId){
   }
 }
 async function tryGoogleRestaurantPhoto(input){
-  if(!GOOGLE_PLACES_API_KEY)return null;
+  if(!GOOGLE_PLACES_API_KEY||!googleServicesEnabled())return null;
   const args=input||{};
   try{
     const id=await findPlaceId(args.name,args.address,args.lat,args.lon,args.placeId);
