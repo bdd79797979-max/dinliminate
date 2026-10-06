@@ -25,6 +25,27 @@ let dbPromise = null;
 let localMonth = '';
 const localCounts = new Map();
 
+async function budgetDb() {
+  if (!DATABASE_URL) return null;
+  if (!dbPromise) {
+    dbPromise = (async () => {
+      const sql = neon(DATABASE_URL);
+      await sql.query(
+        'CREATE TABLE IF NOT EXISTS ' + TABLE + ' (' +
+        'month_key text NOT NULL, ' +
+        'sku_key text NOT NULL, ' +
+        'request_count integer NOT NULL DEFAULT 0, ' +
+        'disabled_until timestamptz NULL, ' +
+        'updated_at timestamptz NOT NULL DEFAULT now(), ' +
+        'PRIMARY KEY (month_key, sku_key)' +
+        ')'
+      );
+      return sql;
+    })();
+  }
+  return dbPromise;
+}
+
 function pacificMonthKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles',
