@@ -1,33 +1,34 @@
-# CURRENT RELEASE — BUILD 1010 / CP1010
+# CURRENT RELEASE — BUILD 1054 / CP1054
 
-Date: 2026-10-05
+Date: 2026-10-06
 
-## CP1010 — Device-aware full iPhone viewport
+## Restaurant Intelligence candidate
 
-The laptop presentation remains intentionally centered with desktop side bands. Phone/touch layouts now use the full viewport.
+CP1045 is the protected starting point for the current restaurant-system work. CP1046–CP1054 now reorganize restaurant identity, Google usage controls, photo sourcing, restaurant details, source-aware persistence, and next-card readiness.
 
-### Why the earlier pass was insufficient
+### Current restaurant photo policy
 
-- CP1006/CP1008 keyed the shell only to `@media (max-width:600px)`.
-- CSS width media features detect the browser's layout viewport, not the physical device. A phone can be presented with a wider layout viewport in some browser modes.
-- The Home door background lives on `.app`, so any remaining desktop-width `max-width` on the app directly creates side bands on a phone.
-- The service-worker registration previously had a race because `APP_BUILD` started at an older fallback while `app-release.json` was fetched asynchronously.
+1. Existing verified Dinliminate photo that already meets the quality gate
+2. Google Places photo for the exact verified restaurant
+3. Official restaurant website/gallery/location page
+4. Exact public venue page
+5. Exact OpenStreetMap/POI image
+6. No restaurant card when no acceptable image is available
 
-### CP1010 behavior
+Generic, stock, neutral, supplier, wrong-business, menu/graphic, and low-quality images are not accepted into the Restaurant swipe deck.
 
-- Desktop/laptop: existing centered/max-width presentation remains.
-- Phone: `max-width:600px` still activates the mobile shell.
-- Touch/mobile environment with a wider layout viewport: `hover:none + pointer:coarse + max-width:1024px` also activates the same shell.
-- The app and active screens occupy `100vw × 100dvh`.
-- The Home door canvas reaches the phone edges.
-- Meals, Restaurants, Winner, Family, and Menu interiors are not redesigned; only the outer viewport shell is adapted.
-- Service-worker registration now starts from the current build fallback so an old worker version cannot be selected by a first-load race.
+### Current information policy
 
-### Recovery anchors
+Google is used first for on-demand restaurant detail enrichment where it provides the needed field. Official restaurant website data is the next fallback, followed by verified venue data. Missing information is left unknown rather than guessed.
 
-- **CP1009:** `f06e1ba973c45fa8021f87ed52a049c2998f3211`
-- **CP1008:** `c372191320df07db864508783ccc7dfa521e4aa3`
-- **CP1007:** `00e7ebed09ed0558853d1b7fcb8f872866cf7038`
-- **CP1006:** `a2d3fc659cafc699aa27db817f29d676a8db5b86`
+### Google protection
 
-Physical iPhone verification remains the final gate; laptop-side bands are expected and are not a failure.
+Dinliminate uses independent hard stops for Google capabilities: Photos 900; Text Search Pro 4500; Nearby Search Pro 4500; Text Search Enterprise 900; Place Details Enterprise 900; Place Details Essentials 9000. The billing month is aligned to America/Los_Angeles. Unknown durable budget tracking fails closed.
+
+### Performance
+
+The Restaurant deck blocks on the current card and immediate next photo only. Additional lookahead is loaded in the background so the user does not wait for a five-photo batch.
+
+### Recovery
+
+The CP1045 commit remains the protected pre-change baseline. CP1055 is the final audit/release gate and has not been deployed yet.
