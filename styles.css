@@ -10703,3 +10703,49 @@ html.dinliminate-visual-mobile #tutorialLayer{
 #food .meal-time-quick .meal-time-chip:active{
   color:#fff!important;
 }
+
+
+/* CP1069 — authoritative Meal Times presentation.
+   Match Cuisine when closed; the opened header goes white.
+   Active choices are white, inactive choices use the same restrained
+   discovery-control tone as Cuisine. */
+#food .food-interior-nav #foodMealTimeToggle{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#food .food-interior-nav #foodMealTimeToggle:hover,
+#food .food-interior-nav #foodMealTimeToggle.is-open{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
+#food .food-interior-nav #foodMealTimeToggle.is-active{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
+#food .meal-time-quick .meal-time-chip{
+  color:#d7cec1!important;
+  border-color:#302c27!important;
+  background:linear-gradient(145deg,#191816,#121211)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+  opacity:1!important;
+}
+#food .meal-time-quick .meal-time-chip:hover{
+  color:#eee5d7!important;
+  border-color:#4b412f!important;
+}
+#food .meal-time-quick .meal-time-chip.is-active,
+#food .meal-time-quick .meal-time-chip[data-active="true"]{
+  color:#fff!important;
+  border-color:rgba(255,255,255,.78)!important;
+  background:linear-gradient(145deg,#252321,#171615)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 12px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.08)!important;
+  font-weight:900!important;
+}
+#food .meal-time-quick .meal-time-chip:not(.is-active)[data-active="false"]{
+  color:#d7cec1!important;
+  border-color:#302c27!important;
+  background:linear-gradient(145deg,#191816,#121211)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
