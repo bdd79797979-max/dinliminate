@@ -2032,6 +2032,86 @@ async function ensureSwipePreviewReady(card){
  return await retry;
 }
 
+
+const swipeCardLayoutPreloads=new Map();
+let swipeCardWarmHost=null;
+
+function ensureSwipeCardWarmHost(){
+ if(swipeCardWarmHost?.isConnected)return swipeCardWarmHost;
+ const host=document.createElement('div');
+ host.id='foodSwipeCardWarmHost';
+ host.setAttribute('aria-hidden','true');
+ host.style.cssText='position:fixed;left:-10000px;top:0;width:320px;height:1px;overflow:hidden;visibility:hidden;pointer-events:none;contain:layout paint style;';
+ document.body.appendChild(host);
+ swipeCardWarmHost=host;
+ return host;
+}
+
+function warmFoodCardLayout(item){
+ if(!item)return;
+ const id=String(item.id||item.name||'');
+ if(!id)return;
+ const refs=mealPhotoList(item);
+ const view={
+  id,
+  name:String(item.name||''),
+  category:String(item.category||''),
+  maybe:S.maybe.has(item.id),
+  photo:foodPhoto(item),
+  photoCount:refs.length||1
+ };
+ swipeCardLayoutPreloads.set(id,view);
+
+ const host=ensureSwipeCardWarmHost();
+ let card=host.querySelector('[data-warm-meal-id="'+CSS.escape(id)+'"]');
+ if(!card){
+  card=document.createElement('article');
+  card.className='card';
+  card.dataset.warmMealId=id;
+  card.innerHTML='<img alt=""><div class="shade"></div><div class="card-copy"><div class="card-cuisine-row"><small></small></div><h3></h3></div>';
+  host.appendChild(card);
+ }
+ const img=card.querySelector('img');
+ const nameEl=card.querySelector('h3');
+ const catEl=card.querySelector('small');
+ if(nameEl)nameEl.textContent=view.name;
+ if(catEl)catEl.textContent=view.category;
+ if(img){
+  img.alt=view.name;
+  img.loading='eager';
+  img.decoding='async';
+  img.referrerPolicy='no-referrer';
+  img.src=view.photo;
+  try{img.decode?.().catch(()=>{});}catch{}
+ }
+ while(swipeCardLayoutPreloads.size>2){
+  const first=swipeCardLayoutPreloads.keys().next().value;
+  swipeCardLayoutPreloads.delete(first);
+  host.querySelector('[data-warm-meal-id="'+CSS.escape(String(first))+'"]')?.remove();
+ }
+}
+
+function prepareNextTwoFoodCardLayouts(){
+ const pool=Array.isArray(S.pool)?S.pool:[];
+ if(pool.length<2)return;
+ const currentIndex=Math.max(0,Math.min(Number(S.index)||0,Math.max(0,pool.length-1)));
+ let cursor=currentIndex;
+ for(let step=0;step<2;step++){
+  let ni;
+  if(S.maybeDeck){
+   ni=(cursor+1)%pool.length;
+  }else{
+   ni=S.foodMaybeRound
+    ?foodChoiceIndex(pool,(cursor+1)%pool.length,true)
+    :foodChoiceIndex(pool,(cursor+1)%pool.length,false);
+   if(ni<0&&pool.length>1)ni=(cursor+1)%pool.length;
+  }
+  if(ni<0||!pool[ni])break;
+  warmFoodCardLayout(pool[ni]);
+  cursor=ni;
+ }
+}
+
 const swipeImagePreloads=new Map();
 function preloadSwipeImage(src){
  const url=String(src||'').trim();if(!url)return;
@@ -2041,7 +2121,7 @@ function preloadSwipeImage(src){
  img.loading='eager';
  img.src=url;
  swipeImagePreloads.set(url,img);
- while(swipeImagePreloads.size>8){
+ while(swipeImagePreloads.size>12){
   const first=swipeImagePreloads.keys().next().value;
   swipeImagePreloads.delete(first);
  }
@@ -2061,6 +2141,8 @@ function primeFoodSwipeMedia(){
   preloadSwipeImage(foodPhoto(item));
   cursor=ni;
  }
+ }
+ prepareNextTwoFoodCardLayouts();
 }
 
 function prepareFoodNextCard(){
