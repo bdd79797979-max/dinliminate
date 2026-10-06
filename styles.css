@@ -9652,7 +9652,7 @@ body:has(.app.home-active)::after{
   margin:0!important;
   padding:0!important;
   color:#fff!important;
-  font-size:15px!important;
+  font-size:12px!important;
   line-height:1!important;
   font-weight:850!important;
   letter-spacing:.08em!important;
@@ -9662,7 +9662,7 @@ body:has(.app.home-active)::after{
 .app.home-active #home .home-choice-arrow{
   display:inline-block!important;
   color:#fff!important;
-  font-size:20px!important;
+  font-size:17px!important;
   line-height:1!important;
   font-weight:400!important;
   text-shadow:0 2px 8px rgba(0,0,0,.68)!important;

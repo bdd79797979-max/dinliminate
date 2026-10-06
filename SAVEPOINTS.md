@@ -11,6 +11,6 @@ Working branch: cp1108-home-choice-text-size
 
 ## CP1108 scope
 
-Only the visible Home choice typography was reduced. The transparent tap-zone positions and the full-screen door background are unchanged.
+Visible Home choice typography is 12px with 17px arrows on the standard mobile Home layout, with 10px / 15px on the narrow-phone media query. The transparent tap-zone positions and full-screen door background are unchanged.
 
 No deployment has been made from CP1108.
