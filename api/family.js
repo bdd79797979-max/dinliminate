@@ -1,6 +1,15 @@
 const family = require('./family-store');
 
 const rateBuckets = new Map();
+const MAX_RATE_BUCKETS = 5000;
+function pruneRateBuckets(now){
+  if(rateBuckets.size<=MAX_RATE_BUCKETS)return;
+  for(const [key,row] of rateBuckets){if(!row||now-row.at>120000)rateBuckets.delete(key);}
+  if(rateBuckets.size>MAX_RATE_BUCKETS){
+    const oldest=[...rateBuckets.entries()].sort((a,b)=>Number(a[1]?.at||0)-Number(b[1]?.at||0)).slice(0,rateBuckets.size-MAX_RATE_BUCKETS);
+    for(const [key] of oldest)rateBuckets.delete(key);
+  }
+}
 
 function clientKey(req) {
   const f = String(req.headers && req.headers['x-forwarded-for'] || '').split(',')[0].trim();
@@ -9,6 +18,7 @@ function clientKey(req) {
 function limited(req, action, max) {
   const key = clientKey(req) + ':' + action;
   const now = Date.now();
+  pruneRateBuckets(now);
   const old = rateBuckets.get(key);
   if (!old || now - old.at > 60000) {
     rateBuckets.set(key, {at:now,count:1});
@@ -28,8 +38,9 @@ module.exports = async function handler(req, res) {
   const contentLength=Number(req.headers?.['content-length']||req.headers?.['Content-Length']||0);
   if(Number.isFinite(contentLength)&&contentLength>64*1024)return send(res,413,{ok:false,code:'REQUEST_TOO_LARGE',message:'Family Mode request is too large.'});
   const contentType=String(req.headers?.['content-type']||req.headers?.['Content-Type']||'').toLowerCase();
-  if(contentType&&!contentType.includes('application/json'))return send(res,415,{ok:false,code:'JSON_REQUIRED',message:'Family Mode requests must use JSON.'});
+  if(!contentType.startsWith('application/json'))return send(res,415,{ok:false,code:'JSON_REQUIRED',message:'Family Mode requests must use JSON.'});
   const body = req.body && typeof req.body === 'object' ? req.body : {};
+  if(Buffer.byteLength(JSON.stringify(body),'utf8')>64*1024)return send(res,413,{ok:false,code:'REQUEST_TOO_LARGE',message:'Family Mode request is too large.'});
   const action = String(body.action || '').trim().toLowerCase();
 
   try {
