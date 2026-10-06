@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='cp1090-launch-candidate'&&expectedCheckpoint==='CP1090');
+assert('launch candidate branch is explicit',expectedBranch==='cp1092-home-polish'&&expectedCheckpoint==='CP1092');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -108,7 +108,7 @@ for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exis
 
 console.log(JSON.stringify({
  ok:true,
- release:'CP1086',
+ release:'CP1092',
  syntaxFiles:sourceFiles.length,
  requiredFiles:requiredFiles.length,
  checkpointSmokeCoverage:checkpointSmoke.map(x=>x[0]),
