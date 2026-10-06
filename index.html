@@ -3,6 +3,96 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="./viewport.js?v=1058"></script>
+<style>
+/* CP1058 — explicit iPhone shell selected by external pre-paint gate. */
+html.dinliminate-ios,
+html.dinliminate-ios body{
+  width:100%!important;
+  min-width:100%!important;
+  max-width:100%!important;
+  height:100%!important;
+  min-height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+html.dinliminate-ios .app{
+  position:relative!important;
+  width:100vw!important;
+  min-width:100vw!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+html.dinliminate-ios .app-topbar{
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  z-index:80!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:env(safe-area-inset-top) 2px 0!important;
+  box-sizing:border-box!important;
+}
+html.dinliminate-ios .screen{
+  position:absolute!important;
+  inset:0!important;
+  width:100vw!important;
+  min-width:100vw!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+html.dinliminate-ios .screen.hidden{display:none!important;}
+html.dinliminate-ios .screen.luxury-home{overflow:hidden!important;}
+html.dinliminate-ios #home{
+  width:100vw!important;
+  min-width:100vw!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:calc(env(safe-area-inset-top) + 74px) 14px max(18px,calc(env(safe-area-inset-bottom) + 18px)) 14px!important;
+  box-sizing:border-box!important;
+}
+html.dinliminate-ios .decision-screen{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  overflow:hidden!important;
+}
+html.dinliminate-ios .winner.screen,
+html.dinliminate-ios .family-screen{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+}
+html.dinliminate-ios .winner.screen{overflow-y:auto!important;}
+html.dinliminate-ios .drawer,
+html.dinliminate-ios .drawer-bg,
+html.dinliminate-ios .modal,
+html.dinliminate-ios .modal-bg,
+html.dinliminate-ios .overlay,
+html.dinliminate-ios .location-permission-modal,
+html.dinliminate-ios .location-permission-bg,
+html.dinliminate-ios #tutorialLayer{
+  max-width:100vw!important;
+  max-height:100dvh!important;
+}
+</style>
 
 <!-- CP1020 — CSP-safe iPhone viewport shell.
      No inline JavaScript: Vercel's CSP allows inline styles but blocks inline scripts.
