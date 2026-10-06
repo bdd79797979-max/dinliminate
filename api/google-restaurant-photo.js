@@ -122,7 +122,15 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
   const query=[clean(name,160),clean(address,240)].filter(Boolean).join(', ');
   const body={textQuery:query,pageSize:5};
   if(Number.isFinite(Number(lat))&&Number.isFinite(Number(lon)))body.locationBias={circle:{center:{latitude:Number(lat),longitude:Number(lon)},radius:1500}};
-  const data=await googleJson('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'X-Goog-FieldMask':'places.id'},body:JSON.stringify(body)});
+  const budget=await reserveGoogleSku('text-search-pro',HARD_LIMITS['text-search-pro']);
+  if(!budget.ok)return '';
+  let data;
+  try{
+    data=await googleJson('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'X-Goog-FieldMask':'places.id'},body:JSON.stringify(body)});
+  }catch(err){
+    if(Number(err?.status)===403||Number(err?.status)===429)await disableGoogleSkuForMonth('text-search-pro');
+    throw err;
+  }
   const candidates=Array.isArray(data.places)?data.places:[];
   return candidates.map(p=>String(p?.id||'').trim()).find(Boolean)||'';
 }
