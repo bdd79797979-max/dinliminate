@@ -1558,32 +1558,39 @@ function bindMaybeDeckToggle(kind){
 }
 function renderRestaurantHours(){
  const toggle=$('restaurantHoursToggle'),chips=$('restaurantHoursQuick');if(!toggle||!chips)return;
- const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all',collapsed=!!S.restaurantHoursCollapsed;
+ const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all';
+ const collapsed=!!S.restaurantHoursCollapsed;
  const labels={all:'All',open:'Open Now',closed:'Closed Now'};
- chips.innerHTML=['all','open','closed'].map(value=>'<button class="chip restaurant-hours-chip'+(mode===value?' is-active':'')+'" data-restaurant-hours="'+value+'" type="button" aria-pressed="'+(mode===value?'true':'false')+'">'+labels[value]+'</button>').join('');
- chips.classList.toggle('is-rail-collapsed',collapsed);chips.setAttribute('aria-hidden',String(collapsed));
- toggle.classList.toggle('is-open',!collapsed);toggle.classList.toggle('is-active',mode!=='all');toggle.setAttribute('aria-expanded',String(!collapsed));
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:''));toggle.title=(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:'');
- chips.querySelectorAll('[data-restaurant-hours]').forEach(btn=>btn.onclick=()=>{S.restaurantHours=['all','open','closed'].includes(btn.dataset.restaurantHours)?btn.dataset.restaurantHours:'all';S.restaurantIndex=0;S.restaurantMaybeRound=false;drawRestaurants();save();});
-}
-function bindRestaurantHours(){
- const toggle=$('restaurantHoursToggle');if(!toggle)return;
- toggle.onclick=event=>{
-  event.preventDefault();
-  event.stopPropagation();
-  const opening=!!S.restaurantHoursCollapsed;
-  S.restaurantHoursCollapsed=!opening;
-  if(opening){
-    S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};
-    collapseRestaurantSearch(false);
-  }
-  renderQuickCutsCollapse('restaurant');
-  renderRestaurantSearchControl();
-  renderRestaurantHours();
-  updateRestaurantStatus();
-  save();
- };
- renderRestaurantHours();
+ chips.innerHTML=['all','open','closed'].map(value=>{
+   const active=mode===value;
+   return '<button class="chip restaurant-hours-chip'+(active?' is-active':'')+'" data-restaurant-hours="'+value+'" data-active="'+(active?'true':'false')+'" type="button" aria-pressed="'+(active?'true':'false')+'">'+labels[value]+'</button>';
+ }).join('');
+ chips.dataset.mode=mode;
+ chips.classList.toggle('is-rail-collapsed',collapsed);
+ chips.setAttribute('aria-hidden',String(collapsed));
+ toggle.classList.toggle('is-open',!collapsed);
+ toggle.classList.toggle('is-active',mode!=='all');
+ toggle.dataset.mode=mode;
+ toggle.setAttribute('data-active',mode);
+ toggle.setAttribute('aria-expanded',String(!collapsed));
+ toggle.setAttribute('aria-pressed',mode!=='all'?'true':'false');
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:''));
+ toggle.title=(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:'');
+ chips.querySelectorAll('[data-restaurant-hours]').forEach(btn=>btn.onclick=event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   const next=['all','open','closed'].includes(btn.dataset.restaurantHours)?btn.dataset.restaurantHours:'all';
+   S.restaurantHours=next;
+   S.restaurantIndex=0;
+   S.restaurantMaybeRound=false;
+   // Selecting a mode is an actual filter action. Keep the Hours rail visible
+   // so the active gold rim and current choice are immediately obvious.
+   S.restaurantHoursCollapsed=false;
+   renderRestaurantHours();
+   updateRestaurantStatus();
+   drawRestaurants();
+   save();
+ });
 }
 function renderQuickCutsCollapse(kind){
  const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
@@ -2814,10 +2821,13 @@ function updateRestaurantStatus(){
  const base=restaurantPoolBase();
  const total=restaurantPoolHourFiltered().length,degraded=S.restaurantSearchDegraded;
  if(!total){
-  el.textContent=degraded?'Restaurant sources are unavailable. Try again.':'No restaurants match the current filters.';
-      return;
+  const mode=['open','closed'].includes(String(S.restaurantHours||''))?String(S.restaurantHours):'all';
+  el.textContent=degraded?'Restaurant sources are unavailable. Try again.':(mode==='open'?'No restaurants are open now in this radius.':(mode==='closed'?'No restaurants are closed now in this radius.':'No restaurants match the current filters.'));
+  return;
  }
- el.textContent=total+' restaurant'+(total===1?'':'s')+' · '+radius+' mi';
+ const mode=['open','closed'].includes(String(S.restaurantHours||''))?String(S.restaurantHours):'all';
+ const modeLabel=mode==='open'?' · Open Now':(mode==='closed'?' · Closed Now':'');
+ el.textContent=total+' restaurant'+(total===1?'':'s')+' · '+radius+' mi'+modeLabel;
 }
 
 function restaurantQuick() {
@@ -3285,6 +3295,7 @@ if(tutorialModeEnabled()&&tutorialState.active){
 let restaurantDrawSeq=0;
 async function drawRestaurants() {
 const drawSeq=++restaurantDrawSeq;
+renderRestaurantHours();
 let rows = restaurantPoolFiltered();
 renderRestaurantSearchControl();
 updateRestaurantStatus();
