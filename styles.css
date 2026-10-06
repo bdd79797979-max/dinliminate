@@ -10638,3 +10638,25 @@ html.dinliminate-visual-mobile .app{
   .app.home-active #home .home-foot-actions{gap:6px!important}
   .app.home-active #home .home-icon-action{width:64px!important;min-width:64px!important;height:40px!important;min-height:40px!important}
 }
+
+
+/* CP1101 — restore the directional arrows inside Home choice windows. */
+@media only screen and (max-width:600px){
+  .app.home-active #home .home-card-choice .arrow{
+    display:inline-block!important;
+    position:static!important;
+    width:auto!important;
+    height:auto!important;
+    margin:4px 0 0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:#e4c982!important;
+    font-size:28px!important;
+    line-height:.8!important;
+    transform:none!important;
+    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
+    box-shadow:none!important;
+  }
+}
