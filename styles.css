@@ -10933,3 +10933,39 @@ html.dinliminate-visual-mobile .app{
 @media only screen and (max-width:390px){
   .app.home-active #home .home-actions{top:41%!important;padding:0 6vw!important}
 }
+
+
+/* CP1075 — Home hamburger matches the app-wide lines-only menu exactly. */
+.app:has(#home:not(.hidden)) .app-topbar #menu,
+.app.home-active #menu{
+  width:40px!important;
+  min-width:40px!important;
+  height:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.app:has(#home:not(.hidden)) .app-topbar #menu span,
+.app.home-active #menu span{
+  width:18px!important;
+  height:1.8px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:#d6b778!important;
+  box-shadow:0 0 7px rgba(214,183,120,.28),0 1px 1px rgba(0,0,0,.55)!important;
+}
+.app:has(#home:not(.hidden)) .app-topbar #menu::before,
+.app:has(#home:not(.hidden)) .app-topbar #menu::after,
+.app.home-active #menu::before,
+.app.home-active #menu::after{
+  content:none!important;
+  display:none!important;
+}
