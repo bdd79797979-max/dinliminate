@@ -10030,7 +10030,7 @@ button,input,select,textarea{
 
 /* CP1002 — the user's original uploaded door image is the sole Home photo. */
 .app:has(#home:not(.hidden)){
-  background-image:url("./assets/home-door.jpg") !important;
+  background-image:url("./assets/home-door.jpg?v=1093") !important;
   background-size:cover !important;
   background-position:center center !important;
   background-repeat:no-repeat !important;
