@@ -4052,6 +4052,8 @@ const close=()=>{
   if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
   if(id==='settingsModal')removeFoodOverlays();
   if(S.screen&&$(S.screen))show(S.screen);
+   // Primary pages opened from the main drawer return to that drawer when exited.
+   if(['manageFoodsModal','historyModal','settingsModal'].includes(id))requestAnimationFrame(()=>openDrawer());
  },150);
 };
 bg.onclick=close;
