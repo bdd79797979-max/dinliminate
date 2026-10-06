@@ -1,15 +1,16 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1077,
-  "sourceBranch": "cp1077-google-usage-tracker",
+  "build": 1078,
+  "sourceBranch": "cp1078-restaurant-search-core",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1077",
-  "deploymentTrigger": "CP1077-google-usage-tracker",
+  "checkpoint": "CP1078",
+  "deploymentTrigger": "CP1078-restaurant-search-core",
   "googleMasterKillSwitch": true,
-  "googleBudgetTracker": "single durable Neon SKU tracker"
+  "googleBudgetTracker": "single durable Neon SKU tracker",
+  "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection"
 }
