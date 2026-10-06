@@ -10280,3 +10280,52 @@ body:has(.app.home-active)::after{
     color:#f4dfae!important;
   }
 }
+
+
+/* CP1120 — Final Home luxury refinement.
+   Cosmetic finish only: strengthen the brand mark slightly, soften the title
+   champagne gradient, warm the choice labels, and make the menu treatment
+   quieter. No Home positioning or behavior is changed. */
+.app.home-active .app-topbar .dinliminate-logo-symbol{
+  width:84px!important;
+  height:84px!important;
+  flex:0 0 84px!important;
+}
+
+.app.home-active .app-topbar .dinliminate-logo-wordmark{
+  font-size:12px!important;
+  letter-spacing:.19em!important;
+}
+
+.app.home-active #home .home-intro h1{
+  background:linear-gradient(180deg,#fbf1d7 0%,#ead5a4 48%,#c9aa6a 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  color:#ead5a4!important;
+  text-shadow:0 2px 5px rgba(0,0,0,.40),0 7px 20px rgba(0,0,0,.28)!important;
+  filter:drop-shadow(0 1px 1px rgba(255,245,215,.08))!important;
+}
+
+.app.home-active #home .home-choice-content strong{
+  color:#f7efdf!important;
+  text-shadow:0 2px 6px rgba(0,0,0,.56),0 0 10px rgba(248,235,208,.10)!important;
+}
+
+.app.home-active .app-topbar #menu{
+  background:rgba(9,8,7,.20)!important;
+  box-shadow:0 2px 8px rgba(0,0,0,.24)!important;
+}
+
+@media only screen and (max-width:390px){
+  .app.home-active .app-topbar .dinliminate-logo-symbol{
+    width:76px!important;
+    height:76px!important;
+    flex-basis:76px!important;
+  }
+
+  .app.home-active .app-topbar .dinliminate-logo-wordmark{
+    font-size:10px!important;
+    letter-spacing:.17em!important;
+  }
+}
