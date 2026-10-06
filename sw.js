@@ -1,6 +1,7 @@
-const CACHE='dinliminate-shell-v1067';
+const CACHE='dinliminate-shell-v1068';
 const IMAGE_CACHE='dinliminate-images-v4';
 
+// CP1068 — Shell cache bump for Restaurant tools, tutorial, and choice-state fixes.
 // CP1008 — Managed image cache:
 // keep a durable working set for meal + restaurant photos without allowing
 // Cache Storage to grow indefinitely. The budget is size-based, not count-based.
