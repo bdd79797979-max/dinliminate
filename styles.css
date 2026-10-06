@@ -11593,3 +11593,10 @@ html.dinliminate-visual-mobile .app{
     bottom:calc(env(safe-area-inset-bottom) + 3px)!important;
   }
 }
+
+/* CP1099 — hidden Meal Times use the same crossed-out cue as Cuisine Cuts. */
+#food .meal-time-quick .meal-time-chip:not(.is-active)[data-active="false"]{
+  text-decoration:line-through!important;
+  text-decoration-thickness:1.5px!important;
+  text-decoration-color:currentColor!important;
+}
