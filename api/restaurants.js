@@ -800,7 +800,7 @@ async function googlePlaces(lat,lon,radius){
    headers:{
     'Content-Type':'application/json',
     'X-Goog-Api-Key':GOOGLE_KEY,
-    'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.types,places.currentOpeningHours.openNow,places.currentOpeningHours.weekdayDescriptions,places.regularOpeningHours.weekdayDescriptions,places.businessStatus'
+    'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.primaryType,places.types,places.businessStatus'
    },
    body:JSON.stringify({includedTypes:['restaurant','fast_food_restaurant'],maxResultCount:20,locationRestriction:{circle:{center:{latitude:lat,longitude:lon},radius:meters}}})
   },6500);
@@ -831,7 +831,7 @@ async function googleContactEnrichment(rows,originLat,originLon){
     headers:{
      'Content-Type':'application/json',
      'X-Goog-Api-Key':GOOGLE_KEY,
-     'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.types,places.currentOpeningHours.openNow,places.businessStatus,places.photos'
+     'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.types,places.currentOpeningHours.openNow,places.regularOpeningHours.weekdayDescriptions,places.businessStatus'
     },
     body:JSON.stringify({
      textQuery:q+' restaurant',
