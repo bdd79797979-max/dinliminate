@@ -20,6 +20,7 @@ const HARD_LIMITS = Object.freeze({
 });
 
 const TABLE = 'dinliminate_google_sku_usage_v1';
+const UNTRACKED_LIMIT = Math.max(0, Number.parseInt(process.env.GOOGLE_UNTRACKED_SKU_LIMIT || '0', 10) || 0);
 let dbPromise = null;
 let localMonth = '';
 const localCounts = new Map();
@@ -35,13 +36,32 @@ function pacificMonthKey(date = new Date()) {
   return year + '-' + month;
 }
 
+function pacificOffsetMinutes(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    timeZoneName: 'shortOffset',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const raw = String(parts.find(p => p.type === 'timeZoneName')?.value || 'GMT');
+  const match = raw.match(/^GMT([+-])(\\d{1,2})(?::(\\d{2}))?$/i);
+  if (!match) return 0;
+  const hours = Number(match[2]) || 0;
+  const minutes = Number(match[3]) || 0;
+  return (match[1] === '-' ? -1 : 1) * (hours * 60 + minutes);
+}
+
 function nextPacificMonthIso(date = new Date()) {
   const month = pacificMonthKey(date);
   const [year, monthNumber] = month.split('-').map(Number);
-  const next = monthNumber === 12
-    ? new Date(Date.UTC(year + 1, 0, 1, 8, 0, 0, 0))
-    : new Date(Date.UTC(year, monthNumber, 1, 8, 0, 0, 0));
-  return next.toISOString();
+  const nextYear = monthNumber === 12 ? year + 1 : year;
+  const nextMonth = monthNumber === 12 ? 1 : monthNumber + 1;
+  const noonUtc = new Date(Date.UTC(nextYear, nextMonth - 1, 1, 12, 0, 0, 0));
+  const offsetMinutes = pacificOffsetMinutes(noonUtc);
+  return new Date(
+    Date.UTC(nextYear, nextMonth - 1, 1, 0, 0, 0, 0) - offsetMinutes * 60000
+  ).toISOString();
 }
 
 async function budgetDb() {
@@ -82,11 +102,17 @@ async function reserveGoogleSku(skuKey, configuredLimit) {
       localMonth = month;
       localCounts.clear();
     }
+    if (UNTRACKED_LIMIT <= 0) {
+      return { ok: false, reason: 'budget-unconfigured', sku, limit, month, durable: false };
+    }
+    const effectiveLimit = Math.min(limit, UNTRACKED_LIMIT);
     const count = Number(localCounts.get(sku) || 0);
-    if (count >= limit) return { ok: false, reason: 'monthly-budget', sku, count, limit, month };
+    if (count >= effectiveLimit) {
+      return { ok: false, reason: 'untracked-limit', sku, count, limit: effectiveLimit, month, durable: false };
+    }
     const next = count + 1;
     localCounts.set(sku, next);
-    return { ok: true, count: next, limit, month, durable: false, sku };
+    return { ok: true, count: next, limit: effectiveLimit, month, durable: false, sku };
   }
 
   await sql.query(
@@ -131,6 +157,7 @@ async function googleUsageHealth() {
   const result = {
     month,
     durable: !!sql,
+    untrackedLimit: UNTRACKED_LIMIT,
     limits: { ...HARD_LIMITS },
     usage: {}
   };
