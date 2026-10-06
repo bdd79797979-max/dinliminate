@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1065,
+  "build": 1066,
   "sourceBranch": "cp1056-restaurant-hours-filter",
-  "checkpoint": "CP1065",
-  "deploymentTrigger": "CP1065-hours-filter-state",
+  "checkpoint": "CP1066",
+  "deploymentTrigger": "CP1066-all-maybes-count-state",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
