@@ -2719,23 +2719,23 @@ function restaurantHoursState(row){
   if(status==='CLOSED_PERMANENTLY'||status==='CLOSED_TEMPORARILY')return 'closed';
   const raw=String(row?.opening_hours||'').trim();
   if(!raw)return 'unknown';
-  if(/\\b24\\s*\\/\\s*7\\b/i.test(raw))return 'open';
+  if(/\b24\s*\/\s*7\b/i.test(raw))return 'open';
   const now=new Date(),day=now.getDay(),minute=now.getHours()*60+now.getMinutes(),days=['Su','Mo','Tu','We','Th','Fr','Sa'],today=days[day];
   let applicable=false,sawClosed=false;
   const dayMatches=selector=>{
     if(!selector)return true;
     const normalized=selector.replace(/[–—]/g,'-');
-    const ranges=[...normalized.matchAll(/\\b(Mo|Tu|We|Th|Fr|Sa|Su)\\s*-\\s*(Mo|Tu|We|Th|Fr|Sa|Su)\\b/g)];
+    const ranges=[...normalized.matchAll(/\b(Mo|Tu|We|Th|Fr|Sa|Su)\s*-\s*(Mo|Tu|We|Th|Fr|Sa|Su)\b/g)];
     for(const m of ranges){const a=days.indexOf(m[1]),b=days.indexOf(m[2]);if(a>=0&&b>=0&&(a<=b?day>=a&&day<=b:day>=a||day<=b))return true;}
     return normalized.split(/[^A-Za-z]+/).some(x=>x===today);
   };
   for(const clause of raw.split(';').map(x=>x.trim()).filter(Boolean)){
-    const tm=clause.match(/\\d{1,2}(?::\\d{2})?\\s*-\\s*\\d{1,2}(?::\\d{2})?/);
+    const tm=clause.match(/\d{1,2}(?::\d{2})?\s*-\s*\d{1,2}(?::\d{2})?/);
     const selector=tm?clause.slice(0,tm.index).trim():'';
     if(!dayMatches(selector))continue;
     applicable=true;
-    if(/\\b(?:off|closed)\\b/i.test(clause)){sawClosed=true;continue;}
-    const intervals=[...clause.matchAll(/(\\d{1,2})(?::(\\d{2}))?\\s*-\\s*(\\d{1,2})(?::(\\d{2}))?/g)];
+    if(/\b(?:off|closed)\b/i.test(clause)){sawClosed=true;continue;}
+    const intervals=[...clause.matchAll(/(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?/g)];
     for(const m of intervals){const start=Number(m[1])*60+Number(m[2]||0),end=Number(m[3])*60+Number(m[4]||0);if(start<=end?minute>=start&&minute<=end:minute>=start||minute<=end)return 'open';}
   }
   return applicable&&sawClosed?'closed':'unknown';
