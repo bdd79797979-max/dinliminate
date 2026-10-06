@@ -1114,8 +1114,15 @@ module.exports=async function handler(req,res){
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
 
-    // CP992: public exact-venue discovery is a fallback, never blocked by the
-    // presence of an official brand website.
+    // CP1005: after official and known-in-Dinliminate sources, prefer a verified
+    // Google Places photo before broader public exact-venue discovery.
+    const googlePhoto=await tryGoogleRestaurantPhoto({
+      name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
+    });
+    if(googlePhoto)return sendMedia(res,googlePhoto);
+
+    // Other exact-venue public sources remain the next fallback when Google
+    // cannot return an exact, quality restaurant photo.
     fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
     if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
     if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
@@ -1147,20 +1154,13 @@ module.exports=async function handler(req,res){
       }
     }
 
-    // OSM exact-POI image is a later fallback after the verified public-site layer.
+    // OSM exact-POI image remains available after the verified public-site layer.
     if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
       try{
         const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
         return sendMedia(res,{media,source:'osm-exact-poi'});
       }catch{}
     }
-
-    // Google Places Photo is the next verified fallback. It is server-side,
-    // budget-controlled, and identity-checked against the requested venue.
-    const googlePhoto=await tryGoogleRestaurantPhoto({
-      name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
-    });
-    if(googlePhoto)return sendMedia(res,googlePhoto);
 
     // Last discovery layer: Bing Images, but only after exact host-page
     // verification or a very strong exact match.
