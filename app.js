@@ -9,32 +9,12 @@ const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.D
 const DEFAULT_FOOD_IMAGE = 'https://images.pexels.com/photos/16365767/pexels-photo-16365767.jpeg?auto=compress&cs=tinysrgb&w=1800';
 const $ = (id) => document.getElementById(id);
 
-// CP1011 — runtime touch-device viewport fallback.
-// Some mobile Safari modes can expose a wider layout viewport than the physical
-// iPhone. Use touch points + physical screen bounds as a second signal so the
-// full-phone shell does not depend on CSS hover/pointer reporting alone.
-(() => {
-  const root = document.documentElement;
-  const markTouchMobile = () => {
-    const touch = Number(navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
-    const screenW = Number(window.screen?.width || 0);
-    const screenH = Number(window.screen?.height || 0);
-    const physicalMax = Math.max(screenW, screenH);
-    const layoutW = Number(window.innerWidth || 0);
-    const mobileTouch = touch && physicalMax > 0 && physicalMax <= 1024 && layoutW <= 1024;
-    root.classList.toggle('device-touch-mobile', mobileTouch);
-  };
-  markTouchMobile();
-  window.addEventListener('resize', markTouchMobile, {passive:true});
-  window.addEventListener('orientationchange', markTouchMobile, {passive:true});
-})();
-
 const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '1056';
+let APP_BUILD = '1064';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1588,7 +1568,21 @@ function renderRestaurantHours(){
 }
 function bindRestaurantHours(){
  const toggle=$('restaurantHoursToggle');if(!toggle)return;
- toggle.onclick=event=>{event.preventDefault();event.stopPropagation();const opening=!!S.restaurantHoursCollapsed;S.restaurantHoursCollapsed=!opening;if(opening){S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};collapseRestaurantSearch(false);}renderQuickCutsCollapse('restaurant');renderRestaurantSearchControl();renderRestaurantHours();save();};
+ toggle.onclick=event=>{
+  event.preventDefault();
+  event.stopPropagation();
+  const opening=!!S.restaurantHoursCollapsed;
+  S.restaurantHoursCollapsed=!opening;
+  if(opening){
+    S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};
+    collapseRestaurantSearch(false);
+  }
+  renderQuickCutsCollapse('restaurant');
+  renderRestaurantSearchControl();
+  renderRestaurantHours();
+  updateRestaurantStatus();
+  save();
+ };
  renderRestaurantHours();
 }
 function renderQuickCutsCollapse(kind){
@@ -2719,26 +2713,79 @@ function restaurantHoursState(row){
   if(status==='CLOSED_PERMANENTLY'||status==='CLOSED_TEMPORARILY')return 'closed';
   const raw=String(row?.opening_hours||'').trim();
   if(!raw)return 'unknown';
-  if(/\b24\s*\/\s*7\b/i.test(raw))return 'open';
-  const now=new Date(),day=now.getDay(),minute=now.getHours()*60+now.getMinutes(),days=['Su','Mo','Tu','We','Th','Fr','Sa'],today=days[day];
-  let applicable=false,sawClosed=false;
-  const dayMatches=selector=>{
-    if(!selector)return true;
-    const normalized=selector.replace(/[–—]/g,'-');
-    const ranges=[...normalized.matchAll(/\b(Mo|Tu|We|Th|Fr|Sa|Su)\s*-\s*(Mo|Tu|We|Th|Fr|Sa|Su)\b/g)];
-    for(const m of ranges){const a=days.indexOf(m[1]),b=days.indexOf(m[2]);if(a>=0&&b>=0&&(a<=b?day>=a&&day<=b:day>=a||day<=b))return true;}
-    return normalized.split(/[^A-Za-z]+/).some(x=>x===today);
+  if(/\b(?:24\s*\/\s*7|24\s*hours?)\b/i.test(raw))return 'open';
+
+  const now=new Date(),day=now.getDay(),minute=now.getHours()*60+now.getMinutes();
+  const dayNames=[['Su','Sun','Sunday'],['Mo','Mon','Monday'],['Tu','Tue','Tuesday'],['We','Wed','Wednesday'],['Th','Thu','Thursday'],['Fr','Fri','Friday'],['Sa','Sat','Saturday']];
+  const aliases=new Map();
+  dayNames.forEach((list,index)=>list.forEach(name=>aliases.set(name.toLowerCase(),index)));
+
+  const appliesToDay=(selector,targetDay)=>{
+    const s=String(selector||'').trim();
+    if(!s)return true;
+    const normalized=s.replace(/[–—−]/g,'-').replace(/\s+/g,' ');
+    const ranges=[...normalized.matchAll(/\b(Su|Mo|Tu|We|Th|Fr|Sa|Sun|Mon|Tue|Wed|Thu|Fri|Sat|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*-\s*(Su|Mo|Tu|We|Th|Fr|Sa|Sun|Mon|Tue|Wed|Thu|Fri|Sat|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/gi)];
+    for(const m of ranges){
+      const a=aliases.get(m[1].toLowerCase()),b=aliases.get(m[2].toLowerCase());
+      if(a==null||b==null)continue;
+      if(a<=b ? targetDay>=a&&targetDay<=b : targetDay>=a||targetDay<=b)return true;
+    }
+    const tokens=normalized.match(/\b(?:Su|Mo|Tu|We|Th|Fr|Sa|Sun|Mon|Tue|Wed|Thu|Fri|Sat|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/gi)||[];
+    return tokens.some(token=>aliases.get(token.toLowerCase())===targetDay);
   };
-  for(const clause of raw.split(';').map(x=>x.trim()).filter(Boolean)){
-    const tm=clause.match(/\d{1,2}(?::\d{2})?\s*-\s*\d{1,2}(?::\d{2})?/);
-    const selector=tm?clause.slice(0,tm.index).trim():'';
-    if(!dayMatches(selector))continue;
+
+  const parseTime=(value,hint='')=>{
+    const m=String(value||'').trim().toUpperCase().replace(/\s+/g,'').match(/^(\d{1,2})(?::(\d{2}))?(AM|PM)?$/);
+    if(!m)return NaN;
+    let hour=Number(m[1]),mins=Number(m[2]||0),ampm=m[3]||hint;
+    if(mins>59)return NaN;
+    if(ampm){
+      if(hour<1||hour>12)return NaN;
+      hour=ampm==='AM'?(hour===12?0:hour):(hour===12?12:hour+12);
+    }else if(hour>23)return NaN;
+    return hour*60+mins;
+  };
+
+  const timeRe=/(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)\s*[-–—]\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)/i;
+  const clauses=raw.split(/\s*[;·•]\s*/).map(x=>x.trim()).filter(Boolean);
+  const intervals=[];
+  let applicable=false,sawClosed=false;
+
+  const collect=(clause,targetDay)=>{
+    const tm=clause.match(timeRe);
+    const selector=tm?clause.slice(0,tm.index).trim():clause;
+    if(!appliesToDay(selector,targetDay))return;
     applicable=true;
-    if(/\b(?:off|closed)\b/i.test(clause)){sawClosed=true;continue;}
-    const intervals=[...clause.matchAll(/(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?/g)];
-    for(const m of intervals){const start=Number(m[1])*60+Number(m[2]||0),end=Number(m[3])*60+Number(m[4]||0);if(start<=end?minute>=start&&minute<=end:minute>=start||minute<=end)return 'open';}
+    if(/\b(?:off|closed)\b/i.test(clause)){sawClosed=true;return;}
+    if(!tm)return;
+    const startHasMeridiem=/\b(?:AM|PM)\b/i.test(tm[1]);
+    const endMeridiem=(tm[2].match(/AM|PM/i)||[])[0]||'';
+    const start=parseTime(tm[1],!startHasMeridiem?endMeridiem:'');
+    const end=parseTime(tm[2]);
+    if(Number.isFinite(start)&&Number.isFinite(end))intervals.push({start,end,targetDay});
+  };
+
+  for(const clause of clauses)collect(clause,day);
+  const todayCount=intervals.length;
+
+  for(let i=todayCount;i<todayCount+clauses.length;i++){}
+  const previousDay=(day+6)%7;
+  const previousIntervals=[];
+  const originalIntervals=intervals.length;
+  for(const clause of clauses){
+    const before=intervals.length;
+    collect(clause,previousDay);
+    if(intervals.length>before)previousIntervals.push(intervals[intervals.length-1]);
   }
-  return applicable&&sawClosed?'closed':'unknown';
+
+  for(const interval of previousIntervals){
+    if(interval.start>interval.end&&minute<=interval.end)return 'open';
+  }
+  for(let i=0;i<originalIntervals;i++){
+    const interval=intervals[i];
+    if(interval.start<=interval.end ? minute>=interval.start&&minute<=interval.end : minute>=interval.start||minute<=interval.end)return 'open';
+  }
+  return applicable&&sawClosed?'closed':(applicable?'closed':'unknown');
 }
 function restaurantHoursMatches(row){
   const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all';
