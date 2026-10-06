@@ -5,6 +5,13 @@ const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
 let sharp=null;
 try{sharp=require('sharp');}catch{}
 
+const restaurantPhotoRateBuckets=new Map();
+function restaurantPhotoRateLimited(req,max=18){
+ const headers=req?.headers||{},ip=String(headers['x-forwarded-for']||headers['x-real-ip']||'anon').split(',')[0].trim()||'anon';
+ const now=Date.now(),old=restaurantPhotoRateBuckets.get(ip);
+ if(!old||now-old.at>60000){restaurantPhotoRateBuckets.set(ip,{at:now,count:1});return false;}
+ old.count++;return old.count>max;
+}
 const NO_PHOTO_HOSTS=new Set(['google.com','www.google.com','googleusercontent.com','lh3.googleusercontent.com','bing.com','www.bing.com','tse1.mm.bing.net','tse2.mm.bing.net','tse3.mm.bing.net','tse4.mm.bing.net','unsplash.com','images.unsplash.com','pexels.com','images.pexels.com','shutterstock.com','istockphoto.com','gettyimages.com','depositphotos.com','alamy.com','stock.adobe.com']);
 const BLOCKED_IMAGE_HINTS=/\b(?:logo|favicon|sprite|icon|avatar|placeholder|default[-_ ]?image|brandmark|wordmark|google[ -]?play|play[ -]?store|app[ -]?store|download[ -]?app|download|badge|payment|visa|mastercard|amex|social[ -]?media|facebook|instagram|tiktok|youtube|x[ -]?twitter)\b/i;
 const VENUE_IMAGE_HINTS=/\b(?:exterior|outside|outdoor|front|entrance|entry|building|storefront|facade|façade|sign|signage|location|drive[- ]?thru|drive through|parking lot|parking|street view|patio|terrace)\b/i;
@@ -1070,6 +1077,11 @@ function sendMedia(res,found){
 }
 
 module.exports=async function handler(req,res){
+  res.setHeader?.('Cache-Control','no-store');
+  res.setHeader?.('X-Content-Type-Options','nosniff');
+  res.setHeader?.('Referrer-Policy','no-referrer');
+  if(String(req?.method||'GET').toUpperCase()!=='GET')return json(res,405,{ok:false,error:'GET required'});
+  if(restaurantPhotoRateLimited(req))return json(res,429,{ok:false,error:'Too many restaurant photo requests. Please try again shortly.'});
   const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
   const name=String(q.name||'').trim().slice(0,160);
   const address=String(q.address||'').trim().slice(0,240);
