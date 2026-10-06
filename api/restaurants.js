@@ -1151,6 +1151,13 @@ function sameRestaurant(x,r){
   const sameNameFamily=sameName||nameVariant;
 
   const sameBrand=!!norm(x.brand)&&!!norm(r.brand)&&norm(x.brand)===norm(r.brand);
+  const xTags=RESTAURANT_TAXONOMY.classifyRestaurant(x).tags||[];
+  const rTags=RESTAURANT_TAXONOMY.classifyRestaurant(r).tags||[];
+  const sharedCategory=xTags.some(tag=>rTags.includes(tag));
+  const xNameTokens=new Set(restaurantNameTokens(x.name)),rNameTokens=new Set(restaurantNameTokens(r.name));
+  const sharedDistinctiveName=xNameTokens.size&&rNameTokens.size
+    ? [...xNameTokens].some(token=>token.length>=4&&!RESTAURANT_NAME_VARIANT_BLOCKERS.has(token)&&rNameTokens.has(token))
+    : false;
   const identityKey=RESTAURANT_TAXONOMY.restaurantIdentityKey(x);
   const rowIdentityKey=RESTAURANT_TAXONOMY.restaurantIdentityKey(r);
   const dist=Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&Number.isFinite(r.lat)&&Number.isFinite(r.lon)
@@ -1170,6 +1177,10 @@ function sameRestaurant(x,r){
 
   // Primary identity rule: same/similar physical address + similar name.
   if(sameAddress&&sameNameFamily)return true;
+  // CP1078: merge provider naming variants such as "Excell Market & BBQ"
+  // and "Excell Bar-B-Q" when they resolve to the same place and share
+  // a distinctive name token plus the same cuisine identity.
+  if(sameAddress&&sharedDistinctiveName&&sharedCategory)return true;
   if(addressScore>=0.90&&sameNameFamily)return true;
   if(sameStreet&&sameNameFamily&&originDistanceClose&&partialAddress)return true;
   // CP972: Photon can return a venue with reordered address fields or without
@@ -1213,6 +1224,25 @@ function dedupe(rows){
     }
   }
   return[...map.values()].sort((a,b)=>a.distance-b.distance);
+}
+function restaurantSearchMatches(row,searchTerm){
+ const q=normalizeRestaurantSearch(searchTerm);
+ if(!q)return true;
+ const classification=RESTAURANT_TAXONOMY.restaurantSearchClassification(q);
+ const tags=RESTAURANT_TAXONOMY.classifyRestaurant(row).tags||[];
+ if(classification.kind==='category'&&classification.tag){
+   return classification.tag==='Burgers'
+     ? tags.includes('Burgers')||tags.includes('Fast Food')
+     : tags.includes(classification.tag);
+ }
+ const filler=new Set(RESTAURANT_TAXONOMY.fillerWords||['restaurant','restaurants','place','places','food','foodie','near','me']);
+ const hay=normalizeRestaurantSearch([
+   row?.name,row?.brand,row?.operator,row?.category,row?.cuisine,row?.primaryType,row?.providerType,
+   Array.isArray(row?.types)?row.types.join(' '):row?.types,
+   ...(Array.isArray(row?.menuItems)?row.menuItems:[])
+ ].filter(Boolean).join(' '));
+ const words=q.split(' ').filter(word=>word&&!filler.has(word));
+ return !words.length || words.every(word=>hay.includes(word));
 }
 function restaurantPhotoMeta(r){
   const raw=String(r?.photo||'').trim();
@@ -1507,7 +1537,7 @@ if(mode==='search'){
   const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
    const distance=miles(lat,lon,n(r.lat),n(r.lon));
    return {...r,distance};
- }).filter(r=>Number.isFinite(r.distance)&&r.distance<=radius+0.001).map(r=>{
+ }).filter(r=>Number.isFinite(r.distance)&&r.distance<=radius+0.001).filter(r=>restaurantSearchMatches(r,searchTerm)).map(r=>{
    const direct=safeWebsiteUrl(r.website); const known=knownRestaurantWebsite(r); const cachedKey=normalizeSearchQuery([r.name,r.address,r.brand].filter(Boolean).join('|')); const cachedEntry=officialWebsiteCache.get(cachedKey); const cached=(cachedEntry&&Date.now()-cachedEntry.t<OFFICIAL_WEBSITE_CACHE_TTL)?cachedEntry.url:''; const website=direct||known||cached;
    const phone=String(r.phone||'').trim();
    const classification=RESTAURANT_TAXONOMY.classifyRestaurant({...r,website,phone}); const canonicalCategory=classification.primary||r.category||'American'; const classifiedFastFood=classification.tags.includes('Fast Food'); const photo=restaurantPhotoMeta(r); return {...r,category:canonicalCategory,fastFood:classifiedFastFood,quickCutTags:classification.tags,quickCutEvidence:classification.evidence,...photo,website,phone,websiteSource:r.website?'provider':(known?'known-brand':(cached?'official-search':'google-search-fallback')),phoneSource:phone?'provider':'google-search-fallback'};
@@ -1516,6 +1546,6 @@ if(mode==='search'){
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.
