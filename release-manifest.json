@@ -1,18 +1,19 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1080,
-  "sourceBranch": "cp1080-restaurant-hours-reliability",
+  "build": 1081,
+  "sourceBranch": "cp1081-restaurant-decision-ui",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1080",
-  "deploymentTrigger": "CP1080-restaurant-hours-reliability",
+  "checkpoint": "CP1081",
+  "deploymentTrigger": "CP1081-restaurant-decision-ui",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
   "restaurantPhotoCertification": "Google exact name+address+location validation; central place-photo quota guard; no generic/neutral fallback",
-  "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing"
+  "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing",
+  "restaurantDecisionUI": "four-control parity, no active-card resize during swipe, in-card first-swipe lesson, target-aware search diagnosis"
 }
