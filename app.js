@@ -1519,32 +1519,37 @@ function setMaybeDeck(kind, enabled){
  }
  renderMaybeDeckToggle(kind); save();
 }
-function maybeDeckCount(kind){
- if(kind==='food'){
-  return foodBasePool().filter(item=>S.maybe.has(item.id)).length;
- }
- return restaurantPoolBase().filter(row=>row._maybe).length;
+function choiceDeckRows(kind){
+ if(kind==='food')return foodPool();
+ return restaurantPoolFiltered();
 }
+function maybeDeckRows(kind){
+ return choiceDeckRows(kind).filter(row=>kind==='food'?S.maybe.has(row.id):!!row._maybe);
+}
+function maybeDeckCount(kind){return maybeDeckRows(kind).length;}
+function allDeckCount(kind){return choiceDeckRows(kind).length;}
 function renderMaybeDeckToggle(kind){
  const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
  const btn=$(id);if(!btn)return;
+ const allCount=allDeckCount(kind);
  const maybeCount=maybeDeckCount(kind);
- const hasMaybe=maybeCount>0;
  const isMaybe=!!S.maybeDeck;
- const visibleCount=isMaybe ? maybeCount : (kind==='food' ? foodBasePool().length : restaurantPoolBase().length);
+ const visibleCount=isMaybe?maybeCount:allCount;
+ const hasMaybes=maybeCount>0;
  btn.dataset.mode=isMaybe?'maybe':'all';
- btn.disabled=!hasMaybe;
+ btn.dataset.allCount=String(allCount);
+ btn.dataset.maybeCount=String(maybeCount);
+ btn.dataset.visibleCount=String(visibleCount);
+ btn.disabled=false;
  const target=isMaybe?'Show all choices':'Show Maybe choices';
- btn.setAttribute('aria-label',isMaybe?'Viewing Maybe choices. Tap to show all choices.':'Viewing all choices. Tap to show Maybe choices.');
+ btn.setAttribute('aria-label',isMaybe?'Viewing Maybe choices ('+maybeCount+'). Tap to show all choices ('+allCount+').':'Viewing all choices ('+allCount+'). Tap to show Maybe choices ('+maybeCount+').');
  btn.setAttribute('aria-pressed',isMaybe?'true':'false');
  btn.title=target;
- if(!btn.classList.contains('canonical-maybe-control')){
-  btn.classList.add('canonical-maybe-control');
- }
+ btn.classList.add('canonical-maybe-control');
  btn.innerHTML='<span class="maybe-control-all" aria-hidden="true">ALL</span><span class="maybe-control-divider" aria-hidden="true">·</span><span class="maybe-control-maybe" aria-hidden="true">MAYBES</span><span class="maybe-control-count" aria-hidden="true">'+visibleCount+'</span>';
  btn.classList.toggle('is-maybe',isMaybe);
  btn.classList.toggle('is-all',!isMaybe);
- btn.classList.toggle('has-maybes',hasMaybe);
+ btn.classList.toggle('has-maybes',hasMaybes);
 }
 function bindMaybeDeckToggle(kind){
  const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
