@@ -521,6 +521,120 @@ function extractExternalWebsiteLinks(html,sourceUrl=''){
  while((m=plainRe.exec(String(html||'')))&&out.length<50)add(m[1],'');
  return out.sort((a,b)=>b.score-a.score);
 }
+function parseJsonLdObjects(html){
+  const out=[];
+  const re=/<script\\b[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi;
+  let match;
+  while((match=re.exec(String(html||'')))){
+    let raw=String(match[1]||'').trim();
+    if(!raw)continue;
+    raw=raw.replace(/^<!--[\\s\\S]*?-->/,'').trim();
+    try{
+      const parsed=JSON.parse(raw);
+      const visit=(value)=>{
+        if(Array.isArray(value)){value.forEach(visit);return;}
+        if(!value||typeof value!=='object')return;
+        out.push(value);
+        if(Array.isArray(value['@graph']))value['@graph'].forEach(visit);
+      };
+      visit(parsed);
+    }catch{}
+  }
+  return out;
+}
+function jsonLdTypeIsRestaurant(value){
+  const type=value?.['@type'];
+  const list=Array.isArray(type)?type:[type];
+  return list.some(x=>/restaurant|foodestablishment|localbusiness/i.test(String(x||'')));
+}
+function normalizeOpeningHoursValue(value){
+  if(Array.isArray(value))return value.map(x=>String(x||'').trim()).filter(Boolean);
+  if(typeof value==='string'&&value.trim())return [value.trim()];
+  return [];
+}
+function formatOpeningHoursSpecification(specs){
+  if(!Array.isArray(specs))return [];
+  const dayNames={Mo:'Mon',Tu:'Tue',We:'Wed',Th:'Thu',Fr:'Fri',Sa:'Sat',Su:'Sun',
+    Monday:'Mon',Tuesday:'Tue',Wednesday:'Wed',Thursday:'Thu',Friday:'Fri',Saturday:'Sat',Sunday:'Sun'};
+  const groups=new Map();
+  for(const spec of specs){
+    if(!spec||typeof spec!=='object')continue;
+    const days=Array.isArray(spec.dayOfWeek)?spec.dayOfWeek:[spec.dayOfWeek];
+    const opens=String(spec.opens||'').trim(),closes=String(spec.closes||'').trim();
+    if(!opens||!closes)continue;
+    const range=opens+'–'+closes;
+    for(const rawDay of days){
+      const raw=String(rawDay||'').split('/').pop();
+      const short=dayNames[raw]||raw;
+      if(!short)continue;
+      if(!groups.has(range))groups.set(range,[]);
+      groups.get(range).push(short);
+    }
+  }
+  return [...groups.entries()].map(([range,days])=>[...new Set(days)].join(', ')+' '+range);
+}
+function extractOfficialRestaurantData(html){
+  const objects=parseJsonLdObjects(html);
+  const restaurant=objects.find(jsonLdTypeIsRestaurant)||objects.find(x=>{
+    return x&&(
+      typeof x.openingHours!=='undefined' ||
+      typeof x.openingHoursSpecification!=='undefined' ||
+      typeof x.telephone!=='undefined'
+    );
+  });
+  if(!restaurant)return {name:'',phone:'',website:'',opening_hours:'',menu:''};
+  const hours=[
+    ...normalizeOpeningHoursValue(restaurant.openingHours),
+    ...formatOpeningHoursSpecification(restaurant.openingHoursSpecification)
+  ];
+  const menu=typeof restaurant.menu==='string'?restaurant.menu:'';
+  return {
+    name:String(restaurant.name||'').trim(),
+    phone:String(restaurant.telephone||'').trim(),
+    website:String(restaurant.url||'').trim(),
+    opening_hours:[...new Set(hours)].slice(0,14).join(' · '),
+    menu:String(menu||'').trim()
+  };
+}
+async function officialRestaurantDetails(name,address,phone,website){
+  const candidate=String(website||'').trim();
+  let officialUrl='';
+  if(candidate){
+    const page=await fetchWebPage(candidate,2800,1200000);
+    if(page){
+      const verified=verifiedWebsiteCandidate({...page,url:page.finalUrl||page.url},name,address,'',phone);
+      if(verified)officialUrl=verified.url;
+      if(officialUrl){
+        const data=extractOfficialRestaurantData(page.html);
+        return {
+          ok:true,
+          source:'official-website',
+          website:officialUrl,
+          phone:data.phone,
+          opening_hours:data.opening_hours,
+          menu:data.menu
+        };
+      }
+    }
+  }
+  const discovered=await resolveOfficialWebsite({name,address,brand:'',website:candidate,phone});
+  officialUrl=String(discovered?.website||'').trim();
+  if(!officialUrl)return {ok:false,source:'none'};
+  const page=await fetchWebPage(officialUrl,3000,1200000);
+  if(!page)return {ok:false,source:'official-website'};
+  const verified=verifiedWebsiteCandidate({...page,url:page.finalUrl||page.url},name,address,'',phone);
+  if(!verified)return {ok:false,source:'official-website'};
+  const data=extractOfficialRestaurantData(page.html);
+  return {
+    ok:true,
+    source:'official-website',
+    website:verified.url,
+    phone:data.phone,
+    opening_hours:data.opening_hours,
+    menu:data.menu
+  };
+}
+
 function websitePageScore(pageUrl,html,name,address,brand='',phone=''){
  const source=normalizeSearchQuery(htmlText(html).slice(0,1400000)+' '+pageUrl);
  const nameTokens=[...new Set(websiteBusinessTokens(name))];
@@ -1220,10 +1334,31 @@ if(mode==='resolve'){const x=await geocode(q.get('q'));return res.status(200).js
 if(mode==='reverse'){const lat=n(q.get('lat')),lon=n(q.get('lon'));if(!validCoords(lat,lon))return res.status(400).json({ok:false,message:'Coordinates are invalid.'});if(res.setHeader)res.setHeader('Cache-Control','public, max-age=300, s-maxage=300, stale-while-revalidate=600');return res.status(200).json({ok:true,display:await reverse(lat,lon)})}
 if(mode==='details'){
   const placeId=String(q.get('placeId')||q.get('googlePlaceId')||'').trim();
-  if(!placeId)return res.status(200).json({ok:true,source:'none',message:'No Google Place ID is available for this restaurant.'});
-  const result=await googlePlaceDetails(placeId);
+  const name=String(q.get('name')||'').trim().slice(0,160);
+  const address=String(q.get('address')||'').trim().slice(0,240);
+  const phone=String(q.get('phone')||'').trim().slice(0,80);
+  const website=String(q.get('website')||'').trim().slice(0,700);
+  let googleResult={ok:false,source:'none'};
+  if(placeId){
+    googleResult=await googlePlaceDetails(placeId);
+  }
+  if(googleResult?.ok){
+    if(!googleResult.opening_hours||!googleResult.phone||!googleResult.website){
+      const official=await officialRestaurantDetails(name||googleResult.name,address||googleResult.address,phone||googleResult.phone,website||googleResult.website);
+      if(official?.ok){
+        if(!googleResult.website&&official.website)googleResult.website=official.website;
+        if(!googleResult.phone&&official.phone)googleResult.phone=official.phone;
+        if(!googleResult.opening_hours&&official.opening_hours)googleResult.opening_hours=official.opening_hours;
+        if(official.menu)googleResult.menu=official.menu;
+        if(official.source)googleResult.fallbackSource=official.source;
+      }
+    }
+    if(res.setHeader)res.setHeader('Cache-Control','private, no-store');
+    return res.status(200).json(googleResult);
+  }
+  const official=await officialRestaurantDetails(name,address,phone,website);
   if(res.setHeader)res.setHeader('Cache-Control','private, no-store');
-  return res.status(200).json(result);
+  return res.status(200).json(official?.ok?official:{ok:false,source:googleResult?.source||'none',message:'Restaurant details are not currently available.'});
 }
 if(mode==='website'){
  const name=String(q.get('name')||'').trim().slice(0,160),address=String(q.get('address')||'').trim().slice(0,240),brand=String(q.get('brand')||'').trim().slice(0,160),providerWebsite=String(q.get('website')||'').trim().slice(0,700),phone=String(q.get('phone')||'').trim().slice(0,80);
@@ -1375,6 +1510,6 @@ if(mode==='search'){
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,applyGoogleContactPatches,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.
