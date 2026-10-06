@@ -165,7 +165,7 @@ async function touchCachedImage(req){
   }catch{}
 }
 
-const SHELL=['./','./index.html','./styles.css?v=1065','./app.js?v=1065','./data/foods.js?v=1065','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./styles.css?v=1067','./app.js?v=1067','./data/foods.js?v=1067','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([
