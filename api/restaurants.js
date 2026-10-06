@@ -1492,13 +1492,11 @@ if(mode==='search'){
    const got=await withinBudget(contactEnrichment(lat,lon,Math.min(radius,25),expandedNames),Math.min(1900,contactRemaining),'Restaurant contact enrichment timed out');
    if(got&&!got.__timeout)contactOut=got; else contactOut.errors.push('Contact enrichment timed out');
   }
- let googleContactOut={rows:[],errors:[]};
- const contactRemaining2=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
- if(contactAllowed&&GOOGLE_KEY&&contactRemaining2>2200&&preliminary.length<12){
-   const got=await withinBudget(googleContactEnrichment(dedupe([...contactCandidates,...contactOut.rows]),lat,lon),Math.min(2100,contactRemaining2),'Google contact enrichment timed out');
-   if(got&&!got.__timeout){googleContactOut=got;applyGoogleContactPatches(contactCandidates,googleContactOut.rows)} else googleContactOut.errors.push('Google contact enrichment timed out');
- }
- const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
+  // CP1053: keep Enterprise Google enrichment on demand. Regular searches
+  // remain in the lower-cost discovery tier; Details requests the Enterprise
+  // fields only when the user actually opens a restaurant.
+  const googleContactOut={rows:[],errors:[]};
+  const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
    const distance=miles(lat,lon,n(r.lat),n(r.lon));
    return {...r,distance};
  }).filter(r=>Number.isFinite(r.distance)&&r.distance<=radius+0.001).map(r=>{
