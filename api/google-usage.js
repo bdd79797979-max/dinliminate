@@ -21,6 +21,7 @@ const HARD_LIMITS = Object.freeze({
 
 const TABLE = 'dinliminate_google_sku_usage_v1';
 const UNTRACKED_LIMIT = Math.max(0, Number.parseInt(process.env.GOOGLE_UNTRACKED_SKU_LIMIT || '0', 10) || 0);
+const GOOGLE_MASTER_ENABLED = !/^(?:0|false|off|disabled)$/i.test(String(process.env.GOOGLE_MASTER_ENABLED ?? 'true'));
 let dbPromise = null;
 let localMonth = '';
 const localCounts = new Map();
@@ -113,9 +114,12 @@ function nextPacificMonthIso(date = new Date()) {
   ).toISOString();
 }
 
+function googleServicesEnabled(){ return GOOGLE_MASTER_ENABLED; }
+
 async function reserveGoogleSku(skuKey, configuredLimit) {
   const sku = String(skuKey || '').trim();
   if (!sku) return { ok: false, reason: 'missing-sku' };
+  if (!GOOGLE_MASTER_ENABLED) return { ok: false, reason: 'master-disabled', sku };
 
   const limit = Math.max(
     1,
@@ -184,6 +188,7 @@ async function googleUsageHealth() {
   const sql = await budgetDb().catch(() => null);
   const result = {
     month,
+    googleMasterEnabled: GOOGLE_MASTER_ENABLED,
     durable: !!sql,
     untrackedLimit: UNTRACKED_LIMIT,
     limits: { ...HARD_LIMITS },
@@ -210,6 +215,7 @@ async function googleUsageHealth() {
 
 module.exports = {
   HARD_LIMITS,
+  googleServicesEnabled,
   pacificMonthKey,
   nextPacificMonthIso,
   reserveGoogleSku,
