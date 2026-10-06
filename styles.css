@@ -10497,3 +10497,185 @@ html.dinliminate-visual-mobile .app{
 
 
 
+
+
+/* CP1105 — Premium Home typography, door-choice placement, and menu layering.
+   Keep the existing door canvas and bottom utilities; only refine the overlay UI. */
+@media only screen and (max-width:600px){
+  /* The menu is a translucent control with no gold outline. The drawer itself
+     must sit above the Home topbar so its close control is actually clickable. */
+  .app.home-active #menu,
+  .app.home-active #menu:hover,
+  .app.home-active #menu:active,
+  .app.home-active #menu:focus,
+  .app.home-active #menu:focus-visible{
+    width:42px!important;
+    min-width:42px!important;
+    height:42px!important;
+    min-height:42px!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:12px!important;
+    background:rgba(10,10,9,.32)!important;
+    background-color:rgba(10,10,9,.32)!important;
+    box-shadow:none!important;
+    backdrop-filter:blur(8px)!important;
+    -webkit-backdrop-filter:blur(8px)!important;
+  }
+
+  .app.home-active #menu span{
+    width:23px!important;
+    height:2px!important;
+    background:#d9bd7c!important;
+    box-shadow:0 1px 5px rgba(0,0,0,.58)!important;
+  }
+
+  /* Premium supporting typography: centered, lighter, cleaner hierarchy. */
+  .app.home-active #home .home-intro{
+    top:29.2%!important;
+    padding:0 16px!important;
+    text-align:center!important;
+  }
+  .app.home-active #home .home-intro h1{
+    margin:0 auto!important;
+    max-width:300px!important;
+    font-size:24px!important;
+    line-height:.98!important;
+    letter-spacing:-.028em!important;
+    font-weight:720!important;
+    color:#fffaf0!important;
+    text-align:center!important;
+    text-shadow:
+      0 2px 16px rgba(0,0,0,.72),
+      0 0 1px rgba(255,248,232,.42)!important;
+  }
+  .app.home-active #home .home-intro .sub{
+    margin:10px auto 0!important;
+    font-size:10px!important;
+    line-height:1.25!important;
+    font-weight:560!important;
+    letter-spacing:.012em!important;
+    color:#f0e5d6!important;
+    text-align:center!important;
+    text-shadow:0 1px 9px rgba(0,0,0,.78)!important;
+  }
+
+  /* Large transparent door hit areas: centered within the actual left/right
+     glass panes rather than centered around the door seam. */
+  .app.home-active #home .home-actions{
+    top:48.2%!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:24%!important;
+    margin:0!important;
+    padding:0 5%!important;
+    display:grid!important;
+    grid-template-columns:45% 45%!important;
+    justify-content:space-between!important;
+    align-items:flex-start!important;
+    gap:0!important;
+    z-index:8!important;
+  }
+
+  .app.home-active #home .home-card-choice{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    place-items:initial!important;
+  }
+
+  .app.home-active #home .home-card-choice .home-card-copy,
+  .app.home-active #home .food-choice .home-card-copy,
+  .app.home-active #home .restaurant-choice .home-card-copy{
+    width:auto!important;
+    position:static!important;
+    left:auto!important;
+    top:auto!important;
+    margin:0!important;
+    padding:0!important;
+    display:block!important;
+    text-align:center!important;
+  }
+
+  .app.home-active #home .home-card-choice .home-card-copy strong{
+    display:block!important;
+    font-size:12px!important;
+    line-height:1!important;
+    font-weight:780!important;
+    letter-spacing:.135em!important;
+    color:#fff5df!important;
+    text-shadow:
+      0 2px 12px rgba(0,0,0,.82),
+      0 0 1px rgba(255,246,225,.35)!important;
+  }
+
+  .app.home-active #home .home-card-choice .arrow{
+    display:block!important;
+    position:static!important;
+    width:auto!important;
+    height:auto!important;
+    margin:9px 0 0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:#dfc17d!important;
+    font-size:27px!important;
+    line-height:.72!important;
+    font-weight:500!important;
+    transform:none!important;
+    text-shadow:0 2px 11px rgba(0,0,0,.76)!important;
+    pointer-events:none!important;
+    box-shadow:none!important;
+  }
+
+  /* The right-hand label sits in the center of the right glass pane. */
+  .app.home-active #home .restaurant-choice{
+    transform:translateX(1.5%)!important;
+  }
+
+  /* Overlay the entire shell when the menu is open so Home branding cannot
+     sit above the drawer. */
+  .drawer-bg{
+    z-index:105!important;
+  }
+  .drawer{
+    z-index:106!important;
+    height:100dvh!important;
+    max-height:100dvh!important;
+  }
+  .drawer-close{
+    position:relative!important;
+    z-index:107!important;
+  }
+}
+
+@media only screen and (max-width:390px){
+  .app.home-active #home .home-intro{
+    top:28.8%!important;
+  }
+  .app.home-active #home .home-intro h1{
+    font-size:22px!important;
+    max-width:280px!important;
+  }
+  .app.home-active #home .home-intro .sub{
+    margin-top:9px!important;
+    font-size:9.5px!important;
+  }
+  .app.home-active #home .home-actions{
+    top:48.4%!important;
+    height:23.5%!important;
+    padding-left:5%!important;
+    padding-right:5%!important;
+  }
+  .app.home-active #home .home-card-choice .home-card-copy strong{
+    font-size:11px!important;
+    letter-spacing:.125em!important;
+  }
+  .app.home-active #home .home-card-choice .arrow{
+    margin-top:8px!important;
+    font-size:25px!important;
+  }
+}
