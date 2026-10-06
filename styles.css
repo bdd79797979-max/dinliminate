@@ -350,10 +350,6 @@
 .luxury-home h1{max-width:calc(100% - 16px);width:100%;margin:16px auto 0;padding:0 4px;box-sizing:border-box;font-size:clamp(2rem,8.1vw,6.2rem);letter-spacing:-.05em;line-height:.98;overflow:visible;background:linear-gradient(120deg,#fff 12%,#e8d5ae 44%,#d98f54 70%,#fff 94%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 .luxury-home .sub{color:#aaa39a;max-width:620px}
 .luxury-home .home-actions{position:relative;z-index:2;gap:11px}
-.luxury-home .home-card{min-height:73px;background:linear-gradient(145deg,#171615,#11100f);border:1px solid #3b3428;color:#eee;box-shadow:0 16px 40px #0008}
-.luxury-home .home-card strong{color:#f6ead4}
-.luxury-home .home-card span span{color:#8e877d}
-.luxury-home .home-card .arrow{color:#bfa16b}
 .luxury-home .home-foot{position:relative;z-index:2}
 .luxury-home .home-foot .tiny{color:#5e574e}
 
