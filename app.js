@@ -358,6 +358,47 @@ async function hydrateRestaurantWebsite(row,scope){
  }
 }
 
+async function hydrateRestaurantDetails(row,modal){
+ if(!row||!modal||!row.googlePlaceId)return;
+ const params=new URLSearchParams({mode:'details',placeId:String(row.googlePlaceId)});
+ try{
+  const response=await fetch('/api/restaurants?'+params.toString(),{cache:'no-store'});
+  if(!response.ok)return;
+  const data=await response.json();
+  if(!data?.ok)return;
+  if(data.name && row.name && normKey(data.name)!==normKey(row.name))return;
+  if(data.address)row.address=data.address;
+  if(data.phone)row.phone=data.phone;
+  if(data.website){
+   const website=safeExternalUrl(data.website);
+   if(website)row.website=website;
+  }
+  if(data.opening_hours)row.opening_hours=data.opening_hours;
+  if(typeof data.openNow==='boolean')row.openNow=data.openNow;
+  if(data.businessStatus)row.businessStatus=data.businessStatus;
+  const hoursSection=modal.querySelector('#restaurantDetailHours');
+  const hoursText=modal.querySelector('#restaurantDetailHoursText');
+  if(hoursText&&data.opening_hours)hoursText.textContent=String(data.opening_hours);
+  if(hoursSection&&data.opening_hours)hoursSection.classList.remove('hidden');
+  const phoneLink=modal.querySelector('#restaurantDetailPhone');
+  const phoneLabel=modal.querySelector('#restaurantDetailPhoneLabel');
+  if(phoneLink&&data.phone){
+   phoneLink.href=phoneHref(data.phone);
+   phoneLink.target='';
+   phoneLink.rel='';
+  }
+  if(phoneLabel&&data.phone)phoneLabel.textContent=String(data.phone);
+  const websiteLink=modal.querySelector('#restaurantDetailWebsite');
+  if(websiteLink&&row.website){
+   const url=safeExternalUrl(row.website);
+   if(url){
+    websiteLink.href=url;
+    websiteLink.title='Website';
+    websiteLink.setAttribute('aria-label','Open '+String(row.name||'restaurant')+' website');
+   }
+  }
+ }catch{}
+}
 function restaurantPhoneSearchUrl(row){
  const q=[row?.name,row?.address].filter(Boolean).join(' ').trim();
  return 'https://www.google.com/search?q='+encodeURIComponent((q||'restaurant')+' phone number');
@@ -439,8 +480,8 @@ function touchRestaurantPhotoMemoryCache(rowKey,data){
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='1005';
-const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v7';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='1007';
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v8';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
 const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
 const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1600;
@@ -488,6 +529,7 @@ async function getPersistentRestaurantPhoto(row){
 }
 async function putPersistentRestaurantPhoto(row,blob,attributions,source){
  try{
+  if(String(source||'').trim()==='google-places')return;
   const cache=await openRestaurantPhotoCache();
   if(!cache)return;
   const request=restaurantPhotoCacheRequest(row);
@@ -528,18 +570,7 @@ function knownRestaurantPhotoFallback(row){
 }
 function restaurantFallbackImage(row){
  const known=knownRestaurantPhotoFallback(row);
- if(known)return known;
- const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[]),...((typeof restaurantCuisineTags==='function')?restaurantCuisineTags(row):[])].filter(Boolean);
- // Restaurant cards should use restaurant-category photography, not meal-category photography.
- // These images are served through /api/image so the service worker can cache them for offline/repeat use.
- const restaurantMap={...REST_QUICK_IMAGES};
- for(const label of labels){
-  if(restaurantMap[label])return imageProxyUrl(restaurantMap[label]);
-  const normalized=String(label).trim().toLowerCase();
-  const found=Object.keys(restaurantMap).find(key=>key.toLowerCase()===normalized);
-  if(found)return imageProxyUrl(restaurantMap[found]);
- }
- return imageProxyUrl(REST_QUICK_IMAGES.American);
+ return known||'';
 }
 function restaurantPhotoEndpointUrl(row){
  if(!row)return '';
@@ -571,17 +602,7 @@ function restaurantImmediatePhoto(row){
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
  return cached?.url ? touchRestaurantPhotoMemoryCache(rowKey,cached).url : '';
 }
-function restaurantCardFallbackImage(row){
- const labels=[row?.category,row?.cuisine,...(Array.isArray(row?.quickCutTags)?row.quickCutTags:[])].filter(Boolean);
- const map=REST_QUICK_IMAGES;
- for(const label of labels){
-  if(map[label])return imageProxyUrl(map[label]);
-  const normalized=String(label).trim().toLowerCase();
-  const found=Object.keys(map).find(key=>key.toLowerCase()===normalized);
-  if(found)return imageProxyUrl(map[found]);
- }
- return imageProxyUrl(REST_QUICK_IMAGES.American);
-}
+function restaurantCardFallbackImage(){return '';}
 
 function decodePhotoAttributions(raw){
  const value=String(raw||'').trim();if(!value)return[];
@@ -613,7 +634,7 @@ async function loadRestaurantPhoto(row){
   pending=(async()=>{
    const stored=await getPersistentRestaurantPhoto(row);
    if(stored)return stored;
-   const res=await fetch(requestUrl,{cache:'force-cache'});
+   const res=await fetch(requestUrl,{cache:'no-store'});
    if(!res.ok){
     restaurantPhotoMissCache.set(rowKey,Date.now());
     throw new Error('Restaurant photo unavailable');
@@ -3733,6 +3754,7 @@ $('winName').textContent = hungry ? 'HUNGRY ☹' : item.name;
 const winImg = $('winImg');
 if (!winImg) return;
 winImg.classList.toggle('hungry-image', hungry);
+ if(!hungry)winImg.dataset.noGenericFallback='1';
 winImg.classList.toggle('hidden',hungry);
 const winnerBaseFallback=S.winnerType==='restaurant'?restaurantFallbackImage(item):HUNGRY_IMAGE;
 const winnerImage=imageProxyUrl(item?.image || item?.photo || item?.photoFallback || winnerBaseFallback);
@@ -3942,13 +3964,13 @@ const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="de
    (address?'<div class="detail-info-row detail-info-row-stack"><span>Location</span><strong>'+esc(address)+'</strong></div>':'')+
    (distance?'<div class="detail-info-row"><span>Distance</span><strong>'+esc(distance)+'</strong></div>':'')+
    '</div>';
- const hoursSection=hours?'<section class="detail-section"><div class="detail-section-title">Hours</div><p class="detail-body-copy detail-hours-copy">'+esc(hours)+'</p></section>':'';
+ const hoursSection='<section class="detail-section '+(hours?'':'hidden')+'" id="restaurantDetailHours"><div class="detail-section-title">Hours</div><p class="detail-body-copy detail-hours-copy" id="restaurantDetailHoursText">'+esc(hours)+'</p></section>';
  const contactRows='<div class="detail-info-list detail-contact-list">'+
-   '<a class="detail-info-row detail-info-row-link" href="'+esc(phoneHrefValue)+'" '+(detailPhone?'':'target="_blank" rel="noopener noreferrer')+'><span>Phone</span><strong>'+esc(phoneLabel)+'</strong><span class="detail-row-arrow">↗</span></a>'+
+   '<a class="detail-info-row detail-info-row-link" id="restaurantDetailPhone" href="'+esc(phoneHrefValue)+'" '+(detailPhone?'':'target="_blank" rel="noopener noreferrer')+'><span>Phone</span><strong id="restaurantDetailPhoneLabel">'+esc(phoneLabel)+'</strong><span class="detail-row-arrow">↗</span></a>'+
    '</div>';
  const aboutSection=about?'<section class="detail-section"><div class="detail-section-title">About</div><p class="detail-body-copy">'+esc(about)+'</p></section>':'';
  const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHideRestaurant" type="button" aria-label="Hide this restaurant"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Restaurant</span></button></div>';
- const body='<div class="detail-unified detail-restaurant"><div class="detail-hero detail-restaurant-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-restaurant-photo-key="'+esc(item.id||item.canonicalId||'')+'" data-final-fallback="'+esc(restaurantFallbackImage(item))+'" alt="'+esc(item.name)+'"><div class="restaurant-photo-credit" aria-live="polite"></div></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">RESTAURANT</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+'</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+infoRows+'</section>'+hoursSection+'<section class="detail-section"><div class="detail-section-title">Contact</div>'+contactRows+'</section>'+notesSection+'<section class="detail-utility-actions"><a class="detail-utility-action" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'">Website</a>'+callAction+directionsAction+'</section>'+hide+'</div>';
+ const body='<div class="detail-unified detail-restaurant"><div class="detail-hero detail-restaurant-hero"><img class="history-detail-photo" data-no-generic-fallback="1" src="'+esc(image)+'" data-restaurant-photo-key="'+esc(item.id||item.canonicalId||'')+'" data-final-fallback="'+esc(restaurantFallbackImage(item))+'" alt="'+esc(item.name)+'"><div class="restaurant-photo-credit" aria-live="polite"></div></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">RESTAURANT</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+'</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+infoRows+'</section>'+hoursSection+'<section class="detail-section"><div class="detail-section-title">Contact</div>'+contactRows+'</section>'+notesSection+'<section class="detail-utility-actions"><a class="detail-utility-action" id="restaurantDetailWebsite" data-restaurant-detail-website="1" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'">Website</a>'+callAction+directionsAction+'</section>'+hide+'</div>';
  const modal=openModal('detailsModal','Restaurant Details',body);
  bindRestaurantPhotoPinch(modal.querySelector('.detail-restaurant-hero img'));
  bindImageFallback('#detailsModal img',image,restaurantFallbackImage(item));
