@@ -63,7 +63,6 @@
 .restaurant-card-stack{margin-bottom:0}
 .rest-stage>.rest-card-extra,.rest-stage>.actions{position:relative;z-index:3}
 
-.home-card{background:linear-gradient(145deg,#171717,#121212);box-shadow:0 12px 32px #0006}
 .home-icon{background:#202020;border:1px solid #2b2b2b}
 .home h1{max-width:8em}
 @media(max-width:390px){
@@ -148,7 +147,6 @@
 .home .brand-mark{margin-left:0}
 .home{padding-top:5vh}
 .home-actions{margin-top:6vh}
-.home-card{border-radius:22px}
 .home-icon{border-radius:50%}
 
 @media(max-width:390px){
