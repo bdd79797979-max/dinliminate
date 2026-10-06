@@ -10619,3 +10619,62 @@ body{-webkit-text-size-adjust:100%;}
 .app.home-active #home{
   background:transparent !important;
 }
+
+
+/* CP1056 — Restaurant Hours filter.
+   Search, Cuisine, and Hours share the existing discovery-rail language.
+   Hours choices are local filter chips; selecting them never opens a Details request. */
+#restaurant .restaurant-hours-toggle.is-active{
+  color:#d9bd7b!important;
+  text-shadow:0 0 12px rgba(214,183,120,.14)!important;
+}
+#restaurant .restaurant-hours-quick{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:5px 0 2px!important;
+  margin:0!important;
+  overflow-x:auto!important;
+  scrollbar-width:none!important;
+  overscroll-behavior-x:contain;
+}
+#restaurant .restaurant-hours-quick::-webkit-scrollbar{display:none}
+#restaurant .restaurant-hours-quick.is-rail-collapsed{
+  display:none!important;
+}
+#restaurant .restaurant-hours-chip{
+  flex:0 0 auto!important;
+  min-height:32px!important;
+  height:32px!important;
+  padding:0 12px!important;
+  border:1px solid #302c27!important;
+  border-radius:12px!important;
+  background:linear-gradient(145deg,#191816,#121211)!important;
+  color:#d7cec1!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+  font-size:9px!important;
+  font-weight:850!important;
+  letter-spacing:.02em!important;
+  transition:transform .14s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease,background .18s ease!important;
+}
+#restaurant .restaurant-hours-chip:hover{
+  border-color:#4b412f!important;
+  color:#eee5d7!important;
+}
+#restaurant .restaurant-hours-chip:active{
+  transform:translateY(1px) scale(.985)!important;
+}
+#restaurant .restaurant-hours-chip.is-active{
+  border-color:#f0e2bf!important;
+  background:#171717!important;
+  color:#f4ecd9!important;
+  box-shadow:0 0 0 1px rgba(214,183,120,.42),0 0 12px rgba(214,183,120,.10)!important;
+}
+@media(max-width:390px){
+  #restaurant .restaurant-hours-quick{gap:6px!important;padding-top:4px!important}
+  #restaurant .restaurant-hours-chip{min-height:29px!important;height:29px!important;padding:0 10px!important;font-size:8.5px!important;border-radius:11px!important}
+}
+@media(max-width:340px){
+  #restaurant .restaurant-hours-quick{gap:5px!important}
+  #restaurant .restaurant-hours-chip{min-height:27px!important;height:27px!important;padding:0 9px!important;font-size:8px!important}
+}
