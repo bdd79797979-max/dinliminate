@@ -10646,3 +10646,20 @@ html.dinliminate-visual-mobile #tutorialLayer{
   color:#77736c!important;
   opacity:1!important;
 }
+
+
+/* CP1068 — Meal Times matches Cuisine: quiet by default, white only while opened/tapped. */
+#food #foodMealTimeToggle{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
+#food #foodMealTimeToggle:hover,
+#food #foodMealTimeToggle:focus-visible,
+#food #foodMealTimeToggle.is-open{
+  color:#fffaf0!important;
+  text-shadow:0 0 14px rgba(213,177,112,.20)!important;
+}
+#food #foodMealTimeToggle.is-active{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+}
