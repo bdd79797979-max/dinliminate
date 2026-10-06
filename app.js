@@ -1195,7 +1195,7 @@ function tutorialStepsForScreen(screen){
   {target:'#restChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
-   {target:'#restaurantHoursToggle',title:'Hours',body:'Show restaurants that are open, closed, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
+   {target:'#restaurantHoursToggle',title:'Open Now',body:'Show restaurants that are open now, closed now, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
   {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
   {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this tutorial bubble to continue through the Meals side of Dinliminate.',action:'enter-food'}
@@ -1579,11 +1579,11 @@ function bindMaybeDeckToggle(kind){
 function renderRestaurantHours(){
  const toggle=$('restaurantHoursToggle'),chips=$('restaurantHoursQuick');if(!toggle||!chips)return;
  const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all',collapsed=!!S.restaurantHoursCollapsed;
- const labels={all:'All',open:'Open',closed:'Closed'};
+ const labels={all:'All',open:'Open Now',closed:'Closed Now'};
  chips.innerHTML=['all','open','closed'].map(value=>'<button class="chip restaurant-hours-chip'+(mode===value?' is-active':'')+'" data-restaurant-hours="'+value+'" type="button" aria-pressed="'+(mode===value?'true':'false')+'">'+labels[value]+'</button>').join('');
  chips.classList.toggle('is-rail-collapsed',collapsed);chips.setAttribute('aria-hidden',String(collapsed));
  toggle.classList.toggle('is-open',!collapsed);toggle.classList.toggle('is-active',mode!=='all');toggle.setAttribute('aria-expanded',String(!collapsed));
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Hours'+(mode!=='all'?' — '+labels[mode]:''));toggle.title=(collapsed?'Show ':'Hide ')+'Hours'+(mode!=='all'?' — '+labels[mode]:'');
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:''));toggle.title=(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:'');
  chips.querySelectorAll('[data-restaurant-hours]').forEach(btn=>btn.onclick=()=>{S.restaurantHours=['all','open','closed'].includes(btn.dataset.restaurantHours)?btn.dataset.restaurantHours:'all';S.restaurantIndex=0;S.restaurantMaybeRound=false;drawRestaurants();save();});
 }
 function bindRestaurantHours(){
