@@ -18,7 +18,7 @@ Google supplies on-demand detail enrichment first. Missing website, phone, weekl
 
 ### Google protection
 
-Independent hard stops: Photos 900; Text Search Pro 4500; Nearby Search Pro 4500; Text Search Enterprise 900; Place Details Enterprise 900; Place Details Essentials 9000. Billing month follows America/Los_Angeles. Unknown durable budget tracking fails closed.
+Independent hard stops: Photos 900; Text Search Pro 4500; Nearby Search Pro 4500; Text Search Enterprise 900; Place Details Enterprise 900; Place Details Essentials 9000. Billing month follows America/Los_Angeles. Unknown durable budget tracking fails closed. A central GOOGLE_MASTER_ENABLED switch can disable all Google requests without disabling the non-Google restaurant fallbacks.
 
 ### Performance
 
