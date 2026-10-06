@@ -10495,5 +10495,54 @@ html.dinliminate-visual-mobile .app{
   .app.home-active #home .home-icon-action{width:64px!important;min-width:64px!important;height:40px!important;min-height:40px!important}
 }
 
+/* CP1105 — Home entry windows: clear surface, white label + arrow only.
+   Keep the existing door positions and full-window tap targets unchanged. */
+@media only screen and (max-width:600px){
+  .app.home-active #home .home-card-choice,
+  .app.home-active #home .home-card-choice:hover,
+  .app.home-active #home .home-card-choice:focus,
+  .app.home-active #home .home-card-choice:focus-visible,
+  .app.home-active #home .home-card-choice:active,
+  .app.home-active #home .home-card-choice.is-pressed{
+    background:transparent!important;
+    background-color:transparent!important;
+    background-image:none!important;
+    border-color:transparent!important;
+    box-shadow:none!important;
+  }
 
+  .app.home-active #home .home-card-choice .home-card-copy strong{
+    color:#fff!important;
+    text-shadow:none!important;
+  }
 
+  .app.home-active #home .home-card-choice .arrow{
+    display:inline-block!important;
+    position:absolute!important;
+    top:50%!important;
+    right:12px!important;
+    transform:translateY(-50%)!important;
+    margin:0!important;
+    padding:0!important;
+    background:transparent!important;
+    color:#fff!important;
+    border:0!important;
+    box-shadow:none!important;
+    text-shadow:none!important;
+    font-size:24px!important;
+    line-height:1!important;
+    font-weight:400!important;
+    opacity:1!important;
+  }
+
+  .app.home-active #home .restaurant-choice .arrow{
+    right:12px!important;
+  }
+}
+
+@media only screen and (max-width:390px){
+  .app.home-active #home .home-card-choice .arrow{
+    right:10px!important;
+    font-size:22px!important;
+  }
+}
