@@ -1400,13 +1400,21 @@ if(mode==='search'){
    // while Photon performs the 100-mile ring expansion in parallel.
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
-     withinBudget(photonWidePlaces(lat,lon,radius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out')
+     withinBudget(photonWidePlaces(lat,lon,radius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
+     withinBudget(googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
    ];
    const settled=await Promise.allSettled(wideTasks);
    const arc=settled[0],wp=settled[1];
    primaryBatch={
      arcgis:arc,
-     widePhoton:wp
+     widePhoton:wp,
+     google:await (async()=>{
+       try{
+         return {status:'fulfilled',value:await wideTasks[2]};
+       }catch(error){
+         return {status:'rejected',reason:error};
+       }
+     })()
    };
    fastProvider='wide';
    const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
@@ -1434,6 +1442,11 @@ if(mode==='search'){
      widePhotonResult=primaryBatch.widePhoton;
    }else if(primaryBatch?.widePhoton?.reason){
      widePhotonResult={status:'rejected',reason:primaryBatch.widePhoton.reason};
+   }
+   if(primaryBatch?.google?.status==='fulfilled'){
+     googleResult=primaryBatch.google;
+   }else if(primaryBatch?.google?.reason){
+     googleResult={status:'rejected',reason:primaryBatch.google.reason};
    }
  }else if(Array.isArray(primaryBatch)){
    photonResult=primaryBatch[0]||photonResult;
