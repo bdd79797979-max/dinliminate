@@ -10408,3 +10408,28 @@ body:has(.app.home-active)::after{
     font-size:21px!important;
   }
 }
+
+
+/* CP1122 — tiny Home choice nudge + refreshed D-logo app icon.
+   Move only the two Home choice groups a few pixels down and outward;
+   keep the rest of Home untouched. */
+.app.home-active #home #foodStart{
+  transform:translateX(-4px)!important;
+}
+.app.home-active #home #restStart{
+  transform:translateX(4px)!important;
+}
+.app.home-active #home .home-choice-zone{
+  top:calc(42% + 3px)!important;
+}
+@media(max-width:390px){
+  .app.home-active #home #foodStart{
+    transform:translateX(-3px)!important;
+  }
+  .app.home-active #home #restStart{
+    transform:translateX(3px)!important;
+  }
+  .app.home-active #home .home-choice-zone{
+    top:calc(42% + 3px)!important;
+  }
+}
