@@ -36,7 +36,7 @@ assert('mobile screens cannot inherit desktop canvas width',
 );
 
 assert('viewport script listens to visualViewport resize',
-viewport.includes('window.visualViewport?.addEventListener')&&viewport.includes('root.classList.toggle('dinliminate-visual-mobile''));
+viewport.includes('window.visualViewport?.addEventListener')&&viewport.includes("root.classList.toggle('dinliminate-visual-mobile'")
 assert('diagnosis measures the real visible viewport',
 app.includes('window.visualViewport?.width')&&app.includes('window.visualViewport?.height')&&
  app.includes('appEl?.getBoundingClientRect?.()')&&app.includes('activeScreen?.getBoundingClientRect?.()')
