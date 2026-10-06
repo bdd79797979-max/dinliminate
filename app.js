@@ -90,6 +90,8 @@ restaurantCuts:new Set(),
 restaurantActions:[],
 restaurantMaybeRound:false,
 restaurantQuery:'',
+restaurantHours:'all',
+restaurantHoursCollapsed:true,
 location:null,
 locationSource:'none',
 restaurantSearchLatencyMs:0,
@@ -979,7 +981,7 @@ cutCats:[...S.cutCats], foodCuts:[...S.foodCuts], maybe:[...S.maybe],
 pool:S.pool, index:S.index, foodActions:S.foodActions,
 restaurantPool:S.restaurantPool, restaurantIndex:S.restaurantIndex,
 restaurantCuts:[...S.restaurantCuts], restaurantActions:S.restaurantActions,
-restaurantQuery:S.restaurantQuery, location:S.location, locationSource:S.locationSource,
+restaurantQuery:S.restaurantQuery, restaurantHours:String(S.restaurantHours||'all'), restaurantHoursCollapsed:!!S.restaurantHoursCollapsed, location:S.location, locationSource:S.locationSource,
 saved:S.saved, winnerItem:S.winnerItem, winnerType:S.winnerType, schemaVersion:STORAGE_VERSION, deleted:[...(S.deleted||[])], deletedCustomMeals:S.deletedCustomMeals||[],
 restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
 mealTimeSettings:{custom:(S.mealTimeSettings?.custom||[]).map(x=>({id:String(x.id),name:String(x.name||'').trim()})).filter(x=>x.name),names:{...(S.mealTimeSettings?.names||{})},order:[...(S.mealTimeSettings?.order||[])],disabled:[...((S.mealTimeSettings?.disabled instanceof Set)?S.mealTimeSettings.disabled:new Set())]},
@@ -1061,6 +1063,8 @@ S.winnerType = d.winnerType || 'food';
 S.restaurantSearchOrigin = d.restaurantSearchOrigin && Number.isFinite(Number(d.restaurantSearchOrigin.lat)) && Number.isFinite(Number(d.restaurantSearchOrigin.lon)) ? {lat:Number(d.restaurantSearchOrigin.lat),lon:Number(d.restaurantSearchOrigin.lon)} : null;
 S.restaurantSearchKey = String(d.restaurantSearchKey||'');
 S.locationSource = String(d.locationSource||'none');
+S.restaurantHours = ['all','open','closed'].includes(String(d.restaurantHours||'all')) ? String(d.restaurantHours||'all') : 'all';
+S.restaurantHoursCollapsed = Object.prototype.hasOwnProperty.call(d,'restaurantHoursCollapsed') ? !!d.restaurantHoursCollapsed : true;
 S.locationFreshAt = Number.isFinite(Number(d.locationFreshAt)) ? Number(d.locationFreshAt) : null;
 S.quickCutsCollapsed = {food:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'food') ? !!d.quickCutsCollapsed.food : true,restaurant:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'restaurant') ? !!d.quickCutsCollapsed.restaurant : true};
 S.mealTimeCutsCollapsed = Object.prototype.hasOwnProperty.call(d,'mealTimeCutsCollapsed') ? !!d.mealTimeCutsCollapsed : true;
@@ -1190,7 +1194,8 @@ function tutorialStepsForScreen(screen){
   {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
   {target:'#restChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
-  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle']},
+  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
+   {target:'#restaurantHoursToggle',title:'Hours',body:'Show restaurants that are open, closed, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
   {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
   {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this tutorial bubble to continue through the Meals side of Dinliminate.',action:'enter-food'}
@@ -1571,6 +1576,21 @@ function bindMaybeDeckToggle(kind){
  };
  renderMaybeDeckToggle(kind);
 }
+function renderRestaurantHours(){
+ const toggle=$('restaurantHoursToggle'),chips=$('restaurantHoursQuick');if(!toggle||!chips)return;
+ const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all',collapsed=!!S.restaurantHoursCollapsed;
+ const labels={all:'All',open:'Open',closed:'Closed'};
+ chips.innerHTML=['all','open','closed'].map(value=>'<button class="chip restaurant-hours-chip'+(mode===value?' is-active':'')+'" data-restaurant-hours="'+value+'" type="button" aria-pressed="'+(mode===value?'true':'false')+'">'+labels[value]+'</button>').join('');
+ chips.classList.toggle('is-rail-collapsed',collapsed);chips.setAttribute('aria-hidden',String(collapsed));
+ toggle.classList.toggle('is-open',!collapsed);toggle.classList.toggle('is-active',mode!=='all');toggle.setAttribute('aria-expanded',String(!collapsed));
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Hours'+(mode!=='all'?' — '+labels[mode]:''));toggle.title=(collapsed?'Show ':'Hide ')+'Hours'+(mode!=='all'?' — '+labels[mode]:'');
+ chips.querySelectorAll('[data-restaurant-hours]').forEach(btn=>btn.onclick=()=>{S.restaurantHours=['all','open','closed'].includes(btn.dataset.restaurantHours)?btn.dataset.restaurantHours:'all';S.restaurantIndex=0;S.restaurantMaybeRound=false;drawRestaurants();save();});
+}
+function bindRestaurantHours(){
+ const toggle=$('restaurantHoursToggle');if(!toggle)return;
+ toggle.onclick=event=>{event.preventDefault();event.stopPropagation();const opening=!!S.restaurantHoursCollapsed;S.restaurantHoursCollapsed=!opening;if(opening){S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};collapseRestaurantSearch(false);}renderQuickCutsCollapse('restaurant');renderRestaurantSearchControl();renderRestaurantHours();save();};
+ renderRestaurantHours();
+}
 function renderQuickCutsCollapse(kind){
  const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
  const toggle=kind==='food'?document.getElementById('foodQuickToggle'):section?.querySelector('.quick-cuts-collapse-toggle');
@@ -1583,6 +1603,7 @@ function renderQuickCutsCollapse(kind){
  }else{
   section.classList.toggle('is-collapsed',collapsed);
  }
+ if(kind==='restaurant' && !collapsed){S.restaurantHoursCollapsed=true;const hours=$('restaurantHoursQuick');if(hours){hours.classList.add('is-rail-collapsed');hours.setAttribute('aria-hidden','true');}const hoursToggle=$('restaurantHoursToggle');if(hoursToggle){hoursToggle.classList.remove('is-open');hoursToggle.setAttribute('aria-expanded','false');hoursToggle.setAttribute('aria-label','Show Hours');hoursToggle.title='Show Hours';}}
  toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
  toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Cuisine');
@@ -1598,7 +1619,8 @@ function bindQuickCutsCollapse(kind){
   event.stopPropagation();
   S.quickCutsCollapsed = {...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
   if(kind==='food' && !S.quickCutsCollapsed.food){S.mealTimeCutsCollapsed=true;renderMealTimeCuts();}
-  if(kind==='restaurant' && !S.quickCutsCollapsed.restaurant) collapseRestaurantSearch(false);
+  if(kind==='restaurant' && !S.quickCutsCollapsed.restaurant){collapseRestaurantSearch(false);S.restaurantHoursCollapsed=true;}
+  if(kind==='restaurant') renderRestaurantHours();
   renderQuickCutsCollapse(kind);
   save();
  };
@@ -2691,6 +2713,38 @@ function restaurantMatchesQuery(row){
  return q.split(/\s+/).filter(Boolean).every(term=>restaurantSearchTermMatches(row,term,hay));
 }
 
+function restaurantHoursState(row){
+  if(typeof row?.openNow==='boolean')return row.openNow?'open':'closed';
+  const status=String(row?.businessStatus||'').toUpperCase();
+  if(status==='CLOSED_PERMANENTLY'||status==='CLOSED_TEMPORARILY')return 'closed';
+  const raw=String(row?.opening_hours||'').trim();
+  if(!raw)return 'unknown';
+  if(/\\b24\\s*\\/\\s*7\\b/i.test(raw))return 'open';
+  const now=new Date(),day=now.getDay(),minute=now.getHours()*60+now.getMinutes(),days=['Su','Mo','Tu','We','Th','Fr','Sa'],today=days[day];
+  let applicable=false,sawClosed=false;
+  const dayMatches=selector=>{
+    if(!selector)return true;
+    const normalized=selector.replace(/[–—]/g,'-');
+    const ranges=[...normalized.matchAll(/\\b(Mo|Tu|We|Th|Fr|Sa|Su)\\s*-\\s*(Mo|Tu|We|Th|Fr|Sa|Su)\\b/g)];
+    for(const m of ranges){const a=days.indexOf(m[1]),b=days.indexOf(m[2]);if(a>=0&&b>=0&&(a<=b?day>=a&&day<=b:day>=a||day<=b))return true;}
+    return normalized.split(/[^A-Za-z]+/).some(x=>x===today);
+  };
+  for(const clause of raw.split(';').map(x=>x.trim()).filter(Boolean)){
+    const tm=clause.match(/\\d{1,2}(?::\\d{2})?\\s*-\\s*\\d{1,2}(?::\\d{2})?/);
+    const selector=tm?clause.slice(0,tm.index).trim():'';
+    if(!dayMatches(selector))continue;
+    applicable=true;
+    if(/\\b(?:off|closed)\\b/i.test(clause)){sawClosed=true;continue;}
+    const intervals=[...clause.matchAll(/(\\d{1,2})(?::(\\d{2}))?\\s*-\\s*(\\d{1,2})(?::(\\d{2}))?/g)];
+    for(const m of intervals){const start=Number(m[1])*60+Number(m[2]||0),end=Number(m[3])*60+Number(m[4]||0);if(start<=end?minute>=start&&minute<=end:minute>=start||minute<=end)return 'open';}
+  }
+  return applicable&&sawClosed?'closed':'unknown';
+}
+function restaurantHoursMatches(row){
+  const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all';
+  return mode==='all'||restaurantHoursState(row)===mode;
+}
+function restaurantPoolHourFiltered(){return restaurantPoolBase().filter(restaurantHoursMatches);}
 function restaurantChoiceIndex(rows,start,keepState=false){
  const len=rows.length;if(!len)return -1;
  for(let step=0;step<len;step++){const i=(start+step)%len;if(keepState?!!rows[i]._maybe:!rows[i]._maybe)return i;}
@@ -2704,14 +2758,14 @@ function restaurantPoolBase(){
  });
 }
 function restaurantPoolFiltered(){
- const base=restaurantPoolBase().filter(row=>!row._photoUnavailable);
+ const base=restaurantPoolHourFiltered().filter(row=>!row._photoUnavailable);
  return S.maybeDeck ? base.filter(row=>row._maybe) : base;
 }
 function updateRestaurantStatus(){
  const el=$('status'); if(!el)return;
  const radius=Math.min(100,Number($('radius')?.value)||10);
  const base=restaurantPoolBase();
- const total=base.length,degraded=S.restaurantSearchDegraded;
+ const total=restaurantPoolHourFiltered().length,degraded=S.restaurantSearchDegraded;
  if(!total){
   el.textContent=degraded?'Restaurant sources are unavailable. Try again.':'No restaurants match the current filters.';
       return;
@@ -3154,6 +3208,8 @@ S.restaurantActions = [];
 S.restaurantMaybeRound = false;
 S.maybeDeck = false;
 S.restaurantQuery = '';
+S.restaurantHours = 'all';
+S.restaurantHoursCollapsed = true;
 S.restaurantCuts.clear();
 for (const row of S.restaurantPool || []) {
 row._cut = false;
@@ -3186,7 +3242,7 @@ updateRestaurantStatus();
 renderMaybeDeckToggle('restaurant');
 if (!rows.length) {
 const hasResults=!!S.restaurantPool.length;
-const message=hasResults ? 'No restaurants match the current cuts.' : (S.restaurantSearchDegraded ? 'Some restaurant sources are unavailable.' : (S.location ? 'No restaurants found in this radius.' : 'Set a location, then find restaurants.'));
+const message=hasResults ? (S.restaurantHours!=='all' && restaurantPoolBase().length ? 'No restaurants match the Hours filter.' : 'No restaurants match the current filters.') : (S.restaurantSearchDegraded ? 'Some restaurant sources are unavailable.' : (S.location ? 'No restaurants found in this radius.' : 'Set a location, then find restaurants.'));
 const actions = (S.location || hasResults) ? '<div class="empty-actions">'+(hasResults?'<button class="secondary" id="clearRestaurantSearch">Clear filter</button>':'')+(S.location?'<button class="premium-retry" id="retryRestaurantSearch">Retry Search</button>':'')+'</div>' : '';
 $('restStage').innerHTML = '<div class="empty"><b>Hungry.</b><span>'+esc(message)+'</span>'+actions+'</div>';
 if($('retryRestaurantSearch')) $('retryRestaurantSearch').onclick=searchRestaurants;
@@ -3375,6 +3431,7 @@ function closeRestaurantSearch(){
  save();
 }
 function bindRestaurantTools(){
+ bindRestaurantHours();
  const searchButton=$('restaurantSearchToggle');
  if(searchButton)searchButton.onclick=()=>{
    const box=$('restaurantSearchBox');
@@ -3382,7 +3439,9 @@ function bindRestaurantTools(){
    const willOpen=box.classList.contains('hidden');
    if(willOpen){
      S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};
+     S.restaurantHoursCollapsed=true;
      renderQuickCutsCollapse('restaurant');
+     renderRestaurantHours();
      box.classList.remove('hidden');
      const input=$('restaurantQuery');
      if(input)input.value=S.restaurantQuery||'';
@@ -5551,7 +5610,7 @@ function familyChooseNormalType(type){
 }
 function familyBuildNormalSnapshot(type){
  const raw=type==='meal'?S.pool.slice():restaurantPoolFiltered().slice();
- return{pool:raw.map(x=>({id:String(x.id||''),name:String(x.name||''),category:String(x.category||x.cuisine||''),cuisine:String(x.cuisine||''),image:String(x.image||x.photo||''),address:String(x.address||''),website:String(x.website||''),phone:String(x.phone||''),distance:Number.isFinite(Number(x.distance))?Number(x.distance):null})).filter(x=>x.id&&x.name),hostExcluded:[],location:S.location?{lat:Number(S.location.lat),lon:Number(S.location.lon)}:null,radius:Number($('radius')?.value||10),searchTerm:String(S.restaurantQuery||''),openState:'all',quickCuts:type==='restaurant'?[...S.restaurantCuts]:[],mealTimes:type==='meal'?[...S.mealTimeFilters]:[],compareBoth:S.familyCompareBothMode?{mode:'compare_both',track:S.familyCompareBothMode,groupId:S.familyCompareBothGroupId,mealWinner:S.familyCompareBothMealWinner||null}:null};
+ return{pool:raw.map(x=>({id:String(x.id||''),name:String(x.name||''),category:String(x.category||x.cuisine||''),cuisine:String(x.cuisine||''),image:String(x.image||x.photo||''),address:String(x.address||''),website:String(x.website||''),phone:String(x.phone||''),distance:Number.isFinite(Number(x.distance))?Number(x.distance):null})).filter(x=>x.id&&x.name),hostExcluded:[],location:S.location?{lat:Number(S.location.lat),lon:Number(S.location.lon)}:null,radius:Number($('radius')?.value||10),searchTerm:String(S.restaurantQuery||''),openState:String(S.restaurantHours||'all'),quickCuts:type==='restaurant'?[...S.restaurantCuts]:[],mealTimes:type==='meal'?[...S.mealTimeFilters]:[],compareBoth:S.familyCompareBothMode?{mode:'compare_both',track:S.familyCompareBothMode,groupId:S.familyCompareBothGroupId,mealWinner:S.familyCompareBothMealWinner||null}:null};
 }
 async function familyStartRoundFromNormal(type){
  const s=familySessionRead();if(!s?.token||s.member?.role!=='host')return;const status=type==='meal'?'foodFamilyNormalStatus':'restaurantFamilyNormalStatus',btn=type==='meal'?'foodFamilyNormalStart':'restaurantFamilyNormalStart',time=type==='meal'?'foodFamilyNormalTime':'restaurantFamilyNormalTime';
