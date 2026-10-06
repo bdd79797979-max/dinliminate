@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1086,
-  "sourceBranch": "cp1086-automated-rc",
+  "build": 1087,
+  "sourceBranch": "cp1087-iphone-certification",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1086",
-  "deploymentTrigger": "CP1086-automated-rc",
+  "checkpoint": "CP1087",
+  "deploymentTrigger": "CP1087-iphone-certification",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -20,5 +20,6 @@
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
   "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
-  "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred"
+  "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
+  "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis"
 }
