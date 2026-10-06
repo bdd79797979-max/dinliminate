@@ -63,7 +63,7 @@ function targetDate(v) {
   if (Number.isNaN(d.getTime())) fail('INVALID_DATE', 'Invalid dinner time.');
   return d;
 }
-function sanitizeCompareItem(item){return{id:String(item?.id||'').slice(0,160),name:String(item?.name||'').slice(0,160),category:String(item?.category||'').slice(0,80),cuisine:String(item?.cuisine||'').slice(0,120),image:String(item?.image||item?.photo||'').slice(0,2000),address:String(item?.address||'').slice(0,500),website:String(item?.website||'').slice(0,1200),phone:String(item?.phone||'').slice(0,100),distance:Number.isFinite(Number(item?.distance))?Number(item.distance):null};}
+function sanitizeCompareItem(item){return{id:String(item?.id||'').slice(0,160),name:String(item?.name||'').slice(0,160),category:String(item?.category||'').slice(0,80),cuisine:String(item?.cuisine||'').slice(0,120),image:safeHttpUrl(item?.image||item?.photo||'',2000),address:String(item?.address||'').slice(0,500),website:safeHttpUrl(item?.website||'',1200),phone:String(item?.phone||'').slice(0,100),distance:Number.isFinite(Number(item?.distance))?Number(item.distance):null};}
 function sanitizeSnapshot(input, type) {
   const raw = input && typeof input === 'object' ? input : {};
   const pool = Array.isArray(raw.pool) ? raw.pool.slice(0, 150) : [];
@@ -73,9 +73,9 @@ function sanitizeSnapshot(input, type) {
       name: String(item && item.name || '').slice(0, 160),
       category: String(item && item.category || '').slice(0, 80),
       cuisine: String(item && item.cuisine || '').slice(0, 120),
-      image: String(item && item.image || '').slice(0, 2000),
+      image: safeHttpUrl(item && item.image || '', 2000),
       address: String(item && item.address || '').slice(0, 500),
-      website: String(item && item.website || '').slice(0, 1200),
+      website: safeHttpUrl(item && item.website || '', 1200),
       phone: String(item && item.phone || '').slice(0, 100),
       distance: Number.isFinite(Number(item && item.distance)) ? Number(item.distance) : null
     };
