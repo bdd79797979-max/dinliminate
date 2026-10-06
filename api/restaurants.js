@@ -1549,7 +1549,7 @@ if(mode==='search'){
   // remain in the lower-cost discovery tier; Details requests the Enterprise
   // fields only when the user actually opens a restaurant.
   const googleContactOut={rows:[],errors:[]};
-  const hoursTimeZone=await Promise.race([hoursTimezonePromise,new Promise(resolve=>setTimeout(()=>resolve(''),650))]).catch(()=>'​');
+  const hoursTimeZone=await Promise.race([hoursTimezonePromise,new Promise(resolve=>setTimeout(()=>resolve(''),650))]).catch(()=>'');
   const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
    const distance=miles(lat,lon,n(r.lat),n(r.lon));
    return {...r,distance};
