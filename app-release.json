@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1079,
-  "sourceBranch": "cp1079-restaurant-photo-certification",
-  "checkpoint": "CP1079",
-  "deploymentTrigger": "CP1079-restaurant-photo-certification",
+  "build": 1080,
+  "sourceBranch": "cp1080-restaurant-hours-reliability",
+  "checkpoint": "CP1080",
+  "deploymentTrigger": "CP1080-restaurant-hours-reliability",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -21,5 +21,6 @@
   "googleBudgetTracker": "single durable Neon SKU tracker; legacy photo usage migrated into place-photo",
   "googleUsageEndpoint": "/api/google-usage (read-only; Used/Cap/Remaining/%/status)",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
-  "restaurantPhotoCertification": "Google exact name+address+location validation; central place-photo quota guard; no generic/neutral fallback"
+  "restaurantPhotoCertification": "Google exact name+address+location validation; central place-photo quota guard; no generic/neutral fallback",
+  "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing"
 }
