@@ -11,19 +11,19 @@
   "description": "Meal decisions without the endless scrolling.",
   "icons": [
     {
-      "src": "./icon-512.png?v=1092",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./apple-touch-icon.png?v=1092",
-      "sizes": "180x180",
-      "type": "image/png",
+      "src": "./logo.svg?v=1122",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./icon.svg?v=1092",
+      "src": "./icon-512.png?v=1122",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon.svg?v=1122",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
