@@ -8,5 +8,8 @@
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "scripts": {
+    "test:rc": "node qa/launch-rc.cjs"
   }
 }
