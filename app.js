@@ -4069,9 +4069,29 @@ requestAnimationFrame(()=>{
  modal.classList.remove('modal-opening');
 });
 let closed=false;
+const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].includes(id);
+const returnToMenuWithoutFlash=()=>{
+ const drawer=$('drawer'),drawerBg=$('drawerBg');
+ // Make the destination menu fully visible before removing the modal/backdrop.
+ // This prevents the underlying Meal/Restaurant/Home screen from ever being
+ // exposed for a frame while a utility modal hands back to the main drawer.
+ drawer?.classList.remove('hidden');
+ drawerBg?.classList.remove('hidden');
+ drawer?.classList.add('is-open');
+ drawerBg?.classList.add('is-open');
+ ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+};
 const close=()=>{
  if(closed)return;
  closed=true;
+ if(isDrawerUtilityModal){
+  returnToMenuWithoutFlash();
+  modal.remove();
+  bg.remove();
+  if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
+  if(id==='settingsModal')removeFoodOverlays();
+  return;
+ }
  modal.classList.remove('modal-open');
  modal.classList.add('modal-closing');
  bg.classList.remove('modal-bg-open');
@@ -4081,8 +4101,6 @@ const close=()=>{
   if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
   if(id==='settingsModal')removeFoodOverlays();
   if(S.screen&&$(S.screen))show(S.screen);
-   // Primary pages opened from the main drawer return to that drawer when exited.
-   if(['manageFoodsModal','historyModal','settingsModal'].includes(id))requestAnimationFrame(()=>openDrawer());
  },150);
 };
 bg.onclick=close;
