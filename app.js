@@ -34,7 +34,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '1055';
+let APP_BUILD = '1056';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -5001,8 +5001,8 @@ async function appDiagnosisView(existingModal){
    const restTaxonomy=Array.isArray(REST_QUICK)?REST_QUICK:[];
    const expectedRest=['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast'];
    expectedRest.every(x=>restTaxonomy.includes(x))?pass('restaurant','Restaurant Cuisine Cuts','Restaurant Cuisine Cuts include Fast Food and the current cuisine/category taxonomy.'):fail('restaurant','Restaurant Cuisine Cuts','The Restaurant taxonomy is missing one or more required categories.','Expected Fast Food, Burgers, Pizza, Mexican, American, Italian, Asian, BBQ, Seafood, Breakfast.');
-   const openAllPresent=!!document.querySelector('#restaurant [data-filter="open"], #restaurant [data-restaurant-filter="open"]')&&!!document.querySelector('#restaurant [data-filter="all"], #restaurant [data-restaurant-filter="all"]');
-   openAllPresent?info('restaurant','Open / All filter','Open and All controls are available in the current shell.','All is the inclusive state for open, unknown, and closed results.'):info('restaurant','Open / All filter','Open / All controls are intentionally hidden for now.','The hour-state logic remains available without exposing the filter UI.');
+   const hoursControl=!!document.getElementById('restaurantHoursToggle');
+   hoursControl?pass('restaurant','Restaurant Hours filter','Search, Cuisine, and Hours are available on the Restaurant discovery rail.','Hours offers All / Open / Closed and filters the loaded pool locally without opening Restaurant Details.'):fail('restaurant','Restaurant Hours filter','The Restaurant Hours control is missing from the current shell.','Expected Search — Cuisine — Hours on the discovery rail.');
    const freshPoolSource=typeof searchRestaurants==='function'&&typeof restaurantPoolBase==='function';
    freshPoolSource?pass('restaurant','Fresh restaurant result pool','Current search results are filtered from the active restaurant pool.','Cuisine Cuts and search work from the current loaded result pool rather than a separate stale base list.'):fail('restaurant','Fresh restaurant result pool','The active restaurant pool functions could not be confirmed.');
    const deDupSource=typeof dedupeRestaurantPool==='function'&&typeof diagnosisRestaurantDuplicates==='function';
