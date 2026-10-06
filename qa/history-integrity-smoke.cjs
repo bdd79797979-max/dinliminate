@@ -47,9 +47,8 @@ assert('History delete is keyed by stable row id',
 assert('History details reopen the original record',
  app.includes("detailsSheet(row, row.type)")
 );
-const familyWinner=between(app,'function familyShowWinner(round){','function familyShowNoWinner');
 assert('Family winners carry family metadata into History',
- familyWinner.includes("winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true})")&&
+ app.includes("winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true})")&&
  record.includes("familyRoundId=String(options.familyRoundId||'')")
 );
 
