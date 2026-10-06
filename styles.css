@@ -11074,3 +11074,108 @@ html.dinliminate-visual-mobile .app{
     top:41%!important;
   }
 }
+
+
+/* CP1076 — Dinliminate brand mark and refined Home composition.
+   The new D subtly reads as two doors opening toward one decision.
+   Home keeps the approved door photography and transparent choice windows;
+   only the brand treatment and choice copy are changed here. */
+.brand-mark{
+  display:flex!important;
+  align-items:center!important;
+}
+.dinliminate-logo-symbol{
+  display:block!important;
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px!important;
+  object-fit:contain!important;
+}
+.dinliminate-logo-wordmark{
+  display:inline-block!important;
+  color:#d9b66d!important;
+  font-size:18px!important;
+  font-weight:500!important;
+  letter-spacing:.30em!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.app.home-active .app-topbar .brand-mark{
+  position:absolute!important;
+  left:50%!important;
+  top:calc(env(safe-area-inset-top) + 5px)!important;
+  transform:translateX(-50%)!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  width:max-content!important;
+  pointer-events:none!important;
+}
+.app.home-active .app-topbar .dinliminate-logo-symbol{
+  width:62px!important;
+  height:62px!important;
+  flex-basis:62px!important;
+}
+.app.home-active .app-topbar .dinliminate-logo-wordmark{
+  font-size:15px!important;
+  letter-spacing:.28em!important;
+  text-align:center!important;
+}
+.app.home-active .app-topbar #menu{
+  pointer-events:auto!important;
+}
+@media only screen and (max-width:600px){
+  .app.home-active #home{
+    padding-top:calc(env(safe-area-inset-top) + 126px)!important;
+  }
+  .app.home-active #home .home-intro{
+    position:relative!important;
+    z-index:7!important;
+    margin-top:0!important;
+  }
+  .app.home-active #home .home-intro h1{
+    max-width:none!important;
+    font-size:clamp(30px,8.3vw,42px)!important;
+    line-height:1.02!important;
+    text-align:center!important;
+    text-shadow:0 2px 18px rgba(0,0,0,.60)!important;
+  }
+  .app.home-active #home .home-intro .sub{
+    margin-top:9px!important;
+    text-align:center!important;
+    color:#eee8df!important;
+    text-shadow:0 2px 12px rgba(0,0,0,.55)!important;
+  }
+  .app.home-active #home .home-actions{
+    top:41.5%!important;
+    z-index:8!important;
+  }
+  .app.home-active #home .home-card-choice .home-card-copy strong{
+    font-size:clamp(17px,5.2vw,24px)!important;
+    letter-spacing:.015em!important;
+  }
+  .app.home-active #home .home-card-choice .home-card-copy>span{
+    display:none!important;
+  }
+  .app.home-active #home .home-card-choice .arrow{
+    bottom:12%!important;
+    color:#f2d893!important;
+    font-size:30px!important;
+  }
+}
+@media only screen and (max-width:390px){
+  .app.home-active .app-topbar .dinliminate-logo-symbol{
+    width:58px!important;
+    height:58px!important;
+    flex-basis:58px!important;
+  }
+  .app.home-active .app-topbar .dinliminate-logo-wordmark{
+    font-size:13px!important;
+    letter-spacing:.25em!important;
+  }
+  .app.home-active #home{
+    padding-top:calc(env(safe-area-inset-top) + 120px)!important;
+  }
+  .app.home-active #home .home-actions{
+    top:41%!important;
+  }
+}
