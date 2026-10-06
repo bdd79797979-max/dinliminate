@@ -1641,7 +1641,13 @@ function bindQuickCutsCollapse(kind){
      save();
      return;
    }
-   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
+   const nextOpen=!!S.quickCutsCollapsed?.[kind];
+   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!nextOpen};
+   if(!nextOpen && kind==='food'){
+    // Meal Times and Cuisine Cuts are mutually exclusive on the Meals screen.
+    S.mealTimeCutsCollapsed=true;
+    renderMealTimeCuts();
+   }
    renderQuickCutsCollapse(kind);
    save();
  };
@@ -1724,7 +1730,13 @@ function bindMealTimeCuts(){
  toggle.onclick=(event)=>{
   event.preventDefault();
   event.stopPropagation();
-  S.mealTimeCutsCollapsed=!S.mealTimeCutsCollapsed;
+  const nextOpen=!!S.mealTimeCutsCollapsed;
+  S.mealTimeCutsCollapsed=!nextOpen;
+  if(!nextOpen){
+   // Meal Times and Cuisine Cuts are mutually exclusive on the Meals screen.
+   S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:false,restaurant:false}),food:true};
+   renderQuickCutsCollapse('food');
+  }
   renderMealTimeCuts();
   save();
  };
