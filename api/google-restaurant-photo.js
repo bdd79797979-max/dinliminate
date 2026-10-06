@@ -1,7 +1,7 @@
 'use strict';
 
 const { neon } = require('@neondatabase/serverless');
-const { pacificMonthKey, nextPacificMonthIso } = require('./google-usage');
+const { pacificMonthKey, nextPacificMonthIso, reserveGoogleSku, HARD_LIMITS, googleUsageHealth, disableGoogleSkuForMonth } = require('./google-usage');
 
 const GOOGLE_PLACES_API_KEY=String(process.env.GOOGLE_PLACES_API_KEY||'').trim();
 const DATABASE_URL=String(
@@ -128,7 +128,20 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
 }
 async function getPlaceDetails(placeId){
   if(!placeId)return null;
-  return googleJson('https://places.googleapis.com/v1/places/'+encodeURIComponent(placeId),{method:'GET',headers:{'X-Goog-FieldMask':'id,formattedAddress,location,photos'}});
+  const budget=await reserveGoogleSku('place-details-essentials',HARD_LIMITS['place-details-essentials']);
+  if(!budget.ok){
+    console.warn('dinliminate-google-place-details-budget-block',{reason:budget.reason,count:budget.count||0,limit:budget.limit||HARD_LIMITS['place-details-essentials']});
+    return null;
+  }
+  try{
+    return await googleJson('https://places.googleapis.com/v1/places/'+encodeURIComponent(placeId),{
+      method:'GET',
+      headers:{'X-Goog-FieldMask':'id,formattedAddress,location,photos'}
+    });
+  }catch(err){
+    if(Number(err?.status)===403||Number(err?.status)===429)await disableGoogleSkuForMonth('place-details-essentials');
+    throw err;
+  }
 }
 async function tryGoogleRestaurantPhoto(input){
   if(!GOOGLE_PLACES_API_KEY)return null;
@@ -217,6 +230,7 @@ async function handler(req,res){
    durableBudgetConfigured:!!DATABASE_URL,
    monthlyHardLimit:DEFAULT_MONTHLY_LIMIT,
    billingMonthTimeZone:'America/Los_Angeles',
+   usageSkus:await googleUsageHealth(),
    untrackedLimit:UNTRACKED_LIMIT,
    usage
   });
