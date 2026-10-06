@@ -9848,3 +9848,16 @@ body:has(.app.home-active)::after{
 .app.home-active #home .home-foot{
   bottom:max(0px,calc(env(safe-area-inset-bottom) - 10px))!important;
 }
+
+
+/* CP1112 — prevent the Home hamburger from remaining visible behind the open drawer. */
+.app-topbar #menu[aria-expanded="true"]{
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* CP1112 — lift the Restaurant card information group slightly while leaving photo attribution fixed. */
+#restaurant .restaurant-card-stack .card-copy{
+  bottom:33px!important;
+}
