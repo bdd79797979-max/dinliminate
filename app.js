@@ -4310,6 +4310,8 @@ return false;
 }
 function historyView() {
 let cursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let modal = null;
+let bodyHost = null;
 const render = () => {
 const history = readHistory();
 const y = cursor.getFullYear(), m = cursor.getMonth();
@@ -4363,7 +4365,13 @@ body += '<div class="cal-cell'+todayClass+'" role="gridcell">'+dayMarkup+'</div>
 body += '</div></div><div class="history-list">';
 body += history.length ? '<div class="history-toolbar"><span class="status">'+history.length+' saved decision'+(history.length===1?'':'s')+'</span><button class="secondary" id="historyClearAll" type="button">Clear all</button></div>'+history.slice(0,30).map(x => '<button class="history-row history-open" data-history-id="'+esc(x.id)+'"><img src="'+esc(historyImageSource(x))+'" data-restaurant-photo-key="'+esc(x.type==='restaurant'?x.id:'')+'" data-final-fallback="'+(x.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(x.name)+'"><span><b>'+esc(x.name)+'</b><small>'+esc(x.date)+' · '+esc(x.type)+(x.type==='food'&&Array.isArray(x.mealTimes)&&x.mealTimes.length?' · '+esc(x.mealTimes.join(' · ')):'')+'</small></span></button>').join('') : '<p class="status">No history yet.</p>';
 body += '</div>';
-const modal = openModal('historyModal','History',body);
+if(!modal||!modal.isConnected){
+  modal = openModal('historyModal','History','<div id="historyModalBody"></div>');
+  bodyHost = modal.querySelector('#historyModalBody');
+}
+if(!bodyHost)return;
+bodyHost.innerHTML=body;
+modal.scrollTop=0;
 bindImageFallback('#historyModal img',FINAL_RESTAURANT_IMAGE,FINAL_RESTAURANT_IMAGE);
 for(const row of history.slice(0,30)) if(row?.type==='restaurant'&&row?.id) hydrateRestaurantPhoto(row,'#historyModal');
 $('historyStatsToggle').onclick=()=>{
@@ -4372,8 +4380,8 @@ $('historyStatsToggle').onclick=()=>{
   btn.setAttribute('aria-expanded',String(!isHidden));
   btn.textContent=isHidden?'Your Stats':'Hide Stats';
 };
-$('calPrev').onclick = () => { cursor = new Date(y,m-1,1); modal.remove(); $('historyModalBg')?.remove(); render(); };
-$('calNext').onclick = () => { cursor = new Date(y,m+1,1); modal.remove(); $('historyModalBg')?.remove(); render(); };
+$('calPrev').onclick = () => { cursor = new Date(y,m-1,1); render(); };
+$('calNext').onclick = () => { cursor = new Date(y,m+1,1); render(); };
 modal.querySelectorAll('[data-history-id]').forEach(btn => btn.onclick = () => {
 const row = history.find(x => x.id === btn.dataset.historyId);
 if (row) detailsSheet(row, row.type);
@@ -4385,22 +4393,22 @@ if (row) detailsSheet(row, row.type);
 if(history.length){
 $('historyClearAll').onclick=async()=>{
 if(!await appConfirm('Clear history?','This permanently removes all saved meal and restaurant decisions from this device.','Clear History'))return;
-writeHistory([]); modal.remove(); $('historyModalBg')?.remove(); render();
+writeHistory([]);
+render();
 };
 }
 modal.querySelectorAll('[data-history-delete]').forEach(btn => {
 const remove = (e) => {
 e.preventDefault(); e.stopPropagation();
 writeHistory(history.filter(x => x.id !== btn.dataset.historyDelete));
-modal.remove(); $('historyModalBg')?.remove(); render();
+render();
 };
 btn.onclick = remove;
 btn.onpointerdown = (e) => e.stopPropagation();
 });
 };
 render();
-}
-function readImageFile(file) {
+}function readImageFile(file) {
 return new Promise((resolve,reject) => {
 if (!file) return resolve('');
 if (!file.type.startsWith('image/')) return reject(new Error('Please choose an image file.'));
