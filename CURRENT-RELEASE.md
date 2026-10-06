@@ -1,34 +1,41 @@
-# CURRENT RELEASE — BUILD 1054 / CP1054
+# CURRENT RELEASE — BUILD 1055 / CP1055
 
 Date: 2026-10-06
 
-## Restaurant Intelligence candidate
+## Final restaurant intelligence audit candidate
 
-CP1045 is the protected starting point for the current restaurant-system work. CP1046–CP1054 now reorganize restaurant identity, Google usage controls, photo sourcing, restaurant details, source-aware persistence, and next-card readiness.
+CP1055 is the final pre-deployment checkpoint built from CP1045.
 
-### Current restaurant photo policy
+### Restaurant photos
 
-1. Existing verified Dinliminate photo that already meets the quality gate
-2. Google Places photo for the exact verified restaurant
-3. Official restaurant website/gallery/location page
-4. Exact public venue page
-5. Exact OpenStreetMap/POI image
-6. No restaurant card when no acceptable image is available
+The Restaurant deck requires an acceptable verified photo. New photo lookup is Google-first, followed by the verified official restaurant website/location page, exact public venue sources, exact OSM/POI imagery, and finally no card.
 
-Generic, stock, neutral, supplier, wrong-business, menu/graphic, and low-quality images are not accepted into the Restaurant swipe deck.
+Generic, stock, neutral, supplier, wrong-business, menu/graphic, and low-quality images are excluded.
 
-### Current information policy
+### Restaurant information
 
-Google is used first for on-demand restaurant detail enrichment where it provides the needed field. Official restaurant website data is the next fallback, followed by verified venue data. Missing information is left unknown rather than guessed.
+Google supplies on-demand detail enrichment first. Missing website, phone, weekly hours, or menu data falls back to the verified official restaurant website/venue data. Unknown values remain unknown.
 
 ### Google protection
 
-Dinliminate uses independent hard stops for Google capabilities: Photos 900; Text Search Pro 4500; Nearby Search Pro 4500; Text Search Enterprise 900; Place Details Enterprise 900; Place Details Essentials 9000. The billing month is aligned to America/Los_Angeles. Unknown durable budget tracking fails closed.
+Independent hard stops: Photos 900; Text Search Pro 4500; Nearby Search Pro 4500; Text Search Enterprise 900; Place Details Enterprise 900; Place Details Essentials 9000. Billing month follows America/Los_Angeles. Unknown durable budget tracking fails closed.
 
 ### Performance
 
-The Restaurant deck blocks on the current card and immediate next photo only. Additional lookahead is loaded in the background so the user does not wait for a five-photo batch.
+The initial Restaurant draw waits only for the current and immediate next verified photos; additional lookahead is warmed separately. Google media is not persisted in the Dinliminate restaurant-photo cache.
 
-### Recovery
+### Verification completed
 
-The CP1045 commit remains the protected pre-change baseline. CP1055 is the final audit/release gate and has not been deployed yet.
+- Node syntax checks: PASS
+- npm dependency install/audit: PASS
+- Google budget/timezone tests: PASS
+- official-site hours extraction test: PASS
+- no-generic-photo policy assertions: PASS
+- CP1045→CP1055 diff isolated to restaurant intelligence/release governance
+- local browser smoke test: PASS
+
+Physical iPhone testing and production deployment are the remaining release actions.
+
+## Recovery
+
+CP1045 remains the protected recovery anchor. No production deployment was made during CP1046–CP1054.
