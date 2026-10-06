@@ -2,8 +2,6 @@
 
 ## Restaurant imagery
 
-The production intent is **actual restaurant photography first**.
-
 ### Resolver order
 
 1. Existing verified Dinliminate restaurant photo that already meets the quality gate
@@ -17,17 +15,15 @@ A generic restaurant/category image is not a valid Restaurant swipe fallback.
 
 ### Verification
 
-A candidate must pass exact-venue identity checks and image-quality checks before the Restaurant deck can use it. Wrong businesses, nearby locations, supplier pages, stock imagery, menus, logos, collages, screenshots, placeholders, and unusably small/blurry media are rejected.
+Candidates must pass exact-venue identity and image-quality checks. Wrong businesses, nearby locations, suppliers, stock imagery, menus, logos, collages, screenshots, placeholders, and unusably small/blurry media are rejected.
 
-### Google usage
+### Google
 
-Google photo requests are durably budgeted and stop at 900 successful photo-media reservations per America/Los_Angeles billing month. The other Google capabilities have independent hard stops. If durable budget tracking is unavailable, Google calls fail closed.
-
-Google photo media is not persisted in Dinliminate's browser restaurant-photo cache. Place IDs and permitted metadata remain the reusable identity layer.
+Google photo requests stop at 900 per America/Los_Angeles billing month. Google media is not persisted in the Dinliminate browser restaurant-photo cache. Durable budget tracking fails closed.
 
 ### Restaurant information
 
-For detail enrichment, Google is queried first for fields that require Google Enterprise data. When those fields are missing or unavailable, Dinliminate falls back to the verified official restaurant website and then verified venue data. Unknown data remains unknown.
+Google is used first for on-demand fields that require it. Missing fields fall back to the verified official restaurant site/venue source. Unknown data stays unknown.
 
 ### Rights
 
