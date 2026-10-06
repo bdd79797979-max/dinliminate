@@ -4259,7 +4259,10 @@ writeHistory(history);
 return true;
 }
 function readHistory() {
-try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+try {
+ const parsed=JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+ return Array.isArray(parsed) ? parsed.filter(row=>row&&typeof row==='object').slice(0,120) : [];
+} catch { return []; }
 }
 function writeHistory(rows) {
 try {
