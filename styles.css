@@ -9730,19 +9730,6 @@ body:has(.app.home-active)::after{
     top:calc(env(safe-area-inset-top) + 7px)!important;
   }
 
-  .app.home-active #home .home-intro{
-    top:calc(env(safe-area-inset-top) + 25.5%)!important;
-  }
-
-  .app.home-active #home .home-intro h1{
-    font-size:29px!important;
-  }
-
-  .app.home-active #home .home-intro .sub{
-    font-size:11px!important;
-    margin-top:8px!important;
-  }
-
   .app.home-active #home .home-choice-zone{
     top:26%!important;
     height:22%!important;
@@ -9898,18 +9885,6 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
-  .app.home-active #home .home-intro{
-    top:calc(env(safe-area-inset-top) + 18.5%)!important;
-  }
-
-  .app.home-active #home .home-intro h1{
-    font-size:28px!important;
-  }
-
-  .app.home-active #home .home-intro .sub{
-    font-size:10px!important;
-    margin-top:7px!important;
-  }
 
   .app.home-active #home .home-choice-zone{
     top:20.5%!important;
@@ -9982,15 +9957,6 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
-  .app.home-active #home .home-intro{
-    top:calc(env(safe-area-inset-top) + 21.5%)!important;
-  }
-  .app.home-active #home .home-intro h1{
-    font-size:28px!important;
-  }
-  .app.home-active #home .home-intro .sub{
-    font-size:10.5px!important;
-  }
   .app.home-active #home .home-choice-zone{
     top:31.5%!important;
     height:18%!important;
@@ -10056,17 +10022,6 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
-  .app.home-active #home .home-intro{
-    top:calc(env(safe-area-inset-top) + 20.5%)!important;
-  }
-  .app.home-active #home .home-intro h1{
-    font-size:28px!important;
-  }
-  .app.home-active #home .home-intro .sub{
-    font-size:10.5px!important;
-    letter-spacing:.12em!important;
-    margin-top:10px!important;
-  }
   .app.home-active #home .home-choice-zone{
     top:35.2%!important;
     height:18%!important;
@@ -10132,9 +10087,6 @@ body:has(.app.home-active)::after{
 }
 
 @media only screen and (max-width:390px){
-  .app.home-active #home .home-intro h1{
-    color:#f4dfae!important;
-  }
 }
 
 
