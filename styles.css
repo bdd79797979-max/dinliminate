@@ -10447,65 +10447,22 @@ html.dinliminate-visual-mobile .app{
     gap:5vw!important;
     align-items:center!important;
   }
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:29vh!important;
-    min-height:0!important;
-    aspect-ratio:.72!important;
-    padding:0!important;
-    overflow:visible!important;
-    background:transparent!important;
-    background-image:none!important;
-    border:0!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-overlay,
+.app.home-active #home .home-card-choice .home-card-overlay,
   .app.home-active #home .home-card-choice::before,
-  .app.home-active #home .home-card-choice::after{
-    display:none!important;
-    content:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy{
+.app.home-active #home .home-card-choice .home-card-copy{
     padding:0 2px!important;
     align-items:center!important;
     justify-content:center!important;
     text-align:center!important;
     gap:5px!important;
   }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#fff!important;
-    font-size:clamp(18px,5.5vw,24px)!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.55)!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
+.app.home-active #home .home-card-choice .home-card-copy>span{
     color:#fff!important;
     font-size:clamp(9px,2.8vw,12px)!important;
     line-height:1.25!important;
     text-shadow:0 2px 11px rgba(0,0,0,.55)!important;
   }
-  .app.home-active #home .home-card-choice .arrow{
-    right:50%!important;
-    bottom:10%!important;
-    transform:translateX(50%)!important;
-    width:auto!important;
-    height:auto!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#fff!important;
-    font-size:28px!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.6)!important;
-  }
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:none!important;
-    filter:none!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
+.app.home-active #home .home-card-choice:active,
 }
 
 @media only screen and (max-width:390px){
@@ -10524,11 +10481,6 @@ html.dinliminate-visual-mobile .app{
     margin:0!important;
     padding:0 7vw!important;
     z-index:8!important;
-  }
-  .app.home-active #home .home-card-choice{
-    position:relative!important;
-    z-index:8!important;
-    pointer-events:auto!important;
   }
 }
 @media only screen and (max-width:390px){
@@ -10728,32 +10680,8 @@ html.dinliminate-visual-mobile .app{
     z-index:8!important;
   }
 
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:100%!important;
-    min-height:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    background-image:none!important;
-    box-shadow:none!important;
-    overflow:visible!important;
-    display:grid!important;
-    place-items:center!important;
-    touch-action:manipulation!important;
-  }
-
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:translateY(1px)!important;
-    filter:brightness(1.03)!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy{
+.app.home-active #home .home-card-choice:active,
+.app.home-active #home .home-card-choice .home-card-copy{
     position:relative!important;
     z-index:2!important;
     width:100%!important;
@@ -10765,38 +10693,14 @@ html.dinliminate-visual-mobile .app{
     gap:6px!important;
     text-align:center!important;
   }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#f8e9c9!important;
-    font-size:clamp(18px,5vw,23px)!important;
-    line-height:1.04!important;
-    letter-spacing:.015em!important;
-    text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
+.app.home-active #home .home-card-choice .home-card-copy>span{
     color:#f3eadc!important;
     font-size:clamp(9px,2.7vw,12px)!important;
     line-height:1.28!important;
     text-shadow:0 2px 10px rgba(0,0,0,.82)!important;
     max-width:18ch!important;
   }
-  .app.home-active #home .home-card-choice .arrow{
-    position:static!important;
-    width:auto!important;
-    height:auto!important;
-    margin-top:3px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#e4c982!important;
-    font-size:30px!important;
-    line-height:.8!important;
-    transform:none!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-foot{
+.app.home-active #home .home-foot{
     position:absolute!important;
     left:0!important;
     right:0!important;
@@ -11027,32 +10931,8 @@ html.dinliminate-visual-mobile .app{
     z-index:8!important;
   }
 
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:100%!important;
-    min-height:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    background-image:none!important;
-    box-shadow:none!important;
-    overflow:visible!important;
-    display:grid!important;
-    place-items:center!important;
-    touch-action:manipulation!important;
-  }
-
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:none!important;
-    filter:brightness(1.035)!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy{
+.app.home-active #home .home-card-choice:active,
+.app.home-active #home .home-card-choice .home-card-copy{
     position:relative!important;
     z-index:2!important;
     width:100%!important;
@@ -11065,15 +10945,7 @@ html.dinliminate-visual-mobile .app{
     text-align:center!important;
   }
 
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#f8e9c9!important;
-    font-size:clamp(18px,5vw,23px)!important;
-    line-height:1.04!important;
-    letter-spacing:.015em!important;
-    text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy>span{
+.app.home-active #home .home-card-choice .home-card-copy>span{
     color:#f3eadc!important;
     font-size:clamp(9px,2.7vw,12px)!important;
     line-height:1.28!important;
@@ -11081,24 +10953,7 @@ html.dinliminate-visual-mobile .app{
     max-width:18ch!important;
   }
 
-  .app.home-active #home .home-card-choice .arrow{
-    position:static!important;
-    width:auto!important;
-    height:auto!important;
-    margin-top:3px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#e4c982!important;
-    font-size:28px!important;
-    line-height:.8!important;
-    transform:none!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-foot{
+.app.home-active #home .home-foot{
     position:absolute!important;
     left:0!important;
     right:0!important;
