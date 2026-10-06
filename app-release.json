@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1088,
-  "sourceBranch": "cp1088-launch-candidate",
-  "checkpoint": "CP1088",
-  "deploymentTrigger": "CP1088-launch-candidate",
+  "build": 1089,
+  "sourceBranch": "cp1089-current-baseline",
+  "checkpoint": "CP1089",
+  "deploymentTrigger": "CP1089-current-baseline",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -30,5 +30,6 @@
   "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
-  "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification"
+  "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
+  "currentBaseline": "CP1089 is the current source-of-truth baseline created from CP1088 Launch Candidate; no deployment created"
 }
