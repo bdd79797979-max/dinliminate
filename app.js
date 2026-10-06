@@ -2041,7 +2041,7 @@ function preloadSwipeImage(src){
  img.loading='eager';
  img.src=url;
  swipeImagePreloads.set(url,img);
- while(swipeImagePreloads.size>8){
+ while(swipeImagePreloads.size>12){
   const first=swipeImagePreloads.keys().next().value;
   swipeImagePreloads.delete(first);
  }
