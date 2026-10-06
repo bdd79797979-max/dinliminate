@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r33';
+const API_VERSION='r34';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -871,12 +871,12 @@ async function googleSearchPlaces(lat,lon,radius,searchTerm){
  const term=normalizeSearchQuery(searchTerm),meters=Math.round(Math.min(50000,Math.max(1609,radius*1609.344))),rows=[],errors=[];
  if(!term)return googlePlaces(lat,lon,radius);
  const terms=providerSearchTerms(term);
- const requests=await Promise.allSettled(terms.map(termVariant=>googleBudgetedJson('text-search-pro','https://places.googleapis.com/v1/places:searchText',{
+ const requests=await Promise.allSettled(terms.map(termVariant=>googleBudgetedJson('text-search-enterprise','https://places.googleapis.com/v1/places:searchText',{
    method:'POST',
    headers:{
      'Content-Type':'application/json',
      'X-Goog-Api-Key':GOOGLE_KEY,
-     'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.primaryType,places.types,places.businessStatus'
+     'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.primaryType,places.types,places.currentOpeningHours.openNow,places.regularOpeningHours.weekdayDescriptions,places.businessStatus'
    },
    body:JSON.stringify({
      textQuery:termVariant+' restaurant',
@@ -899,7 +899,7 @@ async function googleSearchPlaces(lat,lon,radius,searchTerm){
     if(businessStatus==='CLOSED_PERMANENTLY')continue;
     const distance=miles(lat,lon,plat,plon);
     if(distance>radius)continue;
-    rows.push({id:p.id?'google-search-'+p.id:'google-search-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:'',openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat:plat,lon:plon,distance,photo:'',menuItems:[],brand:'',source:'Google Places Search',googlePlaceId:p.id||''});
+    rows.push({id:p.id?'google-search-'+p.id:'google-search-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:regularHours,openNow,hoursSource:typeof openNow==='boolean'?'Google Places':(regularHours?'Google Places':''),lat:plat,lon:plon,distance,photo:'',menuItems:[],brand:'',source:'Google Places Search',googlePlaceId:p.id||''});
    }
  }
  return{rows:dedupe(rows),errors};
@@ -909,12 +909,12 @@ async function googlePlaces(lat,lon,radius){
  if(!GOOGLE_KEY)return{rows:[],errors:[]};
  const meters=Math.round(Math.min(50000,Math.max(1609,radius*1609.344))),rows=[],errors=[];
  try{
-  const data=await googleBudgetedJson('nearby-search-pro','https://places.googleapis.com/v1/places:searchNearby',{
+  const data=await googleBudgetedJson('nearby-search-enterprise','https://places.googleapis.com/v1/places:searchNearby',{
    method:'POST',
    headers:{
     'Content-Type':'application/json',
     'X-Goog-Api-Key':GOOGLE_KEY,
-    'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.primaryType,places.types,places.businessStatus'
+    'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.primaryType,places.types,places.currentOpeningHours.openNow,places.regularOpeningHours.weekdayDescriptions,places.businessStatus'
    },
    body:JSON.stringify({includedTypes:['restaurant','fast_food_restaurant'],maxResultCount:20,locationRestriction:{circle:{center:{latitude:lat,longitude:lon},radius:meters}}})
   },6500);
@@ -924,9 +924,10 @@ async function googlePlaces(lat,lon,radius){
    const types=Array.isArray(p?.types)?p.types.map(String):[];
    const fast=types.includes('fast_food_restaurant')||types.includes('fast_food')||isFastFoodName(name);
    const openNow=typeof p?.currentOpeningHours?.openNow==='boolean'?p.currentOpeningHours.openNow:undefined;
+   const regularHours=Array.isArray(p?.regularOpeningHours?.weekdayDescriptions)?p.regularOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
    const businessStatus=String(p?.businessStatus||'');
    if(businessStatus==='CLOSED_PERMANENTLY')continue;
-   rows.push({id:p.id?'google-'+p.id:'google-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',primaryType:String(p.primaryType||''),types,providerType:types.join(' '),address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:'',openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat:plat,lon:plon,distance:miles(lat,lon,plat,plon),photo:'',menuItems:[],brand:'',source:'Google Places',googlePlaceId:p.id||''});
+   rows.push({id:p.id?'google-'+p.id:'google-'+norm(name)+'-'+plat.toFixed(5)+'-'+plon.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',primaryType:String(p.primaryType||''),types,providerType:types.join(' '),address:String(p?.formattedAddress||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||''),opening_hours:regularHours,openNow,hoursSource:typeof openNow==='boolean'?'Google Places':(regularHours?'Google Places':''),lat:plat,lon:plon,distance:miles(lat,lon,plat,plon),photo:'',menuItems:[],brand:'',source:'Google Places',googlePlaceId:p.id||''});
   }
  }catch(e){errors.push(String(e?.message||e||'Google Places failed'));}
  return{rows,errors};
