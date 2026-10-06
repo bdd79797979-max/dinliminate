@@ -25,6 +25,16 @@ function cleanName(v) {
   if (!s) fail('INVALID_NAME', 'Enter a name to join Family Mode.');
   return s;
 }
+function safeHttpUrl(v,maxLength=2000){
+  const s=String(v||'').trim();
+  if(!s||s.length>maxLength)return '';
+  try{
+    const u=new URL(s);
+    if(u.protocol!=='https:'||u.username||u.password)return '';
+    if(!u.hostname||/[\x00-\x20]/.test(u.hostname))return '';
+    return u.href;
+  }catch{return '';}
+}
 function token() { return crypto.randomBytes(32).toString('base64url'); }
 function hash(v) { return crypto.createHash('sha256').update(String(v || '')).digest('hex'); }
 function code() {
@@ -561,4 +571,4 @@ async function transferHost(sessionToken, targetMemberId) {
   await event(sql,family.family_id,family.active_round_id,me.member_id,'host_transferred',{toMemberId:target.member_id});
   return {ok:true,hostMemberId:target.member_id};
 }
-module.exports = {createFamily,joinFamily,getFamilyState,createRound,startRound,submitVote,markStageSubmitted,enterMaybes,enterChoice,createCompareFinal,rotateCode,endRound,transferHost,leaveFamily};
+module.exports = {createFamily,joinFamily,getFamilyState,createRound,startRound,submitVote,markStageSubmitted,enterMaybes,enterChoice,createCompareFinal,rotateCode,endRound,transferHost,leaveFamily,_test:{safeHttpUrl}};
