@@ -1,4 +1,4 @@
-# CURRENT SAVEPOINT — CP1112
+# CURRENT SAVEPOINT — CP1113
 
 Date: 2026-10-06
 
@@ -23,3 +23,8 @@ Source checks passed after editing:
 - Home menu has an explicit `aria-expanded="true"` visual hide rule.
 - Restaurant card copy is lifted to `bottom:33px`, while `.restaurant-photo-credit` remains at `bottom:11px`.
 - Stylesheet and app script cache versions bumped to 1112.
+
+
+## CP1113 — Home menu overlay correction
+
+The Home menu drawer is now explicitly above the full Home surface. The homepage topbar/logo/slogan and invisible choice hit areas cannot sit above the drawer, and the drawer close X remains clickable.
