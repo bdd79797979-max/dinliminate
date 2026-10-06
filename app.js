@@ -2768,6 +2768,21 @@ function restaurantMatchesQuery(row){
  return q.split(/\s+/).filter(Boolean).every(term=>restaurantSearchTermMatches(row,term,hay));
 }
 
+function restaurantClockParts(row){
+  const timeZone=String(row?.hoursTimeZone||S.restaurantSearchTimeZone||'').trim();
+  if(timeZone){
+    try{
+      const parts=new Intl.DateTimeFormat('en-US',{timeZone,weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+      const pick=type=>String(parts.find(p=>p.type===type)?.value||'');
+      const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+      const day=dayMap[pick('weekday')];
+      const hour=Number(pick('hour')),minute=Number(pick('minute'));
+      if(Number.isFinite(day)&&Number.isFinite(hour)&&Number.isFinite(minute))return {day,minute:hour*60+minute,timeZone};
+    }catch{}
+  }
+  const now=new Date();
+  return {day:now.getDay(),minute:now.getHours()*60+now.getMinutes(),timeZone:''};
+}
 function restaurantHoursState(row){
   if(typeof row?.openNow==='boolean')return row.openNow?'open':'closed';
   const status=String(row?.businessStatus||'').toUpperCase();
@@ -2776,7 +2791,7 @@ function restaurantHoursState(row){
   if(!raw)return 'unknown';
   if(/\b(?:24\s*\/\s*7|24\s*hours?)\b/i.test(raw))return 'open';
 
-  const now=new Date(),day=now.getDay(),minute=now.getHours()*60+now.getMinutes();
+   const {day,minute}=restaurantClockParts(row);
   const dayNames=[['Su','Sun','Sunday'],['Mo','Mon','Monday'],['Tu','Tue','Tuesday'],['We','Wed','Wednesday'],['Th','Thu','Thursday'],['Fr','Fri','Friday'],['Sa','Sat','Saturday']];
   const aliases=new Map();
   dayNames.forEach((list,index)=>list.forEach(name=>aliases.set(name.toLowerCase(),index)));
@@ -2812,19 +2827,21 @@ function restaurantHoursState(row){
   const intervals=[];
   let applicable=false,sawClosed=false;
 
-  const collect=(clause,targetDay)=>{
-    const tm=clause.match(timeRe);
-    const selector=tm?clause.slice(0,tm.index).trim():clause;
-    if(!appliesToDay(selector,targetDay))return;
-    applicable=true;
-    if(/\b(?:off|closed)\b/i.test(clause)){sawClosed=true;return;}
-    if(!tm)return;
-    const startHasMeridiem=/\b(?:AM|PM)\b/i.test(tm[1]);
-    const endMeridiem=(tm[2].match(/AM|PM/i)||[])[0]||'';
-    const start=parseTime(tm[1],!startHasMeridiem?endMeridiem:'');
-    const end=parseTime(tm[2]);
-    if(Number.isFinite(start)&&Number.isFinite(end))intervals.push({start,end,targetDay});
-  };
+   const collect=(clause,targetDay)=>{
+     const matches=[...String(clause||'').matchAll(new RegExp(timeRe.source,'gi'))];
+     const selector=matches.length?String(clause||'').slice(0,matches[0].index).trim():String(clause||'').trim();
+     if(!appliesToDay(selector,targetDay))return;
+     applicable=true;
+     if(/\b(?:off|closed)\b/i.test(clause)&&!matches.length){sawClosed=true;return;}
+     if(!matches.length)return;
+     for(const tm of matches){
+       const startHasMeridiem=/\b(?:AM|PM)\b/i.test(tm[1]);
+       const endMeridiem=(tm[2].match(/AM|PM/i)||[])[0]||'';
+       const start=parseTime(tm[1],!startHasMeridiem?endMeridiem:'');
+       const end=parseTime(tm[2]);
+       if(Number.isFinite(start)&&Number.isFinite(end))intervals.push({start,end,targetDay});
+     }
+   };
 
   for(const clause of clauses)collect(clause,day);
   const todayCount=intervals.length;
@@ -3272,6 +3289,7 @@ const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+
    // CP1078: never leave the previous location/radius/query cards on screen
    // while a materially different restaurant search is being rebuilt.
    S.restaurantPool=[];
+   S.restaurantSearchTimeZone='';
    S.restaurantIndex=0;
    S.restaurantActions=[];
    S.restaurantMaybeRound=false;
@@ -3298,6 +3316,7 @@ S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
 S.restaurantPool = dedupeRestaurantPool(incomingRows).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
 S.restaurantSearchOrigin = {lat:Number(loc.lat),lon:Number(loc.lon)};
 S.restaurantSearchKey = searchKey;
+ S.restaurantSearchTimeZone=String(d.hoursTimeZone||'');
 S.restaurantIndex = 0; S.restaurantActions = []; S.restaurantMaybeRound = false;
 S.winnerItem = null;
 if(S.restaurantPool.length) {
@@ -3318,6 +3337,7 @@ save();
 if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
 S.restaurantSearchDegraded=true;
  if(replacingSearchTarget){
+   S.restaurantSearchTimeZone='';
    S.restaurantSearchKey='';
    S.restaurantPool=[];
    S.restaurantIndex=0;
