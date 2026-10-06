@@ -1,27 +1,8 @@
 'use strict';
 
-const { neon } = require('@neondatabase/serverless');
 const { pacificMonthKey, nextPacificMonthIso, reserveGoogleSku, HARD_LIMITS, googleUsageHealth, disableGoogleSkuForMonth, googleServicesEnabled } = require('./google-usage');
 
 const GOOGLE_PLACES_API_KEY=String(process.env.GOOGLE_PLACES_API_KEY||'').trim();
-const DATABASE_URL=String(
-  process.env.GOOGLE_PHOTO_BUDGET_DATABASE_URL ||
-  process.env.FAMILY_DATABASE_URL ||
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  ''
-).trim();
-const DEFAULT_MONTHLY_LIMIT=Math.max(1,Number.parseInt(process.env.GOOGLE_PHOTO_MONTHLY_HARD_LIMIT||'900',10)||900);
-const UNTRACKED_LIMIT=Math.max(0,Number.parseInt(process.env.GOOGLE_PHOTO_UNTRACKED_LIMIT||'0',10)||0);
-const MONTH_TABLE='dinliminate_google_photo_usage';
-
-let dbPromise=null;
-let localMonth='';
-let localCount=0;
-let quotaDisabledMonth='';
-
-function monthKey(){return pacificMonthKey();}
-function nextMonthIso(){return nextPacificMonthIso();}
 function clean(v,max=300){return String(v||'').trim().replace(/[\x00-\x1f\x7f]/g,' ').slice(0,max)}
 function normalize(v){return clean(v,1000).toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()}
 function addressNumber(v){const m=String(v||'').match(/\b\d{1,6}\b/);return m?m[0]:''}
@@ -54,37 +35,6 @@ function photoQuality(photo,index){
   if(ratio<0.55||ratio>3)score-=150;
   return score;
 }
-async function budgetDb(){
-  if(!DATABASE_URL)return null;
-  if(!dbPromise)dbPromise=(async()=>{
-    const sql=neon(DATABASE_URL);
-    await sql.query('CREATE TABLE IF NOT EXISTS dinliminate_google_photo_usage (month_key text PRIMARY KEY, request_count integer NOT NULL DEFAULT 0, disabled_until timestamptz NULL, updated_at timestamptz NOT NULL DEFAULT now())');
-    return sql;
-  })();
-  return dbPromise;
-}
-async function reservePhotoRequest(){
-  const month=monthKey();
-  if(!GOOGLE_PLACES_API_KEY)return {ok:false,reason:'no-key'};
-  if(quotaDisabledMonth===month)return {ok:false,reason:'google-quota-disabled'};
-  const sql=await budgetDb().catch(()=>null);
-  if(!sql){
-    if(UNTRACKED_LIMIT<=0)return {ok:false,reason:'budget-unconfigured'};
-    if(localMonth!==month){localMonth=month;localCount=0;}
-    if(localCount>=UNTRACKED_LIMIT)return {ok:false,reason:'untracked-limit'};
-    localCount++;
-    return {ok:true,count:localCount};
-  }
-  await sql.query('INSERT INTO dinliminate_google_photo_usage (month_key,request_count,disabled_until,updated_at) VALUES ($1,0,NULL,now()) ON CONFLICT (month_key) DO NOTHING',[month]);
-  const rows=await sql.query('UPDATE dinliminate_google_photo_usage SET request_count=request_count+1,updated_at=now() WHERE month_key=$1 AND (disabled_until IS NULL OR disabled_until<=now()) AND request_count<$2 RETURNING request_count',[month,DEFAULT_MONTHLY_LIMIT]);
-  if(!rows.length)return {ok:false,reason:'monthly-budget'};
-  return {ok:true,count:Number(rows[0].request_count)||0};
-}
-async function disableGoogleForMonth(){
-  const month=monthKey();quotaDisabledMonth=month;
-  const sql=await budgetDb().catch(()=>null);if(!sql)return;
-  await sql.query('INSERT INTO dinliminate_google_photo_usage (month_key,request_count,disabled_until,updated_at) VALUES ($1,0,$2,now()) ON CONFLICT(month_key) DO UPDATE SET disabled_until=$2,updated_at=now()',[month,nextMonthIso()]).catch(()=>{});
-}
 function isQuotaError(status,body){
   const text=normalize(JSON.stringify(body||{}));
   return status===403&&/resource exhausted|quota|billing|rate limit|daily limit|monthly/.test(text);
@@ -99,7 +49,7 @@ async function googleJson(url,options={},timeout=6500){
   }finally{clearTimeout(timer)}
 }
 async function googlePhotoMedia(photoName){
-  const budget=await reservePhotoRequest();
+  const budget=await reserveGoogleSku('place-photo',HARD_LIMITS['place-photo']);
   if(!budget.ok){
     console.warn('dinliminate-google-photo-budget-block',{reason:budget.reason,count:budget.count||0});
     return null;
@@ -224,23 +174,13 @@ async function handler(req,res){
  const q=googlePhotoQuery(req);
  const mode=String(q.mode||'photo').toLowerCase();
  if(mode==='health'){
-  let usage=null;
-  const sql=await budgetDb().catch(()=>null);
-  if(sql){
-   try{
-    const rows=await sql.query('SELECT request_count,disabled_until FROM '+MONTH_TABLE+' WHERE month_key=$1',[monthKey()]);
-    if(rows?.[0])usage={requestCount:Number(rows[0].request_count)||0,disabledUntil:rows[0].disabled_until||null};
-   }catch{}
-  }
   return sendGoogleJson(res,200,{
    ok:true,
    googlePlacesConfigured:!!GOOGLE_PLACES_API_KEY,
-   durableBudgetConfigured:!!DATABASE_URL,
-   monthlyHardLimit:DEFAULT_MONTHLY_LIMIT,
+   durableBudgetConfigured:!!process.env.GOOGLE_BUDGET_DATABASE_URL||!!process.env.FAMILY_DATABASE_URL||!!process.env.DATABASE_URL||!!process.env.POSTGRES_URL,
+   monthlyHardLimit:HARD_LIMITS['place-photo'],
    billingMonthTimeZone:'America/Los_Angeles',
-   usageSkus:await googleUsageHealth(),
-   untrackedLimit:UNTRACKED_LIMIT,
-   usage
+   usageSkus:await googleUsageHealth()
   });
  }
  const name=clean(q.name,160);
