@@ -1049,6 +1049,11 @@ S.restaurantHoursCollapsed = Object.prototype.hasOwnProperty.call(d,'restaurantH
 S.locationFreshAt = Number.isFinite(Number(d.locationFreshAt)) ? Number(d.locationFreshAt) : null;
 S.quickCutsCollapsed = {food:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'food') ? !!d.quickCutsCollapsed.food : true,restaurant:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'restaurant') ? !!d.quickCutsCollapsed.restaurant : true};
 S.mealTimeCutsCollapsed = Object.prototype.hasOwnProperty.call(d,'mealTimeCutsCollapsed') ? !!d.mealTimeCutsCollapsed : true;
+// Keep the Meals refine panels mutually exclusive even when restoring older saved state.
+if(!S.quickCutsCollapsed.food && !S.mealTimeCutsCollapsed){
+  S.quickCutsCollapsed.food=true;
+  S.mealTimeCutsCollapsed=true;
+}
 S.mealTimeSettings={custom:Array.isArray(d.mealTimeSettings?.custom)?d.mealTimeSettings.custom:[],names:d.mealTimeSettings?.names&&typeof d.mealTimeSettings.names==='object'?d.mealTimeSettings.names:{},order:Array.isArray(d.mealTimeSettings?.order)?d.mealTimeSettings.order:[],disabled:new Set(Array.isArray(d.mealTimeSettings?.disabled)?d.mealTimeSettings.disabled:[])};
 ensureMealTimeSettings();
 const availableMealTimeNames=mealTimeNames();
