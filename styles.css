@@ -11261,3 +11261,298 @@ html.dinliminate-visual-mobile .app{
     min-width:67px!important;
   }
 }
+
+/* CP1092 — canonical iPhone Home composition.
+   The supplied door photo is the canvas. The two tap targets map to the
+   actual left/right glass panels after preserving the photo's aspect ratio.
+   No opaque cards, duplicate backdrop, or bottom overlay is introduced. */
+@media only screen and (max-width:600px){
+  .app.home-active{
+    position:fixed!important;
+    inset:0!important;
+    width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    background:#080706 url("./assets/home-door.jpg") center center / auto 100% no-repeat!important;
+  }
+
+  .app.home-active::before,
+  .app.home-active::after,
+  body:has(.app.home-active)::before{
+    display:none!important;
+    content:none!important;
+  }
+
+  .app.home-active .app-topbar{
+    position:absolute!important;
+    inset:0 0 auto 0!important;
+    z-index:80!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:calc(env(safe-area-inset-top) + 8px) 10px 0!important;
+    margin:0!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+
+  .app.home-active .app-topbar .brand-mark{
+    position:relative!important;
+    margin:0 auto!important;
+    min-height:34px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    filter:drop-shadow(0 2px 8px rgba(0,0,0,.55))!important;
+  }
+
+  .app.home-active .dinliminate-logo-symbol{
+    width:30px!important;
+    height:30px!important;
+    flex:0 0 30px!important;
+  }
+
+  .app.home-active .dinliminate-logo-wordmark{
+    color:#f0d79a!important;
+    font-size:12px!important;
+    line-height:1!important;
+    font-weight:900!important;
+    letter-spacing:.22em!important;
+    white-space:nowrap!important;
+    text-shadow:0 1px 7px rgba(0,0,0,.72)!important;
+  }
+
+  .app.home-active .app-topbar #menu{
+    position:absolute!important;
+    top:calc(env(safe-area-inset-top) + 5px)!important;
+    right:8px!important;
+    width:42px!important;
+    min-width:42px!important;
+    height:42px!important;
+    min-height:42px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+
+  .app.home-active .app-topbar #menu span{
+    width:18px!important;
+    height:1.8px!important;
+    background:#d6b778!important;
+    box-shadow:0 0 7px rgba(214,183,120,.3),0 1px 1px rgba(0,0,0,.55)!important;
+  }
+
+  .app.home-active #home{
+    position:absolute!important;
+    inset:0!important;
+    width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    display:block!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+
+  .app.home-active #home .home-intro{
+    position:absolute!important;
+    top:calc(env(safe-area-inset-top) + 58px)!important;
+    left:0!important;
+    right:0!important;
+    z-index:7!important;
+    margin:0!important;
+    padding:0 14px!important;
+  }
+
+  .app.home-active #home .home-intro .eyebrow{display:none!important}
+
+  .app.home-active #home .home-intro h1{
+    margin:0!important;
+    max-width:none!important;
+    font-size:24px!important;
+    line-height:1!important;
+    letter-spacing:-.045em!important;
+    color:#f3e8d5!important;
+    text-shadow:0 2px 14px rgba(0,0,0,.72)!important;
+  }
+
+  .app.home-active #home .home-intro .sub{
+    margin:6px auto 0!important;
+    font-size:9px!important;
+    line-height:1.25!important;
+    color:#eadfce!important;
+    text-shadow:0 1px 9px rgba(0,0,0,.78)!important;
+  }
+
+  /* The photograph is 912x1136. With auto-height sizing, these 36% edge
+     columns line up with the visible left/right glass panels on iPhone widths. */
+  .app.home-active #home .home-actions{
+    position:absolute!important;
+    top:12.5%!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:67.5%!important;
+    margin:0!important;
+    padding:0!important;
+    display:grid!important;
+    grid-template-columns:36% 36%!important;
+    justify-content:space-between!important;
+    align-items:stretch!important;
+    gap:0!important;
+    z-index:8!important;
+  }
+
+  .app.home-active #home .home-card-choice{
+    width:100%!important;
+    min-width:0!important;
+    height:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    background-image:none!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    display:grid!important;
+    place-items:center!important;
+    touch-action:manipulation!important;
+  }
+
+  .app.home-active #home .home-card-choice:active,
+  .app.home-active #home .home-card-choice.is-pressed{
+    transform:none!important;
+    filter:brightness(1.035)!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+
+  .app.home-active #home .home-card-choice .home-card-copy{
+    position:relative!important;
+    z-index:2!important;
+    width:100%!important;
+    padding:0 2px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:5px!important;
+    text-align:center!important;
+  }
+
+  .app.home-active #home .home-card-choice .home-card-copy strong{
+    color:#f8e9c9!important;
+    font-size:clamp(18px,5vw,23px)!important;
+    line-height:1.04!important;
+    letter-spacing:.015em!important;
+    text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
+  }
+
+  .app.home-active #home .home-card-choice .home-card-copy>span{
+    color:#f3eadc!important;
+    font-size:clamp(9px,2.7vw,12px)!important;
+    line-height:1.28!important;
+    text-shadow:0 2px 10px rgba(0,0,0,.82)!important;
+    max-width:18ch!important;
+  }
+
+  .app.home-active #home .home-card-choice .arrow{
+    position:static!important;
+    width:auto!important;
+    height:auto!important;
+    margin-top:3px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:#e4c982!important;
+    font-size:28px!important;
+    line-height:.8!important;
+    transform:none!important;
+    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
+    box-shadow:none!important;
+  }
+
+  .app.home-active #home .home-foot{
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    bottom:calc(env(safe-area-inset-bottom) + 16px)!important;
+    z-index:12!important;
+    margin:0!important;
+    padding:0 8px!important;
+    display:flex!important;
+    justify-content:center!important;
+    align-items:center!important;
+  }
+
+  .app.home-active #home .home-foot-actions{
+    flex-direction:row!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    gap:10px!important;
+    width:auto!important;
+  }
+
+  .app.home-active #home .home-icon-action{
+    width:72px!important;
+    min-width:72px!important;
+    height:46px!important;
+    min-height:46px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:#eee3d3!important;
+  }
+
+  .app.home-active #home .home-icon-action:hover,
+  .app.home-active #home .home-icon-action:active,
+  .app.home-active #home .home-icon-action:focus,
+  .app.home-active #home .home-icon-action:focus-visible{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    outline:none!important;
+  }
+
+  .app.home-active #home .home-foot-icon{
+    width:20px!important;
+    height:20px!important;
+    filter:drop-shadow(0 1px 5px rgba(0,0,0,.82))!important;
+  }
+
+  .app.home-active #home .home-icon-label{
+    color:#f1e7d7!important;
+    font-size:7.5px!important;
+    font-weight:900!important;
+    letter-spacing:.13em!important;
+    text-shadow:0 1px 6px rgba(0,0,0,.86)!important;
+  }
+}
+
+@media only screen and (max-width:390px){
+  .app.home-active #home .home-intro{top:calc(env(safe-area-inset-top) + 56px)!important}
+  .app.home-active #home .home-intro h1{font-size:22px!important}
+  .app.home-active #home .home-actions{top:12.5%!important;height:67.5%!important}
+  .app.home-active #home .home-card-choice .home-card-copy strong{font-size:18px!important}
+  .app.home-active #home .home-card-choice .home-card-copy>span{font-size:8.5px!important}
+  .app.home-active #home .home-foot-actions{gap:6px!important}
+  .app.home-active #home .home-icon-action{width:67px!important;min-width:67px!important}
+}
+
