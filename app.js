@@ -5769,6 +5769,7 @@ show('restaurant'); restaurantQuick(); drawRestaurants();
 } else {
 home();
 }
+window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting')));
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({
