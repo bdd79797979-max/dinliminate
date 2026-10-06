@@ -58,7 +58,6 @@ assert('search response carries hours timezone',
  apiSource.includes("hoursTimeZone:String(hoursTimeZone||r.hoursTimeZone||'')")
 );
 assert('multi-interval parser uses repeated time matches',
- /const matches=[...String(clause||' ').matchAll/.test(appSource.replace(/'/g,""))
- || appSource.includes("matchAll(new RegExp(timeRe.source,'gi'))")
+ appSource.includes("matchAll(new RegExp(timeRe.source,'gi'))")
 );
 console.log(JSON.stringify({ok:true,timezoneAware:true,multipleIntervals:true,crossMidnight:true,branch:'cp1080-restaurant-hours-reliability'},null,2));
