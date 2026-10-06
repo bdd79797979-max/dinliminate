@@ -9533,11 +9533,38 @@ button,input,select,textarea{
   color:#85817a!important;
   box-shadow:none!important;
 }
-.canonical-maybe-control.has-maybes{
+/* CP1067 — All/Maybe is always readable; the active side and its count are the only lit green state. */
+.canonical-maybe-control,
+.canonical-maybe-control.has-maybes,
+.canonical-maybe-control:not(.has-maybes),
+.canonical-maybe-control:disabled{
   opacity:1!important;
 }
-.canonical-maybe-control:not(.has-maybes){
-  opacity:.48!important;
+.canonical-maybe-control .maybe-control-count{
+  color:#55d88a!important;
+  text-shadow:0 0 10px rgba(85,216,138,.26)!important;
+  font-weight:950!important;
+}
+.canonical-maybe-control.is-all .maybe-control-all,
+.canonical-maybe-control.is-all .maybe-control-count,
+.canonical-maybe-control.is-maybe .maybe-control-maybe,
+.canonical-maybe-control.is-maybe .maybe-control-count{
+  color:#55d88a!important;
+  text-shadow:0 0 10px rgba(85,216,138,.26)!important;
+  font-weight:950!important;
+}
+.canonical-maybe-control.is-all .maybe-control-maybe,
+.canonical-maybe-control.is-maybe .maybe-control-all{
+  color:#77736c!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.canonical-maybe-control.is-all .maybe-control-all,
+.canonical-maybe-control.is-all .maybe-control-count,
+.canonical-maybe-control.is-maybe .maybe-control-maybe,
+.canonical-maybe-control.is-maybe .maybe-control-count{
+  background:transparent!important;
+  box-shadow:none!important;
 }
 .canonical-maybe-control:disabled{
   cursor:default!important;
