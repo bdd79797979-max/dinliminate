@@ -10975,3 +10975,49 @@ html.dinliminate-visual-mobile .app{
   content:none!important;
   display:none!important;
 }
+
+
+/* CP1085 UI fixes — final mobile interaction overrides. */
+
+/* Startup: never paint the previously rendered SPA screen while state restores. */
+html.dinliminate-booting body>.app{
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Meals: Meal Times and Cuisine are mutually exclusive, matching Restaurant. */
+#food .food-quick-section{
+  position:relative!important;
+}
+#food .food-quick-section .meal-time-quick.is-rail-collapsed,
+#food .food-quick-section #foodQuick.is-rail-collapsed{
+  pointer-events:none!important;
+}
+
+/* Restaurant card: lift the complete text block clear of the photo credit. */
+#restaurant .restaurant-card-stack #restaurantCard .card-copy{
+  bottom:34px!important;
+}
+#restaurant .restaurant-card-stack #restaurantCard .restaurant-card-location-distance{
+  margin-top:6px!important;
+}
+
+/* Pinch zoom owns touch input while two fingers are down. */
+#restaurant .restaurant-card-stack #restaurantCard:has(img.restaurant-photo-zoomable){
+  touch-action:none!important;
+}
+
+/* Tutorial: preserve a clean gap above the Winner Start over button. */
+#winner .tutorial-bubble[data-action="winner-restart"]{
+  margin-bottom:10px!important;
+}
+
+@media(max-width:390px){
+  #restaurant .restaurant-card-stack #restaurantCard .card-copy{
+    bottom:31px!important;
+  }
+  #winner .tutorial-bubble[data-action="winner-restart"]{
+    margin-bottom:8px!important;
+  }
+}
