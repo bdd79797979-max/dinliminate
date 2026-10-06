@@ -25,13 +25,16 @@ module.exports = async function handler(req, res) {
   if (String(req.method || '').toUpperCase() !== 'POST') {
     return send(res, 405, {ok:false,code:'POST_REQUIRED',message:'Family Mode uses POST requests.'});
   }
+  const contentLength=Number(req.headers?.['content-length']||req.headers?.['Content-Length']||0);
+  if(Number.isFinite(contentLength)&&contentLength>64*1024)return send(res,413,{ok:false,code:'REQUEST_TOO_LARGE',message:'Family Mode request is too large.'});
+  const contentType=String(req.headers?.['content-type']||req.headers?.['Content-Type']||'').toLowerCase();
+  if(contentType&&!contentType.includes('application/json'))return send(res,415,{ok:false,code:'JSON_REQUIRED',message:'Family Mode requests must use JSON.'});
   const body = req.body && typeof req.body === 'object' ? req.body : {};
   const action = String(body.action || '').trim().toLowerCase();
 
   try {
-    if (['create','join'].includes(action) && limited(req, action, action === 'join' ? 12 : 8)) {
-      return send(res, 429, {ok:false,code:'RATE_LIMITED',message:'Too many Family Mode attempts. Please try again shortly.'});
-    }
+    const actionLimit=action==='create'?8:action==='join'?12:['state'].includes(action)?120:30;
+    if(limited(req,action,actionLimit))return send(res,429,{ok:false,code:'RATE_LIMITED',message:'Too many Family Mode requests. Please try again shortly.'});
 
     let result;
     if (action === 'create') result = await family.createFamily(body.displayName);
