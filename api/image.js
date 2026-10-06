@@ -29,7 +29,7 @@ module.exports=async function handler(req,res){
     const timer=setTimeout(()=>ctl.abort(),8000);
     let r;
     try{
-      r=await fetch(u.href,{signal:ctl.signal,headers:{Accept:'image/webp,image/jpeg,image/png,image/apng,image/svg+xml,image/*;q=0.8,*/*;q=0.5'}});
+      r=await fetch(u.href,{signal:ctl.signal,redirect:'error',headers:{Accept:'image/webp,image/jpeg,image/png,image/apng,image/svg+xml,image/*;q=0.8,*/*;q=0.5'}});
     }finally{clearTimeout(timer);}
     if(!r.ok)return res.status(502).json({ok:false,error:'Upstream image unavailable'});
     const type=(r.headers.get('content-type')||'').split(';')[0].toLowerCase();
@@ -42,6 +42,7 @@ module.exports=async function handler(req,res){
     res.setHeader('Cache-Control','public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
     res.setHeader('X-Content-Type-Options','nosniff');
     res.setHeader('Cross-Origin-Resource-Policy','same-origin');
+    res.setHeader('Referrer-Policy','no-referrer');
     res.status(200).end(data);
   }catch{
     res.status(502).json({ok:false,error:'Could not load image'});
