@@ -1641,7 +1641,8 @@ function bindQuickCutsCollapse(kind){
   event.preventDefault();
   event.stopPropagation();
   S.quickCutsCollapsed = {...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
-  if(kind==='food' && !S.quickCutsCollapsed.food){S.mealTimeCutsCollapsed=true;renderMealTimeCuts();}
+  // Cuisine and Meal Times are independent filters. Opening/closing one must
+  // never rewrite or collapse the other filter's state.
   renderQuickCutsCollapse(kind);
   save();
  };
@@ -1652,50 +1653,54 @@ function renderMealTimeCuts(){
  const toggle=document.getElementById('foodMealTimeToggle');
  const chips=document.getElementById('mealTimeQuick');
  if(!section||!toggle||!chips)return;
+
+ const availableMealTimes=mealTimeOptions().filter(x=>x.enabled);
+ const availableNames=availableMealTimes.map(x=>x.name);
+ let selected=new Set([...(S.mealTimeFilters||[])].map(currentMealTimeName).filter(name=>availableNames.includes(name)));
+ // An empty/legacy selection means the default ALL state.
+ if(!selected.size && availableNames.length) selected=new Set(availableNames);
+ S.mealTimeFilters=selected;
+
+ const allMealTimesSelected=availableNames.length>0&&availableNames.every(name=>selected.has(name));
+ const filterLabels=availableNames.filter(name=>selected.has(name));
+ const filterSummary=allMealTimesSelected?'All Meal Times':(filterLabels.length?filterLabels.join(', '):'All Meal Times');
+
  const collapsed=!!S.mealTimeCutsCollapsed;
  chips.classList.toggle('is-rail-collapsed',collapsed);
  chips.setAttribute('aria-hidden',String(collapsed));
  toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
-
- const availableMealTimes=mealTimeOptions().filter(x=>x.enabled);
- const selected=new Set(S.mealTimeFilters||[]);
- const allMealTimesSelected=availableMealTimes.length>0&&availableMealTimes.every(x=>selected.has(x.name));
- const filterLabels=availableMealTimes.filter(x=>selected.has(x.name)).map(x=>x.name);
- const filterSummary=filterLabels.length===0||allMealTimesSelected?'All Meal Times':filterLabels.join(', ');
- toggle.classList.toggle('is-active',!allMealTimesSelected);
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times'+(allMealTimesSelected?'':' — '+filterSummary));
- toggle.title=collapsed?'Show Meal Times'+(allMealTimesSelected?'':' — '+filterSummary):'Hide Meal Times'+(allMealTimesSelected?'':' — '+filterSummary);
+ toggle.classList.toggle('is-active',false);
  toggle.setAttribute('data-all-selected',allMealTimesSelected?'true':'false');
  toggle.setAttribute('data-filtered',allMealTimesSelected?'false':'true');
+ toggle.setAttribute('aria-pressed',!collapsed?'true':'false');
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times'+(allMealTimesSelected?'':' — '+filterSummary));
+ toggle.title=(collapsed?'Show ':'Hide ')+'Meal Times'+(allMealTimesSelected?'':' — '+filterSummary);
 
- chips.innerHTML=availableMealTimes.map(def=>def.name).map(label=>'<button class="chip meal-time-chip'+(selected.has(label)?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(selected.has(label)?'true':'false')+'">'+esc(label)+'</button>').join('');
+ chips.innerHTML=availableNames.map(label=>{
+  const active=selected.has(label);
+  return '<button class="chip meal-time-chip'+(active?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(active?'true':'false')+'" data-active="'+(active?'true':'false')+'">'+esc(label)+'</button>';
+ }).join('');
+
  chips.querySelectorAll('[data-meal-time]').forEach(btn=>{
-  btn.onclick=()=>{
-   const label=btn.dataset.mealTime;
-   const next=new Set(S.mealTimeFilters||[]);
+  btn.onclick=(event)=>{
+   event.preventDefault();
+   event.stopPropagation();
+   const label=currentMealTimeName(btn.dataset.mealTime);
+   if(!label||!availableNames.includes(label))return;
 
-   // Meal Times is a true multi-select filter.
-   // All enabled times start active. Tapping a time toggles only that time,
-   // so two or more times can remain active together.
+   const next=new Set(S.mealTimeFilters||[]);
    if(next.has(label)){
-    if(next.size===1){
-     // Never allow an empty Meal Time filter; keep the full set selected.
-     next.clear();
-     mealTimeNames().forEach(name=>next.add(name));
-    }else{
-     next.delete(label);
-    }
+    // Keep at least one time selected. This remains a multi-select control.
+    if(next.size>1)next.delete(label);
    }else{
     next.add(label);
    }
-
-   S.mealTimeFilters=next;
+   S.mealTimeFilters=new Set([...next].filter(name=>availableNames.includes(name)));
    S.index=0;
    buildFood();
-   renderMealTimeCuts();
-   foodQuick();
    drawFood();
+   renderMealTimeCuts();
    save();
   };
  });
