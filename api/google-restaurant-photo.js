@@ -7,6 +7,23 @@ function clean(v,max=300){return String(v||'').trim().replace(/[\x00-\x1f\x7f]/g
 function normalize(v){return clean(v,1000).toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()}
 function addressNumber(v){const m=String(v||'').match(/\b\d{1,6}\b/);return m?m[0]:''}
 function cityTokens(v){return normalize(v).split(' ').filter(x=>x.length>=4&&!/^\d+$/.test(x)).slice(-5)}
+function canonicalVenueNameTokens(v){
+  return normalize(v)
+    .replace(/\bbar\s+b\s+q\b/g,'bbq')
+    .replace(/\bbarbecue\b/g,'bbq')
+    .replace(/\bbarbeque\b/g,'bbq')
+    .split(' ')
+    .filter(Boolean);
+}
+function venueNameMatches(candidate,input){
+  const a=canonicalVenueNameTokens(candidate),b=canonicalVenueNameTokens(input);
+  if(!a.length||!b.length)return false;
+  if(a.join(' ')===b.join(' '))return true;
+  const shared=a.filter(token=>b.includes(token)).length;
+  const coverage=shared/Math.min(a.length,b.length);
+  const hasDistinctive= a.some(token=>token.length>=4&&b.includes(token));
+  return hasDistinctive&&coverage>=0.75;
+}
 function distanceMiles(a,b,c,d){
   const R=3958.7613,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,z=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;
   return 2*R*Math.asin(Math.sqrt(z));
@@ -14,7 +31,9 @@ function distanceMiles(a,b,c,d){
 function exactPlaceMatch(place,name,address,lat,lon){
   const formatted=normalize(place?.formattedAddress||'');
   const input=normalize(address);
+  const placeName=normalize(place?.displayName?.text||place?.displayName||place?.name||'');
   const number=addressNumber(address);
+  if(!venueNameMatches(placeName,name))return false;
   if(number&&!formatted.includes(number))return false;
   const inputCities=cityTokens(address);
   if(!inputCities.some(t=>formatted.includes(t)))return false;
@@ -58,7 +77,7 @@ async function googlePhotoMedia(photoName){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),7000);
   try{
     const res=await fetch(url,{signal:ctl.signal,headers:{'Accept':'image/avif,image/webp,image/jpeg,image/png','X-Goog-Api-Key':GOOGLE_PLACES_API_KEY,'User-Agent':'Dinliminate/1.0 (Google Places photo)'}});
-    if(!res.ok){let body=null;try{body=await res.json()}catch{};if(isQuotaError(res.status,body))await disableGoogleForMonth();return null;}
+    if(!res.ok){let body=null;try{body=await res.json()}catch{};if(isQuotaError(res.status,body))await disableGoogleSkuForMonth('place-photo');return null;}
     const type=(res.headers.get('content-type')||'').split(';')[0].toLowerCase();
     if(!type.startsWith('image/')||type==='image/svg+xml'||type==='image/svg')return null;
     const bytes=Buffer.from(await res.arrayBuffer());
@@ -76,13 +95,15 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
   if(!budget.ok)return '';
   let data;
   try{
-    data=await googleJson('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'X-Goog-FieldMask':'places.id'},body:JSON.stringify(body)});
+    data=await googleJson('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location'},body:JSON.stringify(body)});
   }catch(err){
     if(Number(err?.status)===403||Number(err?.status)===429)await disableGoogleSkuForMonth('text-search-pro');
     throw err;
   }
   const candidates=Array.isArray(data.places)?data.places:[];
-  return candidates.map(p=>String(p?.id||'').trim()).find(Boolean)||'';
+  const exact=candidates.find(p=>exactPlaceMatch(p,args?.name||name,args?.address||address,args?.lat??lat,args?.lon??lon));
+  if(exact?.id)return String(exact.id).trim();
+  return '';
 }
 async function getPlaceDetails(placeId){
   if(!placeId)return null;
@@ -94,7 +115,7 @@ async function getPlaceDetails(placeId){
   try{
     return await googleJson('https://places.googleapis.com/v1/places/'+encodeURIComponent(placeId),{
       method:'GET',
-      headers:{'X-Goog-FieldMask':'id,formattedAddress,location,photos'}
+      headers:{'X-Goog-FieldMask':'id,displayName,formattedAddress,location,photos'}
     });
   }catch(err){
     if(Number(err?.status)===403||Number(err?.status)===429)await disableGoogleSkuForMonth('place-details-essentials');
@@ -141,7 +162,7 @@ async function tryGoogleRestaurantPhoto(input){
       body:err?.body||null,
       message:String(err?.message||err||'unknown')
     });
-    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleForMonth();
+    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleSkuForMonth('place-photo');
   }
   return null;
 }
