@@ -10452,3 +10452,50 @@ body:has(.app.home-active)::after{
     transform:translate(3px,5px)!important;
   }
 }
+
+
+/* CP1143 — cleaner Home hierarchy: remove the large headline, move the slogan
+   above the Home tools, slightly enlarge the two choices, and lift them a touch. */
+.app.home-active #home .home-slogan{
+  position:absolute;
+  left:0;right:0;
+  bottom:calc(env(safe-area-inset-bottom) + 68px);
+  z-index:30;
+  margin:0;
+  padding:0 16px;
+  text-align:center;
+  font:600 12px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  letter-spacing:.13em;
+  color:#f5e4c2;
+  text-shadow:0 2px 7px rgba(0,0,0,.60);
+}
+.app.home-active #home .home-choice-content strong{
+  font-size:13px!important;
+}
+.app.home-active #home .home-choice-arrow{
+  font-size:23px!important;
+}
+.app.home-active #home #foodStart .home-choice-content{
+  transform:translate(-5px,2px)!important;
+}
+.app.home-active #home #restStart .home-choice-content{
+  transform:translate(4px,2px)!important;
+}
+@media(max-width:390px){
+  .app.home-active #home .home-slogan{
+    bottom:calc(env(safe-area-inset-bottom) + 68px);
+    font-size:10.5px;
+  }
+  .app.home-active #home .home-choice-content strong{
+    font-size:12px!important;
+  }
+  .app.home-active #home .home-choice-arrow{
+    font-size:21px!important;
+  }
+  .app.home-active #home #foodStart .home-choice-content{
+    transform:translate(-3px,2px)!important;
+  }
+  .app.home-active #home #restStart .home-choice-content{
+    transform:translate(3px,2px)!important;
+  }
+}
