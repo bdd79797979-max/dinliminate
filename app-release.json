@@ -27,5 +27,5 @@
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
-  "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers"
+  "securityHardening": "Family URL sanitizer; JSON/body/method guards; bounded API rate buckets; hardened image proxy; generic restaurant server errors"
 }
