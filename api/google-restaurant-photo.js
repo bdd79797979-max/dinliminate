@@ -1,6 +1,7 @@
 'use strict';
 
 const { neon } = require('@neondatabase/serverless');
+const { pacificMonthKey, nextPacificMonthIso } = require('./google-usage');
 
 const GOOGLE_PLACES_API_KEY=String(process.env.GOOGLE_PLACES_API_KEY||'').trim();
 const DATABASE_URL=String(
@@ -10,7 +11,7 @@ const DATABASE_URL=String(
   process.env.POSTGRES_URL ||
   ''
 ).trim();
-const DEFAULT_MONTHLY_LIMIT=Math.max(1,Number.parseInt(process.env.GOOGLE_PHOTO_MONTHLY_HARD_LIMIT||'850',10)||850);
+const DEFAULT_MONTHLY_LIMIT=Math.max(1,Number.parseInt(process.env.GOOGLE_PHOTO_MONTHLY_HARD_LIMIT||'900',10)||900);
 const UNTRACKED_LIMIT=Math.max(0,Number.parseInt(process.env.GOOGLE_PHOTO_UNTRACKED_LIMIT||'0',10)||0);
 const MONTH_TABLE='dinliminate_google_photo_usage';
 
@@ -19,14 +20,8 @@ let localMonth='';
 let localCount=0;
 let quotaDisabledMonth='';
 
-function monthKey(){
-  const d=new Date();
-  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
-}
-function nextMonthIso(){
-  const d=new Date();
-  return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1,0,0,0,0)).toISOString();
-}
+function monthKey(){return pacificMonthKey();}
+function nextMonthIso(){return nextPacificMonthIso();}
 function clean(v,max=300){return String(v||'').trim().replace(/[\x00-\x1f\x7f]/g,' ').slice(0,max)}
 function normalize(v){return clean(v,1000).toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()}
 function addressNumber(v){const m=String(v||'').match(/\b\d{1,6}\b/);return m?m[0]:''}
@@ -193,7 +188,7 @@ function sendGoogleJson(res,status,payload){
 function sendGoogleMedia(res,found){
  if(!found?.media)return sendGoogleJson(res,404,{ok:false,error:'No verified Google restaurant photo was found'});
  res.setHeader?.('Content-Type',found.media.type);
- res.setHeader?.('Cache-Control','public, max-age=604800, stale-while-revalidate=2592000');
+ res.setHeader?.('Cache-Control','no-store');
  res.setHeader?.('X-Content-Type-Options','nosniff');
  res.setHeader?.('X-Restaurant-Photo-Source',found.source||'google-places');
  res.setHeader?.('X-Restaurant-Photo-Source-URL',found.sourceUrl||'https://www.google.com/maps');
@@ -221,6 +216,7 @@ async function handler(req,res){
    googlePlacesConfigured:!!GOOGLE_PLACES_API_KEY,
    durableBudgetConfigured:!!DATABASE_URL,
    monthlyHardLimit:DEFAULT_MONTHLY_LIMIT,
+   billingMonthTimeZone:'America/Los_Angeles',
    untrackedLimit:UNTRACKED_LIMIT,
    usage
   });
