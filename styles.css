@@ -10749,3 +10749,65 @@ html.dinliminate-visual-mobile #tutorialLayer{
   background:linear-gradient(145deg,#191816,#121211)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
 }
+
+
+/* CP1071 — true edge-to-edge iPhone viewport shell.
+   Mobile screens must own the physical viewport rather than participate in
+   the desktop centered canvas. Safe-area space is reserved by the children
+   that need it, while the app itself stays pinned to every viewport edge. */
+@media only screen and (max-width:1199px){
+  html,body{
+    position:fixed!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:100%!important;
+    min-height:100%!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+  .app{
+    position:fixed!important;
+    inset:0!important;
+    width:100%!important;
+    min-width:100%!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+  .app-topbar,
+  .screen{
+    width:100%!important;
+    max-width:none!important;
+  }
+}
+
+html.dinliminate-visual-mobile .app{
+  position:fixed!important;
+  inset:0!important;
+  width:100%!important;
+  min-width:100%!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+
+/* CP1071 — do not let the legacy desktop canvas width leak into any mobile
+   screen or modal, including Safari desktop-site presentation. */
+@media only screen and (max-width:1199px){
+  .app > .screen,
+  .app > .screen > *{
+    max-width:none;
+  }
+}
