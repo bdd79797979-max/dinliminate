@@ -10234,20 +10234,6 @@ button,input,select,textarea{
 }
 
 
-/* CP1021 — persistent Home canvas. The app JS already maintains .home-active,
-   so keep the permanent door photo keyed to that explicit state instead of
-   depending on :has() to discover the active screen. */
-.app.home-active{
-  background-image:url("./assets/home-door.jpg") !important;
-  background-size:cover !important;
-  background-position:center center !important;
-  background-repeat:no-repeat !important;
-  background-color:#080706 !important;
-}
-.app.home-active #home{
-  background:transparent !important;
-}
-
 
 /* CP1056 — Restaurant Hours filter.
    Search, Cuisine, and Hours share the existing discovery-rail language.
@@ -10310,42 +10296,6 @@ button,input,select,textarea{
 
 
 
-/* CP1063 — viewport-level Home backdrop.
-   The door image is independent of the app canvas, so it can never be trapped
-   inside the desktop 520px presentation. */
-body:has(.app.home-active){
-  position:relative!important;
-}
-body:has(.app.home-active)::before{
-  content:""!important;
-  position:fixed!important;
-  z-index:0!important;
-  top:0!important;
-  bottom:0!important;
-  left:50%!important;
-  width:520px!important;
-  transform:translateX(-50%)!important;
-  background:url("./assets/home-door.jpg") center center / cover no-repeat!important;
-  background-color:#080706!important;
-  pointer-events:none!important;
-}
-body:has(.app.home-active) .app{
-  position:relative!important;
-  z-index:1!important;
-  background:transparent!important;
-}
-@media only screen and (max-width:1199px){
-  body:has(.app.home-active)::before{
-    left:0!important;
-    width:100vw!important;
-    transform:none!important;
-  }
-}
-html.dinliminate-visual-mobile body:has(.app.home-active)::before{
-  left:0!important;
-  width:100vw!important;
-  transform:none!important;
-}
 
 /* CP1062 — single responsive app shell.
    Phones/tablets own the full viewport; larger desktop windows keep the
@@ -10454,100 +10404,6 @@ html.dinliminate-visual-mobile body:has(.app.home-active)::before{
     max-width:100vw!important;
     max-height:100dvh!important;
   }
-}
-
-
-/* CP1063 — visual-viewport mobile fallback.
-   Used only when visualViewport.width identifies a phone/tablet-sized visible
-   canvas even when Safari is presenting a desktop-style layout viewport. */
-html.dinliminate-visual-mobile,
-html.dinliminate-visual-mobile body{
-  width:100%!important;
-  min-width:100%!important;
-  max-width:none!important;
-  height:100%!important;
-  min-height:100%!important;
-  margin:0!important;
-  padding:0!important;
-  overflow:hidden!important;
-}
-html.dinliminate-visual-mobile body{
-  -webkit-text-size-adjust:100%!important;
-}
-html.dinliminate-visual-mobile .app{
-  position:relative!important;
-  width:100vw!important;
-  min-width:100vw!important;
-  max-width:none!important;
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:100dvh!important;
-  margin:0!important;
-  padding:0!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-}
-html.dinliminate-visual-mobile .app-topbar{
-  position:absolute!important;
-  inset:0 0 auto 0!important;
-  z-index:80!important;
-  width:100%!important;
-  max-width:none!important;
-  margin:0!important;
-  padding:env(safe-area-inset-top) 2px 0!important;
-  box-sizing:border-box!important;
-}
-html.dinliminate-visual-mobile .screen{
-  position:absolute!important;
-  inset:0!important;
-  width:100vw!important;
-  min-width:100vw!important;
-  max-width:none!important;
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:100dvh!important;
-  margin:0!important;
-  box-sizing:border-box!important;
-  overflow-x:hidden!important;
-  overflow-y:auto!important;
-  -webkit-overflow-scrolling:touch!important;
-}
-html.dinliminate-visual-mobile .screen.hidden{display:none!important;}
-html.dinliminate-visual-mobile .screen.luxury-home{overflow:hidden!important;}
-html.dinliminate-visual-mobile .app:has(#home:not(.hidden)) #home{
-  width:100vw!important;
-  min-width:100vw!important;
-  max-width:none!important;
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:100dvh!important;
-  margin:0!important;
-  padding:calc(env(safe-area-inset-top) + 74px) 14px max(18px,calc(env(safe-area-inset-bottom) + 18px)) 14px!important;
-  box-sizing:border-box!important;
-}
-html.dinliminate-visual-mobile .decision-screen{
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:100dvh!important;
-  overflow:hidden!important;
-}
-html.dinliminate-visual-mobile .winner.screen,
-html.dinliminate-visual-mobile .family-screen{
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:100dvh!important;
-}
-html.dinliminate-visual-mobile .winner.screen{overflow-y:auto!important;}
-html.dinliminate-visual-mobile .drawer,
-html.dinliminate-visual-mobile .drawer-bg,
-html.dinliminate-visual-mobile .modal,
-html.dinliminate-visual-mobile .modal-bg,
-html.dinliminate-visual-mobile .overlay,
-html.dinliminate-visual-mobile .location-permission-modal,
-html.dinliminate-visual-mobile .location-permission-bg,
-html.dinliminate-visual-mobile #tutorialLayer{
-  max-width:100vw!important;
-  max-height:100dvh!important;
 }
 
 
@@ -10799,473 +10655,24 @@ html.dinliminate-visual-mobile .app{
 }
 
 
-/* CP1073 — iPhone Home door composition.
-   Keep the full supplied door visible on phones instead of the aggressive
-   cover-crop. The At Home / Restaurant controls are transparent vertical
-   hitboxes aligned to the two door-window panels; only their text and arrows
-   are visible. */
-@media only screen and (max-width:600px){
-  .app.home-active{
-    background-position:center center!important;
-  }
-  body:has(.app.home-active)::before{
-    width:100vw!important;
-    left:0!important;
-    transform:none!important;
-    background-position:center center!important;
-    background-repeat:no-repeat!important;
-  }
-  .app.home-active #home{
-    padding-left:0!important;
-    padding-right:0!important;
-    justify-content:center!important;
-  }
-  .app.home-active #home .home-actions{
-    width:100%!important;
-    margin:7vh auto 0!important;
-    padding:0 7vw!important;
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:5vw!important;
-    align-items:center!important;
-  }
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:29vh!important;
-    min-height:0!important;
-    aspect-ratio:.72!important;
-    padding:0!important;
-    overflow:visible!important;
-    background:transparent!important;
-    background-image:none!important;
-    border:0!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-overlay,
-  .app.home-active #home .home-card-choice::before,
-  .app.home-active #home .home-card-choice::after{
-    display:none!important;
-    content:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy{
-    padding:0 2px!important;
-    align-items:center!important;
-    justify-content:center!important;
-    text-align:center!important;
-    gap:5px!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#fff!important;
-    font-size:clamp(18px,5.5vw,24px)!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.55)!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    color:#fff!important;
-    font-size:clamp(9px,2.8vw,12px)!important;
-    line-height:1.25!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.55)!important;
-  }
-  .app.home-active #home .home-card-choice .arrow{
-    right:50%!important;
-    bottom:10%!important;
-    transform:translateX(50%)!important;
-    width:auto!important;
-    height:auto!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#fff!important;
-    font-size:28px!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.6)!important;
-  }
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:none!important;
-    filter:none!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
+
+
+
+
+
+
+
+/* CP1099 — hidden Meal Times use the same crossed-out cue as Cuisine Cuts. */
+#food .meal-time-quick .meal-time-chip:not(.is-active)[data-active="false"]{
+  text-decoration:line-through!important;
+  text-decoration-thickness:1.5px!important;
+  text-decoration-color:currentColor!important;
 }
 
-@media only screen and (max-width:390px){
-  .app.home-active #home .home-actions{margin-top:5vh!important;padding:0 6vw!important;gap:4vw!important}
-  .app.home-active #home .home-card-choice{height:31vh!important}
-}
-
-
-/* CP1074 — align transparent Home tap windows to the door panels. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-actions{
-    position:absolute!important;
-    top:43%!important;
-    left:0!important;
-    right:0!important;
-    width:100%!important;
-    margin:0!important;
-    padding:0 7vw!important;
-    z-index:8!important;
-  }
-  .app.home-active #home .home-card-choice{
-    position:relative!important;
-    z-index:8!important;
-    pointer-events:auto!important;
-  }
-}
-@media only screen and (max-width:390px){
-  .app.home-active #home .home-actions{top:41%!important;padding:0 6vw!important}
-}
-
-
-/* CP1075 — Home hamburger matches the app-wide lines-only menu exactly. */
-.app:has(#home:not(.hidden)) .app-topbar #menu,
-.app.home-active #menu{
-  width:40px!important;
-  min-width:40px!important;
-  height:40px!important;
-  min-height:40px!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  background-color:transparent!important;
-  background-image:none!important;
-  box-shadow:none!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-}
-.app:has(#home:not(.hidden)) .app-topbar #menu span,
-.app.home-active #menu span{
-  width:18px!important;
-  height:1.8px!important;
-  margin:0!important;
-  border:0!important;
-  border-radius:999px!important;
-  background:#d6b778!important;
-  box-shadow:0 0 7px rgba(214,183,120,.28),0 1px 1px rgba(0,0,0,.55)!important;
-}
-.app:has(#home:not(.hidden)) .app-topbar #menu::before,
-.app:has(#home:not(.hidden)) .app-topbar #menu::after,
-.app.home-active #menu::before,
-.app.home-active #menu::after{
-  content:none!important;
-  display:none!important;
-}
-
-/* CP1090 — Home-only launch viewport candidate.
-   Keep the existing door image; eliminate the stretched mobile presentation.
-   The photo preserves its natural aspect ratio and fills the viewport by
-   matching the viewport height, allowing only horizontal crop when needed.
-   Home owns the full viewport; other screens keep their existing layout. */
-@media only screen and (max-width:600px){
-  body:has(.app.home-active)::before{
-    display:none!important;
-    content:none!important;
-  }
-
-  .app.home-active{
-    position:fixed!important;
-    inset:0!important;
-    width:100vw!important;
-    max-width:none!important;
-    height:100dvh!important;
-    min-height:100dvh!important;
-    max-height:100dvh!important;
-    margin:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-    background-color:#080706!important;
-    background-image:url("./assets/home-door.jpg")!important;
-    background-repeat:no-repeat!important;
-    background-position:center center!important;
-    background-size:auto 100%!important;
-  }
-
-  .app.home-active::after,
-  .app.home-active #home::before{
-    display:none!important;
-    content:none!important;
-  }
-
-  .app.home-active .app-topbar{
-    position:absolute!important;
-    inset:0 0 auto 0!important;
-    z-index:80!important;
-    width:100%!important;
-    height:auto!important;
-    min-height:0!important;
-    padding:calc(env(safe-area-inset-top) + 8px) 10px 0!important;
-    margin:0!important;
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
-    box-sizing:border-box!important;
-  }
-
-  .app.home-active .app-topbar .brand-mark{
-    position:relative!important;
-    margin:0 auto!important;
-    gap:6px!important;
-    min-height:34px!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    filter:drop-shadow(0 2px 8px rgba(0,0,0,.55))!important;
-  }
-  .app.home-active .dinliminate-logo-symbol{
-    width:30px!important;
-    height:30px!important;
-    flex:0 0 30px!important;
-  }
-  .app.home-active .dinliminate-logo-wordmark{
-    color:#f0d79a!important;
-    font-size:12px!important;
-    line-height:1!important;
-    font-weight:900!important;
-    letter-spacing:.22em!important;
-    white-space:nowrap!important;
-    text-shadow:0 1px 7px rgba(0,0,0,.72)!important;
-  }
-
-  .app.home-active .app-topbar #menu{
-    position:absolute!important;
-    top:calc(env(safe-area-inset-top) + 5px)!important;
-    right:8px!important;
-    width:42px!important;
-    min-width:42px!important;
-    height:42px!important;
-    min-height:42px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-  .app.home-active .app-topbar #menu span{
-    width:18px!important;
-    height:1.8px!important;
-    background:#d6b778!important;
-    box-shadow:0 0 7px rgba(214,183,120,.3),0 1px 1px rgba(0,0,0,.55)!important;
-  }
-
-  .app.home-active #home{
-    position:absolute!important;
-    inset:0!important;
-    width:100vw!important;
-    max-width:none!important;
-    height:100dvh!important;
-    min-height:100dvh!important;
-    max-height:100dvh!important;
-    margin:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-    display:block!important;
-    background:transparent!important;
-    text-align:center!important;
-  }
-
-  .app.home-active #home .home-intro{
-    position:absolute!important;
-    top:calc(env(safe-area-inset-top) + 58px)!important;
-    left:0!important;
-    right:0!important;
-    margin:0!important;
-    padding:0 14px!important;
-    z-index:7!important;
-    transform:none!important;
-  }
-  .app.home-active #home .home-intro h1{
-    margin:0!important;
-    max-width:none!important;
-    font-size:24px!important;
-    line-height:1!important;
-    letter-spacing:-.045em!important;
-    color:#f3e8d5!important;
-    text-shadow:0 2px 14px rgba(0,0,0,.72)!important;
-  }
-  .app.home-active #home .home-intro .sub{
-    margin:6px auto 0!important;
-    font-size:9px!important;
-    line-height:1.25!important;
-    color:#eadfce!important;
-    text-shadow:0 1px 9px rgba(0,0,0,.78)!important;
-  }
-
-  /* These are transparent interaction windows. The photograph remains visible
-     beneath them; only the instructional text/arrows are painted by the UI. */
-  .app.home-active #home .home-actions{
-    position:absolute!important;
-    top:34%!important;
-    left:0!important;
-    right:0!important;
-    width:100%!important;
-    height:31%!important;
-    margin:0!important;
-    padding:0 7vw!important;
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:5vw!important;
-    align-items:stretch!important;
-    z-index:8!important;
-  }
-
-  .app.home-active #home .home-card-choice{
-    width:100%!important;
-    min-width:0!important;
-    height:100%!important;
-    min-height:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    background-image:none!important;
-    box-shadow:none!important;
-    overflow:visible!important;
-    display:grid!important;
-    place-items:center!important;
-    touch-action:manipulation!important;
-  }
-
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:translateY(1px)!important;
-    filter:brightness(1.03)!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-card-choice .home-card-copy{
-    position:relative!important;
-    z-index:2!important;
-    width:100%!important;
-    padding:0 2px!important;
-    display:flex!important;
-    flex-direction:column!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:6px!important;
-    text-align:center!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    color:#f8e9c9!important;
-    font-size:clamp(18px,5vw,23px)!important;
-    line-height:1.04!important;
-    letter-spacing:.015em!important;
-    text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    color:#f3eadc!important;
-    font-size:clamp(9px,2.7vw,12px)!important;
-    line-height:1.28!important;
-    text-shadow:0 2px 10px rgba(0,0,0,.82)!important;
-    max-width:18ch!important;
-  }
-  .app.home-active #home .home-card-choice .arrow{
-    position:static!important;
-    width:auto!important;
-    height:auto!important;
-    margin-top:3px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    color:#e4c982!important;
-    font-size:30px!important;
-    line-height:.8!important;
-    transform:none!important;
-    text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active #home .home-foot{
-    position:absolute!important;
-    left:0!important;
-    right:0!important;
-    bottom:calc(env(safe-area-inset-bottom) + 16px)!important;
-    z-index:12!important;
-    margin:0!important;
-    padding:0 8px!important;
-    display:flex!important;
-    justify-content:center!important;
-    align-items:center!important;
-  }
-  .app.home-active #home .home-foot-actions{
-    flex-direction:row!important;
-    align-items:flex-end!important;
-    justify-content:center!important;
-    gap:10px!important;
-    width:auto!important;
-  }
-  .app.home-active #home .home-icon-action{
-    width:72px!important;
-    min-width:72px!important;
-    height:46px!important;
-    min-height:46px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-    color:#eee3d3!important;
-  }
-  .app.home-active #home .home-icon-action:hover,
-  .app.home-active #home .home-icon-action:active,
-  .app.home-active #home .home-icon-action:focus,
-  .app.home-active #home .home-icon-action:focus-visible{
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
-    outline:none!important;
-  }
-  .app.home-active #home .home-foot-icon{
-    width:20px!important;
-    height:20px!important;
-    filter:drop-shadow(0 1px 5px rgba(0,0,0,.82))!important;
-  }
-  .app.home-active #home .home-icon-label{
-    color:#f1e7d7!important;
-    font-size:7.5px!important;
-    font-weight:900!important;
-    letter-spacing:.13em!important;
-    text-shadow:0 1px 6px rgba(0,0,0,.86)!important;
-  }
-
-}
-
-@media only screen and (max-width:390px){
-  .app.home-active #home .home-intro{
-    top:calc(env(safe-area-inset-top) + 56px)!important;
-  }
-  .app.home-active #home .home-intro h1{
-    font-size:22px!important;
-  }
-  .app.home-active #home .home-actions{
-    top:32%!important;
-    height:32%!important;
-    padding:0 6vw!important;
-    gap:4vw!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy strong{
-    font-size:18px!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    font-size:8.5px!important;
-  }
-  .app.home-active #home .home-foot-actions{
-    gap:6px!important;
-  }
-  .app.home-active #home .home-icon-action{
-    width:67px!important;
-    min-width:67px!important;
-  }
-}
-
-/* CP1092 — canonical iPhone Home composition.
-   The supplied door photo is the canvas. The two tap targets map to the
-   actual left/right glass panels after preserving the photo's aspect ratio.
-   No opaque cards, duplicate backdrop, or bottom overlay is introduced. */
+/* CP1102 — canonical Home door controls.
+   Old Home-specific composition blocks were removed. One authoritative mobile
+   composition keeps the supplied door photo as the only background, with the
+   At Home hit area on the left door panel and Restaurant on the right. */
 @media only screen and (max-width:600px){
   .app.home-active{
     position:fixed!important;
@@ -11280,77 +10687,6 @@ html.dinliminate-visual-mobile .app{
     overflow:hidden!important;
     background:#080706 url("./assets/home-door.jpg") center center / auto 100% no-repeat!important;
   }
-
-  .app.home-active::before,
-  .app.home-active::after,
-  body:has(.app.home-active)::before{
-    display:none!important;
-    content:none!important;
-  }
-
-  .app.home-active .app-topbar{
-    position:absolute!important;
-    inset:0 0 auto 0!important;
-    z-index:80!important;
-    width:100%!important;
-    height:auto!important;
-    min-height:0!important;
-    padding:calc(env(safe-area-inset-top) + 8px) 10px 0!important;
-    margin:0!important;
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active .app-topbar .brand-mark{
-    position:relative!important;
-    margin:0 auto!important;
-    min-height:34px!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:6px!important;
-    filter:drop-shadow(0 2px 8px rgba(0,0,0,.55))!important;
-  }
-
-  .app.home-active .dinliminate-logo-symbol{
-    width:30px!important;
-    height:30px!important;
-    flex:0 0 30px!important;
-  }
-
-  .app.home-active .dinliminate-logo-wordmark{
-    color:#f0d79a!important;
-    font-size:12px!important;
-    line-height:1!important;
-    font-weight:900!important;
-    letter-spacing:.22em!important;
-    white-space:nowrap!important;
-    text-shadow:0 1px 7px rgba(0,0,0,.72)!important;
-  }
-
-  .app.home-active .app-topbar #menu{
-    position:absolute!important;
-    top:calc(env(safe-area-inset-top) + 5px)!important;
-    right:8px!important;
-    width:42px!important;
-    min-width:42px!important;
-    height:42px!important;
-    min-height:42px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-
-  .app.home-active .app-topbar #menu span{
-    width:18px!important;
-    height:1.8px!important;
-    background:#d6b778!important;
-    box-shadow:0 0 7px rgba(214,183,120,.3),0 1px 1px rgba(0,0,0,.55)!important;
-  }
-
   .app.home-active #home{
     position:absolute!important;
     inset:0!important;
@@ -11366,7 +10702,70 @@ html.dinliminate-visual-mobile .app{
     background:transparent!important;
     text-align:center!important;
   }
-
+  .app.home-active::before,
+  .app.home-active::after,
+  body:has(.app.home-active)::before{
+    display:none!important;
+    content:none!important;
+  }
+  .app.home-active .app-topbar{
+    position:absolute!important;
+    inset:0 0 auto 0!important;
+    z-index:80!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:calc(env(safe-area-inset-top) + 8px) 10px 0!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    box-sizing:border-box!important;
+  }
+  .app.home-active .app-topbar .brand-mark{
+    position:relative!important;
+    margin:0 auto!important;
+    min-height:34px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    filter:drop-shadow(0 2px 8px rgba(0,0,0,.55))!important;
+  }
+  .app.home-active .dinliminate-logo-symbol{
+    width:30px!important;
+    height:30px!important;
+    flex:0 0 30px!important;
+  }
+  .app.home-active .dinliminate-logo-wordmark{
+    color:#f0d79a!important;
+    font-size:12px!important;
+    line-height:1!important;
+    font-weight:900!important;
+    letter-spacing:.22em!important;
+    white-space:nowrap!important;
+    text-shadow:0 1px 7px rgba(0,0,0,.72)!important;
+  }
+  .app.home-active .app-topbar #menu{
+    position:absolute!important;
+    top:calc(env(safe-area-inset-top) + 5px)!important;
+    right:8px!important;
+    width:42px!important;
+    min-width:42px!important;
+    height:42px!important;
+    min-height:42px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  .app.home-active .app-topbar #menu span{
+    width:18px!important;
+    height:1.8px!important;
+    background:#d6b778!important;
+    box-shadow:0 0 7px rgba(214,183,120,.3),0 1px 1px rgba(0,0,0,.55)!important;
+  }
   .app.home-active #home .home-intro{
     position:absolute!important;
     top:calc(env(safe-area-inset-top) + 58px)!important;
@@ -11376,9 +10775,6 @@ html.dinliminate-visual-mobile .app{
     margin:0!important;
     padding:0 14px!important;
   }
-
-  .app.home-active #home .home-intro .eyebrow{display:none!important}
-
   .app.home-active #home .home-intro h1{
     margin:0!important;
     max-width:none!important;
@@ -11388,7 +10784,6 @@ html.dinliminate-visual-mobile .app{
     color:#f3e8d5!important;
     text-shadow:0 2px 14px rgba(0,0,0,.72)!important;
   }
-
   .app.home-active #home .home-intro .sub{
     margin:6px auto 0!important;
     font-size:9px!important;
@@ -11396,9 +10791,6 @@ html.dinliminate-visual-mobile .app{
     color:#eadfce!important;
     text-shadow:0 1px 9px rgba(0,0,0,.78)!important;
   }
-
-  /* The photograph is 912x1136. With auto-height sizing, these 36% edge
-     columns line up with the visible left/right glass panels on iPhone widths. */
   .app.home-active #home .home-actions{
     position:absolute!important;
     top:12.5%!important;
@@ -11415,36 +10807,49 @@ html.dinliminate-visual-mobile .app{
     gap:0!important;
     z-index:8!important;
   }
-
-  .app.home-active #home .home-card-choice{
+  .app.home-active #home .home-card-choice,
+  .app.home-active #home .home-card-choice:hover,
+  .app.home-active #home .home-card-choice:focus,
+  .app.home-active #home .home-card-choice:focus-visible,
+  .app.home-active #home .home-card-choice:active,
+  .app.home-active #home .home-card-choice.is-pressed{
+    position:relative!important;
     width:100%!important;
     min-width:0!important;
     height:100%!important;
     min-height:0!important;
+    margin:0!important;
     padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    background-image:none!important;
-    box-shadow:none!important;
     overflow:visible!important;
     display:grid!important;
     place-items:center!important;
     touch-action:manipulation!important;
-  }
-
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    transform:none!important;
-    filter:brightness(1.035)!important;
+    appearance:none!important;
+    -webkit-appearance:none!important;
     background:transparent!important;
+    background-color:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+    transform:none!important;
+  }
+  .app.home-active #home .home-card-choice .home-card-overlay,
+  .app.home-active #home .home-card-choice::before,
+  .app.home-active #home .home-card-choice::after{
+    display:none!important;
+    content:none!important;
+    background:none!important;
+    border:0!important;
     box-shadow:none!important;
   }
-
   .app.home-active #home .home-card-choice .home-card-copy{
     position:relative!important;
     z-index:2!important;
     width:100%!important;
+    margin:0!important;
     padding:0 2px!important;
     display:flex!important;
     flex-direction:column!important;
@@ -11452,46 +10857,48 @@ html.dinliminate-visual-mobile .app{
     justify-content:center!important;
     gap:5px!important;
     text-align:center!important;
+    background:transparent!important;
+    border:0!important;
+    outline:0!important;
+    box-shadow:none!important;
   }
-
   .app.home-active #home .home-card-choice .home-card-copy strong{
     color:#f8e9c9!important;
     font-size:clamp(18px,5vw,23px)!important;
     line-height:1.04!important;
     letter-spacing:.015em!important;
     text-shadow:0 2px 12px rgba(0,0,0,.76),0 0 10px rgba(0,0,0,.26)!important;
+    white-space:nowrap!important;
   }
-
-  .app.home-active #home .home-card-choice .home-card-copy>span{
-    color:#f3eadc!important;
-    font-size:clamp(9px,2.7vw,12px)!important;
-    line-height:1.28!important;
-    text-shadow:0 2px 10px rgba(0,0,0,.82)!important;
-    max-width:18ch!important;
-  }
-
   .app.home-active #home .home-card-choice .arrow{
-    position:static!important;
+    display:block!important;
+    position:absolute!important;
+    right:50%!important;
+    bottom:10%!important;
+    transform:translateX(50%)!important;
     width:auto!important;
     height:auto!important;
-    margin-top:3px!important;
+    margin:0!important;
     padding:0!important;
-    border:0!important;
-    border-radius:0!important;
     background:transparent!important;
+    background-color:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
     color:#e4c982!important;
     font-size:28px!important;
+    font-weight:800!important;
     line-height:.8!important;
-    transform:none!important;
     text-shadow:0 2px 11px rgba(0,0,0,.78)!important;
-    box-shadow:none!important;
+    pointer-events:none!important;
   }
-
   .app.home-active #home .home-foot{
     position:absolute!important;
     left:0!important;
     right:0!important;
-    bottom:calc(env(safe-area-inset-bottom) + 16px)!important;
+    bottom:calc(env(safe-area-inset-bottom) + 3px)!important;
     z-index:12!important;
     margin:0!important;
     padding:0 8px!important;
@@ -11499,104 +10906,14 @@ html.dinliminate-visual-mobile .app{
     justify-content:center!important;
     align-items:center!important;
   }
-
-  .app.home-active #home .home-foot-actions{
-    flex-direction:row!important;
-    align-items:flex-end!important;
-    justify-content:center!important;
-    gap:10px!important;
-    width:auto!important;
-  }
-
-  .app.home-active #home .home-icon-action{
-    width:72px!important;
-    min-width:72px!important;
-    height:46px!important;
-    min-height:46px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-    color:#eee3d3!important;
-  }
-
-  .app.home-active #home .home-icon-action:hover,
-  .app.home-active #home .home-icon-action:active,
-  .app.home-active #home .home-icon-action:focus,
-  .app.home-active #home .home-icon-action:focus-visible{
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
-    outline:none!important;
-  }
-
-  .app.home-active #home .home-foot-icon{
-    width:20px!important;
-    height:20px!important;
-    filter:drop-shadow(0 1px 5px rgba(0,0,0,.82))!important;
-  }
-
-  .app.home-active #home .home-icon-label{
-    color:#f1e7d7!important;
-    font-size:7.5px!important;
-    font-weight:900!important;
-    letter-spacing:.13em!important;
-    text-shadow:0 1px 6px rgba(0,0,0,.86)!important;
-  }
 }
-
 @media only screen and (max-width:390px){
   .app.home-active #home .home-intro{top:calc(env(safe-area-inset-top) + 56px)!important}
   .app.home-active #home .home-intro h1{font-size:22px!important}
   .app.home-active #home .home-actions{top:12.5%!important;height:67.5%!important}
   .app.home-active #home .home-card-choice .home-card-copy strong{font-size:18px!important}
-  .app.home-active #home .home-card-choice .home-card-copy>span{font-size:8.5px!important}
   .app.home-active #home .home-foot-actions{gap:6px!important}
   .app.home-active #home .home-icon-action{width:67px!important;min-width:67px!important}
+  .app.home-active #home .home-card-choice .arrow{font-size:26px!important}
 }
 
-
-/* CP1096 — Home door windows are fully clear; text is the only painted content. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-card-choice,
-  .app.home-active #home .home-card-choice:hover,
-  .app.home-active #home .home-card-choice:focus,
-  .app.home-active #home .home-card-choice:focus-visible,
-  .app.home-active #home .home-card-choice:active,
-  .app.home-active #home .home-card-choice.is-pressed{
-    background:transparent!important;
-    background-color:transparent!important;
-    background-image:none!important;
-    border:0!important;
-    outline:0!important;
-    box-shadow:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-overlay,
-  .app.home-active #home .home-card-choice::before,
-  .app.home-active #home .home-card-choice::after,
-  .app.home-active #home .home-card-choice .arrow{
-    display:none!important;
-    content:none!important;
-  }
-  .app.home-active #home .home-card-choice .home-card-copy{
-    background:transparent!important;
-    box-shadow:none!important;
-    border:0!important;
-    outline:0!important;
-  }
-}
-
-/* CP1098 — lower Home utility actions toward the bottom edge while preserving safe-area clearance. */
-@media only screen and (max-width:600px){
-  .app.home-active #home .home-foot{
-    bottom:calc(env(safe-area-inset-bottom) + 3px)!important;
-  }
-}
-
-/* CP1099 — hidden Meal Times use the same crossed-out cue as Cuisine Cuts. */
-#food .meal-time-quick .meal-time-chip:not(.is-active)[data-active="false"]{
-  text-decoration:line-through!important;
-  text-decoration-thickness:1.5px!important;
-  text-decoration-color:currentColor!important;
-}
