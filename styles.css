@@ -10216,3 +10216,25 @@ body:has(.app.home-active)::after{
     right:10px!important;
   }
 }
+
+
+/* CP1118 — Home choice-only positioning.
+   Keep the title, tagline, logo, menu, footer, background, and styling fixed.
+   Move only the Home/Restaurant label + arrow groups lower; nudge Restaurant
+   slightly right. */
+.app.home-active #home .home-choice-zone{
+  top:42%!important;
+}
+
+.app.home-active #home #restStart{
+  right:13%!important;
+}
+
+@media only screen and (max-width:390px){
+  .app.home-active #home .home-choice-zone{
+    top:42%!important;
+  }
+  .app.home-active #home #restStart{
+    right:10%!important;
+  }
+}
