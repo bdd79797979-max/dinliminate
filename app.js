@@ -14,7 +14,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
-let APP_BUILD = '1067';
+let APP_BUILD = '1068';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1262,6 +1262,8 @@ function renderTutorialStep(){
  layer.classList.remove('hidden');layer.setAttribute('aria-hidden','false');
  const title=document.querySelector('#tutorialBubbleTitle'),body=document.querySelector('#tutorialBubbleBody');
  if(title)title.textContent=step.title;if(body)body.textContent=step.body;
+ bubble.classList.toggle('is-action-step',!!step.action);
+ bubble.setAttribute('aria-disabled',String(!!step.action));
  tutorialState.awaitingAction=!!step.action;
  const expectedToken=tutorialState.token;
  requestAnimationFrame(()=>tutorialPosition(expectedToken));
@@ -1601,6 +1603,18 @@ function renderRestaurantHours(){
    save();
  });
 }
+function bindRestaurantHours(){
+ const toggle=$('restaurantHoursToggle');
+ if(!toggle)return;
+ toggle.onclick=(event)=>{
+  event.preventDefault();
+  event.stopPropagation();
+  S.restaurantHoursCollapsed=!S.restaurantHoursCollapsed;
+  renderRestaurantHours();
+  save();
+ };
+ renderRestaurantHours();
+}
 function renderQuickCutsCollapse(kind){
  const section=kind==='food'?document.querySelector('#food .quick-section'):document.querySelector('#restaurant .restaurant-quick-section');
  const toggle=kind==='food'?document.getElementById('foodQuickToggle'):section?.querySelector('.quick-cuts-collapse-toggle');
@@ -1613,7 +1627,6 @@ function renderQuickCutsCollapse(kind){
  }else{
   section.classList.toggle('is-collapsed',collapsed);
  }
- if(kind==='restaurant' && !collapsed){S.restaurantHoursCollapsed=true;const hours=$('restaurantHoursQuick');if(hours){hours.classList.add('is-rail-collapsed');hours.setAttribute('aria-hidden','true');}const hoursToggle=$('restaurantHoursToggle');if(hoursToggle){hoursToggle.classList.remove('is-open');hoursToggle.setAttribute('aria-expanded','false');hoursToggle.setAttribute('aria-label','Show Hours');hoursToggle.title='Show Hours';}}
  toggle.classList.toggle('is-open',!collapsed);
  toggle.setAttribute('aria-expanded',String(!collapsed));
  toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Cuisine');
@@ -1629,8 +1642,6 @@ function bindQuickCutsCollapse(kind){
   event.stopPropagation();
   S.quickCutsCollapsed = {...(S.quickCutsCollapsed||{food:false,restaurant:false}),[kind]:!S.quickCutsCollapsed?.[kind]};
   if(kind==='food' && !S.quickCutsCollapsed.food){S.mealTimeCutsCollapsed=true;renderMealTimeCuts();}
-  if(kind==='restaurant' && !S.quickCutsCollapsed.restaurant){collapseRestaurantSearch(false);S.restaurantHoursCollapsed=true;}
-  if(kind==='restaurant') renderRestaurantHours();
   renderQuickCutsCollapse(kind);
   save();
  };
@@ -3506,9 +3517,7 @@ function bindRestaurantTools(){
    const willOpen=box.classList.contains('hidden');
    if(willOpen){
      S.quickCutsCollapsed={...(S.quickCutsCollapsed||{}),restaurant:true};
-     S.restaurantHoursCollapsed=true;
      renderQuickCutsCollapse('restaurant');
-     renderRestaurantHours();
      box.classList.remove('hidden');
      const input=$('restaurantQuery');
      if(input)input.value=S.restaurantQuery||'';
