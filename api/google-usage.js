@@ -36,20 +36,33 @@ function pacificMonthKey(date = new Date()) {
   return year + '-' + month;
 }
 
-function pacificOffsetMinutes(date = new Date()) {
+function pacificParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles',
-    timeZoneName: 'shortOffset',
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23'
   }).formatToParts(date);
-  const raw = String(parts.find(p => p.type === 'timeZoneName')?.value || 'GMT');
-  const match = raw.match(/^GMT([+-])(\\d{1,2})(?::(\\d{2}))?$/i);
-  if (!match) return 0;
-  const hours = Number(match[2]) || 0;
-  const minutes = Number(match[3]) || 0;
-  return (match[1] === '-' ? -1 : 1) * (hours * 60 + minutes);
+  const value = type => Number(parts.find(p => p.type === type)?.value || 0);
+  return {
+    year: value('year'),
+    month: value('month'),
+    day: value('day'),
+    hour: value('hour'),
+    minute: value('minute'),
+    second: value('second')
+  };
+}
+
+function pacificOffsetMinutes(date = new Date()) {
+  const p = pacificParts(date);
+  if (!p.year || !p.month || !p.day) return 0;
+  const localAsUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return Math.round((localAsUtc - date.getTime()) / 60000);
 }
 
 function nextPacificMonthIso(date = new Date()) {
@@ -57,32 +70,26 @@ function nextPacificMonthIso(date = new Date()) {
   const [year, monthNumber] = month.split('-').map(Number);
   const nextYear = monthNumber === 12 ? year + 1 : year;
   const nextMonth = monthNumber === 12 ? 1 : monthNumber + 1;
-  const noonUtc = new Date(Date.UTC(nextYear, nextMonth - 1, 1, 12, 0, 0, 0));
-  const offsetMinutes = pacificOffsetMinutes(noonUtc);
-  return new Date(
-    Date.UTC(nextYear, nextMonth - 1, 1, 0, 0, 0, 0) - offsetMinutes * 60000
-  ).toISOString();
-}
-
-async function budgetDb() {
-  if (!DATABASE_URL) return null;
-  if (!dbPromise) {
-    dbPromise = (async () => {
-      const sql = neon(DATABASE_URL);
-      await sql.query(
-        'CREATE TABLE IF NOT EXISTS ' + TABLE + ' (' +
-        'month_key text NOT NULL, ' +
-        'sku_key text NOT NULL, ' +
-        'request_count integer NOT NULL DEFAULT 0, ' +
-        'disabled_until timestamptz NULL, ' +
-        'updated_at timestamptz NOT NULL DEFAULT now(), ' +
-        'PRIMARY KEY (month_key, sku_key)' +
-        ')'
-      );
-      return sql;
-    })();
+  // Pacific uses UTC-8 or UTC-7. Try both possible offsets and choose the
+  // candidate that is exactly midnight on the requested Pacific date.
+  for (const offsetMinutes of [-480, -420]) {
+    const candidate = new Date(
+      Date.UTC(nextYear, nextMonth - 1, 1, 0, 0, 0, 0) - offsetMinutes * 60000
+    );
+    const p = pacificParts(candidate);
+    if (
+      p.year === nextYear &&
+      p.month === nextMonth &&
+      p.day === 1 &&
+      p.hour === 0 &&
+      p.minute === 0
+    ) {
+      return candidate.toISOString();
+    }
   }
-  return dbPromise;
+  return new Date(
+    Date.UTC(nextYear, nextMonth - 1, 1, 8, 0, 0, 0)
+  ).toISOString();
 }
 
 async function reserveGoogleSku(skuKey, configuredLimit) {
