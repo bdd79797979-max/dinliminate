@@ -3471,11 +3471,17 @@ $('restaurantSearchBox')?.classList.add('hidden');
 $('restaurantQuery').value = '';
 maybeShowInCardSwipeCoach();
 
-// Restaurants should proactively request device location the first time the user enters
-// this screen, but never overwrite an active location or a typed address search.
+// Restaurant entry is location-first: use the device location automatically whenever
+// this screen is entered or re-entered, while preserving a deliberate typed-address search.
 const hasTypedAddress=!!String($('address')?.value||'').trim();
-if(!S.location&&!hasTypedAddress) {
- window.setTimeout(()=>{ if(S.screen==='restaurant'&&!S.location&&!String($('address')?.value||'').trim()) useLocation(); },80);
+const shouldAutoUseDeviceLocation=S.locationSource==='device'||!hasTypedAddress;
+if(shouldAutoUseDeviceLocation) {
+ window.setTimeout(()=>{
+   if(S.screen!=='restaurant'||locationRequestActive)return;
+   const currentAddress=String($('address')?.value||'').trim();
+   const preserveTypedAddress=!!currentAddress&&S.locationSource==='typed';
+   if(!preserveTypedAddress) useLocation();
+ },80);
 }
 if(tutorialModeEnabled()&&tutorialState.active){
  const resumeIndex=Number.isInteger(options?.tutorialResumeIndex)?options.tutorialResumeIndex:0;
