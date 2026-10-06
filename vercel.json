@@ -51,6 +51,9 @@
     },
     "api/restaurant-photo.js": {
       "maxDuration": 30
+    },
+    "api/google-usage.js": {
+      "maxDuration": 10
     }
   }
 }

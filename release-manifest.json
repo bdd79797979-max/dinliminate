@@ -1,14 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1070,
-  "sourceBranch": "cp1056-restaurant-hours-filter",
+  "build": 1077,
+  "sourceBranch": "cp1077-google-usage-tracker",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1070",
-  "deploymentTrigger": "CP1070-restaurant-refine-one-at-a-time-and-cuisine-filter",
-  "googleMasterKillSwitch": true
+  "checkpoint": "CP1077",
+  "deploymentTrigger": "CP1077-google-usage-tracker",
+  "googleMasterKillSwitch": true,
+  "googleBudgetTracker": "single durable Neon SKU tracker"
 }

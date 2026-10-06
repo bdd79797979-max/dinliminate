@@ -5152,6 +5152,32 @@ async function appDiagnosisView(existingModal){
     rr.ok&&d?.ok?pass('restaurant','Restaurant API health','Healthy · version '+String(d.version||'unknown')+' · max radius '+String(d.maxRadiusMiles||'unknown')+' mi.','Health check is read-only and does not alter the current restaurant pool.'):warn('restaurant','Restaurant API health','Health endpoint returned HTTP '+rr.status+'.','This can affect location, radius, search, Cuisine Cuts, and restaurant cards.');
    }catch(e){warn('restaurant','Restaurant API health','Health check failed or timed out.','The diagnosis does not change location or search state.');
    }
+   const googleUsageUrl='./api/google-usage?diagnosis='+Date.now();
+   try{
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),5000);
+    const rr=await fetch(googleUsageUrl,{cache:'no-store',signal:ctl.signal});
+    clearTimeout(tm);
+    const d=await rr.json().catch(()=>null);
+    if(!rr.ok||!d?.ok){
+      warn('restaurant','Google usage tracker','Tracker endpoint returned HTTP '+rr.status+'.','Google calls remain fail-closed when durable budget tracking is unavailable.');
+    }else{
+      const skus=Array.isArray(d.skus)?d.skus:[];
+      const exhausted=skus.filter(x=>x.status==='exhausted'||x.status==='disabled');
+      const warnings=skus.filter(x=>x.status==='warning');
+      const photo=skus.find(x=>x.sku==='place-photo');
+      const summary=photo&&photo.used!==null?'Photos '+photo.used+'/'+photo.cap+' · '+String(photo.remaining)+' remaining'+(warnings.length?' · warning threshold reached on '+warnings.length+' SKU(s)':''):'Google usage is not durably trackable in this runtime.';
+      if(d.status==='blocked-untracked'){
+        fail('restaurant','Google usage tracker',summary,'Durable Neon budget tracking is unavailable and the fail-closed guard is blocking untracked Google calls.');
+      }else if(exhausted.length){
+        warn('restaurant','Google usage tracker',summary,'At least one Google SKU is currently limited or disabled for the billing month.');
+      }else if(warnings.length){
+        warn('restaurant','Google usage tracker',summary,'At least one Google SKU is above 80% of its monthly cap.');
+      }else{
+        pass('restaurant','Google usage tracker',summary,'Read-only tracker is online; each Google SKU has a hard monthly cap.');
+      }
+    }
+   }catch(e){warn('restaurant','Google usage tracker','Tracker check failed or timed out.','The app does not treat an unreachable tracker as permission to spend untracked Google usage.');
+   }
    
    /* Interaction stability */
    const queryInputSource=String(document.querySelector('#restaurantQuery')?.oninput||'');
