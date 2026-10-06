@@ -2141,7 +2141,6 @@ function primeFoodSwipeMedia(){
   preloadSwipeImage(foodPhoto(item));
   cursor=ni;
  }
- }
  prepareNextTwoFoodCardLayouts();
 }
 
