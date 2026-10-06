@@ -1,16 +1,17 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1078,
-  "sourceBranch": "cp1078-restaurant-search-core",
+  "build": 1079,
+  "sourceBranch": "cp1079-restaurant-photo-certification",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1078",
-  "deploymentTrigger": "CP1078-restaurant-search-core",
+  "checkpoint": "CP1079",
+  "deploymentTrigger": "CP1079-restaurant-photo-certification",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
-  "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection"
+  "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
+  "restaurantPhotoCertification": "Google exact name+address+location validation; central place-photo quota guard; no generic/neutral fallback"
 }
