@@ -9840,3 +9840,11 @@ body:has(.app.home-active)::after{
     max-width:none!important;
   }
 }
+
+
+/* CP1110 — lower Home footer utilities.
+   Move only Add to Phone / Share App / Tutorial downward on the iPhone Home.
+   Their size, horizontal layout, and appearance remain unchanged. */
+.app.home-active #home .home-foot{
+  bottom:max(0px,calc(env(safe-area-inset-bottom) - 6px))!important;
+}

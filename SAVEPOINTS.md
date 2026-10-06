@@ -1,16 +1,16 @@
-# CURRENT SAVEPOINT — CP1109
+# CURRENT SAVEPOINT — CP1110
 
 Date: 2026-10-06
 
-Working branch: cp1109-iphone-width-fix
+Working branch: cp1110-home-footer-lower
 
 ## Checkpoint
 
-- CP1108: 6d45bad0edb1af944708e368bbee7d2948261f3d — Home choice text-size refinement.
-- CP1109: corrected Home to use an iPhone-sized portrait canvas on desktop previews while remaining full-width on actual iPhones. No deployment has been made.
+- CP1109: 0301f0c00f7e2e6dac3846ac0417be397e7b4d71 — iPhone-width Home canvas.
+- CP1110: lowered the Add to Phone / Share App / Tutorial footer utilities. No deployment has been made.
 
-## CP1109 scope
+## CP1110 scope
 
-The Home app shell is capped at 430px wide for desktop/tablet browser previews and centered on screen. At actual iPhone widths (600px and below), it expands to the full viewport width. The Home content uses the shell width instead of desktop 100vw overflow.
+Only the Home footer utilities were moved downward. Their horizontal positions, sizing, labels, icons, and the rest of the Home layout are unchanged.
 
-No deployment has been made from CP1109.
+No deployment has been made from CP1110.
