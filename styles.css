@@ -10329,3 +10329,82 @@ body:has(.app.home-active)::after{
     letter-spacing:.17em!important;
   }
 }
+
+
+/* CP1121 — Decision control spacing + primary action sizing.
+   Meals and Restaurants share the same four-button rail. Give CUT and MAYBE
+   more visual/physical prominence, with more breathing room between controls.
+   Keep the rail at the same bottom position. */
+#food .unified-swipe-actions,
+#restaurant .unified-swipe-actions{
+  display:grid!important;
+  grid-template-columns:44px 70px 70px 44px!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:15px!important;
+  margin:8px auto max(4px,env(safe-area-inset-bottom))!important;
+  width:100%!important;
+  flex:0 0 auto!important;
+}
+
+#food .unified-swipe-actions .round-back,
+#restaurant .unified-swipe-actions .round-back,
+#food .unified-swipe-actions .round-choose,
+#restaurant .unified-swipe-actions .round-choose{
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+}
+
+#food .unified-swipe-actions .round-cut,
+#restaurant .unified-swipe-actions .round-cut,
+#food .unified-swipe-actions .round-maybe,
+#restaurant .unified-swipe-actions .round-maybe{
+  width:70px!important;
+  height:70px!important;
+  min-width:70px!important;
+  min-height:70px!important;
+}
+
+#food .unified-swipe-actions .round-cut span,
+#restaurant .unified-swipe-actions .round-cut span,
+#food .unified-swipe-actions .round-maybe span,
+#restaurant .unified-swipe-actions .round-maybe span{
+  font-size:22px!important;
+}
+
+@media(max-width:390px){
+  #food .unified-swipe-actions,
+  #restaurant .unified-swipe-actions{
+    grid-template-columns:42px 66px 66px 42px!important;
+    gap:13px!important;
+  }
+
+  #food .unified-swipe-actions .round-back,
+  #restaurant .unified-swipe-actions .round-back,
+  #food .unified-swipe-actions .round-choose,
+  #restaurant .unified-swipe-actions .round-choose{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    min-height:42px!important;
+  }
+
+  #food .unified-swipe-actions .round-cut,
+  #restaurant .unified-swipe-actions .round-cut,
+  #food .unified-swipe-actions .round-maybe,
+  #restaurant .unified-swipe-actions .round-maybe{
+    width:66px!important;
+    height:66px!important;
+    min-width:66px!important;
+    min-height:66px!important;
+  }
+
+  #food .unified-swipe-actions .round-cut span,
+  #restaurant .unified-swipe-actions .round-cut span,
+  #food .unified-swipe-actions .round-maybe span,
+  #restaurant .unified-swipe-actions .round-maybe span{
+    font-size:21px!important;
+  }
+}
