@@ -10439,7 +10439,7 @@ body:has(.app.home-active)::after{
    Move only the visible Home choice groups a few pixels: At Home left,
    Restaurant right, and both slightly lower. Hit areas stay unchanged. */
 .app.home-active #home #foodStart .home-choice-content{
-  transform:translate(-4px,3px)!important;
+  transform:translate(-5px,3px)!important;
 }
 .app.home-active #home #restStart .home-choice-content{
   transform:translate(4px,3px)!important;
