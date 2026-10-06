@@ -4310,7 +4310,10 @@ return false;
 }
 function historyView() {
 let cursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-const render = () => {
+const render = (replaceExisting=false) => {
+const previousBg = replaceExisting ? $('historyModalBg') : null;
+const previousModal = replaceExisting ? $('historyModal') : null;
+if(replaceExisting) previousModal?.remove();
 const history = readHistory();
 const y = cursor.getFullYear(), m = cursor.getMonth();
 const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
@@ -4364,6 +4367,7 @@ body += '</div></div><div class="history-list">';
 body += history.length ? '<div class="history-toolbar"><span class="status">'+history.length+' saved decision'+(history.length===1?'':'s')+'</span><button class="secondary" id="historyClearAll" type="button">Clear all</button></div>'+history.slice(0,30).map(x => '<button class="history-row history-open" data-history-id="'+esc(x.id)+'"><img src="'+esc(historyImageSource(x))+'" data-restaurant-photo-key="'+esc(x.type==='restaurant'?x.id:'')+'" data-final-fallback="'+(x.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(x.name)+'"><span><b>'+esc(x.name)+'</b><small>'+esc(x.date)+' · '+esc(x.type)+(x.type==='food'&&Array.isArray(x.mealTimes)&&x.mealTimes.length?' · '+esc(x.mealTimes.join(' · ')):'')+'</small></span></button>').join('') : '<p class="status">No history yet.</p>';
 body += '</div>';
 const modal = openModal('historyModal','History',body);
+if(replaceExisting) previousBg?.remove();
 bindImageFallback('#historyModal img',FINAL_RESTAURANT_IMAGE,FINAL_RESTAURANT_IMAGE);
 for(const row of history.slice(0,30)) if(row?.type==='restaurant'&&row?.id) hydrateRestaurantPhoto(row,'#historyModal');
 $('historyStatsToggle').onclick=()=>{
@@ -4372,8 +4376,8 @@ $('historyStatsToggle').onclick=()=>{
   btn.setAttribute('aria-expanded',String(!isHidden));
   btn.textContent=isHidden?'Your Stats':'Hide Stats';
 };
-$('calPrev').onclick = () => { cursor = new Date(y,m-1,1); modal.remove(); $('historyModalBg')?.remove(); render(); };
-$('calNext').onclick = () => { cursor = new Date(y,m+1,1); modal.remove(); $('historyModalBg')?.remove(); render(); };
+$('calPrev').onclick = () => { cursor = new Date(y,m-1,1); render(true); };
+$('calNext').onclick = () => { cursor = new Date(y,m+1,1); render(true); };
 modal.querySelectorAll('[data-history-id]').forEach(btn => btn.onclick = () => {
 const row = history.find(x => x.id === btn.dataset.historyId);
 if (row) detailsSheet(row, row.type);
