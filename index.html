@@ -10,14 +10,19 @@
 <meta name="apple-mobile-web-app-title" content="Dinliminate">
 <meta name="format-detection" content="telephone=no">
 <script>
-/* CP1138 — prevent iPhone/PWA reload snapshot + first-paint screen flash. */
+/* CP1142 — hide the outgoing app before the browser can paint its reload snapshot. */
 (() => {
-  try { document.documentElement.classList.add('dinliminate-booting'); } catch {}
-  window.addEventListener('pagehide', () => {
-    try { document.documentElement.classList.add('dinliminate-page-unloading'); } catch {}
-  }, {capture:true});
+  const root = document.documentElement;
+  const hideForNavigation = () => {
+    try { root.classList.add('dinliminate-page-unloading'); } catch {}
+  };
+  try { root.classList.add('dinliminate-booting'); } catch {}
+  window.addEventListener('beforeunload', hideForNavigation, {capture:true});
+  window.addEventListener('pagehide', hideForNavigation, {capture:true});
   window.addEventListener('pageshow', () => {
-    try { document.documentElement.classList.remove('dinliminate-page-unloading'); } catch {}
+    try {
+      root.classList.remove('dinliminate-page-unloading');
+    } catch {}
   }, {capture:true});
 })();
 </script>
@@ -35,6 +40,8 @@ button{font:inherit;border:0}
 .hidden{display:none!important}
 html.dinliminate-booting .app,
 html.dinliminate-page-unloading .app{visibility:hidden!important}
+html.dinliminate-booting,
+html.dinliminate-page-unloading,
 html.dinliminate-booting body,
 html.dinliminate-page-unloading body{background:#090909!important}
 .app{
