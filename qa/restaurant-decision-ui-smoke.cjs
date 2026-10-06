@@ -18,12 +18,12 @@ function ordered(ids){
 assert('meal controls are Back / Cut / Maybe / Choose',
  ordered(['foodBack','foodCut','foodMaybe','foodChoose'])
 );
-const restaurantSection=index.slice(index.indexOf('<section id="restaurant"'),index.indexOf('<section id="winner"'));
+const drawRestaurants=between(app,'async function drawRestaurants() {','\\nasync function restaurantCut');
 assert('restaurant controls are Back / Cut / Maybe / Choose',
- ['restBack','restCut','restMaybe','restChoose'].every(id=>restaurantSection.includes('id="'+id+'"')) &&
- restaurantSection.indexOf('id="restBack"')<restaurantSection.indexOf('id="restCut"')&&
- restaurantSection.indexOf('id="restCut"')<restaurantSection.indexOf('id="restMaybe"')&&
- restaurantSection.indexOf('id="restMaybe"')<restaurantSection.indexOf('id="restChoose"')
+ ['restBack','restCut','restMaybe','restChoose'].every(id=>drawRestaurants.includes('id="'+id+'"')) &&
+ drawRestaurants.indexOf('id="restBack"')<drawRestaurants.indexOf('id="restCut"')&&
+ drawRestaurants.indexOf('id="restCut"')<drawRestaurants.indexOf('id="restMaybe"')&&
+ drawRestaurants.indexOf('id="restMaybe"')<drawRestaurants.indexOf('id="restChoose"')
 );
 assert('meal and restaurant actions use one unified control class',
  index.includes('class="swipe-actions unified-swipe-actions"')&&
