@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1056,
-  "sourceBranch": "cp1046-restaurant-intelligence",
+  "build": 1064,
+  "sourceBranch": "cp1056-restaurant-hours-filter",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1056",
-  "deploymentTrigger": "CP1056-restaurant-hours-filter",
+  "checkpoint": "CP1064",
+  "deploymentTrigger": "CP1064-restaurant-filters",
   "googleMasterKillSwitch": true
 }
