@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1090,
-  "sourceBranch": "cp1090-home-viewport",
-  "checkpoint": "CP1090",
-  "deploymentTrigger": "CP1090-home-viewport",
+  "build": 1092,
+  "sourceBranch": "cp1092-home-polish",
+  "checkpoint": "CP1092",
+  "deploymentTrigger": "CP1092-home-polish",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -31,5 +31,5 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1090 Home full-screen viewport candidate based on CP1089; deployment now reserved for full verification"
+  "currentBaseline": "CP1092 Home door-window alignment polish based on the restored CP1090 application shell"
 }
