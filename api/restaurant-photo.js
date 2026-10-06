@@ -1200,6 +1200,7 @@ module.exports._test={
   fastKnownPublicPhoto,
   imageDimensions,
   mediaQuality,
+  isRejectedPhotoCandidate,
   fetchImage,
   normalizeRestaurantImage
 };
