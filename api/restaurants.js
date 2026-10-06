@@ -1226,7 +1226,7 @@ function dedupe(rows){
   return[...map.values()].sort((a,b)=>a.distance-b.distance);
 }
 function restaurantSearchMatches(row,searchTerm){
- const q=normalizeRestaurantSearch(searchTerm);
+ const q=normalizeSearchQuery(searchTerm);
  if(!q)return true;
  const classification=RESTAURANT_TAXONOMY.restaurantSearchClassification(q);
  const tags=RESTAURANT_TAXONOMY.classifyRestaurant(row).tags||[];
