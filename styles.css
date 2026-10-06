@@ -10781,6 +10781,9 @@ html.dinliminate-visual-mobile #tutorialLayer{
     width:100%!important;
     min-width:100%!important;
     max-width:none!important;
+    height:100vh!important;
+    min-height:100vh!important;
+    max-height:100vh!important;
     height:100dvh!important;
     min-height:100dvh!important;
     max-height:100dvh!important;
@@ -10801,6 +10804,9 @@ html.dinliminate-visual-mobile .app{
   width:100%!important;
   min-width:100%!important;
   max-width:none!important;
+  height:100vh!important;
+  min-height:100vh!important;
+  max-height:100vh!important;
   height:100dvh!important;
   min-height:100dvh!important;
   max-height:100dvh!important;
