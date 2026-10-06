@@ -1,25 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dinliminate">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#11110f"/>
+      <stop offset="0" stop-color="#171512"/>
       <stop offset="1" stop-color="#050505"/>
     </linearGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6f4e1d"/>
-      <stop offset=".18" stop-color="#d3ab5e"/>
-      <stop offset=".31" stop-color="#fff8dc"/>
-      <stop offset=".5" stop-color="#a2762d"/>
-      <stop offset=".68" stop-color="#f4d796"/>
-      <stop offset=".84" stop-color="#fff5cf"/>
-      <stop offset="1" stop-color="#79551d"/>
-    </linearGradient>
-    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff7d9" stop-opacity=".75"/>
-      <stop offset=".52" stop-color="#c79a47" stop-opacity=".15"/>
-      <stop offset="1" stop-color="#3d2910" stop-opacity=".55"/>
+      <stop offset="0" stop-color="#8a641f"/>
+      <stop offset=".2" stop-color="#e3bd6c"/>
+      <stop offset=".36" stop-color="#fff3c9"/>
+      <stop offset=".52" stop-color="#b18235"/>
+      <stop offset=".7" stop-color="#f1d28e"/>
+      <stop offset=".88" stop-color="#fff4cc"/>
+      <stop offset="1" stop-color="#7d5a20"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
   <rect x="18" y="18" width="476" height="476" rx="98" fill="none" stroke="#d6b56f" stroke-opacity=".16" stroke-width="2"/>
-  <path d="M144 96h116c91 0 145 59 145 160s-54 160-145 160H144V96Zm72 64v192h40c50 0 77-31 77-96s-27-96-77-96h-40Z" fill="url(#gold)" stroke="url(#edge)" stroke-width="3"/>
+  <path d="M135 91h132c92 0 149 61 149 165s-57 165-149 165H135V91Zm69 66v198h55c54 0 89-34 89-99s-35-99-89-99h-55Z" fill="url(#gold)"/>
+  <path d="M135 91v330l80-62V153Z" fill="#d2aa59" opacity=".9"/>
+  <path d="M357 148v216l-55-43V191Z" fill="#8f6824" opacity=".95"/>
+  <path d="M223 170v172l47-38V208Z" fill="#12110f" opacity=".95"/>
 </svg>
