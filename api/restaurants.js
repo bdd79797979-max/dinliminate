@@ -863,6 +863,43 @@ async function googleContactEnrichment(rows,originLat,originLon){
  await Promise.all(workers);
  return{rows:dedupe(out),errors};
 }
+async function googlePlaceDetails(placeId){
+  const id=String(placeId||'').trim();
+  if(!GOOGLE_KEY||!/^ChI[A-Za-z0-9_-]+$/.test(id))return{ok:false,reason:'missing-place-id'};
+  const reservation=await reserveGoogleSku('place-details-enterprise',HARD_LIMITS['place-details-enterprise']);
+  if(!reservation.ok)return{ok:false,reason:'monthly-budget',budget:reservation};
+  try{
+    const data=await json('https://places.googleapis.com/v1/places/'+encodeURIComponent(id),{
+      method:'GET',
+      headers:{
+        'X-Goog-Api-Key':GOOGLE_KEY,
+        'X-Goog-FieldMask':'id,displayName,formattedAddress,location,nationalPhoneNumber,websiteUri,regularOpeningHours.weekdayDescriptions,currentOpeningHours.openNow,currentOpeningHours.weekdayDescriptions,businessStatus,primaryType,types'
+      }
+    },5200);
+    const regularHours=Array.isArray(data?.regularOpeningHours?.weekdayDescriptions)
+      ?data.regularOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
+    const currentHours=Array.isArray(data?.currentOpeningHours?.weekdayDescriptions)
+      ?data.currentOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
+    return{
+      ok:true,
+      source:'Google Places',
+      googlePlaceId:String(data?.id||id),
+      name:String(data?.displayName?.text||'').trim(),
+      address:String(data?.formattedAddress||'').trim(),
+      phone:String(data?.nationalPhoneNumber||'').trim(),
+      website:String(data?.websiteUri||'').trim(),
+      opening_hours:regularHours,
+      currentOpeningHours:currentHours,
+      openNow:typeof data?.currentOpeningHours?.openNow==='boolean'?data.currentOpeningHours.openNow:null,
+      businessStatus:String(data?.businessStatus||''),
+      primaryType:String(data?.primaryType||''),
+      types:Array.isArray(data?.types)?data.types.map(String):[]
+    };
+  }catch(e){
+    if(Number(e?.status)===403||Number(e?.status)===429)await disableGoogleSkuForMonth('place-details-enterprise');
+    return{ok:false,reason:'google-error',error:String(e?.message||e||'Google Place Details failed')};
+  }
+}
 function applyGoogleContactPatches(rows,patches){
  const byId=new Map((rows||[]).map(row=>[String(row?.id||''),row]));
  for(const patch of (patches||[])){
@@ -1181,6 +1218,13 @@ if(mode==='health'){if(res.setHeader)res.setHeader('Cache-Control','public, max-
 if(mode==='suggest'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');return res.status(200).json({ok:true,results:await suggest(q.get('q'))});}
 if(mode==='resolve'){const x=await geocode(q.get('q'));return res.status(200).json({ok:true,...x})}
 if(mode==='reverse'){const lat=n(q.get('lat')),lon=n(q.get('lon'));if(!validCoords(lat,lon))return res.status(400).json({ok:false,message:'Coordinates are invalid.'});if(res.setHeader)res.setHeader('Cache-Control','public, max-age=300, s-maxage=300, stale-while-revalidate=600');return res.status(200).json({ok:true,display:await reverse(lat,lon)})}
+if(mode==='details'){
+  const placeId=String(q.get('placeId')||q.get('googlePlaceId')||'').trim();
+  if(!placeId)return res.status(200).json({ok:true,source:'none',message:'No Google Place ID is available for this restaurant.'});
+  const result=await googlePlaceDetails(placeId);
+  if(res.setHeader)res.setHeader('Cache-Control','private, no-store');
+  return res.status(200).json(result);
+}
 if(mode==='website'){
  const name=String(q.get('name')||'').trim().slice(0,160),address=String(q.get('address')||'').trim().slice(0,240),brand=String(q.get('brand')||'').trim().slice(0,160),providerWebsite=String(q.get('website')||'').trim().slice(0,700),phone=String(q.get('phone')||'').trim().slice(0,80);
  if(!name)return res.status(400).json({ok:false,message:'Restaurant name is required.'});
@@ -1331,6 +1375,6 @@ if(mode==='search'){
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,applyGoogleContactPatches,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,applyGoogleContactPatches,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.
