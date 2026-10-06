@@ -17,13 +17,15 @@ const HARD_LIMITS = Object.freeze({
   'nearby-search-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_NEARBY_SEARCH_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'text-search-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_TEXT_SEARCH_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'place-details-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
-  'place-details-essentials': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ESSENTIALS_HARD_LIMIT || '9000', 10) || 9000)
+  'place-details-essentials': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ESSENTIALS_HARD_LIMIT || '9000', 10) || 9000),
+  'place-photo': Math.max(1, Number.parseInt(process.env.GOOGLE_PHOTO_MONTHLY_HARD_LIMIT || process.env.GOOGLE_PLACE_PHOTO_HARD_LIMIT || '900', 10) || 900)
 });
 
 const TABLE = 'dinliminate_google_sku_usage_v1';
 const UNTRACKED_LIMIT = Math.max(0, Number.parseInt(process.env.GOOGLE_UNTRACKED_SKU_LIMIT || '0', 10) || 0);
 const GOOGLE_MASTER_ENABLED = !/^(?:0|false|off|disabled)$/i.test(String(process.env.GOOGLE_MASTER_ENABLED ?? 'true'));
 let dbPromise = null;
+let legacyPhotoMigratedMonth = '';
 let localMonth = '';
 const localCounts = new Map();
 
@@ -46,6 +48,30 @@ async function budgetDb() {
     })();
   }
   return dbPromise;
+}
+
+async function migrateLegacyPhotoUsage(sql, month) {
+  if (!sql || legacyPhotoMigratedMonth === month) return;
+  try {
+    const rows = await sql.query(
+      'SELECT request_count,disabled_until FROM dinliminate_google_photo_usage WHERE month_key=$1 LIMIT 1',
+      [month]
+    );
+    const legacy = rows?.[0];
+    if (!legacy) { legacyPhotoMigratedMonth = month; return; }
+    const count = Math.max(0, Number(legacy.request_count) || 0);
+    const disabledUntil = legacy.disabled_until || null;
+    await sql.query(
+      'INSERT INTO ' + TABLE + ' (month_key,sku_key,request_count,disabled_until,updated_at) ' +
+      'VALUES ($1,$2,$3,$4,now()) ' +
+      'ON CONFLICT(month_key,sku_key) DO UPDATE SET ' +
+      'request_count=GREATEST(' + TABLE + '.request_count,$3), ' +
+      'disabled_until=CASE WHEN $4 IS NOT NULL THEN $4 ELSE ' + TABLE + '.disabled_until END, ' +
+      'updated_at=now()',
+      [month, 'place-photo', count, disabledUntil]
+    );
+    legacyPhotoMigratedMonth = month;
+  } catch {}
 }
 
 function pacificMonthKey(date = new Date()) {
@@ -130,6 +156,8 @@ async function reserveGoogleSku(skuKey, configuredLimit) {
   const month = pacificMonthKey();
   const sql = await budgetDb().catch(() => null);
 
+  if (sql) await migrateLegacyPhotoUsage(sql, month);
+
   if (!sql) {
     if (localMonth !== month) {
       localMonth = month;
@@ -187,6 +215,7 @@ async function disableGoogleSkuForMonth(skuKey) {
 async function googleUsageHealth() {
   const month = pacificMonthKey();
   const sql = await budgetDb().catch(() => null);
+  if (sql) await migrateLegacyPhotoUsage(sql, month);
   const result = {
     month,
     googleMasterEnabled: GOOGLE_MASTER_ENABLED,
@@ -214,12 +243,63 @@ async function googleUsageHealth() {
   return result;
 }
 
-module.exports = {
-  HARD_LIMITS,
-  googleServicesEnabled,
-  pacificMonthKey,
-  nextPacificMonthIso,
-  reserveGoogleSku,
-  disableGoogleSkuForMonth,
-  googleUsageHealth
-};
+async function googleUsageSnapshot() {
+  const health = await googleUsageHealth();
+  const now = Date.now();
+  const skus = Object.entries(HARD_LIMITS).map(([sku, cap]) => {
+    const raw = health.usage?.[sku] || {};
+    const trackingAvailable = !!health.durable || health.untrackedLimit > 0;
+    const used = trackingAvailable ? Math.max(0, Number(raw.requestCount) || 0) : null;
+    const remaining = used === null ? null : Math.max(0, cap - used);
+    const percent = used === null ? null : Number(Math.min(100, (used / cap) * 100).toFixed(1));
+    const disabledUntil = raw.disabledUntil || null;
+    const disabled = Number.isFinite(Date.parse(disabledUntil)) && Date.parse(disabledUntil) > now;
+    let status = 'ok';
+    if (!health.googleMasterEnabled) status = 'disabled';
+    else if (!trackingAvailable) status = 'blocked-untracked';
+    else if (disabled) status = 'disabled';
+    else if (used >= cap) status = 'exhausted';
+    else if (used >= cap * 0.8) status = 'warning';
+    return {sku,used,cap,remaining,percent,status,disabledUntil};
+  });
+  const blocked = !health.googleMasterEnabled || (!health.durable && health.untrackedLimit <= 0);
+  return {
+    ok:true,
+    readOnly:true,
+    trackerVersion:'1.0',
+    month:health.month,
+    billingMonthTimeZone:'America/Los_Angeles',
+    googleMasterEnabled:!!health.googleMasterEnabled,
+    durable:!!health.durable,
+    untrackedLimit:health.untrackedLimit,
+    safeToCallGoogle:!blocked && skus.some(x=>x.status==='ok'||x.status==='warning'),
+    status:!health.googleMasterEnabled?'master-disabled':(!health.durable&&health.untrackedLimit<=0?'blocked-untracked':(skus.some(x=>x.status==='exhausted'||x.status==='disabled')?'limited':'healthy')),
+    nextBillingMonth:nextPacificMonthIso(),
+    skus
+  };
+}
+
+async function handler(req,res){
+  res?.setHeader?.('Cache-Control','no-store, max-age=0');
+  res?.setHeader?.('X-Content-Type-Options','nosniff');
+  if(String(req?.method||'GET').toUpperCase()!=='GET')return res.status(405).json({ok:false,error:'Method not allowed'});
+  try{return res.status(200).json(await googleUsageSnapshot());}
+  catch(error){
+    console.error('dinliminate-google-usage-health',{message:String(error?.message||error||'unknown')});
+    return res.status(500).json({ok:false,error:'Google usage tracker unavailable'});
+  }
+}
+handler.snapshot=googleUsageSnapshot;
+handler._test={googleUsageSnapshot,pacificMonthKey,nextPacificMonthIso};
+
+
+
+module.exports = handler;
+handler.HARD_LIMITS=HARD_LIMITS;
+handler.googleServicesEnabled=googleServicesEnabled;
+handler.pacificMonthKey=pacificMonthKey;
+handler.nextPacificMonthIso=nextPacificMonthIso;
+handler.reserveGoogleSku=reserveGoogleSku;
+handler.disableGoogleSkuForMonth=disableGoogleSkuForMonth;
+handler.googleUsageHealth=googleUsageHealth;
+handler.googleUsageSnapshot=googleUsageSnapshot;
