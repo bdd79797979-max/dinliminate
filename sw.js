@@ -1,7 +1,7 @@
-const CACHE='dinliminate-shell-v1069';
+const CACHE='dinliminate-shell-v1070';
 const IMAGE_CACHE='dinliminate-images-v4';
 
-// CP1068 — Shell cache bump for Restaurant tools, tutorial, and choice-state fixes.
+// CP1070 — Shell cache bump for Restaurant refine controls and tutorial home navigation.
 // CP1008 — Managed image cache:
 // keep a durable working set for meal + restaurant photos without allowing
 // Cache Storage to grow indefinitely. The budget is size-based, not count-based.
@@ -166,7 +166,7 @@ async function touchCachedImage(req){
   }catch{}
 }
 
-const SHELL=['./','./index.html','./styles.css?v=1069','./app.js?v=1069','./data/foods.js?v=1069','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./styles.css?v=1070','./app.js?v=1070','./data/foods.js?v=1070','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./icon-512.png','./apple-touch-icon.png','./fallback-food.svg','./fallback-restaurant.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([
