@@ -1,16 +1,16 @@
-# CURRENT SAVEPOINT — CP1107
+# CURRENT SAVEPOINT — CP1108
 
 Date: 2026-10-06
 
-Working branch: cp1107-home-window-centering
+Working branch: cp1108-home-choice-text-size
 
 ## Checkpoint
 
-- CP1106: 5aac1a8129f555c3899b0555303b1ffb6f247a41 — canonical Home rebuild.
-- CP1107: centered Home choice zones over the left/right door glass panels. No deployment has been made.
+- CP1107: 4f5afb59e2024ff73382f487f2b9fd9e445a2de9 — centered Home choices in the door glass.
+- CP1108: reduced At Home / Restaurant label and arrow size so both stay comfortably inside their glass panels. No deployment has been made.
 
-## CP1107 scope
+## CP1108 scope
 
-At Home and Restaurant remain invisible full tap zones, but their visible labels are now centered within the corresponding left and right glass areas of the door photo. Both retain visible white arrows.
+Only the visible Home choice typography was reduced. The transparent tap-zone positions and the full-screen door background are unchanged.
 
-No deployment has been made from CP1107.
+No deployment has been made from CP1108.

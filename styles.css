@@ -1950,7 +1950,7 @@ button,a,select{touch-action:manipulation}
   box-shadow:0 6px 16px #0007,inset 0 1px 0 #ffffff09!important;
 }
 .unified-swipe-actions .round-show-maybe span{
-  font-size:15px!important;
+  font-size:12px!important;
   line-height:1!important;
   font-weight:950!important;
 }
@@ -5621,7 +5621,7 @@ press-only sheen{
 .winner-brand{
   display:block!important;
   text-align:center!important;
-  font-size:20px!important;
+  font-size:17px!important;
   line-height:1!important;
   font-weight:850!important;
   letter-spacing:-.05em!important;
@@ -9789,11 +9789,11 @@ body:has(.app.home-active)::after{
   }
 
   .app.home-active #home .home-choice-content strong{
-    font-size:12px!important;
+    font-size:10px!important;
   }
 
   .app.home-active #home .home-choice-arrow{
-    font-size:17px!important;
+    font-size:15px!important;
   }
 
   .app.home-active #home .home-foot-actions{
