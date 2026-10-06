@@ -101,7 +101,7 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
     throw err;
   }
   const candidates=Array.isArray(data.places)?data.places:[];
-  const exact=candidates.find(p=>exactPlaceMatch(p,args?.name||name,args?.address||address,args?.lat??lat,args?.lon??lon));
+  const exact=candidates.find(p=>exactPlaceMatch(p,name,address,lat,lon));
   if(exact?.id)return String(exact.id).trim();
   return '';
 }
