@@ -5410,7 +5410,23 @@ const text='Tonight: '+S.winnerItem.name;
 if(navigator.share){navigator.share({title:'Dinliminate',text}).catch(()=>{});}
 else if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>appToast('Decision copied.')).catch(()=>{});
 }
+async function clearMealPhotoStorage(id){
+  const target=String(id||'').trim();
+  if(!target)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise(resolve=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite'),store=tx.objectStore(PHOTO_STORE),req=store.getAllKeys();
+      req.onsuccess=()=>{for(const rawKey of req.result||[]){const key=String(rawKey);if(key===target||key.startsWith(target+':photo:'))store.delete(rawKey);}};
+      req.onerror=()=>resolve();
+      tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve;
+    });
+  }catch{}
+  for(const key of [...storedPhotoIds])if(key===target||String(key).startsWith(target+':photo:'))storedPhotoIds.delete(key);
+}
 async function clearAllDinliminateStorage(){
+  try{stopFamilyLobbyPolling();}catch{}
+  try{familySessionClear();}catch{}
   try{
     const keys=[];
     for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith('dinliminate.'))keys.push(key);}
@@ -5458,32 +5474,34 @@ function resetRestoreView(){
   $('fullResetOption').onclick=async()=>{modal.remove();$('resetRestoreModalBg')?.remove();await resetAppDataFlow();};
 }
 async function resetAppDataFlow(){
-  if(!await appConfirm('Reset all app data?','This permanently removes all Dinliminate data stored on this device, including custom meals, history, hidden choices, notes, saved state, custom photos, restaurant photo cache, and Family Mode session data.','Reset Everything'))return;
+  if(!await appConfirm('Reset all app data?','This permanently removes all Dinliminate data stored on this device, including custom meals, history, hidden choices, notes, saved state, custom photos, restaurant photo cache, Meal Times and Family Mode session data.','Reset Everything'))return;
   await clearAllDinliminateStorage();
+  S.hungryWheelSpinToken++;
+  S.hungryWheelSpinning=false;S.hungryWheelChoice=null;S.hungryWheelRotation=0;S.hungryWheelDisplayItems=null;S.hungryWheelLandedId=null;S.hungryWheelSpinPhase='idle';S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
+  S.hungryRestaurantChoice=null;S.hungryRestaurantPendingChoice=null;
   S.hidden.clear();S.deleted.clear();S.deletedCustomMeals=[];S.customQuickCuts=[];S.hiddenRestaurants={};S.cutCats.clear();S.foodCuts.clear();S.maybe.clear();S.foodMaybeRound=false;S.restaurantCuts.clear();S.restaurantMaybeRound=false;
   S.mealTimeSettings={custom:[],names:{},order:DEFAULT_MEAL_TIME_DEFS.map(x=>x.id),disabled:new Set()};S.mealTimeFilters=new Set(mealTimeNames());
   S.pool=[];S.restaurantPool=[];S.index=0;S.restaurantIndex=0;S.foodActions=[];S.restaurantActions=[];S.winnerItem=null;S.winnerType='food';S.location=null;S.locationSource='none';S.locationFreshAt=null;S.restaurantSearchOrigin=null;S.restaurantSearchKey='';S.restaurantQuery='';S.restaurantHours='all';S.restaurantHoursCollapsed=true;S.restaurantSearchDegraded=false;S.storageWarning=false;S.saved=false;S.custom=[];S.notes={};
-  S.familyNormalMode='idle';S.familyDecisionType='';S.familyNormalRoundId='';S.familyNormalStage=0;S.familyNormalAutoResume=false;S.familyActiveData=null;S.familyVotedIds=new Set();S.familyBrowseHistory=[];
+  S.familyNormalMode='idle';S.familyDecisionType='';S.familyNormalRoundId='';S.familyNormalStage=0;S.familyNormalAutoResume=false;S.familyNormalVoteBusy=false;S.familyActiveData=null;S.familyVotedIds=new Set();S.familyBrowseHistory=[];S.familyCompareBothMode='';S.familyCompareBothGroupId='';S.familyCompareBothMealWinner=null;S.familyVoteBusy=false;S.familyPollBusy=false;S.familyPollTimer=0;
+  try{location.hash='';}catch{}
   window.location.reload();
 }
 async function systemRestoreFlow(){
-  if(!await appConfirm('Restore built-in defaults?','This returns built-in meals to their original catalog state and recovers deleted built-in meals. Custom meals, Custom Cuisine Cuts, History, notes, Restaurant choices, and location settings stay on this device.','Restore Defaults'))return;
+  if(!await appConfirm('Restore built-in defaults?','This returns every built-in meal to its original catalog data, including its name, nutrition, ingredients, recipe/notes, photos, meal times, hidden/deleted state, and current meal-choice cuts. Custom meals, Custom Cuisine Cuts, History, notes, Restaurant choices, location settings, and Family Mode remain on this device.','Restore Defaults'))return;
   const defaultIds=new Set(getDefaultFoods().map(x=>String(x.id)));
   const builtInOverrides=S.custom.filter(x=>defaultIds.has(String(x.id)));
-  for(const item of builtInOverrides){
-    const photos=mealPhotoList(item);
-    for(let i=0;i<photos.length;i++){
-      const key=mealPhotoStorageKey(item.id,i);
-      if(String(photos[i]||'').startsWith('data:image/')||storedPhotoIds.has(key)){try{await deleteStoredPhoto(key)}catch{}storedPhotoIds.delete(key);}
-    }
-  }
+  for(const item of builtInOverrides) await clearMealPhotoStorage(item.id);
   S.custom=S.custom.filter(x=>!defaultIds.has(String(x.id)));
   S.deleted=new Set([...S.deleted].filter(id=>!defaultIds.has(String(id))));
   S.hidden=new Set([...S.hidden].filter(id=>!defaultIds.has(String(id))));
-  S.maybe.clear();S.foodMaybeRound=false;S.foodActions=[];S.pool=[];S.index=0;S.winnerItem=null;S.winnerType='food';
+  S.foodCuts=new Set([...S.foodCuts].filter(id=>!defaultIds.has(String(id))));
+  S.maybe=new Set([...S.maybe].filter(id=>!defaultIds.has(String(id))));
+  S.foodActions=(Array.isArray(S.foodActions)?S.foodActions:[]).filter(a=>!defaultIds.has(String(a?.id||'')));
+  S.foodMaybeRound=false;
+  S.pool=[];S.index=0;S.winnerItem=null;S.winnerType='food';
   buildFood();foodQuick();save();
   document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();document.querySelector('#resetRestoreModal')?.remove();document.querySelector('#resetRestoreModalBg')?.remove();document.querySelector('#drawer')?.classList.add('hidden');document.querySelector('#drawerBg')?.classList.add('hidden');
-  home();
+  home();appToast('Built-in meals restored.');
 }
 const homeActionHandler = (event) => {
  const button = event.target.closest?.('[data-home-action]');
