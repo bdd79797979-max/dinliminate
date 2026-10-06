@@ -10806,14 +10806,12 @@ html.dinliminate-visual-mobile .app{
    are visible. */
 @media only screen and (max-width:600px){
   .app.home-active{
-    background-size:100% 100%!important;
     background-position:center center!important;
   }
   body:has(.app.home-active)::before{
     width:100vw!important;
     left:0!important;
     transform:none!important;
-    background-size:100% 100%!important;
     background-position:center center!important;
     background-repeat:no-repeat!important;
   }
