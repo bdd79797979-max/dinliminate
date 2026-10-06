@@ -223,5 +223,5 @@ async function handler(req,res){
  }
 }
 handler.tryGoogleRestaurantPhoto=tryGoogleRestaurantPhoto;
-handler._test={tryGoogleRestaurantPhoto,exactPlaceMatch,photoQuality,findPlaceId,getPlaceDetails};
+handler._test={tryGoogleRestaurantPhoto,exactPlaceMatch,venueNameMatches,canonicalVenueNameTokens,photoQuality,findPlaceId,getPlaceDetails,googlePhotoMedia};
 module.exports=handler;
