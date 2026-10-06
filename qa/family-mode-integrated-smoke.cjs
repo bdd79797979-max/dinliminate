@@ -28,8 +28,8 @@ assert('Restaurant Family round submits restaurant row Maybes',
  app.includes("type==='restaurant' ? restaurantPoolFiltered().filter(x=>x?._maybe)")
 );
 assert('Meal Family round submits S.maybe',
- app.includes(": [...(S.maybe||new Set())].map(String)");
-assert('shared round ignores stale Restaurant search/Hours/Cuisine filters',
+ app.includes(": [...(S.maybe||new Set())].map(String)")
+);assert('shared round ignores stale Restaurant search/Hours/Cuisine filters',
  app.includes("S.restaurantQuery=''")&&
  app.includes("S.restaurantHours='all'")&&
  app.includes("S.restaurantCuts.clear()")
