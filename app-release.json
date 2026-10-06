@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1077,
-  "sourceBranch": "cp1077-google-usage-tracker",
-  "checkpoint": "CP1077",
-  "deploymentTrigger": "CP1077-google-usage-tracker",
+  "build": 1078,
+  "sourceBranch": "cp1078-restaurant-search-core",
+  "checkpoint": "CP1078",
+  "deploymentTrigger": "CP1078-restaurant-search-core",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -19,5 +19,6 @@
   "googleMasterKillSwitch": true,
   "restaurantFilters": "Cuisine + Open Now (All/Open Now/Closed Now) + Radius; Open Now uses explicit current-hours data or validated opening hours without opening Details",
   "googleBudgetTracker": "single durable Neon SKU tracker; legacy photo usage migrated into place-photo",
-  "googleUsageEndpoint": "/api/google-usage (read-only; Used/Cap/Remaining/%/status)"
+  "googleUsageEndpoint": "/api/google-usage (read-only; Used/Cap/Remaining/%/status)",
+  "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection"
 }
