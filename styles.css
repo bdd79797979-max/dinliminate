@@ -10678,3 +10678,89 @@ body{-webkit-text-size-adjust:100%;}
   #restaurant .restaurant-hours-quick{gap:5px!important}
   #restaurant .restaurant-hours-chip{min-height:27px!important;height:27px!important;padding:0 9px!important;font-size:8px!important}
 }
+
+
+/* CP1060 — use the device viewport, not the reported layout viewport, as the
+   mobile shell switch. Apple documents device-width specifically for iPhone web
+   apps. This is intentionally the final mobile rule so no older max-width:520px
+   desktop rule can win on an actual phone/iPad. */
+@media only screen and (max-device-width:1024px){
+  html,
+  body{
+    width:100%!important;
+    min-width:100%!important;
+    max-width:none!important;
+    min-height:100%!important;
+    height:100%!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+  .app{
+    position:relative!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  .app-topbar{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  .screen{
+    position:absolute!important;
+    inset:0!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  .screen.hidden{display:none!important;}
+  .screen.luxury-home{overflow:hidden!important;}
+  .app:has(#home:not(.hidden)) #home,
+  html.dinliminate-ios #home{
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  .decision-screen,
+  .winner.screen,
+  .family-screen{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+  }
+  .decision-screen{overflow:hidden!important;}
+  .winner.screen{overflow-y:auto!important;}
+  .drawer,
+  .drawer-bg,
+  .modal,
+  .modal-bg,
+  .overlay,
+  .location-permission-modal,
+  .location-permission-bg,
+  #tutorialLayer{
+    max-width:100vw!important;
+    max-height:100dvh!important;
+  }
+}
