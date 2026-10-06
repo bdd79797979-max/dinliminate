@@ -9592,8 +9592,8 @@ body:has(.app.home-active)::after{
 
 .app.home-active #home .home-choice-zone{
   position:absolute!important;
-  top:38%!important;
-  width:39%!important;
+  top:26%!important;
+  width:30%!important;
   height:22%!important;
   margin:0!important;
   padding:0!important;
@@ -9616,11 +9616,11 @@ body:has(.app.home-active)::after{
 }
 
 .app.home-active #home #foodStart{
-  left:6%!important;
+  left:18%!important;
 }
 
 .app.home-active #home #restStart{
-  right:6%!important;
+  right:18%!important;
 }
 
 .app.home-active #home .home-choice-zone::before,
@@ -9780,8 +9780,8 @@ body:has(.app.home-active)::after{
   }
 
   .app.home-active #home .home-choice-zone{
-    top:38%!important;
-    height:21%!important;
+    top:26%!important;
+    height:22%!important;
   }
 
   .app.home-active #home .home-choice-content{

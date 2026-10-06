@@ -1,18 +1,16 @@
-# CURRENT SAVEPOINT — CP1106
+# CURRENT SAVEPOINT — CP1107
 
 Date: 2026-10-06
 
-Working branch: cp1106-canonical-home
+Working branch: cp1107-home-window-centering
 
 ## Checkpoint
 
-- CP1104: ab575cf241c270aa6c72df9c6c6b63d1507d0aa4 — clean Home baseline before the clear-window rebuild.
-- CP1106: Canonical Home rebuild candidate. No deployment has been made.
+- CP1106: 5aac1a8129f555c3899b0555303b1ffb6f247a41 — canonical Home rebuild.
+- CP1107: centered Home choice zones over the left/right door glass panels. No deployment has been made.
 
-## CP1106 scope
+## CP1107 scope
 
-The Home screen now has one authoritative implementation: the existing door photo is the full-screen canvas; At Home and Restaurant are transparent touch zones over the two door windows; both show white text with a white right arrow; the gold D and DINLIMINATE wordmark are stacked; the existing Add to Phone / Share App / Tutorial actions remain on Home.
+At Home and Restaurant remain invisible full tap zones, but their visible labels are now centered within the corresponding left and right glass areas of the door photo. Both retain visible white arrows.
 
-Legacy Home card/window styling and competing Home-specific CSS rules were removed rather than overridden.
-
-No deployment has been made from CP1106.
+No deployment has been made from CP1107.
