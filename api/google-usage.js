@@ -14,6 +14,7 @@ const DATABASE_URL = String(
 const HARD_LIMITS = Object.freeze({
   'text-search-pro': Math.max(1, Number.parseInt(process.env.GOOGLE_TEXT_SEARCH_PRO_HARD_LIMIT || '4500', 10) || 4500),
   'nearby-search-pro': Math.max(1, Number.parseInt(process.env.GOOGLE_NEARBY_SEARCH_PRO_HARD_LIMIT || '4500', 10) || 4500),
+  'nearby-search-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_NEARBY_SEARCH_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'text-search-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_TEXT_SEARCH_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'place-details-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'place-details-essentials': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ESSENTIALS_HARD_LIMIT || '9000', 10) || 9000)
