@@ -9861,3 +9861,25 @@ body:has(.app.home-active)::after{
 #restaurant .restaurant-card-stack .card-copy{
   bottom:33px!important;
 }
+
+
+/* CP1113 — Home Menu overlay lock.
+   The open drawer must sit above the complete Home surface, including the
+   Home topbar, logo, slogan, and transparent choice zones. */
+.app.home-active > #drawerBg{
+  z-index:99!important;
+  pointer-events:auto!important;
+}
+.app.home-active > #drawer{
+  z-index:100!important;
+  pointer-events:auto!important;
+  background:linear-gradient(165deg,#151515 0%,#0d0d0c 100%)!important;
+}
+.app.home-active > #drawer.is-open{
+  z-index:100!important;
+}
+.app.home-active > #drawer .drawer-close{
+  position:relative!important;
+  z-index:101!important;
+  pointer-events:auto!important;
+}
