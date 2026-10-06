@@ -5348,6 +5348,7 @@ async function appDiagnosisView(existingModal){
  return modal;
 }
 function privacyView() {
+const settings=$('settingsModal');settings?.remove();$('settingsModalBg')?.remove();
 const body = '<div class="info-copy"><h4>Privacy & Data</h4><p>Dinliminate uses your selected address or optional device location to find nearby restaurants. Location access is optional.</p><p>Restaurant/address results are retrieved through Dinliminate’s search service using third-party mapping and place providers. Your exact location or selected address is used for that search request.</p><p>Your meal choices, hidden items, history, and custom-meal information are stored on this device using browser storage. Custom food photos may be stored in IndexedDB on the device.</p><p>Restaurant and meal images may be loaded from third-party image hosts. Restaurant availability, hours, phone numbers, websites, and menu information can change and are supplied by external providers.</p></div>';
 openModal('privacyModal','Privacy',body,{returnToMenu:true});
 }
@@ -5378,6 +5379,7 @@ function exportHistoryPrint(scope){
  if(w.document.readyState==='complete')printWhenReady(); else w.addEventListener('load',printWhenReady,{once:true});
 }
 function exportPdfView(){
+ const settings=$('settingsModal');settings?.remove();$('settingsModalBg')?.remove();
  const history=readHistory();
  if(!history.length){appToast('No history to export yet.');return;}
  const body='<div class="export-pdf-copy"><div class="export-pdf-kicker">SAVE YOUR DECISIONS</div><h4>Export your history</h4><p>Choose what to include. A print-ready PDF opens next, where you can save or share it from your device.</p><div class="export-pdf-options">'+
