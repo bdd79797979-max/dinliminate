@@ -11586,3 +11586,10 @@ html.dinliminate-visual-mobile .app{
     outline:0!important;
   }
 }
+
+/* CP1098 — lower Home utility actions toward the bottom edge while preserving safe-area clearance. */
+@media only screen and (max-width:600px){
+  .app.home-active #home .home-foot{
+    bottom:calc(env(safe-area-inset-bottom) + 3px)!important;
+  }
+}
