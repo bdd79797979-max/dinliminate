@@ -523,12 +523,12 @@ function extractExternalWebsiteLinks(html,sourceUrl=''){
 }
 function parseJsonLdObjects(html){
   const out=[];
-  const re=/<script\\b[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi;
+  const re=/<script\b[^>]*type=[\"']application\/ld\+json[\"'][^>]*>([\s\S]*?)<\/script>/gi;
   let match;
   while((match=re.exec(String(html||'')))){
     let raw=String(match[1]||'').trim();
     if(!raw)continue;
-    raw=raw.replace(/^<!--[\\s\\S]*?-->/,'').trim();
+    raw=raw.replace(/^<!--[\s\S]*?-->/,'').trim();
     try{
       const parsed=JSON.parse(raw);
       const visit=(value)=>{
