@@ -3195,7 +3195,7 @@ return;
 }
 S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
-const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT+1);
+const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
 if(drawSeq!==restaurantDrawSeq)return;
 rows=restaurantPoolFiltered();
 if(prepared.firstId){
