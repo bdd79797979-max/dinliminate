@@ -9,6 +9,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dinliminate">
 <meta name="format-detection" content="telephone=no">
+<script>
+/* CP1138 — prevent iPhone/PWA reload snapshot + first-paint screen flash. */
+(() => {
+  try { document.documentElement.classList.add('dinliminate-booting'); } catch {}
+  window.addEventListener('pagehide', () => {
+    try { document.documentElement.classList.add('dinliminate-page-unloading'); } catch {}
+  }, {capture:true});
+  window.addEventListener('pageshow', () => {
+    try { document.documentElement.classList.remove('dinliminate-page-unloading'); } catch {}
+  }, {capture:true});
+})();
+</script>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg?v=1092" type="image/svg+xml">
 <title>Dinliminate — Meal Decisions Simplified</title>
@@ -21,6 +33,10 @@ html,body{margin:0;background:#090909;color:#f5f5f5;min-height:100%;overscroll-b
 *{box-sizing:border-box}
 button{font:inherit;border:0}
 .hidden{display:none!important}
+html.dinliminate-booting .app,
+html.dinliminate-page-unloading .app{visibility:hidden!important}
+html.dinliminate-booting body,
+html.dinliminate-page-unloading body{background:#090909!important}
 .app{
   position:fixed;inset:0;width:min(100vw,430px);max-width:430px;height:100dvh;min-height:100dvh;
   margin:0 auto;padding:0;overflow:hidden;background:#080706;
