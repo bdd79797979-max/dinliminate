@@ -1,4 +1,4 @@
-const CACHE='dinliminate-shell-v1065';
+const CACHE='dinliminate-shell-v1066';
 const IMAGE_CACHE='dinliminate-images-v4';
 
 // CP1008 — Managed image cache:
