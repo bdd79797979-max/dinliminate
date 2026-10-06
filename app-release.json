@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1084,
-  "sourceBranch": "cp1084-brand-pwa-final",
-  "checkpoint": "CP1084",
-  "deploymentTrigger": "CP1084-brand-pwa-final",
+  "build": 1085,
+  "sourceBranch": "cp1085-security-hardening",
+  "checkpoint": "CP1085",
+  "deploymentTrigger": "CP1085-security-hardening",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -26,5 +26,6 @@
   "restaurantDecisionUI": "four-control parity, no active-card resize during swipe, in-card first-swipe lesson, target-aware search diagnosis",
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
-  "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning"
+  "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
+  "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers"
 }
