@@ -1,4 +1,4 @@
-// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
+// CP1067: stabilize first card and make All/Maybe counts derive from the actual choice catalog.\n// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
 // CP950 final tree sync: Meal swipe gate removed; keep this commit as the deploy source of truth.
 
 (() => {
@@ -1519,15 +1519,19 @@ function setMaybeDeck(kind, enabled){
  }
  renderMaybeDeckToggle(kind); save();
 }
+function allChoiceRows(kind){
+ if(kind==='food')return foodBasePool();
+ return restaurantPoolHourFiltered().filter(row=>!row._photoUnavailable);
+}
 function choiceDeckRows(kind){
- if(kind==='food')return foodPool();
- return restaurantPoolFiltered();
+ const all=allChoiceRows(kind);
+ return S.maybeDeck ? all.filter(row=>kind==='food'?S.maybe.has(row.id):!!row._maybe) : all;
 }
 function maybeDeckRows(kind){
- return choiceDeckRows(kind).filter(row=>kind==='food'?S.maybe.has(row.id):!!row._maybe);
+ return allChoiceRows(kind).filter(row=>kind==='food'?S.maybe.has(row.id):!!row._maybe);
 }
 function maybeDeckCount(kind){return maybeDeckRows(kind).length;}
-function allDeckCount(kind){return choiceDeckRows(kind).length;}
+function allDeckCount(kind){return allChoiceRows(kind).length;}
 function renderMaybeDeckToggle(kind){
  const id=kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck';
  const btn=$(id);if(!btn)return;
@@ -1742,15 +1746,13 @@ document.addEventListener('pointerdown',event=>{
 function maybeShowInCardSwipeCoach(){
  try{if(localStorage.getItem('dinliminate.swipeHint.v5')||localStorage.getItem('dinliminate.swipeHint.v4')){clearLegacySwipeInstructions();return;}}catch{}
  const card=S.screen==='restaurant' ? $('restaurantCard') : $('foodCard');
- const screenId=S.screen==='restaurant' ? 'restaurant' : 'food';
- const host=document.querySelector('#'+screenId+' .unified-swipe-actions');
- if(!card || !host || host.querySelector('.swipe-card-coach'))return;
+ if(!card || card.querySelector('.swipe-card-coach'))return;
  const coach=document.createElement('div');
  coach.className='swipe-card-coach';
  coach.setAttribute('role','note');
  coach.setAttribute('aria-label','Swipe left to Cut or right for Maybe. This lesson disappears after your first meaningful interaction.');
  coach.innerHTML='<span class="swipe-card-coach-cut">← CUT</span><span class="swipe-card-coach-mid">· SWIPE ·</span><span class="swipe-card-coach-maybe">MAYBE →</span>';
- host.appendChild(coach);
+ card.appendChild(coach);
 }
 
 function startFood(options={}) {
