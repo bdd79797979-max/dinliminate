@@ -3,6 +3,8 @@ name: Import Home background
 on:
   push:
     branches: [cp1093-home-background]
+    paths:
+      - 'assets/home-door.parts/READY'
   workflow_dispatch:
 
 permissions:
