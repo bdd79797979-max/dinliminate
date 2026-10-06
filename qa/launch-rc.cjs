@@ -44,18 +44,23 @@ const release=JSON.parse(read('app-release.json'));
 const releaseManifest=JSON.parse(read('release-manifest.json'));
 const pkg=JSON.parse(read('package.json'));
 
-assert('current build is 1086',release.build===1086&&releaseManifest.build===1086);
-assert('checkpoint metadata is CP1086',release.checkpoint==='CP1086'&&releaseManifest.checkpoint==='CP1086');
+const build=Number(release.build);
+const expectedCheckpoint=String(release.checkpoint||'');
+const expectedBranch=String(release.sourceBranch||'');
+assert('release build is a positive integer',Number.isInteger(build)&&build>0);
+assert('current build agrees across manifests',releaseManifest.build===build);
+assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
-assert('release branches agree',release.sourceBranch==='cp1086-automated-rc'&&releaseManifest.sourceBranch==='cp1086-automated-rc');
+assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
+assert('launch candidate branch is explicit',expectedBranch==='cp1088-launch-candidate'&&expectedCheckpoint==='CP1088');
 
-for(const asset of ['./app.js?v=1086','./styles.css?v=1086','./viewport.js?v=1086','./logo.svg?v=1086','./icon.svg?v=1086']){
+for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
  assert('service-worker cache '+asset,sw.includes(asset));
 }
-assert('service-worker shell version',sw.includes("const CACHE='dinliminate-shell-v1086'"));
+assert('service-worker shell version',sw.includes(`const CACHE='dinliminate-shell-v${build}'`));
 assert('PWA standalone',manifest.display==='standalone'&&manifest.orientation==='portrait');
-assert('PWA icons versioned',manifest.icons.some(x=>String(x.src).includes('?v=1086')));
+assert('PWA icons versioned',manifest.icons.some(x=>String(x.src).includes(`?v=${build}`)));
 
 const app=read('app.js');
 const restaurants=read('api/restaurants.js');
