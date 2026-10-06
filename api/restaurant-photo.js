@@ -16,6 +16,7 @@ const LOW_TRUST_PUBLIC_PHOTO_HOSTS=new Set(['restaurantguru.com','usarestaurants
 const MAX_RESTAURANT_IMAGE_DIMENSION=6000;
 const MAX_RESTAURANT_IMAGE_PIXELS=12000000;
 const PHOTO_SOURCE_TIER={
+  'google-places':100,
   'known-restaurant-photo':100,
   'official-fast-path':99,
   'official-venue-page':96,
@@ -1078,11 +1079,15 @@ module.exports=async function handler(req,res){
   const googlePlaceId=String(q.placeId||q.googlePlaceId||'').trim().slice(0,220);
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
   try{
-    // CP976: if provider data has no website, use exact public venue pages
-    // to discover the restaurant's own site before public-photo fallback.
-    let fastDirectory=null;
+    // CP1047: Google is the primary new-photo source. Existing client-side
+    // verified photos are reused before this request; once a fresh lookup starts,
+    // Google gets first opportunity, then exact non-Google sources.
+    const googlePhoto=await tryGoogleRestaurantPhoto({
+      name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
+    });
+    if(googlePhoto)return sendMedia(res,googlePhoto);
 
-    // CP992: honor an exact official location page when the caller already has one.
+    // Official restaurant sources are the first fallback after Google.
     if(officialLocationPage){
       const directLocation=await fastOfficialVenuePhoto(name,address,officialLocationPage,phone);
       if(directLocation)return sendMedia(res,{...directLocation,source:'official-location-page'});
@@ -1092,7 +1097,7 @@ module.exports=async function handler(req,res){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
       if(fastOfficial)return sendMedia(res,fastOfficial);
 
-      // CP992: an official brand root is not necessarily the exact store page.
+      // An official brand root is not necessarily the exact store page.
       // Discover and verify the location-specific page before leaving the official domain.
       const locationPages=await discoverOfficialLocationPages(name,address,officialWebsite,phone);
       for(const entry of locationPages){
@@ -1113,13 +1118,6 @@ module.exports=async function handler(req,res){
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
     if(fastKnown)return sendMedia(res,fastKnown);
-
-    // CP1005: after official and known-in-Dinliminate sources, prefer a verified
-    // Google Places photo before broader public exact-venue discovery.
-    const googlePhoto=await tryGoogleRestaurantPhoto({
-      name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
-    });
-    if(googlePhoto)return sendMedia(res,googlePhoto);
 
     // Other exact-venue public sources remain the next fallback when Google
     // cannot return an exact, quality restaurant photo.
