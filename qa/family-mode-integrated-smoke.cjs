@@ -43,9 +43,12 @@ assert('Round 2/3 uses shared browse source',
 assert('ENTER control reuses normal Choose button',
  app.includes("const btn=$(type==='meal'?'foodChoose':'restChoose')")
 );
+const stageAlertStart=app.indexOf('function familyStageAlert(type,stage){');
+const stageAlertEnd=app.indexOf('\nfunction familySwipeInstruction',stageAlertStart);
+const stageAlert=app.slice(stageAlertStart,stageAlertEnd);
 assert('Family stage alert is non-blocking',
- app.includes("document.getElementById('familyStageAlert')?.remove();")&&
- !app.includes("document.body.appendChild(overlay)")
+ stageAlert.includes("document.getElementById('familyStageAlert')?.remove();")&&
+ !stageAlert.includes('document.body.appendChild(overlay)')
 );
 assert('winner returns through normal Winner screen',
  app.includes("winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true})")
