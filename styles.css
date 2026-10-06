@@ -10396,8 +10396,11 @@ html.dinliminate-visual-mobile body:has(.app.home-active)::before{
     width:100vw!important;
     min-width:100vw!important;
     max-width:none!important;
+    height:100vh!important;
     height:100dvh!important;
+    min-height:100vh!important;
     min-height:100dvh!important;
+    max-height:100vh!important;
     max-height:100dvh!important;
     margin:0!important;
     padding:0!important;
@@ -10422,8 +10425,11 @@ html.dinliminate-visual-mobile body:has(.app.home-active)::before{
     width:100vw!important;
     min-width:100vw!important;
     max-width:none!important;
+    height:100vh!important;
     height:100dvh!important;
+    min-height:100vh!important;
     min-height:100dvh!important;
+    max-height:100vh!important;
     max-height:100dvh!important;
     margin:0!important;
     box-sizing:border-box!important;
