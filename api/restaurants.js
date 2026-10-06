@@ -1236,7 +1236,7 @@ function restaurantSearchMatches(row,searchTerm){
      : tags.includes(classification.tag);
  }
  const filler=new Set(RESTAURANT_TAXONOMY.fillerWords||['restaurant','restaurants','place','places','food','foodie','near','me']);
- const hay=normalizeRestaurantSearch([
+ const hay=normalizeSearchQuery([
    row?.name,row?.brand,row?.operator,row?.category,row?.cuisine,row?.primaryType,row?.providerType,
    Array.isArray(row?.types)?row.types.join(' '):row?.types,
    ...(Array.isArray(row?.menuItems)?row.menuItems:[])
