@@ -10105,3 +10105,114 @@ body:has(.app.home-active)::after{
     right:10px!important;
   }
 }
+
+
+/* CP1117 — Home luxury composition.
+   Establish a single visual hierarchy in the center of the door while
+   leaving the background, logo, footer tools, and behavior untouched. */
+.app.home-active #home .home-intro{
+  top:calc(env(safe-area-inset-top) + 20.5%)!important;
+}
+
+.app.home-active #home .home-intro h1{
+  max-width:11.8em!important;
+  margin:0 auto!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(28px,6.9vw,48px)!important;
+  line-height:.97!important;
+  letter-spacing:-.028em!important;
+  font-weight:700!important;
+  color:#fffaf2!important;
+  text-shadow:0 2px 5px rgba(0,0,0,.50),0 9px 25px rgba(0,0,0,.36)!important;
+}
+
+.app.home-active #home .home-intro .sub{
+  margin:11px auto 0!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;
+  font-size:12px!important;
+  line-height:1.2!important;
+  font-weight:600!important;
+  letter-spacing:.13em!important;
+  color:#f5e4c2!important;
+  text-shadow:0 2px 7px rgba(0,0,0,.60),0 0 14px rgba(0,0,0,.22)!important;
+}
+
+.app.home-active #home .home-choice-zone{
+  top:35.2%!important;
+  height:18%!important;
+  align-items:flex-start!important;
+  padding-top:0!important;
+}
+
+.app.home-active #home .home-choice-content{
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:9px!important;
+  min-width:145px!important;
+}
+
+.app.home-active #home .home-choice-content strong{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  letter-spacing:.17em!important;
+  color:#fffaf1!important;
+  text-align:center!important;
+  text-shadow:0 2px 6px rgba(0,0,0,.58),0 0 12px rgba(0,0,0,.20)!important;
+}
+
+.app.home-active #home .home-choice-arrow{
+  display:block!important;
+  width:100%!important;
+  text-align:center!important;
+  color:#e8cf98!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;
+  font-size:23px!important;
+  line-height:.9!important;
+  font-weight:300!important;
+  text-shadow:0 2px 7px rgba(0,0,0,.58),0 0 10px rgba(0,0,0,.18)!important;
+}
+
+.app.home-active .app-topbar #menu{
+  top:calc(env(safe-area-inset-top) + 8px)!important;
+  right:12px!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:12px!important;
+  background:rgba(9,8,7,.34)!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.30)!important;
+}
+
+@media only screen and (max-width:390px){
+  .app.home-active #home .home-intro{
+    top:calc(env(safe-area-inset-top) + 20.5%)!important;
+  }
+  .app.home-active #home .home-intro h1{
+    font-size:28px!important;
+  }
+  .app.home-active #home .home-intro .sub{
+    font-size:10.5px!important;
+    letter-spacing:.12em!important;
+    margin-top:10px!important;
+  }
+  .app.home-active #home .home-choice-zone{
+    top:35.2%!important;
+    height:18%!important;
+  }
+  .app.home-active #home .home-choice-content{
+    min-width:128px!important;
+    gap:8px!important;
+  }
+  .app.home-active #home .home-choice-content strong{
+    font-size:10.5px!important;
+    letter-spacing:.14em!important;
+  }
+  .app.home-active #home .home-choice-arrow{
+    font-size:21px!important;
+  }
+  .app.home-active .app-topbar #menu{
+    right:10px!important;
+  }
+}
