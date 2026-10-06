@@ -5210,8 +5210,24 @@ async function appDiagnosisView(existingModal){
    swVersionSynchronized?pass('runtime','PWA runtime versioning','The app runtime and service-worker shell are synchronized to build '+appRuntimeVersion+'.','The cache-query and service-worker shell point to the same release.'):warn('runtime','PWA runtime versioning','The service-worker shell does not match app build '+appRuntimeVersion+'.','The app now unregisters an older worker and registers the current build-specific worker on load.');
    /* iPhone / PWA */
    const metaViewport=document.querySelector('meta[name="viewport"]')?.getAttribute('content')||'';
-   metaViewport.includes('viewport-fit=cover')?pass('runtime','iPhone viewport','Safe-area-aware viewport settings are present.'):warn('runtime','iPhone viewport','The expected viewport-fit setting is missing.');
-   const address16=!!document.querySelector('#address')&&String(getComputedStyle($('address')).fontSize)==='16px';
+   metaViewport.includes('viewport-fit=cover')?pass('runtime','Safe-area configuration','viewport-fit=cover is enabled so the app can use the full iPhone display area.','This setting does not impose a width or height limit; safe-area insets are reserved only where content needs protection from the notch/home indicator.'):warn('runtime','Safe-area configuration','viewport-fit=cover is missing.','This can reduce safe-area coverage, but it is separate from whether the app shell fills the viewport.');
+   const viewportWidth=Number(window.visualViewport?.width||window.innerWidth||0);
+   const viewportHeight=Number(window.visualViewport?.height||window.innerHeight||0);
+   const appEl=document.querySelector('.app');
+   const activeScreen=document.querySelector('.screen:not(.hidden)');
+   const appRect=appEl?.getBoundingClientRect?.();
+   const screenRect=activeScreen?.getBoundingClientRect?.();
+   const mobileViewport=viewportWidth>0&&viewportWidth<=1199;
+   const widthMatches=!!appRect&&Math.abs(appRect.width-viewportWidth)<=2;
+   const heightMatches=!!appRect&&viewportHeight>0&&Math.abs(appRect.height-viewportHeight)<=2;
+   const appCenteredOffViewport=!!appRect&&(Math.abs(appRect.left)>2||Math.abs(appRect.right-viewportWidth)>2);
+   const appStyles=appEl?getComputedStyle(appEl):null;
+   const shellRulesGood=!!appStyles&&appStyles.width!=='auto'&&appStyles.maxWidth==='none'&&appStyles.marginLeft==='0px'&&appStyles.marginRight==='0px';
+   const screenMatches=!!screenRect&&Math.abs(screenRect.width-viewportWidth)<=2&&viewportHeight>0&&Math.abs(screenRect.height-viewportHeight)<=2;
+   if(mobileViewport&&widthMatches&&heightMatches&&!appCenteredOffViewport&&shellRulesGood)pass('runtime','Full iPhone viewport shell','The active app shell fills the visible viewport · '+Math.round(viewportWidth)+'×'+Math.round(viewportHeight)+' CSS px.','The shell is not constrained to the desktop 520px canvas on phone-sized viewports.');
+   else if(mobileViewport)fail('runtime','Full iPhone viewport shell','The app shell is not filling the visible viewport · measured '+Math.round(Number(appRect?.width)||0)+'×'+Math.round(Number(appRect?.height)||0)+' against '+Math.round(viewportWidth)+'×'+Math.round(viewportHeight)+'.','This is the check that can expose a real full-iPhone sizing problem; safe-area configuration is evaluated separately above.');
+   else info('runtime','Full iPhone viewport shell','Desktop-sized viewport detected · '+Math.round(viewportWidth)+'×'+Math.round(viewportHeight)+' CSS px.','The centered 520px desktop presentation is intentional outside the phone/tablet breakpoint; the physical iPhone gate must be run on the device.');
+   if(mobileViewport&&screenMatches)pass('runtime','Active screen geometry','The visible app screen matches the full viewport.','The active screen is not leaving a viewport-sized gap inside the shell.');   const address16=!!document.querySelector('#address')&&String(getComputedStyle($('address')).fontSize)==='16px';
    const search16=!!document.querySelector('#restaurantSearchBox input')&&String(getComputedStyle(document.querySelector('#restaurantSearchBox input')).fontSize)==='16px';
    address16&&search16?pass('runtime','Safari form sizing','Restaurant editable fields are using 16px text to avoid Safari auto-zoom.'):info('runtime','Safari form sizing','16px field sizing is applied on phone media queries; this desktop runtime may not be using those rules.');
    const installSource=typeof addToPhoneFlow==='function'&&typeof deferredInstallPrompt!=='undefined';
