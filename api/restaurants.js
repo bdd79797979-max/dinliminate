@@ -961,6 +961,7 @@ async function googleContactEnrichment(rows,originLat,originLon){
     if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
     const types=Array.isArray(p?.types)?p.types.map(String):[];
     const openNow=typeof p?.currentOpeningHours?.openNow==='boolean'?p.currentOpeningHours.openNow:undefined;
+    const regularHours=Array.isArray(p?.regularOpeningHours?.weekdayDescriptions)?p.regularOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
     const businessStatus=String(p?.businessStatus||'');
     if(businessStatus==='CLOSED_PERMANENTLY')return null;
     const distance=Number.isFinite(baseLat)&&Number.isFinite(baseLon)?miles(baseLat,baseLon,lat,lon):miles(originLat,originLon,lat,lon);
