@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1010,
-  "sourceBranch": "main",
+  "build": 1054,
+  "sourceBranch": "cp1046-restaurant-intelligence",
   "releaseMode": "candidate",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1010",
-  "deploymentTrigger": "CP1010-device-aware-iphone-shell"
+  "checkpoint": "CP1054",
+  "deploymentTrigger": "CP1054-restaurant-intelligence-preflight"
 }
