@@ -16,6 +16,7 @@ const WIDE_DISCOVERY_TIMEBOX_MS=5000;
 const OVERPASS_HTTP_TIMEOUT_MS=2500;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
+const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
 async function withinBudget(promise,ms,label){
  const wait=Math.max(250,ms);
  return Promise.race([promise,new Promise(resolve=>setTimeout(()=>resolve({__timeout:true,label}),wait))]);
@@ -59,7 +60,23 @@ function isClearlyNonDiningBusiness(row){
 }
 function filterNonDiningRows(rows){return (rows||[]).filter(row=>!isClearlyNonDiningBusiness(row))}
 function miles(a,b,c,d){const R=3958.7613,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,z=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(z))}
-async function json(url,opt={},timeout=9000){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);try{const r=await fetch(url,{...opt,signal:ctl.signal,headers:{Accept:'application/json','User-Agent':'Dinliminate/1.0',...(opt.headers||{})}});const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{}if(!r.ok)throw new Error('HTTP '+r.status);return data}finally{clearTimeout(t)}}
+async function json(url,opt={},timeout=9000){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);try{const r=await fetch(url,{...opt,signal:ctl.signal,headers:{Accept:'application/json','User-Agent':'Dinliminate/1.0',...(opt.headers||{})}});const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{}if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;e.body=data;throw e}return data}finally{clearTimeout(t)}}
+async function googleBudgetedJson(skuKey,url,opt={},timeout=9000){
+  const reservation=await reserveGoogleSku(skuKey,HARD_LIMITS[skuKey]);
+  if(!reservation.ok){
+    const e=new Error('Google '+skuKey+' monthly budget is exhausted.');
+    e.code='GOOGLE_SKU_BUDGET';
+    e.sku=skuKey;
+    e.budget=reservation;
+    throw e;
+  }
+  try{
+    return await json(url,opt,timeout);
+  }catch(e){
+    if(Number(e?.status)===403||Number(e?.status)===429)await disableGoogleSkuForMonth(skuKey);
+    throw e;
+  }
+}
 function rate(req,mode){const headers=req?.headers||{},client=String(headers['x-forwarded-for']||headers['client-ip']||headers['x-nf-client-connection-ip']||headers['cf-connecting-ip']||'anon').split(',')[0].trim()||'anon',key=mode+':'+client,now=Date.now(),old=buckets.get(key),max=(mode==='suggest'||mode==='reverse'||mode==='resolve')?40:(mode==='search'?MAX_SEARCH_PER_MINUTE:18);if(!old||now-old.t>60000){buckets.set(key,{t:now,c:1});return false}old.c++;return old.c>max}
 function osmRow(el,origin){const t=el?.tags||{},lat=n(el?.lat??el?.center?.lat),lon=n(el?.lon??el?.center?.lon),name=String(t.name||'').trim();if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;const amen=String(t.amenity||'restaurant').toLowerCase(),fast=amen==='fast_food'||isFastFoodName(name,String(t.brand||''),String(t.operator||''));let website=String(t.website||t['contact:website']||'').trim();if(website&&!/^https?:\/\//i.test(website))website='https://'+website;const key=norm(name)+'|'+lat.toFixed(4)+'|'+lon.toFixed(4);return{id:el?.osm_id?'osm-'+el.osm_id:'osm-'+key.replace(/ /g,'-'),name,category:fast?'Fast Food':(String(t.cuisine||'').trim()||'Restaurant'),fastFood:fast,cuisine:String(t.cuisine||''),providerType:String(t.amenity||''),address:[t['addr:housenumber'],t['addr:street'],t['addr:city'],t['addr:state'],t['addr:postcode']].filter(Boolean).join(', '),phone:String(t.phone||t['contact:phone']||''),website,opening_hours:String(t.opening_hours||''),lat,lon,distance:miles(origin.lat,origin.lon,lat,lon),photo:String(t.image||t.image_url||''),menuItems:[t.dish,t['dish:name'],t['menu:items'],t.menu_items].flatMap(v=>String(v||'').split(/[|;•,]/)).map(x=>x.trim()).filter(Boolean).slice(0,10),brand:String(t.brand||''),source:'OpenStreetMap'} }
 function queryClause(lat,lon,radius,types=DINING_AMENITIES){
@@ -740,12 +757,12 @@ async function googleSearchPlaces(lat,lon,radius,searchTerm){
  const term=normalizeSearchQuery(searchTerm),meters=Math.round(Math.min(50000,Math.max(1609,radius*1609.344))),rows=[],errors=[];
  if(!term)return googlePlaces(lat,lon,radius);
  const terms=providerSearchTerms(term);
- const requests=await Promise.allSettled(terms.map(termVariant=>json('https://places.googleapis.com/v1/places:searchText',{
+ const requests=await Promise.allSettled(terms.map(termVariant=>googleBudgetedJson('text-search-pro','https://places.googleapis.com/v1/places:searchText',{
    method:'POST',
    headers:{
      'Content-Type':'application/json',
      'X-Goog-Api-Key':GOOGLE_KEY,
-     'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.types,places.currentOpeningHours.openNow,places.businessStatus,places.photos'
+     'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.primaryType,places.types,places.businessStatus'
    },
    body:JSON.stringify({
      textQuery:termVariant+' restaurant',
@@ -763,6 +780,7 @@ async function googleSearchPlaces(lat,lon,radius,searchTerm){
     const types=Array.isArray(p?.types)?p.types.map(String):[];
     const fast=types.includes('fast_food_restaurant')||types.includes('fast_food')||isFastFoodName(name);
     const openNow=typeof p?.currentOpeningHours?.openNow==='boolean'?p.currentOpeningHours.openNow:undefined;
+     const regularHours=Array.isArray(p?.regularOpeningHours?.weekdayDescriptions)?p.regularOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
     const businessStatus=String(p?.businessStatus||'');
     if(businessStatus==='CLOSED_PERMANENTLY')continue;
     const distance=miles(lat,lon,plat,plon);
@@ -777,12 +795,12 @@ async function googlePlaces(lat,lon,radius){
  if(!GOOGLE_KEY)return{rows:[],errors:[]};
  const meters=Math.round(Math.min(50000,Math.max(1609,radius*1609.344))),rows=[],errors=[];
  try{
-  const data=await json('https://places.googleapis.com/v1/places:searchNearby',{
+  const data=await googleBudgetedJson('nearby-search-pro','https://places.googleapis.com/v1/places:searchNearby',{
    method:'POST',
    headers:{
     'Content-Type':'application/json',
     'X-Goog-Api-Key':GOOGLE_KEY,
-    'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.types,places.currentOpeningHours.openNow,places.businessStatus,places.photos'
+    'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.types,places.currentOpeningHours.openNow,places.currentOpeningHours.weekdayDescriptions,places.regularOpeningHours.weekdayDescriptions,places.businessStatus'
    },
    body:JSON.stringify({includedTypes:['restaurant','fast_food_restaurant'],maxResultCount:20,locationRestriction:{circle:{center:{latitude:lat,longitude:lon},radius:meters}}})
   },6500);
@@ -801,14 +819,14 @@ async function googlePlaces(lat,lon,radius){
 }
 async function googleContactEnrichment(rows,originLat,originLon){
  if(!GOOGLE_KEY)return{rows:[],errors:[]};
- const targets=(rows||[]).filter(r=>!r.phone||!r.website).slice(0,12);
+ const targets=(rows||[]).filter(r=>!r.phone||!r.website||!r.opening_hours).slice(0,12);
  if(!targets.length)return{rows:[],errors:[]};
  const errors=[],out=[];
  let cursor=0;
  async function one(r){
   const q=[r.name,r.address].filter(Boolean).join(', ');
   try{
-   const data=await json('https://places.googleapis.com/v1/places:searchText',{
+   const data=await googleBudgetedJson('text-search-enterprise','https://places.googleapis.com/v1/places:searchText',{
     method:'POST',
     headers:{
      'Content-Type':'application/json',
@@ -834,7 +852,7 @@ async function googleContactEnrichment(rows,originLat,originLon){
     const distance=Number.isFinite(baseLat)&&Number.isFinite(baseLon)?miles(baseLat,baseLon,lat,lon):miles(originLat,originLon,lat,lon);
     const target=norm(r.name),candidate=norm(name);
     const nameMatch=target===candidate||candidate.includes(target)||target.includes(candidate);
-    return !nameMatch||distance>1.5?null:{id:p.id?'google-contact-'+p.id:'google-contact-'+norm(name),name,address:String(p?.formattedAddress||r.address||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||r.website||''),openNow,hoursSource:typeof openNow==='boolean'?'Google Places':'',lat,lon,distance:miles(originLat,originLon,lat,lon),category:types.includes('fast_food_restaurant')||types.includes('fast_food')?'Fast Food':(r.category||'Restaurant'),primaryType:String(p.primaryType||''),types,providerType:types.join(' '),fastFood:types.includes('fast_food_restaurant')||types.includes('fast_food')||!!r.fastFood,cuisine:r.cuisine||'',opening_hours:r.opening_hours||'',photo:'',menuItems:r.menuItems||[],brand:r.brand||'',source:'Google Places Search',googlePlaceId:p.id||''};
+    return !nameMatch||distance>1.5?null:{id:p.id?'google-contact-'+p.id:'google-contact-'+norm(name),name,address:String(p?.formattedAddress||r.address||''),phone:String(p?.nationalPhoneNumber||''),website:String(p?.websiteUri||r.website||''),openNow,hoursSource:regularHours?'Google Places':(typeof openNow==='boolean'?'Google Places':''),lat,lon,distance:miles(originLat,originLon,lat,lon),category:types.includes('fast_food_restaurant')||types.includes('fast_food')?'Fast Food':(r.category||'Restaurant'),primaryType:String(p.primaryType||''),types,providerType:types.join(' '),fastFood:types.includes('fast_food_restaurant')||types.includes('fast_food')||!!r.fastFood,cuisine:r.cuisine||'',opening_hours:regularHours||r.opening_hours||'',photo:'',menuItems:r.menuItems||[],brand:r.brand||'',source:'Google Places Search',googlePlaceId:p.id||''};
    }).filter(Boolean).sort((a,b)=>Number(a.distance)-Number(b.distance))[0];
    if(best)out.push({...best,_targetId:r.id});
   }catch(e){errors.push(String(e?.message||e||'Google contact lookup failed'));}
@@ -1159,7 +1177,7 @@ function requestQuery(req){
  try{return new URL(String(req?.url||'/'),'https://dinliminate.local').searchParams}catch{return new URLSearchParams()}
 }
 async function handler(req,res){const q=requestQuery(req),mode=String(q.get('mode')||'health').toLowerCase();if(mode!=='search'&&rate(req,mode))return res.status(429).json({ok:false,code:'RATE_LIMITED',message:'Too many requests. Try again shortly.'});try{
-if(mode==='health'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=60, s-maxage=60, stale-while-revalidate=120');return res.status(200).json({ok:true,version:API_VERSION,maxRadiusMiles:MAX_RADIUS,googlePlacesConfigured:!!GOOGLE_KEY,providers:['OpenStreetMap Overpass','ArcGIS','Photon',...(GOOGLE_KEY?['Google Places']:[]),'Open-Meteo timezone']});}
+if(mode==='health'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=60, s-maxage=60, stale-while-revalidate=120');return res.status(200).json({ok:true,version:API_VERSION,maxRadiusMiles:MAX_RADIUS,googlePlacesConfigured:!!GOOGLE_KEY,googleUsage:await googleUsageHealth(),providers:['OpenStreetMap Overpass','ArcGIS','Photon',...(GOOGLE_KEY?['Google Places']:[]),'Open-Meteo timezone']});}
 if(mode==='suggest'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');return res.status(200).json({ok:true,results:await suggest(q.get('q'))});}
 if(mode==='resolve'){const x=await geocode(q.get('q'));return res.status(200).json({ok:true,...x})}
 if(mode==='reverse'){const lat=n(q.get('lat')),lon=n(q.get('lon'));if(!validCoords(lat,lon))return res.status(400).json({ok:false,message:'Coordinates are invalid.'});if(res.setHeader)res.setHeader('Cache-Control','public, max-age=300, s-maxage=300, stale-while-revalidate=600');return res.status(200).json({ok:true,display:await reverse(lat,lon)})}
