@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1083,
-  "sourceBranch": "cp1083-history-integrity",
-  "checkpoint": "CP1083",
-  "deploymentTrigger": "CP1083-history-integrity",
+  "build": 1084,
+  "sourceBranch": "cp1084-brand-pwa-final",
+  "checkpoint": "CP1084",
+  "deploymentTrigger": "CP1084-brand-pwa-final",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -25,5 +25,6 @@
   "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing",
   "restaurantDecisionUI": "four-control parity, no active-card resize during swipe, in-card first-swipe lesson, target-aware search diagnosis",
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
-  "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion"
+  "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
+  "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning"
 }
