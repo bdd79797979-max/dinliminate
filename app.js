@@ -1154,9 +1154,8 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#home .home-intro',title:'TUTORIAL',body:'Tap this bubble to move to the next step.'},
-  {target:'#home .home-intro h1',title:'DINLIMINATE',body:'Swipe through meals or restaurants until you find what you want.'},
-  {target:'#home .home-actions',title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot']}
+  {target:'#home .home-slogan',title:'DINLIMINATE',body:'Swipe through meals or restaurants until you find what you want.'},
+  {target:'#home .home-choice-rail',title:'GET STARTED',body:'Tap Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot']}
  ];
  if(screen==='food')return[
   {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},

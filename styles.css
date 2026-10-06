@@ -10499,3 +10499,24 @@ body:has(.app.home-active)::after{
     transform:translate(3px,2px)!important;
   }
 }
+
+
+/* CP1144 — final Home cleanup: slogan stays above the bottom tools;
+   Home/Restaurant choices lift 2px, with Restaurant 1px farther left. */
+.app.home-active #home .home-slogan{
+  z-index:35;
+}
+.app.home-active #home #foodStart .home-choice-content{
+  transform:translate(-5px,0)!important;
+}
+.app.home-active #home #restStart .home-choice-content{
+  transform:translate(3px,0)!important;
+}
+@media(max-width:390px){
+  .app.home-active #home #foodStart .home-choice-content{
+    transform:translate(-3px,0)!important;
+  }
+  .app.home-active #home #restStart .home-choice-content{
+    transform:translate(2px,0)!important;
+  }
+}
