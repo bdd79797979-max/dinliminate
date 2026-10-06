@@ -772,13 +772,16 @@ function knownPublicPhotoPage(name,address='',phone=''){
  const addr=normalizeMatchText(address);
  const phoneDigits=normalizePhoneDigits(phone);
  const hit=KNOWN_PUBLIC_PHOTO_PAGES.find(entry=>{
-  const nameMatch=entry.names.some(n=>{
+  const names=Array.isArray(entry?.names)?entry.names:[];
+  const addressTokens=Array.isArray(entry?.addressTokens)?entry.addressTokens:[];
+  const nameMatch=names.some(n=>{
    const key=compactMatchText(n);
    return normalized===key||normalized.includes(key)||key.includes(normalized);
   });
   if(!nameMatch)return false;
-  const addressMatch=entry.addressTokens.some(token=>addr.includes(normalizeMatchText(token)));
-  const phoneMatch=entry.phone&&phoneDigits?normalizePhoneDigits(entry.phone)===phoneDigits:false;
+  const addressMatch=addressTokens.some(token=>addr.includes(normalizeMatchText(token)));
+  const entryPhone=normalizePhoneDigits(entry?.phone||'');
+  const phoneMatch=!!entryPhone&&!!phoneDigits&&entryPhone===phoneDigits;
   return addressMatch||phoneMatch;
  });
  return hit?.url||'';
@@ -1121,7 +1124,7 @@ module.exports=async function handler(req,res){
 
     // Other exact-venue public sources remain the next fallback when Google
     // cannot return an exact, quality restaurant photo.
-    fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
+    const fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
     if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
     if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
 
