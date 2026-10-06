@@ -3265,6 +3265,20 @@ const visibleLabel=displayRestaurantLocationLabel(rd.display,q); loc = {lat:rd.l
 const radius = Math.min(100,Math.max(1,Number($('radius').value)||10));
 const searchTerm = String(S.restaurantQuery||'').trim().slice(0,100);
 const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+radius+':'+normalizeRestaurantSearch(searchTerm);
+ let replacingSearchTarget=false;
+ const previousSearchKey=String(S.restaurantSearchKey||'');
+ replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
+ if(replacingSearchTarget){
+   // CP1078: never leave the previous location/radius/query cards on screen
+   // while a materially different restaurant search is being rebuilt.
+   S.restaurantPool=[];
+   S.restaurantIndex=0;
+   S.restaurantActions=[];
+   S.restaurantMaybeRound=false;
+   S.maybeDeck=false;
+   S.winnerItem=null;
+   await drawRestaurants();
+ }
 const queryParam = searchTerm ? '&q='+encodeURIComponent(searchTerm) : '';
 const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=search&lat='+encodeURIComponent(loc.lat)+'&lon='+encodeURIComponent(loc.lon)+'&radius='+radius+queryParam,signal);
 const d = await responseJson(rr,'Restaurant search returned an invalid response. Please try again.');
@@ -3303,6 +3317,12 @@ save();
 } catch (err) {
 if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
 S.restaurantSearchDegraded=true;
+ if(replacingSearchTarget){
+   S.restaurantSearchKey='';
+   S.restaurantPool=[];
+   S.restaurantIndex=0;
+   await drawRestaurants().catch(()=>{});
+ }
 $('status').textContent = timedOut ? 'The restaurant search took too long. Please try again.' : (err?.message || 'Could not complete the search.');
 } finally {
 clearTimeout(deadline);
