@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r35';
+const API_VERSION='r36';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -1437,11 +1437,14 @@ if(mode==='search'){
  const primaryPromise=wideSearch
    ? [arcgisPlaces(lat,lon,providerRadius,searchTerm,2100)]
    : [
+     // Named restaurant searches use the fast local providers first. This keeps
+     // common searches (Wendy's, McDonald's, etc.) from waiting on slower
+     // Google Text Search and Overpass calls before the UI can show results.
      photonPlaces(lat,lon,providerRadius,searchTerm),
      arcgisPlaces(lat,lon,providerRadius,searchTerm),
-     searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),
-     // Run OSM opening_hours discovery in parallel with primary providers.
-     radius<=25 ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : Promise.resolve({rows:[],errors:[]})
+     searchTerm ? Promise.resolve({rows:[],errors:[]}) : googlePlaces(lat,lon,providerRadius),
+     // OSM discovery is a fallback for a named search, not part of its critical path.
+     (!searchTerm && radius<=25) ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : Promise.resolve({rows:[],errors:[]})
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
@@ -1507,10 +1510,29 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch)photonOut.rows=[...(photonOut.rows||[]),...(widePhotonOut.rows||[])];
  if(wideSearch)photonOut.errors=[...(photonOut.errors||[]),...(widePhotonOut.errors||[])];
  const arcgisOut=arcgisResult.status==='fulfilled'?arcgisResult.value:{rows:[],errors:[String(arcgisResult.reason?.message||arcgisResult.reason||'ArcGIS unavailable')]};
- const googleOut=googleResult.status==='fulfilled'?googleResult.value:{rows:[],errors:[String(googleResult.reason?.message||googleResult.reason||'Google Places unavailable')]};
- const preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
- const preliminaryFast=preliminary.filter(r=>r.fastFood).length;
+ let googleOut=googleResult.status==='fulfilled'?googleResult.value:{rows:[],errors:[String(googleResult.reason?.message||googleResult.reason||'Google Places unavailable')]};
+ let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
+
+ // Named searches should return the local-provider results immediately. Only
+ // fall back to Google/Overpass when those providers return nothing; otherwise
+ // a slow/limited provider must not block an otherwise valid search.
+ if(searchTerm && preliminary.length===0){
+   const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
+   const fallbackBudget=Math.min(3200,remaining);
+   if(fallbackBudget>600){
+     const fallbackTasks=[
+       withinBudget(googleSearchPlaces(lat,lon,providerRadius,searchTerm),fallbackBudget,'Google named search fallback timed out'),
+       radius<=25
+         ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(2200,fallbackBudget),'OSM named search fallback timed out')
+         : Promise.resolve({rows:[],errors:[]})
+     ];
+     const fallback=await Promise.allSettled(fallbackTasks);
+     if(fallback[0]?.status==='fulfilled')googleOut=fallback[0].value||googleOut;
+     if(fallback[1]?.status==='fulfilled')osmOut=fallback[1].value||osmOut;
+     preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[]),...(osmOut.rows||[])]));
+   }
+ }
 const parallelOsmResult=!wideSearch && Array.isArray(primaryBatch) ? primaryBatch[3] : null;
 if(parallelOsmResult?.status==='fulfilled'){
   osmOut.rows.push(...(parallelOsmResult.value?.rows||[]));
