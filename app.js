@@ -1648,38 +1648,50 @@ function bindQuickCutsCollapse(kind){
  };
  renderQuickCutsCollapse(kind);
 }
+function mealTimeFilterNames(){
+ const available=mealTimeOptions().filter(x=>x.enabled).map(x=>String(x.name||'').trim()).filter(Boolean);
+ return [...new Set(available)];
+}
+function normalizeMealTimeFilter(){
+ const available=mealTimeFilterNames();
+ const allowed=new Set(available);
+ const incoming=[...(S.mealTimeFilters||[])].map(currentMealTimeName).map(x=>String(x||'').trim()).filter(x=>allowed.has(x));
+ const selected=new Set(incoming);
+ // The canonical default is ALL Meal Times. Never persist an invalid/empty filter.
+ if(!selected.size&&available.length)available.forEach(name=>selected.add(name));
+ S.mealTimeFilters=selected;
+ return {available,selected};
+}
 function renderMealTimeCuts(){
- const section=document.querySelector('#food .quick-section');
  const toggle=document.getElementById('foodMealTimeToggle');
  const chips=document.getElementById('mealTimeQuick');
- if(!section||!toggle||!chips)return;
+ if(!toggle||!chips)return;
 
- const availableMealTimes=mealTimeOptions().filter(x=>x.enabled);
- const availableNames=availableMealTimes.map(x=>x.name);
- let selected=new Set([...(S.mealTimeFilters||[])].map(currentMealTimeName).filter(name=>availableNames.includes(name)));
- // An empty/legacy selection means the default ALL state.
- if(!selected.size && availableNames.length) selected=new Set(availableNames);
- S.mealTimeFilters=selected;
-
- const allMealTimesSelected=availableNames.length>0&&availableNames.every(name=>selected.has(name));
- const filterLabels=availableNames.filter(name=>selected.has(name));
- const filterSummary=allMealTimesSelected?'All Meal Times':(filterLabels.length?filterLabels.join(', '):'All Meal Times');
-
+ const {available,selected}=normalizeMealTimeFilter();
+ const allSelected=available.length>0&&available.every(name=>selected.has(name));
+ const activeLabels=available.filter(name=>selected.has(name));
+ const summary=allSelected?'All Meal Times':activeLabels.join(', ');
  const collapsed=!!S.mealTimeCutsCollapsed;
+
+ // The header behaves like Cuisine: normal state is restrained; only the
+ // opened control goes white. Filter selection itself does not recolor the
+ // header button.
+ toggle.classList.toggle('is-open',!collapsed);
+ toggle.classList.remove('is-active');
+ toggle.setAttribute('aria-expanded',String(!collapsed));
+ toggle.setAttribute('aria-pressed',String(!collapsed));
+ toggle.setAttribute('data-all-selected',allSelected?'true':'false');
+ toggle.setAttribute('data-selected-count',String(activeLabels.length));
+ toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times'+(allSelected?'':' — '+summary));
+ toggle.title=(collapsed?'Show ':'Hide ')+'Meal Times'+(allSelected?'':' — '+summary);
+
  chips.classList.toggle('is-rail-collapsed',collapsed);
  chips.setAttribute('aria-hidden',String(collapsed));
- toggle.classList.toggle('is-open',!collapsed);
- toggle.setAttribute('aria-expanded',String(!collapsed));
- toggle.classList.toggle('is-active',false);
- toggle.setAttribute('data-all-selected',allMealTimesSelected?'true':'false');
- toggle.setAttribute('data-filtered',allMealTimesSelected?'false':'true');
- toggle.setAttribute('aria-pressed',!collapsed?'true':'false');
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Meal Times'+(allMealTimesSelected?'':' — '+filterSummary));
- toggle.title=(collapsed?'Show ':'Hide ')+'Meal Times'+(allMealTimesSelected?'':' — '+filterSummary);
-
- chips.innerHTML=availableNames.map(label=>{
-  const active=selected.has(label);
-  return '<button class="chip meal-time-chip'+(active?' is-active':'')+'" data-meal-time="'+esc(label)+'" type="button" aria-pressed="'+(active?'true':'false')+'" data-active="'+(active?'true':'false')+'">'+esc(label)+'</button>';
+ chips.dataset.selected=activeLabels.join('|');
+ chips.dataset.allSelected=allSelected?'true':'false';
+ chips.innerHTML=available.map(label=>{
+   const active=selected.has(label);
+   return '<button class="chip meal-time-chip'+(active?' is-active':'')+'" data-meal-time="'+esc(label)+'" data-active="'+(active?'true':'false')+'" type="button" aria-pressed="'+(active?'true':'false')+'">'+esc(label)+'</button>';
  }).join('');
 
  chips.querySelectorAll('[data-meal-time]').forEach(btn=>{
@@ -1687,16 +1699,18 @@ function renderMealTimeCuts(){
    event.preventDefault();
    event.stopPropagation();
    const label=currentMealTimeName(btn.dataset.mealTime);
-   if(!label||!availableNames.includes(label))return;
+   if(!label||!available.includes(label))return;
 
    const next=new Set(S.mealTimeFilters||[]);
    if(next.has(label)){
-    // Keep at least one time selected. This remains a multi-select control.
+    // At least one Meal Time stays selected; otherwise the state would become
+    // ambiguous. To get ALL, simply reselect the removed time.
     if(next.size>1)next.delete(label);
    }else{
     next.add(label);
    }
-   S.mealTimeFilters=new Set([...next].filter(name=>availableNames.includes(name)));
+   S.mealTimeFilters=new Set([...next].filter(name=>available.includes(name)));
+   normalizeMealTimeFilter();
    S.index=0;
    buildFood();
    drawFood();
@@ -1712,7 +1726,6 @@ function bindMealTimeCuts(){
   event.preventDefault();
   event.stopPropagation();
   S.mealTimeCutsCollapsed=!S.mealTimeCutsCollapsed;
-  if(!S.mealTimeCutsCollapsed){S.quickCutsCollapsed.food=true;renderQuickCutsCollapse('food');}
   renderMealTimeCuts();
   save();
  };
