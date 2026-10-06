@@ -1261,10 +1261,14 @@ function renderTutorialStep(){
  const step=tutorialState.steps[tutorialState.index];if(!step){stopTutorialMode();return;}
  const layer=document.querySelector('#tutorialLayer');if(!layer){ensureTutorialUI();return renderTutorialStep();}
  layer.classList.remove('hidden');layer.setAttribute('aria-hidden','false');
+ const bubble=document.querySelector('#tutorialBubble');
  const title=document.querySelector('#tutorialBubbleTitle'),body=document.querySelector('#tutorialBubbleBody');
  if(title)title.textContent=step.title;if(body)body.textContent=step.body;
+ if(!bubble){ensureTutorialUI();return renderTutorialStep();}
  bubble.classList.toggle('is-action-step',!!step.action);
- bubble.setAttribute('aria-disabled',String(!!step.action));
+ bubble.disabled=false;
+ bubble.setAttribute('aria-disabled','false');
+ bubble.dataset.action=step.action||'';
  tutorialState.awaitingAction=!!step.action;
  const expectedToken=tutorialState.token;
  requestAnimationFrame(()=>tutorialPosition(expectedToken));
