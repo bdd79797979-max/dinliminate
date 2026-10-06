@@ -1623,8 +1623,13 @@ function renderQuickCutsCollapse(kind){
  if(!section||!toggle||!chips)return;
  const collapsed=!!S.quickCutsCollapsed?.[kind];
  if(kind==='food'){
+  // Hard-lock the Meals refine panels so Cuisine and Meal Times can never both be open.
+  if(!collapsed && !S.mealTimeCutsCollapsed)S.mealTimeCutsCollapsed=true;
   section.classList.remove('is-collapsed');
   chips.classList.toggle('is-rail-collapsed',collapsed);
+  const mealTimeChips=document.getElementById('mealTimeQuick');
+  mealTimeChips?.classList.toggle('is-rail-collapsed',!!S.mealTimeCutsCollapsed);
+  mealTimeChips?.setAttribute('aria-hidden',String(!!S.mealTimeCutsCollapsed));
  }else{
   section.classList.toggle('is-collapsed',collapsed);
  }
@@ -1682,6 +1687,13 @@ function renderMealTimeCuts(){
  const activeLabels=available.filter(name=>selected.has(name));
  const summary=allSelected?'All Meal Times':activeLabels.join(', ');
  const collapsed=!!S.mealTimeCutsCollapsed;
+ if(!collapsed && !S.quickCutsCollapsed?.food){
+  // Hard-lock the Meals refine panels: opening Meal Times closes Cuisine.
+  S.quickCutsCollapsed={...(S.quickCutsCollapsed||{food:true,restaurant:true}),food:true};
+  const cuisineChips=document.getElementById('foodQuick');
+  cuisineChips?.classList.add('is-rail-collapsed');
+  cuisineChips?.setAttribute('aria-hidden','true');
+ }
 
  // The header behaves like Cuisine: normal state is restrained; only the
  // opened control goes white. Filter selection itself does not recolor the
