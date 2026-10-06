@@ -31,5 +31,5 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1102 consolidated Home door-window styling: fully transparent text-only windows, smaller labels, utility actions at bottom edge"
+  "currentBaseline": "CP1102 cleaned Home window surface: transparent text-only door panels, smaller labels, utilities at bottom edge"
 }
