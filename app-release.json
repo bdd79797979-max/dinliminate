@@ -15,5 +15,6 @@
   "googleBillingMonth": "America/Los_Angeles calendar month",
   "googleBudgetFailClosed": true,
   "imageCache": "source-aware restaurant photo cache v8; Google media not persisted",
-  "viewportShell": "CP1011-runtime-touch-device-fallback"
+  "viewportShell": "CP1011-runtime-touch-device-fallback",
+  "googleMasterKillSwitch": true
 }
