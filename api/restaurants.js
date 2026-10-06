@@ -11,9 +11,9 @@ const SEARCH_BUDGET_MS=7500;
 const WIDE_DISCOVERY_RESERVE_MS=4500;
 const WIDE_RADIUS_THRESHOLD=50;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2200;
-const WIDE_DISCOVERY_TIMEBOX_MS=5000;
-const OVERPASS_HTTP_TIMEOUT_MS=2500;
+const WIDE_PRIMARY_TIMEBOX_MS=2600;
+const WIDE_DISCOVERY_TIMEBOX_MS=4700;
+const OVERPASS_HTTP_TIMEOUT_MS=4200;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
@@ -162,8 +162,8 @@ async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=2400){
 }
 
 const WIDE_PHOTON_RING_MILES=60;
-const WIDE_PHOTON_RING_POINTS=9;
-const WIDE_PHOTON_QUERY_TIMEOUT_MS=1700;
+const WIDE_PHOTON_RING_POINTS=12;
+const WIDE_PHOTON_QUERY_TIMEOUT_MS=3200;
 function widePhotonCenters(lat,lon,radius){
  const ring=Math.min(WIDE_PHOTON_RING_MILES,Math.max(55,Number(radius)||100));
  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
