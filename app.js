@@ -360,7 +360,14 @@ async function hydrateRestaurantWebsite(row,scope){
 
 async function hydrateRestaurantDetails(row,modal){
  if(!row||!modal||!row.googlePlaceId)return;
- const params=new URLSearchParams({mode:'details',placeId:String(row.googlePlaceId)});
+ const params=new URLSearchParams({
+  mode:'details',
+  placeId:String(row.googlePlaceId),
+  name:String(row.name||''),
+  address:String(row.address||''),
+  phone:String(row.phone||row.nationalPhoneNumber||row['contact:phone']||''),
+  website:String(row.website||'')
+});
  try{
   const response=await fetch('/api/restaurants?'+params.toString(),{cache:'no-store'});
   if(!response.ok)return;
@@ -3594,7 +3601,7 @@ function revealHungryRestaurant(){
  if(img){
    const src=imageProxyUrl(item?.photo||item?.image||item?.photoFallback||restaurantFallbackImage(item));
    img.src=src; img.alt=item.name||'Mystery restaurant'; img.dataset.restaurantPhotoKey=String(item.id||item.canonicalId||'');
-   img.onerror=function(){const fb=restaurantFallbackImage(item);if(this.src!==fb)this.src=fb;};
+   img.onerror=function(){const fb=restaurantFallbackImage(item);if(fb&&this.src!==fb)this.src=fb;};
  }
  card.classList.remove('is-revealed');
  card.classList.add('is-revealing');
@@ -4078,7 +4085,7 @@ if(limited.length===0){
   dayMarkup = '<div class="cal-day"><b>'+day+'</b></div>';
 } else if(limited.length===1){
   const entry=limited[0];
-  dayMarkup = '<div class="cal-day has single"><span class="cal-date-chip">'+day+'</span><div class="cal-photo-wrap"><button class="cal-photo-link" data-history-date="'+esc(entry.id)+'" aria-label="View '+esc(entry.name)+' from '+esc(key)+'"><img src="'+esc(historyImageSource(entry))+'" data-restaurant-photo-key="'+esc(entry.type==='restaurant'?entry.id:'')+'" data-final-fallback="'+(entry.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(entry.name)+'"><span class="cal-photo-kind">'+(entry.type==='restaurant'?'Restaurant':'Food')+'</span></button><button class="cal-entry-x" data-history-delete="'+esc(entry.id)+'" aria-label="Remove '+esc(entry.name)+' from '+esc(key)+'">×</button></div></div>';
+  dayMarkup = '<div class="cal-day has single"><span class="cal-date-chip">'+day+'</span><div class="cal-photo-wrap"><button class="cal-photo-link" data-history-date="'+esc(entry.id)+'" aria-label="View '+esc(entry.name)+' from '+esc(key)+'"><img src="'+esc(historyImageSource(entry))+'" data-no-generic-fallback="'+(entry.type==='restaurant'?'1':'0')+'" data-restaurant-photo-key="'+esc(entry.type==='restaurant'?entry.id:'')+'" data-final-fallback="'+(entry.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(entry.name)+'"><span class="cal-photo-kind">'+(entry.type==='restaurant'?'Restaurant':'Food')+'</span></button><button class="cal-entry-x" data-history-delete="'+esc(entry.id)+'" aria-label="Remove '+esc(entry.name)+' from '+esc(key)+'">×</button></div></div>';
 } else {
   dayMarkup = '<div class="cal-day has dual" aria-label="'+entries.length+' history entries on '+esc(key)+'"><span class="cal-date-chip">'+day+'</span>'+limited.map(entry=>'<div class="cal-photo-wrap"><button class="cal-photo-link" data-history-date="'+esc(entry.id)+'" aria-label="View '+esc(entry.name)+' from '+esc(key)+'"><img src="'+esc(historyImageSource(entry))+'" data-restaurant-photo-key="'+esc(entry.type==='restaurant'?entry.id:'')+'" data-final-fallback="'+(entry.type==='restaurant'?FINAL_RESTAURANT_IMAGE:HUNGRY_IMAGE)+'" alt="'+esc(entry.name)+'"><span class="cal-photo-kind">'+(entry.type==='restaurant'?'Restaurant':'Food')+'</span></button><button class="cal-entry-x" data-history-delete="'+esc(entry.id)+'" aria-label="Remove '+esc(entry.name)+' from '+esc(key)+'">×</button></div>').join('')+more+'</div>';
 }
