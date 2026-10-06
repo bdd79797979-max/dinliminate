@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1054,
+  "build": 1055,
   "sourceBranch": "cp1046-restaurant-intelligence",
-  "checkpoint": "CP1054",
-  "deploymentTrigger": "CP1054-restaurant-intelligence-preflight",
+  "checkpoint": "CP1055",
+  "deploymentTrigger": "CP1055-restaurant-intelligence-final",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
