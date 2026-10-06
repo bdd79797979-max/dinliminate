@@ -5893,6 +5893,8 @@ renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
 hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
+// CP1138 — reveal only after the correct persisted screen has been painted.
+requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
 if (S.saved && S.screen === 'food' && S.pool.length) {
 show('food'); foodQuick(); drawFood();
 } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
