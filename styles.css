@@ -11600,3 +11600,53 @@ html.dinliminate-visual-mobile .app{
   text-decoration-thickness:1.5px!important;
   text-decoration-color:currentColor!important;
 }
+
+/* CP1101 — definitive transparent Home windows and smaller labels. */
+@media only screen and (max-width:600px){
+  .app.home-active #home .home-actions .home-card,
+  .app.home-active #home .home-actions .home-card-choice,
+  .app.home-active #home .home-actions .food-choice,
+  .app.home-active #home .home-actions .restaurant-choice{
+    appearance:none!important;
+    -webkit-appearance:none!important;
+    background:transparent!important;
+    background-color:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+    border-radius:0!important;
+  }
+  .app.home-active #home .home-actions .home-card::before,
+  .app.home-active #home .home-actions .home-card::after,
+  .app.home-active #home .home-actions .home-card-choice::before,
+  .app.home-active #home .home-actions .home-card-choice::after,
+  .app.home-active #home .home-actions .home-card-choice .home-card-overlay,
+  .app.home-active #home .home-actions .home-card-choice .arrow{
+    display:none!important;
+    content:none!important;
+    background:none!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  .app.home-active #home .home-actions .home-card-choice .home-card-copy,
+  .app.home-active #home .home-actions .home-card-choice .home-card-copy strong{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    outline:0!important;
+  }
+  .app.home-active #home .home-actions .home-card-choice .home-card-copy strong{
+    font-size:15px!important;
+    line-height:1!important;
+    letter-spacing:.08em!important;
+  }
+  .app.home-active #home .home-foot{
+    bottom:env(safe-area-inset-bottom)!important;
+  }
+}
+@media only screen and (max-width:390px){
+  .app.home-active #home .home-actions .home-card-choice .home-card-copy strong{font-size:14px!important}
+  .app.home-active #home .home-foot{bottom:env(safe-area-inset-bottom)!important}
+}
