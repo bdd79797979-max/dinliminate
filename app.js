@@ -5837,7 +5837,7 @@ function familyBeginNormalDecision(data){
  const round=data?.activeRound;if(!round)return;const type=round.decisionType==='restaurant'?'restaurant':'meal',stage=Number(round.currentStage)||1,stageData=familyNormalStagePool(round,data),same=S.familyNormalMode==='decision'&&S.familyNormalRoundId===String(round.id)&&S.familyDecisionType===type&&S.familyNormalStage===stage&&S.screen===(type==='meal'?'food':'restaurant');
  S.familyActiveData=data;S.familyDecisionType=type;S.familyNormalMode='decision';S.familyNormalRoundId=String(round.id);S.familyNormalStage=stage;S.familyNormalAutoResume=true;if(same){familyNormalBar(type,'decision',data);return;}
  S.winnerItem=null;S.winnerType=type==='restaurant'?'restaurant':'food';
- if(type==='meal'){S.foodActions=[];S.maybe.clear();S.foodMaybeRound=false;S.foodCuts.clear();S.cutCats.clear();S.pool=stageData.remaining.map(x=>({...x}));S.index=0;show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data);}else{S.restaurantActions=[];S.restaurantMaybeRound=false;S.restaurantCuts.clear();S.restaurantPool=stageData.remaining.map(x=>({...x,_cut:false,_maybe:false}));S.restaurantIndex=0;show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data);}
+ if(type==='meal'){S.foodActions=[];S.maybe.clear();S.foodMaybeRound=false;S.foodCuts.clear();S.cutCats.clear();S.maybeDeck=false;S.pool=stageData.remaining.map(x=>({...x}));S.index=0;show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data);}else{S.restaurantActions=[];S.restaurantMaybeRound=false;S.restaurantCuts.clear();S.maybeDeck=false;S.restaurantQuery='';S.restaurantHours='all';S.restaurantHoursCollapsed=true;S.restaurantSearchKey='';S.restaurantSearchDegraded=false;S.restaurantPool=stageData.remaining.map(x=>({...x,_cut:false,_maybe:false}));S.restaurantIndex=0;show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data);}
  familyStageAlert(type,stage);familySwipeInstruction(type,stage);
 }
 function familyNormalStagePool(round,data){
@@ -5865,8 +5865,9 @@ function familySetDecisionAction(type,stage,submitted){
  const label=submitted?'ENTERED':(stage===1?'ENTER MAYBES':'ENTER');
  btn.setAttribute('aria-label',label);btn.title=label;btn.dataset.familyAction=copy.action;btn.dataset.familyActionLabel=label;btn.disabled=!!submitted||S.familyNormalVoteBusy;
 }function familyStageAlert(type,stage){
- $('familyStageAlert')?.remove();const c=stage===2?{k:'DINNER TOGETHER',h:'FINALISTS ARE IN',p:'Everyone gets one pick. Swipe to browse. Tap ENTER when ready.'}:stage===3?{k:'DINNER TOGETHER',h:'TIEBREAKER',p:'The round is still tied. Browse the tied choices, then tap ENTER.'}:{k:'DINNER TOGETHER',h:'ROUND 1 IS LIVE',p:'Build your Maybes, then tap ENTER MAYBES.'};
- const overlay=document.createElement('div');overlay.id='familyStageAlert';overlay.className='family-stage-alert';overlay.innerHTML='<div class="family-stage-alert-card"><span>'+c.k+'</span><b>'+c.h+'</b><p>'+c.p+'</p><button type="button">LET’S GO</button></div>';document.body.appendChild(overlay);overlay.querySelector('button').onclick=()=>overlay.remove();
+ // CP1082: Family Mode stays inside the normal decision screen. The persistent
+ // Family bar and round instruction provide the stage cue without blocking it.
+ document.getElementById('familyStageAlert')?.remove();
 }
 function familySwipeInstruction(type,stage){
  const root=$(type==='meal'?'food':'restaurant');if(!root)return;root.querySelector('.family-swipe-tip')?.remove();const tip=document.createElement('div');tip.className='family-swipe-tip';tip.innerHTML=stage===1?'<b>Round 1</b><span>Swipe or tap ♥ to build your Maybes. ✓ enters them.</span><button type="button" aria-label="Dismiss">×</button>':'<b>'+(stage===2?'Round 2':'Tiebreak')+'</b><span>Swipe left or right to browse. ✓ enters your choice.</span><button type="button" aria-label="Dismiss">×</button>';root.appendChild(tip);tip.querySelector('button').onclick=()=>tip.remove();window.setTimeout(()=>tip.remove(),6500);
