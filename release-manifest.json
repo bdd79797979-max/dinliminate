@@ -9,5 +9,6 @@
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
   "checkpoint": "CP1055",
-  "deploymentTrigger": "CP1055-restaurant-intelligence-final"
+  "deploymentTrigger": "CP1055-restaurant-intelligence-final",
+  "googleMasterKillSwitch": true
 }
