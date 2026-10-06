@@ -20,5 +20,6 @@
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
   "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
-  "uiFixes": "Meal Times/Cuisine mutual exclusion; startup flash guard; menu subview return-to-menu; restaurant card info spacing; pinch/swipe isolation; tutorial placement"
+  "uiFixes": "Meal Times/Cuisine mutual exclusion; startup flash guard; menu subview return-to-menu; restaurant card info spacing; pinch/swipe isolation; tutorial placement; nested Settings tools close parent modal before opening, preventing stacked menu views",
+  "uiCacheVersion": "1085-ui2"
 }
