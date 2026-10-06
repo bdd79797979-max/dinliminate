@@ -1549,6 +1549,7 @@ if(mode==='search'){
   // remain in the lower-cost discovery tier; Details requests the Enterprise
   // fields only when the user actually opens a restaurant.
   const googleContactOut={rows:[],errors:[]};
+  const hoursTimeZone=await Promise.race([hoursTimezonePromise,new Promise(resolve=>setTimeout(()=>resolve(''),650))]).catch(()=>'​');
   const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
    const distance=miles(lat,lon,n(r.lat),n(r.lon));
    return {...r,distance};
@@ -1557,7 +1558,6 @@ if(mode==='search'){
    const phone=String(r.phone||'').trim();
    const classification=RESTAURANT_TAXONOMY.classifyRestaurant({...r,website,phone}); const canonicalCategory=classification.primary||r.category||'American'; const classifiedFastFood=classification.tags.includes('Fast Food'); const photo=restaurantPhotoMeta(r); return {...r,category:canonicalCategory,fastFood:classifiedFastFood,quickCutTags:classification.tags,quickCutEvidence:classification.evidence,...photo,website,phone,websiteSource:r.website?'provider':(known?'known-brand':(cached?'official-search':'google-search-fallback')),phoneSource:phone?'provider':'google-search-fallback',hoursTimeZone:String(hoursTimeZone||r.hoursTimeZone||''),hoursSource:r.hoursSource||(r.opening_hours?(String(r.source||'').startsWith('OpenStreetMap')||String(r.source||'').startsWith('Photon')?'OpenStreetMap':'provider'):'')};
   });
-  const hoursTimeZone=await Promise.race([hoursTimezonePromise,new Promise(resolve=>setTimeout(()=>resolve(''),650))]).catch(()=>''),
  const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:wideSearch?WIDE_PHOTON_RING_POINTS+1:1,primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
