@@ -102,15 +102,15 @@ assert('menu tutorial no longer says tap the bubble to navigate',
 );
 
 // Shell cache versions must match all current UI assets.
-assert('index app cache synced',index.includes('./app.js?v=1085-ui1'));
-assert('index viewport cache synced',index.includes('./viewport.js?v=1085-ui1'));
-assert('index logo cache synced',index.includes('./logo.svg?v=1085-ui1'));
-assert('index styles cache synced',index.includes('./styles.css?v=1085-ui1'));
+assert('index app cache synced',index.includes('./app.js?v=1085-ui2'));
+assert('index viewport cache synced',index.includes('./viewport.js?v=1085-ui2'));
+assert('index logo cache synced',index.includes('./logo.svg?v=1085-ui2'));
+assert('index styles cache synced',index.includes('./styles.css?v=1085-ui2'));
 assert('SW shell cache synced',
- sw.includes("dinliminate-shell-v1085-ui1")&&
- sw.includes("./app.js?v=1085-ui1")&&
- sw.includes("./viewport.js?v=1085-ui1")&&
- sw.includes("./styles.css?v=1085-ui1")
+ sw.includes("dinliminate-shell-v1085-ui2")&&
+ sw.includes("./app.js?v=1085-ui2")&&
+ sw.includes("./viewport.js?v=1085-ui2")&&
+ sw.includes("./styles.css?v=1085-ui2")
 );
 
 // Release provenance.
