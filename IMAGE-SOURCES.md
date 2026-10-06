@@ -1,35 +1,34 @@
 # Dinliminate image-source governance
 
-## Current policy
+## Restaurant imagery
 
-All built-in image URLs must use HTTPS.
+The production intent is **actual restaurant photography first**.
 
-### Meal imagery
+### Resolver order
 
-### CP1031–CP1032 Buttermilk & Cornbread
-The built-in catalog contains **Buttermilk & Cornbread** only; the standalone **Buttermilk** meal was removed.
-The current image is the **Cornbread & Buttermilk** photograph from *Our State* (photograph by Tim Robison), which specifically depicts cornbread with buttermilk. Usage rights should be reviewed before public distribution.
-Meal images are tied to the meal catalog and should be dish-specific. Third-party image sources require the appropriate rights/usage review before public distribution.
+1. Existing verified Dinliminate restaurant photo that already meets the quality gate
+2. Google Places Photo for the exact verified restaurant
+3. Official restaurant website, gallery, or exact location page
+4. Exact public venue page
+5. Exact OpenStreetMap/POI venue image
+6. No card
 
-### Restaurant imagery
+A generic restaurant/category image is not a valid Restaurant swipe fallback.
 
-Google Places Photos are supported as a **server-side fallback**, not as the first source. The restaurant-photo resolver follows this priority:
+### Verification
 
-1. official restaurant website, gallery, or exact location page
-2. exact public venue page
-3. exact OpenStreetMap/Photon venue image
-4. Google Places Photo for an identity-checked exact venue
-5. tightly validated exact-restaurant search imagery
-6. safe restaurant/category fallback
+A candidate must pass exact-venue identity checks and image-quality checks before the Restaurant deck can use it. Wrong businesses, nearby locations, supplier pages, stock imagery, menus, logos, collages, screenshots, placeholders, and unusably small/blurry media are rejected.
 
-The Google photo path is budget-controlled with a durable monthly request counter and fails closed when the budget tracker is unavailable.
+### Google usage
 
-Identity checks should use restaurant name plus address/phone/site evidence so a nearby or similarly named venue cannot supply the photo.
+Google photo requests are durably budgeted and stop at 900 successful photo-media reservations per America/Los_Angeles billing month. The other Google capabilities have independent hard stops. If durable budget tracking is unavailable, Google calls fail closed.
 
-Resolved restaurant photos may be cached for faster repeat display, but a cached image must remain tied to the exact restaurant identity.
+Google photo media is not persisted in Dinliminate's browser restaurant-photo cache. Place IDs and permitted metadata remain the reusable identity layer.
 
-## Rights review
+### Restaurant information
 
-Automated runtime checks can confirm source/identity behavior, but they cannot establish copyright permission for every third-party image. Review or replace any asset whose usage rights are not clear before public launch.
+For detail enrichment, Google is queried first for fields that require Google Enterprise data. When those fields are missing or unavailable, Dinliminate falls back to the verified official restaurant website and then verified venue data. Unknown data remains unknown.
 
-Historical source inventories and older checkpoint-specific image notes remain in Git history rather than the active policy file.
+### Rights
+
+Automated identity/quality checks do not establish copyright permission for every third-party image. Usage rights still need review before public launch.
