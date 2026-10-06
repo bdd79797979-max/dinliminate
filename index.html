@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="css-boot">
 <head>
 <!-- CP1070 Restaurant refine controls -->
 <meta charset="utf-8">
@@ -15,7 +15,9 @@
 
 <title>Dinliminate — Meal Decisions Simplified</title>
 
-<link rel="stylesheet" href="./styles.css?v=1123">
+<style id="critical-boot-style">html.css-boot{background:#090909;color:#f5f5f5}html.css-boot .app{visibility:hidden}html.css-boot body{background:#090909}</style>
+<link rel="preload" href="./styles.css?v=1124" as="style">
+<link rel="stylesheet" href="./styles.css?v=1124" onload="document.documentElement.classList.remove('css-boot')" onerror="document.documentElement.classList.remove('css-boot')">
 </head>
 <body>
 <main class="app">
