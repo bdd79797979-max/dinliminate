@@ -1401,20 +1401,13 @@ if(mode==='search'){
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
      withinBudget(photonWidePlaces(lat,lon,radius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
-     withinBudget(googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
+     withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
    ];
    const settled=await Promise.allSettled(wideTasks);
-   const arc=settled[0],wp=settled[1];
    primaryBatch={
-     arcgis:arc,
-     widePhoton:wp,
-     google:await (async()=>{
-       try{
-         return {status:'fulfilled',value:await wideTasks[2]};
-       }catch(error){
-         return {status:'rejected',reason:error};
-       }
-     })()
+     arcgis:settled[0],
+     widePhoton:settled[1],
+     google:settled[2]
    };
    fastProvider='wide';
    const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
