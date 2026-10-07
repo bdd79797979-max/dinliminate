@@ -1998,6 +1998,10 @@ function foodChoiceIndex(rows,start,keepState=false){
  return -1;
 }
 function drawFood(){
+ // CP1196: the meal swipe deck is intentionally single-card on all clients.
+ // Keep the legacy waiting-card DOM fully out of paint; it remains only as inert markup.
+ const staleNextCard=$('foodNextCard');
+ if(staleNextCard){staleNextCard.style.display='none';staleNextCard.style.visibility='hidden';staleNextCard.style.opacity='0';staleNextCard.style.pointerEvents='none';}
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
  if(S.maybeDeck){
   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
@@ -2072,7 +2076,7 @@ function drawFood(){
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
  if(!foodSwipeHandoff){primeFoodSwipeMedia();}
- maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
+ maybeShowInCardSwipeCoach();if(!foodSwipeHandoff)bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
 function foodCut(item=S.pool[S.index]){
@@ -2607,16 +2611,9 @@ const completeAfterExit=async ()=>{
   card.dataset.swipe='';
 
   if(foodHandoff){
-   // Keep the promoted waiting image visually authoritative while the
-   // recycled meal card is repainted behind it.
-   card.style.transition='none';
-   card.style.transform='none';
-   card.style.opacity='0';
-   card.style.visibility='hidden';
-   card.style.pointerEvents='none';
-   card.classList.remove('swipe-active');
-   card.style.removeProperty('--swipe-tint-alpha');
-   card.dataset.swipe='';
+   // CP1196: meal swipes use one visible card only. The waiting-card DOM
+   // element is never promoted, so iOS WebKit cannot briefly paint a stale
+   // copy of the swiped meal.
   }
 
   try{
@@ -2626,50 +2623,31 @@ const completeAfterExit=async ()=>{
   }finally{
    if(foodHandoff){
     if(card.isConnected){
-     // CP1181: use the pre-action snapshot as the handoff source of truth.
-     const recycledImg=card.querySelector('img');
-     const currentMealId=String(S.pool?.[S.index]?.id||'');
-     if(currentMealId===promotedMealId){
-      if(recycledImg){
-       if(promotedSrc)recycledImg.src=promotedSrc;
-       if(promotedAlt)recycledImg.alt=promotedAlt;
-       recycledImg.referrerPolicy='no-referrer';
-       recycledImg.style.transform='none';
-       recycledImg.style.visibility='visible';
-      }
-      card.dataset.mealId=promotedMealId;
-     }
-     if(next){
-      // Invalidate stale waiting state before preparing the real next card.
-      next.style.transition='none';
-      next.style.transform='none';
-      next.style.opacity='0';
-      next.style.visibility='hidden';
-      next.style.pointerEvents='none';
-      next.dataset.swipePromoted='';
-      next.dataset.mealId='';
-      next.dataset.foodReady='0';
-      next.dataset.foodImageReady='0';
-      next.dataset.foodImageSource='';
-      const nextImg=next.querySelector('img');
-      if(nextImg)nextImg.style.transform='none';
-     }
-     card.classList.remove('swipe-active');
-     card.style.transition='none';
-     card.style.transform='none';
-     card.style.opacity='1';
-     card.style.visibility='visible';
-     card.style.removeProperty('--swipe-tint-alpha');
-     card.dataset.swipe='';
-     card.dataset.swipePhase='idle';
-     // Establish the actual following card before unlocking the current card.
-     foodSwipeHandoff=false;
-     if($('foodNextCard')?.isConnected)primeFoodSwipeMedia();
-     card.style.pointerEvents='auto';
-     card.dataset.swipeTransaction='';
-     card.dataset.swipePhase='idle';
+     // The action redraws the SAME live card while it is hidden. Wait for
+     // that card's new meal image to settle before returning it to paint.
+     try{
+      const ready=card.__mealReadyPromise;
+      if(ready)await Promise.race([ready,new Promise(resolve=>setTimeout(resolve,900))]);
+     }catch{}
+     const reveal=()=>{
+      if(!card.isConnected)return;
+      card.classList.remove('swipe-active');
+      card.style.transition='none';
+      card.style.transform='none';
+      card.style.opacity='1';
+      card.style.visibility='visible';
+      card.style.pointerEvents='auto';
+      card.style.removeProperty('--swipe-tint-alpha');
+      card.dataset.swipe='';
+      card.dataset.swipePhase='idle';
+      card.dataset.swipeTransaction='';
+      foodSwipeHandoff=false;
+      bindFoodSwipe();
+     };
+     requestAnimationFrame(()=>requestAnimationFrame(reveal));
     }
    }else{
+    
     // Restaurant redraws replace the card node. Never call resetCard() here:
     // that can briefly resurrect the just-swiped node while drawRestaurants()
     // is finishing its photo preparation.
@@ -2720,7 +2698,7 @@ const completeAfterExit=async ()=>{
   card.style.opacity='1';
   card.style.transform='translate3d('+(direction*exitDistance)+'px,0,0) rotate('+(direction*11)+'deg)';
 
-  if(next){
+  if(next&&!staticWaitingCard){
    const revealPromotedNext=()=>{
     if(!next.isConnected)return;
     const nextMealId=String(next.dataset.mealId||'');
