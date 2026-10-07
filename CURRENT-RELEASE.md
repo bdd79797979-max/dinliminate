@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1220 / CP1220
+# CURRENT RELEASE — BUILD 1221 / CP1221
 
 Date: 2026-10-07
 
@@ -30,6 +30,10 @@ CP1216 adds Indian and Mediterranean as first-class Restaurant Cuisine Cuts, wit
 ## Swipe interaction polish
 
 CP1218–CP1220 refine the existing Meal and Restaurant swipe system without changing the card-stack lifecycle. Committed swipes now use a tighter 21% gesture threshold (72–108px clamp), a lighter flick threshold, faster off-screen completion, and a shorter clean return when a swipe is released before commit. Cut/Maybe buttons receive immediate press feedback and a light haptic. The All/Maybes count gives immediate commit-time feedback, including correct handling when the committed restaurant was already a Maybe. No next-card promotion animation or new stack behavior was added.
+
+## Meal photo refresh
+
+CP1221 refreshes the requested Southern Vegetable Plate, Meatloaf & Mashed Potatoes, Peanut Butter & Jelly, Chicken Pot Pie, BLT, Ham Dinner, Roast Beef Sandwich, Chicken & Dumplings, Shrimp & Grits, Biscuits & Gravy, Southern Vegetable Beef Soup, White Chicken Chili, and Buttermilk & Cornbread catalog images. The replacements use the approved built-in meal image hosts (Pexels/Unsplash); no provider/meal data or nutrition values were changed.
 
 ## Recovery
 
