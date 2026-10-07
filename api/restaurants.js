@@ -140,7 +140,7 @@ async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm='
 
 function wideRadiusCenters(lat,lon,radius){
   const r=clamp(radius);
-  const spec=r<=50?{tile:30,ring:30,count:6}:{tile:50,ring:65,count:12};
+  const spec=r<=50?{tile:30,ring:30,count:6}:{tile:50,ring:65,count:8};
   const out=[{lat,lon,radius:spec.tile}];
   const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
   for(let i=0;i<spec.count;i++){
@@ -156,13 +156,13 @@ async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
   // does not spend its serverless budget on 13 independent HTTP requests.
   const wide100=radius>50;
   const chunks=wide100
-    ? Array.from({length:Math.ceil(points.length/4)},(_,i)=>points.slice(i*4,i*4+4))
+    ? Array.from({length:Math.ceil(points.length/3)},(_,i)=>points.slice(i*3,i*3+3))
     : points.map(p=>[p]);
   const tasks=chunks.map((chunk,i)=>{
     const endpoints=wide100
-      ? [OVERPASS[i%OVERPASS.length],OVERPASS[(i+1)%OVERPASS.length]]
+      ? [OVERPASS[i%OVERPASS.length]]
       : [OVERPASS[i%OVERPASS.length]];
-    const timeout=wide100?5000:5000;
+    const timeout=wide100?4500:5000;
     return overpassPoints(chunk,lat,lon,radius,DINING_AMENITIES,searchTerm,endpoints,timeout);
   });
   const settled=await Promise.allSettled(tasks);
@@ -1446,12 +1446,12 @@ if(mode==='search'){
  const wideSearch=radius>25;
 let radiusEngineResult={coverageVerified:false},engineTimedOut=false,engineRows=[],engineErrors=[],engineProviderStats={},radiusEngineElapsedMs=0,wideGoogleOut={rows:[],errors:[]};
 if(wideSearch){
-  const wideStarted=Date.now(),providerRadius=50;
+  const wideStarted=Date.now(),providerRadius=radius;
   const tasks=[
     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,3200),5000,'Wide ArcGIS lookup timed out'),
     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),5000,'Wide Photon lookup timed out'),
     withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),5000,'Wide Google lookup timed out'),
-    withinBudget(wideRadiusOverpass(lat,lon,radius,searchTerm),11000,'Wide Overpass coverage timed out')
+    withinBudget(wideRadiusOverpass(lat,lon,radius,searchTerm),6500,'Wide Overpass coverage timed out')
   ];
   const settled=await Promise.allSettled(tasks);
   const get=(i,label)=>settled[i]?.status==='fulfilled'&&!settled[i].value?.__timeout?settled[i].value:{rows:[],errors:[label]};
