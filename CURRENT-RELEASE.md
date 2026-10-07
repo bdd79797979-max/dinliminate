@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1222 / CP1222
+# CURRENT RELEASE — BUILD 1223 / CP1223
 
 Date: 2026-10-07
 
@@ -32,6 +32,8 @@ CP1216 adds Indian and Mediterranean as first-class Restaurant Cuisine Cuts, wit
 CP1218–CP1220 refine the existing Meal and Restaurant swipe system without changing the card-stack lifecycle. Committed swipes now use a tighter 21% gesture threshold (72–108px clamp), a lighter flick threshold, faster off-screen completion, and a shorter clean return when a swipe is released before commit. Cut/Maybe buttons receive immediate press feedback and a light haptic. The All/Maybes count gives immediate commit-time feedback, including correct handling when the committed restaurant was already a Maybe. No next-card promotion animation or new stack behavior was added.
 
 ## Swipe button exit polish
+
+CP1223 fixes the button activation handoff so Cut and Maybe enter the committed-swipe phase correctly before running the existing decision callback. The off-screen animation and waiting-card lifecycle remain unchanged.
 
 CP1222 routes Meal and Restaurant Cut/Maybe button decisions through the existing committed-swipe exit path. A button decision now keeps the active card visible while it travels completely off-screen before the existing safe handoff/removal logic runs. The waiting card and card-stack lifecycle remain unchanged.
 
