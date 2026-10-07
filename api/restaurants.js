@@ -1515,10 +1515,12 @@ async function enrichOpenNowHours(rows,options={}){
   const input=filterNonDiningRows(Array.isArray(rows)?rows:[]).map(compactHoursRow).filter(r=>r.id&&Number.isFinite(r.lat)&&Number.isFinite(r.lon));
   const candidates=input.filter(r=>!hoursKnown(r)).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
   const maxCalls=Math.max(1,Math.min(OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS,Number(options.maxGoogleCalls)||OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS));
+  const totalRestaurants=Math.max(input.length,Number(options.totalRestaurants)||input.length);
+  const knownOpenNow=Math.max(0,Number(options.knownOpenNow)||0);
   const budget={callsUsed:0,maxCalls,budgetDenied:0};
   const patches=[],stats={cacheHits:0,existing:input.length-candidates.length,officialWebsite:0,googlePlaceDetails:0,googleTextSearch:0,unknown:0};
-  const targetOpen=Math.min(50,Math.max(12,Math.ceil(input.length*0.20)));
-  const alreadyOpen=input.filter(r=>r.openNow===true).length;
+  const targetOpen=Math.min(50,Math.max(12,Math.ceil(totalRestaurants*0.20)));
+  const alreadyOpen=knownOpenNow+input.filter(r=>r.openNow===true).length;
   let resolvedOpen=alreadyOpen;
   let cursor=0;
   const worker=async()=>{
