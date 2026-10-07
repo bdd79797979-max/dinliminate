@@ -48,7 +48,8 @@ module.exports=async function handler(req,res){
     const data=Buffer.from(await r.arrayBuffer());
     if(data.length>MAX_BYTES)return res.status(413).json({ok:false,error:'Image too large'});
     res.setHeader('Content-Type',type);
-    res.setHeader('Cache-Control','public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
+    const isMealImage=String(req.query?.meal||'')==='1';
+    res.setHeader('Cache-Control',isMealImage?'no-store':'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
     res.setHeader('X-Content-Type-Options','nosniff');
     res.setHeader('Cross-Origin-Resource-Policy','same-origin');
     res.setHeader('Referrer-Policy','no-referrer');
