@@ -1,3 +1,4 @@
+// CP1181: stale waiting-card safe rapid swipe handoff.
 // CP1180: eliminate stale waiting-card reuse during rapid meal swipes.
 // CP1176: cumulative restaurant radius client merge layered onto rapid-swipe main.
 // CP1171: preserve the swipe transaction lock across card rebinds.
@@ -2562,14 +2563,15 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   settleBack();
  };
 
- const completeAfterExit=async ()=>{
+ // CP1181: repaired completeAfterExit from known-good CP1179 flow.
+const completeAfterExit=async ()=>{
   if(phase!=='committing')return;
   clearCompletionTimer();
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
-  // CP1180: snapshot the waiting card before action() can redraw/rebind it.
+  // CP1181: snapshot the waiting card before action() can redraw/rebind it.
   const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
   const promotedImg=foodHandoff?next?.querySelector('img'):null;
   const promotedSrc=foodHandoff?String(promotedImg?.currentSrc||promotedImg?.src||promotedImg?.getAttribute('src')||''):'';
@@ -2579,32 +2581,40 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   if(foodHandoff)foodSwipeHandoff=true;
 
   if(foodHandoff){
+   // Keep the promoted waiting image visually authoritative while the
+   // recycled meal card is repainted behind it.
+   card.style.transition='none';
+   card.style.transform='none';
+   card.style.opacity='0';
+   card.style.visibility='hidden';
+   card.style.pointerEvents='none';
+   card.classList.remove('swipe-active');
+   card.style.removeProperty('--swipe-tint-alpha');
+   card.dataset.swipe='';
+  }
+
+  try{
+   await Promise.resolve(action?.());
+  }catch(err){
+   setTimeout(()=>{throw err;},0);
+  }finally{
+   if(foodHandoff){
     if(card.isConnected){
-     /*
-      * CP1180: the promoted meal is the source of truth for this handoff.
-      * The waiting DOM node can be recycled by drawFood(), so never read its
-      * content after action() completes.
-      */
+     // CP1181: use the pre-action snapshot as the handoff source of truth.
      const recycledImg=card.querySelector('img');
-     if(recycledImg){
-      if(promotedSrc)recycledImg.src=promotedSrc;
-      if(promotedAlt)recycledImg.alt=promotedAlt;
-      recycledImg.referrerPolicy='no-referrer';
-      recycledImg.style.transform='none';
-      recycledImg.style.visibility='visible';
-     }
      const currentMealId=String(S.pool?.[S.index]?.id||'');
-     card.classList.remove('swipe-active');
-     card.style.transition='none';
-     card.style.transform='none';
-     card.style.opacity='1';
-     card.style.visibility='visible';
-     card.style.removeProperty('--swipe-tint-alpha');
-     card.dataset.swipe='';
-     card.dataset.swipePhase='idle';
-     card.style.pointerEvents='auto';
-     if(promotedMealId&&currentMealId===promotedMealId)card.dataset.mealId=promotedMealId;
-     if(next&&next.isConnected){
+     if(currentMealId===promotedMealId){
+      if(recycledImg){
+       if(promotedSrc)recycledImg.src=promotedSrc;
+       if(promotedAlt)recycledImg.alt=promotedAlt;
+       recycledImg.referrerPolicy='no-referrer';
+       recycledImg.style.transform='none';
+       recycledImg.style.visibility='visible';
+      }
+      card.dataset.mealId=promotedMealId;
+     }
+     if(next){
+      // Invalidate stale waiting state before preparing the real next card.
       next.style.transition='none';
       next.style.transform='none';
       next.style.opacity='0';
@@ -2618,14 +2628,21 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
       const nextImg=next.querySelector('img');
       if(nextImg)nextImg.style.transform='none';
      }
+     card.classList.remove('swipe-active');
+     card.style.transition='none';
+     card.style.transform='none';
+     card.style.opacity='1';
+     card.style.visibility='visible';
+     card.style.removeProperty('--swipe-tint-alpha');
+     card.dataset.swipe='';
+     card.dataset.swipePhase='idle';
+     // Establish the actual following card before unlocking the current card.
+     foodSwipeHandoff=false;
+     if($('foodNextCard')?.isConnected)primeFoodSwipeMedia();
+     card.style.pointerEvents='auto';
+     card.dataset.swipeTransaction='';
+     card.dataset.swipePhase='idle';
     }
-    // CP1180: prepare the actual following meal synchronously before clearing
-    // the transaction lock. Its DOM identity is established immediately even
-    // though its image continues loading asynchronously.
-    foodSwipeHandoff=false;
-    if($('foodNextCard')?.isConnected)primeFoodSwipeMedia();
-    card.dataset.swipeTransaction='';
-    card.dataset.swipePhase='idle';
    }else{
     if(card.isConnected){
      resetCard();
@@ -2668,9 +2685,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
     if(!next.isConnected)return;
     const nextMealId=String(next.dataset.mealId||'');
     const activeMealId=String(card.dataset.mealId||'');
-    // CP1180: correctness depends on card identity, not remote-image readiness.
-    // A fallback/remote image may load asynchronously without ever promoting
-    // a stale waiting card.
+    // CP1181: card identity, not image readiness, controls promotion.
     if(staticWaitingCard&&(!nextMealId||nextMealId===activeMealId))return;
     next.dataset.swipePromoted='1';
     next.style.transition='none';
