@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1215 / CP1215
+# CURRENT RELEASE — BUILD 1217 / CP1217
 
 Date: 2026-10-07
 
@@ -22,6 +22,10 @@ Legacy saved Closed Now state is normalized to All.
 ## Restaurant All / Maybes count fix
 
 CP1214/CP1215 fix a restaurant-count bug where photo preparation could mark unavailable photos and inadvertently remove those restaurants from the decision pool and the ALL count. A Maybe action now leaves the ALL count unchanged; only actual filters such as CUT, Search, Cuisine, and Open can change it. Photo-preparation failure is presentation-only and is no longer persisted in saved restaurant state.
+
+## Restaurant Cuisine Cuts
+
+CP1216 adds Indian and Mediterranean as first-class Restaurant Cuisine Cuts, with category search aliases, provider/name signals, menu corroboration, and dedicated chip imagery. The full Restaurant Cuisine Cut set is now 13 categories.
 
 ## Recovery
 
