@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - cp1168-radius-tiles
+  pull_request:
+    branches:
+      - main
 
 jobs:
   live-radius:
