@@ -77,6 +77,7 @@ restaurantHoursCollapsed:true,
 location:null,
 locationSource:'none',
 restaurantSearchLatencyMs:0,
+restaurantSearchRadius:10,
 saved:false,
 storageWarning:false,
 restaurantSearchDegraded:false,
@@ -1972,6 +1973,12 @@ function drawFood(){
  const foodCard=$('foodCard');if(foodCard)foodCard.dataset.mealId=item.id;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;
+ let mealReadyResolve=()=>{};
+ const mealReadyPromise=new Promise(resolve=>{mealReadyResolve=resolve;});
+ if(foodCard){
+  foodCard.dataset.mealLoadToken=loadToken;
+  foodCard.__mealReadyPromise=mealReadyPromise;
+ }
  img.dataset.fallback=foodPhotoFallback(item);
  img.dataset.finalFallback=FINAL_FOOD_IMAGE;
  img.alt=item.name;img.referrerPolicy='no-referrer';img.loading='eager';img.decoding='async';
@@ -1985,8 +1992,15 @@ function drawFood(){
  img.style.visibility='visible';
  const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
  if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
-  if(!ok&&String(img.dataset.mealLoadToken||'')===loadToken)markMealImageUnavailable(img);
- });}
+  if(String(img.dataset.mealLoadToken||'')===loadToken){
+   if(!ok)markMealImageUnavailable(img);
+   mealReadyResolve(!!ok);
+  }else{
+   mealReadyResolve(false);
+  }
+ });}else{
+  mealReadyResolve(false);
+ }
  if(foodCard){
   foodCard.querySelector('.maybe-stamp')?.remove();
   const photoPager=ensureMealCardPhotoPager(foodCard,photoCount,photoIndex);
@@ -2527,6 +2541,16 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   }finally{
    if(foodHandoff){
     if(card.isConnected){
+     // Keep the promoted waiting card visible until the recycled main card
+     // has finished its first paint. This prevents a blank frame on mobile.
+     const readyPromise=card.__mealReadyPromise;
+     if(readyPromise){
+      await Promise.race([
+       readyPromise,
+       new Promise(resolve=>window.setTimeout(resolve,1200))
+      ]);
+     }
+     await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
      const promotedImg=next?.querySelector('img');
      const recycledImg=card.querySelector('img');
      if(promotedImg&&recycledImg){
@@ -2535,6 +2559,8 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
       if(promotedImg.alt)recycledImg.alt=promotedImg.alt;
       recycledImg.style.transform='none';
      }
+     // Reveal the replacement and hide the promoted card in the same frame.
+     // The browser should therefore never paint an empty gap between them.
      card.classList.remove('swipe-active');
      card.style.transition='none';
      card.style.transform='none';
@@ -3172,7 +3198,7 @@ function restaurantPoolFiltered(){
 }
 function updateRestaurantStatus(){
  const el=$('status'); if(!el)return;
- const radius=Math.min(100,Number($('radius')?.value)||10);
+ const radius=Math.min(100,Math.max(1,Number(S.restaurantSearchRadius ?? $('radius')?.value)||10));
  const base=restaurantPoolBase();
  const total=restaurantPoolHourFiltered().length,degraded=S.restaurantSearchDegraded;
  if(!total){
@@ -3564,6 +3590,7 @@ if (!rr.ok || !rd.ok) throw new Error(rr.status===429 ? 'Address lookup is tempo
 const visibleLabel=displayRestaurantLocationLabel(rd.display,q); loc = {lat:rd.lat, lon:rd.lon, label:visibleLabel}; S.location = loc; S.locationSource='address'; renderLocationSource(); $('address').value = visibleLabel;
 }
 const radius = Math.min(100,Math.max(1,Number(options?.radius ?? $('radius')?.value)||10));
+S.restaurantSearchRadius=radius;
 const searchTerm = String(S.restaurantQuery||'').trim().slice(0,100);
 const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+radius+':'+normalizeRestaurantSearch(searchTerm);
  let replacingSearchTarget=false;
@@ -3586,6 +3613,10 @@ const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=search&lat
 const d = await responseJson(rr,'Restaurant search returned an invalid response. Please try again.');
 if (searchSeq !== restaurantSearchSeq) return;
 if (!rr.ok || !d.ok) throw new Error(rr.status===429 ? 'Restaurant search is temporarily busy. Please try again.' : (d.message || 'Restaurant search failed.'));
+const returnedRadius=Number(d.radiusMiles);
+if(Number.isFinite(returnedRadius)&&Math.abs(returnedRadius-radius)>0.001){
+ throw new Error('Restaurant search returned the wrong radius. Please try again.');
+}
 S.restaurantSearchDegraded = !!(d.providerErrors?.length);
 S.restaurantSearchLatencyMs = Number(d.searchLatencyMs)||0;
 S.restaurantSearchQuery = String(d.searchQuery||searchTerm||'');

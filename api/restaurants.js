@@ -1434,21 +1434,23 @@ if(mode==='search'){
  // caps from replacing nearby restaurants with a biased subset of the huge box.
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
  const discoveryPromise=wideSearch ? wideRadiusOverpass(lat,lon,radius,searchTerm) : null;
+ // CP1158: nearby provider calls are individually time-boxed. The previous
+ // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
+ // upstream could hold the serverless function until Vercel's 30-second cap.
+ const nearbyProviderTimeout=Math.min(4200,Math.max(2800,primaryBudget));
  const primaryPromise=wideSearch
-   ? [arcgisPlaces(lat,lon,providerRadius,searchTerm,2100)]
+   ? [withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),nearbyProviderTimeout,'Wide ArcGIS lookup timed out')]
    : [
      // Named restaurant searches use the fast local providers first. This keeps
      // common searches (Wendy's, McDonald's, etc.) from waiting on slower
      // Google Text Search and Overpass calls before the UI can show results.
-     photonPlaces(lat,lon,providerRadius,searchTerm),
-     arcgisPlaces(lat,lon,providerRadius,searchTerm),
-     searchTerm ? Promise.resolve({rows:[],errors:[]}) : googlePlaces(lat,lon,providerRadius),
+     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
+     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
+     searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out'),
      // OSM discovery is a fallback for a named search, not part of its critical path.
-     // CP1157: keep large 25-mile searches out of the critical path. A 25-mile
-    // Overpass circle can be slow enough to exhaust the function budget even
-    // when ArcGIS/Photon/Google already returned a usable pool. Overpass remains
-    // available below as a fallback when the faster providers return nothing.
-    (!searchTerm && radius<=10) ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : null
+     // CP1157: keep large 25-mile searches out of the critical path. Overpass
+     // remains available below as a fallback when the faster providers return nothing.
+     (!searchTerm && radius<=10) ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),nearbyProviderTimeout,'Overpass lookup timed out') : null
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
@@ -1517,11 +1519,18 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  let googleOut=googleResult.status==='fulfilled'?googleResult.value:{rows:[],errors:[String(googleResult.reason?.message||googleResult.reason||'Google Places unavailable')]};
  let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
+ // A named search is only successful when at least one preliminary row actually
+ // matches the user's term. Photon/ArcGIS can legally return a non-empty nearby
+ // set for a search phrase that they cannot resolve, so checking only
+ // preliminary.length can suppress the Google/OSM fallback and leave the user
+ // with an empty final deck.
+ const preliminarySearchMatches=searchTerm
+   ? preliminary.filter(row=>restaurantSearchMatches(row,searchTerm)).length
+   : preliminary.length;
 
- // Named searches should return the local-provider results immediately. Only
- // fall back to Google/Overpass when those providers return nothing; otherwise
- // a slow/limited provider must not block an otherwise valid search.
- if(searchTerm && preliminary.length===0){
+ // Named searches should fall back whenever the fast providers produced no
+ // search-compatible venue, not merely when they produced zero rows.
+ if(searchTerm && preliminarySearchMatches===0){
    const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
    const fallbackBudget=Math.min(3200,remaining);
    if(fallbackBudget>600){
