@@ -2816,7 +2816,7 @@ const completeAfterExit=async ()=>{
   cancelMoveFrame();
   const dx=lastX-downX;
   const speed=Number.isFinite(velocityX)?velocityX/1000:0;
-  swipeThreshold=clamp(Math.round(cardWidth()*.23),76,118);
+  swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
   const distanceCommit=Math.abs(dx)>=swipeThreshold;
   const flickCommit=Math.abs(dx)>=48&&Math.abs(speed)>=.50;
   if(distanceCommit||flickCommit)commit(dx,speed);
@@ -2847,7 +2847,7 @@ const completeAfterExit=async ()=>{
   lastMoveX=e.clientX;
   lastMoveTime=performance.now();
   velocityX=0;
-  swipeThreshold=clamp(Math.round(cardWidth()*.23),76,118);
+  swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
   phase='dragging';
   card.dataset.swipePhase='dragging';
   card.dataset.swipeDirection='';
