@@ -1,9 +1,9 @@
-// CP1186: radius searches are independent and each selected radius gets direct origin coverage.
+// CP1189: radius searches use independent origin coverage plus throttled, exact-distance expansion for every selected radius.
 // CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
 // CP1173: cumulative restaurant radius search — retained only as historical context.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r45';
+const API_VERSION='r46';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -19,8 +19,10 @@ const WIDE_PRIMARY_TIMEBOX_MS=3500;
 const WIDE_DISCOVERY_TIMEBOX_MS=12000;
 const RADIUS_DISCOVERY_TIMEBOX_MS=11500;
 const OVERPASS_HTTP_TIMEOUT_MS=5500;
-const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=3000;
-const RADIUS_OVERPASS_FAST_TIMEOUT_MS=5200;
+const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=2200;
+const RADIUS_OVERPASS_FAST_TIMEOUT_MS=3600;
+const RADIUS_EXPANSION_CONCURRENCY=3;
+const PHOTON_EXPANSION_CONCURRENCY=2;
 const WIDE_OVERPASS_GROUP_SIZE=1;
 const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
@@ -272,44 +274,54 @@ function radiusExpansionCenters(lat,lon,radius){
 async function radiusOverpassExpansion(lat,lon,radius,searchTerm=''){
  const points=radiusExpansionCenters(lat,lon,radius);
  if(!points.length)return{rows:[],errors:[],tiles:0,provider:'none'};
- // CP1187: radius expansion must not wait sequentially on public Overpass mirrors.
- // Submit the single multi-tile query to multiple mirrors concurrently and merge
- // successful responses. This makes the 25/50-mile coverage layer independent of
- // whichever public mirror happens to be slow or rate-limited.
- const data=queryMany(points,'restaurant|fast_food',7);
- const tasks=OVERPASS.map(ep=>json(ep+'?data='+encodeURIComponent(data),{},RADIUS_OVERPASS_FAST_TIMEOUT_MS));
- const settled=await Promise.allSettled(tasks),rows=[],errors=[];
- let successful=0;
- for(const result of settled){
-  if(result.status!=='fulfilled'){
-    errors.push(String(result.reason?.message||result.reason||'Overpass mirror failed'));
-    continue;
+ // CP1189: never send a giant multi-tile Overpass query. Large combined
+ // requests were timing out/aborting on the public mirrors, which caused
+ // 25/50-mile searches to collapse back to the 10-mile provider floor.
+ // Query one geographic tile at a time with bounded concurrency and a
+ // second mirror fallback for each tile. The final origin-distance filter
+ // remains authoritative, so partial mirror success is still useful.
+ const rows=[],errors=[];
+ let cursor=0;
+ const workers=Array.from({length:Math.min(RADIUS_EXPANSION_CONCURRENCY,points.length)},async()=>{
+  while(cursor<points.length){
+   const index=cursor++;
+   const point=points[index];
+   const endpoints=[OVERPASS[index%OVERPASS.length],OVERPASS[(index+1)%OVERPASS.length]];
+   try{
+    const result=await overpassPoints([point],lat,lon,radius,'restaurant|fast_food',searchTerm,endpoints,RADIUS_OVERPASS_FAST_TIMEOUT_MS);
+    rows.push(...(result?.rows||[]));
+    errors.push(...(result?.errors||[]));
+   }catch(e){
+    errors.push(String(e?.message||e||'Overpass tile failed'));
+   }
   }
-  successful++;
-  for(const el of result.value?.elements||[]){
-    const row=osmRow(el,{lat,lon});
-    if(row&&row.distance<=radius&&!isClearlyNonDiningBusiness(row))rows.push(row);
-  }
- }
- return{rows:dedupe(rows),errors,tiles:points.length,provider:'Overpass fast mirrors',mirrors:successful};
+ });
+ await Promise.all(workers);
+ return{rows:dedupe(rows),errors,tiles:points.length,provider:'Overpass tiled mirrors'};
 }
 
 async function photonRadiusExpansion(lat,lon,radius,searchTerm=''){
  const points=radiusExpansionCenters(lat,lon,radius),rows=[],errors=[];
  if(!points.length)return{rows,errors,tiles:0,provider:'none'};
- const tasks=points.map(p=>photonWideCenterPlaces(
-   p.lat,p.lon,p.radius,lat,lon,radius,searchTerm
- ));
- const settled=await Promise.allSettled(tasks);
- for(const result of settled){
-  if(result.status!=='fulfilled'){
-   errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));
-   continue;
+ // CP1189: throttle Photon expansion instead of launching 14-22 public
+ // requests at once. Each tile still asks restaurant + fast-food in parallel,
+ // but only a small number of tiles are active at once.
+ let cursor=0;
+ const workers=Array.from({length:Math.min(PHOTON_EXPANSION_CONCURRENCY,points.length)},async()=>{
+  while(cursor<points.length){
+   const index=cursor++;
+   const p=points[index];
+   try{
+    const result=await photonWideCenterPlaces(p.lat,p.lon,p.radius,lat,lon,radius,searchTerm);
+    rows.push(...(result?.rows||[]));
+    errors.push(...(result?.errors||[]));
+   }catch(e){
+    errors.push(String(e?.message||e||'Photon expansion failed'));
+   }
   }
-  rows.push(...(result.value?.rows||[]));
-  errors.push(...(result.value?.errors||[]));
- }
- return{rows:dedupe(rows),errors,tiles:points.length,provider:'Photon expansion'};
+ });
+ await Promise.all(workers);
+ return{rows:dedupe(rows),errors,tiles:points.length,provider:'Photon throttled expansion'};
 }
 
 async function photonWideCenterPlaces(tileLat,tileLon,searchExtentRadius,originLat,originLon,selectedRadius,searchTerm=''){
@@ -1611,12 +1623,12 @@ if(mode==='search'){
  const discoveryPromise=radius>10
    ? withinBudget(
        Promise.allSettled([
-         // CP1187: Overpass is the authoritative wide-radius expansion layer.
-         // Photon expansion was firing 14+ public queries for a 25-mile search
-         // and was consuming the same time budget as the useful radius coverage.
-         // Keep the expansion bounded to one multi-tile query sent to concurrent
-         // mirrors so 25/50-mile searches can finish before the request budget.
-         radius<=50 ? radiusOverpassExpansion(lat,lon,radius,searchTerm) : Promise.resolve({rows:[],errors:[],provider:'none'})
+         // CP1189: both independent expansion layers run for 25/50/100.
+         // Overpass supplies high-coverage OSM discovery tile-by-tile;
+         // throttled Photon adds a second independent source when Overpass
+         // mirrors are slow or incomplete.
+         radiusOverpassExpansion(lat,lon,radius,searchTerm),
+         photonRadiusExpansion(lat,lon,radius,searchTerm)
        ]).then(results=>{
          const rows=[],errors=[];
          for(const result of results){
