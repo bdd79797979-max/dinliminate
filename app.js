@@ -1998,10 +1998,9 @@ function foodChoiceIndex(rows,start,keepState=false){
  return -1;
 }
 function drawFood(){
- // CP1196: the meal swipe deck is intentionally single-card on all clients.
- // Keep the legacy waiting-card DOM fully out of paint; it remains only as inert markup.
- const staleNextCard=$('foodNextCard');
- if(staleNextCard){staleNextCard.style.display='none';staleNextCard.style.visibility='hidden';staleNextCard.style.opacity='0';staleNextCard.style.pointerEvents='none';}
+ // CP1197: restore the visual waiting card, but never promote it into the live card.
+ // The live meal card remains the only swipeable/committed card; the waiting card is
+ // a separate, pointer-inert preview that is refreshed independently.
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
  if(S.maybeDeck){
   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
@@ -2075,7 +2074,8 @@ function drawFood(){
  });}
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
- // CP1196: no second meal card is prepared or promoted.
+ // CP1197: prepare the visual waiting card independently. It is never promoted.
+ if(!foodSwipeHandoff)primeFoodSwipeMedia();
  maybeShowInCardSwipeCoach();if(!foodSwipeHandoff)bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
@@ -2611,9 +2611,8 @@ const completeAfterExit=async ()=>{
   card.dataset.swipe='';
 
   if(foodHandoff){
-   // CP1196: meal swipes use one visible card only. The waiting-card DOM
-   // element is never promoted, so iOS WebKit cannot briefly paint a stale
-   // copy of the swiped meal.
+   // CP1197: the waiting card remains underneath as a separate, inert preview.
+   // The live card is still updated in place; the waiting card is never promoted.
   }
 
   try{
