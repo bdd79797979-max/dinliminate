@@ -1517,11 +1517,18 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  let googleOut=googleResult.status==='fulfilled'?googleResult.value:{rows:[],errors:[String(googleResult.reason?.message||googleResult.reason||'Google Places unavailable')]};
  let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
+ // A named search is only successful when at least one preliminary row actually
+ // matches the user's term. Photon/ArcGIS can legally return a non-empty nearby
+ // set for a search phrase that they cannot resolve, so checking only
+ // preliminary.length can suppress the Google/OSM fallback and leave the user
+ // with an empty final deck.
+ const preliminarySearchMatches=searchTerm
+   ? preliminary.filter(row=>restaurantSearchMatches(row,searchTerm)).length
+   : preliminary.length;
 
- // Named searches should return the local-provider results immediately. Only
- // fall back to Google/Overpass when those providers return nothing; otherwise
- // a slow/limited provider must not block an otherwise valid search.
- if(searchTerm && preliminary.length===0){
+ // Named searches should fall back whenever the fast providers produced no
+ // search-compatible venue, not merely when they produced zero rows.
+ if(searchTerm && preliminarySearchMatches===0){
    const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
    const fallbackBudget=Math.min(3200,remaining);
    if(fallbackBudget>600){
