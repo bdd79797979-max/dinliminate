@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1165,
-  "sourceBranch": "cp1165-remaining-meal-photo-refresh",
+  "build": 1186,
+  "sourceBranch": "release/cp1186-pwa-swipe-compositor-fix",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1165",
-  "deploymentTrigger": "cp1165-remaining-meal-photo-refresh",
+  "checkpoint": "CP1186",
+  "deploymentTrigger": "cp1186-pwa-swipe-compositor-fix",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,6 +23,6 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1165 remaining meal-photo refresh with approved-host sources",
+  "currentBaseline": "CP1186 PWA standalone swipe compositor fix after CP1185 meal-photo and Southern-cuisine updates",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; every meal remains swipeable and image loading never blocks"
 }
