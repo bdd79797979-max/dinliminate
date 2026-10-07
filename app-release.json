@@ -2,7 +2,7 @@
   "name": "Dinliminate",
   "version": "1.0",
   "build": 1239,
-  "sourceBranch": "fix/cp1218-swipe-polish",
+  "sourceBranch": "fix/cp1239-swipe-flight",
   "checkpoint": "CP1239",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
