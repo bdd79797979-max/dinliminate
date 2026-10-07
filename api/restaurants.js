@@ -1434,21 +1434,23 @@ if(mode==='search'){
  // caps from replacing nearby restaurants with a biased subset of the huge box.
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
  const discoveryPromise=wideSearch ? wideRadiusOverpass(lat,lon,radius,searchTerm) : null;
+ // CP1158: nearby provider calls are individually time-boxed. The previous
+ // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
+ // upstream could hold the serverless function until Vercel's 30-second cap.
+ const nearbyProviderTimeout=Math.min(4200,Math.max(2800,primaryBudget));
  const primaryPromise=wideSearch
-   ? [arcgisPlaces(lat,lon,providerRadius,searchTerm,2100)]
+   ? [withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),nearbyProviderTimeout,'Wide ArcGIS lookup timed out')]
    : [
      // Named restaurant searches use the fast local providers first. This keeps
      // common searches (Wendy's, McDonald's, etc.) from waiting on slower
      // Google Text Search and Overpass calls before the UI can show results.
-     photonPlaces(lat,lon,providerRadius,searchTerm),
-     arcgisPlaces(lat,lon,providerRadius,searchTerm),
-     searchTerm ? Promise.resolve({rows:[],errors:[]}) : googlePlaces(lat,lon,providerRadius),
+     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
+     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
+     searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out'),
      // OSM discovery is a fallback for a named search, not part of its critical path.
-     // CP1157: keep large 25-mile searches out of the critical path. A 25-mile
-    // Overpass circle can be slow enough to exhaust the function budget even
-    // when ArcGIS/Photon/Google already returned a usable pool. Overpass remains
-    // available below as a fallback when the faster providers return nothing.
-    (!searchTerm && radius<=10) ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : null
+     // CP1157: keep large 25-mile searches out of the critical path. Overpass
+     // remains available below as a fallback when the faster providers return nothing.
+     (!searchTerm && radius<=10) ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),nearbyProviderTimeout,'Overpass lookup timed out') : null
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
