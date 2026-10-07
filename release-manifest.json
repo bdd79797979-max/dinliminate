@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1188,
-  "sourceBranch": "release/cp1188-atomic-swipe-exit",
+  "build": 1189,
+  "sourceBranch": "release/cp1189-radius-deep-fix",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1188",
-  "deploymentTrigger": "release/cp1188-atomic-swipe-exit",
+  "checkpoint": "CP1189",
+  "deploymentTrigger": "release/cp1189-radius-deep-fix",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,6 +23,6 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1188 atomic swipe exit; CP1187 radius improvements retained",
+  "currentBaseline": "CP1189 throttled tiled radius expansion; CP1188 atomic swipe exit retained",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; every meal remains swipeable and image loading never blocks"
 }
