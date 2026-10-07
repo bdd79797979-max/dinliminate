@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1224 / CP1224
+# CURRENT RELEASE — BUILD 1225 / CP1225
 
 Date: 2026-10-07
 
@@ -46,6 +46,10 @@ CP1221 refreshes the requested Southern Vegetable Plate, Meatloaf & Mashed Potat
 CP1224 refreshes the clearest weak matches from the requested meal-photo set: Meatloaf, Southern Vegetable Plate, Chicken Pot Pie, Roast Beef Sandwich, Chicken & Dumplings, and Biscuits & Gravy. The replacement catalog images use approved Pexels/Unsplash hosts.
 
 The remaining requested items — Peanut Butter & Jelly, BLT, Ham Dinner, Shrimp & Grits, Southern Vegetable Beef Soup, and White Chicken Chili — were kept because the available approved-host alternatives were not clearly better or were less faithful to the meal.
+
+## Meals deck order and Tour update
+
+CP1225 keeps the built-in Fish Sticks meal as the final card in the Meals deck, including filtered/Maybe views when Fish Sticks remains eligible. The Tour now explains the current swipe behavior on both Meal and Restaurant cards, including that committed cards slide fully off-screen before the next choice takes over.
 
 ## Recovery
 
