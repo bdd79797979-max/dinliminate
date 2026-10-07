@@ -10485,3 +10485,15 @@ becomes active.
   #restaurant .restaurant-refine-tabs{gap:7px!important;}
   .discovery-home-back{flex-basis:23px!important;width:23px!important;min-width:23px!important;max-width:23px!important;font-size:18px!important;}
 }
+
+
+/* CP1186 — iOS Home Screen compositor guard.
+   Safari renders the waiting layer correctly, but standalone PWA compositing can
+   briefly expose the waiting card as a second visible card. Keep the waiting
+   layer paint-hidden until the swipe engine explicitly promotes it. */
+html.dinliminate-standalone #food .swipe-card-stack>.next-card:not([data-swipe-promoted="1"]),
+html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([data-swipe-promoted="1"]){
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
