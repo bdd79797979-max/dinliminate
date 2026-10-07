@@ -17,6 +17,7 @@ const WIDE_DISCOVERY_TIMEBOX_MS=6200;
 const RADIUS_DISCOVERY_TIMEBOX_MS=4800;
 const OVERPASS_HTTP_TIMEOUT_MS=5000;
 const WIDE_OVERPASS_GROUP_SIZE=3;
+const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
@@ -272,7 +273,8 @@ function searchQueryClause(lat,lon,radius,searchTerm){
 function searchQueryMany(points,searchTerm,timeoutSeconds=10){return '[out:json][timeout:'+Math.max(6,Math.min(16,Number(timeoutSeconds)||10))+'];('+points.map(c=>searchQueryClause(c.lat,c.lon,c.radius,searchTerm)).join('')+');out center tags;'}
 function radiusDiscoveryPlan(lat,lon,radius){
  const r=clamp(radius),coverage=centers(lat,lon,r),groups=[];
- for(let i=0;i<coverage.length;i+=WIDE_OVERPASS_GROUP_SIZE)groups.push(coverage.slice(i,i+WIDE_OVERPASS_GROUP_SIZE));
+ const groupSize=r>WIDE_RADIUS_THRESHOLD?WIDE_OVERPASS_GROUP_SIZE:TILED_OVERPASS_GROUP_SIZE;
+ for(let i=0;i<coverage.length;i+=groupSize)groups.push(coverage.slice(i,i+groupSize));
  return {
   mode:r>WIDE_RADIUS_THRESHOLD?'wide':'tiled',
   reserveMs:r>WIDE_RADIUS_THRESHOLD?WIDE_DISCOVERY_RESERVE_MS:0,
@@ -1241,26 +1243,59 @@ function sameRestaurant(x,r){
 }
 function dedupe(rows){
   const ordered=[...(rows||[])].filter(Boolean).sort((a,b)=>providerPriority(a)-providerPriority(b));
-  const map=new Map();
+  const map=new Map(),index=new Map();
+  const normId=v=>String(v||'').trim();
+  const cellKey=(lat,lon)=>Number.isFinite(Number(lat))&&Number.isFinite(Number(lon))
+    ?Math.floor(Number(lat)*100)+'|'+Math.floor(Number(lon)*100):'';
+  function candidateKeys(row){
+    const out=[];
+    const id=normId(row?.id);
+    if(id)out.push('id:'+id);
+    const name=restaurantNameKey(row?.name);
+    if(name)out.push('name:'+name);
+    const addr=restaurantAddressKey(row?.address||'');
+    if(addr)out.push('addr:'+addr);
+    const phone=phoneKey(row?.phone);
+    if(phone)out.push('phone:'+phone);
+    const website=websiteKey(row?.website);
+    if(website)out.push('web:'+website);
+    const cell=cellKey(row?.lat,row?.lon);
+    if(cell){
+      const [la,lo]=cell.split('|').map(Number);
+      for(let dlat=-1;dlat<=1;dlat++)for(let dlon=-1;dlon<=1;dlon++)out.push('cell:'+(la+dlat)+'|'+(lo+dlon));
+    }
+    return [...new Set(out)];
+  }
+  function mergeInto(target,r){
+    target.fastFood=target.fastFood||r.fastFood;
+    if(typeof r.openNow==='boolean' && (typeof target.openNow!=='boolean' || String(r.source||'').startsWith('Google')))target.openNow=r.openNow;
+    for(const f of ['address','phone','website','opening_hours','photo','cuisine','brand','operator'])if(!target[f]&&r[f])target[f]=r[f];
+    if(!target.googlePlaceId&&r.googlePlaceId)target.googlePlaceId=r.googlePlaceId;
+    target.menuItems=[...new Set([...(target.menuItems||[]),...(r.menuItems||[])])].slice(0,10);
+    if(!target.hoursSource&&r.hoursSource)target.hoursSource=r.hoursSource;
+  }
   for(const r of ordered){
+    const candidates=new Set();
+    for(const ck of candidateKeys(r))for(const key of (index.get(ck)||[]))candidates.add(key);
     let key=null;
-    for(const [k,x] of map){if(sameRestaurant(x,r)){key=k;break}}
+    for(const candidate of candidates){
+      const x=map.get(candidate);
+      if(x&&sameRestaurant(x,r)){key=candidate;break}
+    }
     if(!key){
       const nameKey=norm(r.name),addr=normAddress(r.address||''),phone=phoneKey(r.phone),website=websiteKey(r.website);
       key=(nameKey+'|'+(addr||phone||website||('geo-'+Math.round(r.lat*1000)+'|'+Math.round(r.lon*1000)))).slice(0,220);
       let suffix=1;
       while(map.has(key)) key=key+'|'+(++suffix);
+      map.set(key,{...r});
+    }else{
+      mergeInto(map.get(key),r);
     }
-    if(!map.has(key))map.set(key,{...r});
-    else{
-      const x=map.get(key);
-      x.fastFood=x.fastFood||r.fastFood;
-      if(typeof r.openNow==='boolean' && (typeof x.openNow!=='boolean' || String(r.source||'').startsWith('Google')))x.openNow=r.openNow;
-      for(const f of ['address','phone','website','opening_hours','photo','cuisine','brand','operator'])if(!x[f]&&r[f])x[f]=r[f];
-      if(!x.googlePlaceId&&r.googlePlaceId)x.googlePlaceId=r.googlePlaceId;
-
-      x.menuItems=[...new Set([...(x.menuItems||[]),...(r.menuItems||[])])].slice(0,10);
-      if(!x.hoursSource&&r.hoursSource)x.hoursSource=r.hoursSource;
+    const storedKeys=candidateKeys(map.get(key));
+    for(const ck of storedKeys){
+      let bucket=index.get(ck);
+      if(!bucket){bucket=[];index.set(ck,bucket);}
+      if(!bucket.includes(key))bucket.push(key);
     }
   }
   return[...map.values()].sort((a,b)=>a.distance-b.distance);
@@ -1545,7 +1580,7 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
 
- // CP1168: deterministic tiled radius discovery is started after the fast provider pass and merged
+ // CP1168: deterministic tiled radius discovery runs alongside the fast provider pass and is merged
  // before final matching. 10/25/50 mile searches therefore get an actual
  // geographic discovery layer instead of inheriting a 100-result provider cap.
  if(discoveryPromise){
