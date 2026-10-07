@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1191,
-  "sourceBranch": "release/cp1191-radius-engine-v2-foundation",
-  "checkpoint": "CP1191",
-  "deploymentTrigger": "release/cp1191-radius-engine-v2-foundation",
+  "build": 1193,
+  "sourceBranch": "release/cp1193-radius-legacy-cleanup",
+  "checkpoint": "CP1193",
+  "deploymentTrigger": "release/cp1193-radius-legacy-cleanup",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,5 +32,5 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1191 Radius Engine v2 foundation; CP1190 radius fan-out and homepage chevrons retained; CP1188 atomic swipe exit retained"
+  "currentBaseline": "CP1193 Radius Engine v2 integrated; legacy radius orchestration removed; CP1188 atomic swipe exit retained"
 }
