@@ -1,7 +1,8 @@
+// CP1175: fix radius expansion timeout constant and harden expansion runtime.
 // CP1173: cumulative restaurant radius search — stable 10-mile core plus radius-specific Photon expansion.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r40';
+const API_VERSION='r41';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -17,6 +18,7 @@ const WIDE_PRIMARY_TIMEBOX_MS=3500;
 const WIDE_DISCOVERY_TIMEBOX_MS=12000;
 const RADIUS_DISCOVERY_TIMEBOX_MS=11500;
 const OVERPASS_HTTP_TIMEOUT_MS=5500;
+const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=3200;
 const WIDE_OVERPASS_GROUP_SIZE=1;
 const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
@@ -292,7 +294,7 @@ async function photonWideCenterPlaces(tileLat,tileLon,searchExtentRadius,originL
   new URLSearchParams({q:searchTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(tileLat),lon:String(tileLon),zoom:'11'})
  ];
  const rows=[],errors=[];
- const settled=await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},WIDE_PHOTON_QUERY_TIMEOUT_MS)));
+ const settled=await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},RADIUS_EXPANSION_QUERY_TIMEOUT_MS)));
  for(const result of settled){
   if(result.status!=='fulfilled'){
    errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));
