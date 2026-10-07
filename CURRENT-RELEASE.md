@@ -87,3 +87,7 @@ CP1237 tests free Unsplash candidates against the requested meal-photo list. The
 ## Swipe continuation correction — CP1238
 
 CP1238 changes the committed Meal and Restaurant swipe exit so the active card stays fully visible and continues from the exact finger-release position all the way off-screen. The release position is flushed synchronously before the animation starts, the destination is calculated from the card's actual viewport edges, and the card no longer fades out during the exit. The exit runs longer and remains locked until the transform finishes, reducing fast-swipe race conditions and the premature-disappear effect. The existing waiting-card and handoff lifecycle is unchanged.
+
+## Swipe flight stabilization — CP1239
+
+CP1239 replaces the committed Meal and Restaurant swipe exit with one browser-owned full-flight animation. The card starts at the exact release position, stays fully visible, travels until the entire card clears the viewport, and the visual handoff is not released until that flight completes.
