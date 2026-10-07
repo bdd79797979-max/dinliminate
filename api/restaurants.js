@@ -149,6 +149,40 @@ function wideRadiusCenters(lat,lon,radius){
   }
   return out;
 }
+async function wideRadiusArcgis(lat,lon,radius,searchTerm=''){
+  const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
+  const wide100=radius>50;
+  if(!wide100){
+    const one=await arcgisPlaces(lat,lon,Math.min(50,radius),searchTerm,3200);
+    return {rows:filterNonDiningRows(dedupe(one.rows||[])),errors:one.errors||[],tileCount:1,tileRadiusMiles:Math.min(50,radius),ringMiles:0};
+  }
+  let cursor=0;
+  const worker=async()=>{
+    while(cursor<points.length){
+      const i=cursor++,p=points[i];
+      const result=await withinBudget(
+        arcgisPlaces(p.lat,p.lon,50,searchTerm,2800),
+        3500,
+        'Wide ArcGIS tile timed out'
+      );
+      if(result?.__timeout){
+        errors.push('Wide ArcGIS tile timed out');
+        continue;
+      }
+      rows.push(...(result?.rows||[]));
+      errors.push(...(result?.errors||[]));
+    }
+  };
+  await Promise.all(Array.from({length:5},()=>worker()));
+  return {
+    rows:filterNonDiningRows(dedupe(rows)),
+    errors,
+    tileCount:points.length,
+    tileRadiusMiles:50,
+    ringMiles:65
+  };
+}
+
 async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
   const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
   // Keep the proven 50-mile path unchanged. For 100 miles, batch the 13
@@ -1446,27 +1480,39 @@ if(mode==='search'){
  const wideSearch=radius>25;
 let radiusEngineResult={coverageVerified:false},engineTimedOut=false,engineRows=[],engineErrors=[],engineProviderStats={},radiusEngineElapsedMs=0,wideGoogleOut={rows:[],errors:[]};
 if(wideSearch){
-  const wideStarted=Date.now(),providerRadius=radius;
-  const tasks=[
-    withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,3200),5000,'Wide ArcGIS lookup timed out'),
-    withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),5000,'Wide Photon lookup timed out'),
-    withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),5000,'Wide Google lookup timed out'),
-    withinBudget(wideRadiusOverpass(lat,lon,radius,searchTerm),6500,'Wide Overpass coverage timed out')
-  ];
-  const settled=await Promise.allSettled(tasks);
-  const get=(i,label)=>settled[i]?.status==='fulfilled'&&!settled[i].value?.__timeout?settled[i].value:{rows:[],errors:[label]};
-  const arc=get(0,'Wide ArcGIS unavailable'),pho=get(1,'Wide Photon unavailable'),goo=get(2,'Wide Google unavailable'),osm=get(3,'Wide Overpass unavailable');
+  const wideStarted=Date.now();
+  const wide100=radius>50;
+  const wideArcgisPromise=withinBudget(
+    wideRadiusArcgis(lat,lon,radius,searchTerm),
+    wide100?7500:5000,
+    wide100?'Wide tiled ArcGIS coverage timed out':'Wide ArcGIS lookup timed out'
+  );
+  const wideGooglePromise=withinBudget(
+    searchTerm?googleSearchPlaces(lat,lon,Math.min(radius,50),searchTerm):googlePlaces(lat,lon,Math.min(radius,50)),
+    5000,
+    'Wide Google lookup timed out'
+  );
+  const settled=await Promise.allSettled([wideArcgisPromise,wideGooglePromise]);
+  const arc=settled[0]?.status==='fulfilled'&&!settled[0].value?.__timeout
+    ?settled[0].value:{rows:[],errors:['Wide ArcGIS coverage timed out'],tileCount:wide100?wideRadiusCenters(lat,lon,radius).length:1,tileRadiusMiles:50,ringMiles:wide100?65:0};
+  const goo=settled[1]?.status==='fulfilled'&&!settled[1].value?.__timeout
+    ?settled[1].value:{rows:[],errors:['Wide Google unavailable']};
   wideGoogleOut=goo;
-  engineRows=filterNonDiningRows(dedupe([...(arc.rows||[]),...(pho.rows||[]),...(goo.rows||[]),...(osm.rows||[])]));
-  engineErrors=[...(arc.errors||[]),...(pho.errors||[]),...(goo.errors||[]),...(osm.errors||[])];
+  engineRows=filterNonDiningRows(dedupe([...(arc.rows||[]),...(goo.rows||[])]));
+  engineErrors=[...(arc.errors||[]),...(goo.errors||[])];
   engineProviderStats={
-    ArcGIS:{tiles:1,rows:(arc.rows||[]).length,errors:(arc.errors||[]).length},
-    Photon:{tiles:1,rows:(pho.rows||[]).length,errors:(pho.errors||[]).length},
+    ArcGIS:{tiles:arc.tileCount||1,rows:(arc.rows||[]).length,errors:(arc.errors||[]).length},
     Google:{tiles:1,rows:(goo.rows||[]).length,errors:(goo.errors||[]).length},
-    Overpass:{tiles:osm.tileCount||wideRadiusCenters(lat,lon,radius).length,rows:(osm.rows||[]).length,errors:(osm.errors||[]).length}
+    Photon:{tiles:0,rows:0,errors:0},
+    Overpass:{tiles:0,rows:0,errors:0}
   };
   radiusEngineElapsedMs=Date.now()-wideStarted;
-  radiusEngineResult={coverageVerified:true,tileCount:osm.tileCount||wideRadiusCenters(lat,lon,radius).length,tileRadiusMiles:osm.tileRadiusMiles||0,ringMiles:osm.ringMiles||0};
+  radiusEngineResult={
+    coverageVerified:true,
+    tileCount:arc.tileCount||1,
+    tileRadiusMiles:arc.tileRadiusMiles||50,
+    ringMiles:arc.ringMiles||0
+  };
 }else{
   const radiusEngineStarted=Date.now();
   const radiusEnginePromise=runRadiusEngine({lat,lon,radiusMiles:radius,searchTerm,providers:[{name:'radius-discovery',query:radiusEngineProviderQuery}],dedupe,concurrency:RADIUS_ENGINE_CONCURRENCY});
