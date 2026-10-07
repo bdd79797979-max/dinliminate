@@ -3662,70 +3662,87 @@ return true;
 }
 let restaurantSearchSeq = 0;
 let restaurantHoursEnrichmentSeq = 0;
+let restaurantHoursEnrichmentKey = '';
+let restaurantHoursEnrichmentInFlightKey = '';
+let restaurantHoursEnrichmentInFlight = null;
+let restaurantHoursEnrichedAt = 0;
+
 async function enrichRestaurantHoursForOpenNow(){
-  const pool=Array.isArray(S.restaurantPool)?S.restaurantPool:[];
-  const unknown=pool
-    .filter(row=>restaurantHoursState(row)==='unknown')
-    .sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity))
-    .slice(0,90);
-  if(!unknown.length){
-    restaurantHoursEnrichmentKey=String(S.restaurantSearchKey||'');
-    restaurantHoursEnrichedAt=Date.now();
-    return {ok:true,counts:{total:pool.length,alreadyKnown:pool.length,resolvedFromOfficialWebsite:0,resolvedByGooglePlaceDetails:0,resolvedByGoogleTextSearch:0,stillUnknown:0,open:pool.filter(r=>restaurantHoursState(r)==='open').length},google:{callsUsed:0,callsBudget:36}};
-  }
-  const seq=++restaurantHoursEnrichmentSeq;
-  const payload={
-    maxGoogleCalls:36,
-    rows:unknown.map(row=>({
-      id:String(row?.id||''),
-      name:String(row?.name||'').slice(0,160),
-      address:String(row?.address||'').slice(0,240),
-      phone:String(row?.phone||'').slice(0,50),
-      website:String(row?.website||'').slice(0,700),
-      brand:String(row?.brand||'').slice(0,120),
-      lat:Number(row?.lat),
-      lon:Number(row?.lon),
-      distance:Number(row?.distance),
-      googlePlaceId:String(row?.googlePlaceId||'').trim(),
-      opening_hours:String(row?.opening_hours||'').slice(0,1200),
-      openNow:typeof row?.openNow==='boolean'?row.openNow:null,
-      businessStatus:String(row?.businessStatus||''),
-      hoursSource:String(row?.hoursSource||''),
-      hoursTimeZone:String(row?.hoursTimeZone||S.restaurantSearchTimeZone||'')
-    }))
-  };
-  $('status').textContent='Checking open hours…';
-  try{
-    const response=await fetch('/api/restaurants?mode=hours',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify(payload)
-    });
-    const data=await responseJson(response,'Open hours could not be checked right now.');
-    if(seq!==restaurantHoursEnrichmentSeq||S.screen!=='restaurant')return data;
-    const patches=new Map((Array.isArray(data?.patches)?data.patches:[]).map(row=>[String(row?.id||''),row]));
-    let applied=0;
-    for(const row of S.restaurantPool||[]){
-      const patch=patches.get(String(row?.id||''));
-      if(!patch)continue;
-      for(const key of ['name','address','phone','website','opening_hours','openNow','businessStatus','googlePlaceId']){
-        if(patch[key]!==undefined&&patch[key]!==null&&patch[key]!=='')row[key]=patch[key];
-      }
-      if(patch.hoursSource)row.hoursSource=patch.hoursSource;
-      applied++;
+  const searchKey=String(S.restaurantSearchKey||'');
+  if(restaurantHoursEnrichmentInFlight&&restaurantHoursEnrichmentInFlightKey===searchKey)return restaurantHoursEnrichmentInFlight;
+  const run=(async()=>{
+    const pool=Array.isArray(S.restaurantPool)?S.restaurantPool:[];
+    const unknown=pool
+      .filter(row=>restaurantHoursState(row)==='unknown')
+      .sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity))
+      .slice(0,90);
+    if(!unknown.length){
+      restaurantHoursEnrichmentKey=searchKey;
+      restaurantHoursEnrichedAt=Date.now();
+      return {ok:true,counts:{total:pool.length,candidates:0,alreadyKnown:pool.length,knownOpenNow:pool.filter(r=>restaurantHoursState(r)==='open').length,resolvedFromOfficialWebsite:0,resolvedByGooglePlaceDetails:0,resolvedByGoogleTextSearch:0,stillUnknown:0,open:pool.filter(r=>restaurantHoursState(r)==='open').length},google:{callsUsed:0,callsBudget:36}};
     }
-    restaurantHoursEnrichmentKey=String(S.restaurantSearchKey||'');
-    restaurantHoursEnrichedAt=Date.now();
-    return {...data,applied};
-  }catch(error){
-    if(seq!==restaurantHoursEnrichmentSeq||S.screen!=='restaurant')return {ok:false,error:String(error?.message||error||'')};
-    $('status').textContent='Open hours could not be checked. Showing confirmed hours only.';
-    return {ok:false,error:String(error?.message||error||'Open hours enrichment failed.')};
+    const seq=++restaurantHoursEnrichmentSeq;
+    const payload={
+      maxGoogleCalls:36,
+      totalRestaurants:pool.length,
+      knownOpenNow:pool.filter(row=>restaurantHoursState(row)==='open').length,
+      rows:unknown.map(row=>({
+        id:String(row?.id||''),
+        name:String(row?.name||'').slice(0,160),
+        address:String(row?.address||'').slice(0,240),
+        phone:String(row?.phone||'').slice(0,50),
+        website:String(row?.website||'').slice(0,700),
+        brand:String(row?.brand||'').slice(0,120),
+        lat:Number(row?.lat),
+        lon:Number(row?.lon),
+        distance:Number(row?.distance),
+        googlePlaceId:String(row?.googlePlaceId||'').trim(),
+        opening_hours:String(row?.opening_hours||'').slice(0,1200),
+        openNow:typeof row?.openNow==='boolean'?row.openNow:null,
+        businessStatus:String(row?.businessStatus||''),
+        hoursSource:String(row?.hoursSource||''),
+        hoursTimeZone:String(row?.hoursTimeZone||S.restaurantSearchTimeZone||'')
+      }))
+    };
+    $('status').textContent='Checking open hours…';
+    try{
+      const response=await fetch('/api/restaurants?mode=hours',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify(payload)
+      });
+      const data=await responseJson(response,'Open hours could not be checked right now.');
+      if(seq!==restaurantHoursEnrichmentSeq||S.screen!=='restaurant')return data;
+      const patches=new Map((Array.isArray(data?.patches)?data.patches:[]).map(row=>[String(row?.id||''),row]));
+      let applied=0;
+      for(const row of S.restaurantPool||[]){
+        const patch=patches.get(String(row?.id||''));
+        if(!patch)continue;
+        for(const key of ['name','address','phone','website','opening_hours','openNow','businessStatus','googlePlaceId']){
+          if(patch[key]!==undefined&&patch[key]!==null&&patch[key]!=='')row[key]=patch[key];
+        }
+        if(patch.hoursSource)row.hoursSource=patch.hoursSource;
+        applied++;
+      }
+      restaurantHoursEnrichmentKey=String(S.restaurantSearchKey||'');
+      restaurantHoursEnrichedAt=Date.now();
+      return {...data,applied};
+    }catch(error){
+      if(seq!==restaurantHoursEnrichmentSeq||S.screen!=='restaurant')return {ok:false,error:String(error?.message||error||'')};
+      $('status').textContent='Open hours could not be checked. Showing confirmed hours only.';
+      return {ok:false,error:String(error?.message||error||'Open hours enrichment failed.')};
+    }
+  })();
+  restaurantHoursEnrichmentInFlightKey=searchKey;
+  restaurantHoursEnrichmentInFlight=run;
+  try{return await run}finally{
+    if(restaurantHoursEnrichmentInFlight===run){
+      restaurantHoursEnrichmentInFlight=null;
+      restaurantHoursEnrichmentInFlightKey='';
+    }
   }
 }
 
-let restaurantHoursEnrichmentKey = '';
-let restaurantHoursEnrichedAt = 0;
 async function responseJson(response, message){
 let body=null;
 try{body=await response.json();}catch{throw new Error(message||'The restaurant search returned an invalid response.');}
