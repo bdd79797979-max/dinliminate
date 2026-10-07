@@ -1552,16 +1552,9 @@ function bindTutorialUI(){
  ensureTutorialUI();
  const bubble=document.querySelector('#tutorialBubble');
  if(bubble&&!bubble.dataset.bound){bubble.dataset.bound='1';bubble.addEventListener('click',advanceTutorial);}
- const toggle=document.querySelector('#tutorialModeToggle');
- if(toggle&&!toggle.dataset.bound){
-  toggle.dataset.bound='1';
-  toggle.addEventListener('click',event=>{
-   event.preventDefault();
-   event.stopPropagation();
-   if(tutorialModeEnabled()&&tutorialState.active) stopTutorialMode();
-   else startTutorialFromHome();
-  });
- }
+ // CP1229: Home Tour is routed by the single global data-home-action handler.
+ // Do not add a second click handler here; it would start the Tour and then
+ // immediately toggle it back off during the same click event.
  const toggleSettings=document.querySelector('#tutorialModeSettings');
  if(toggleSettings&&!toggleSettings.dataset.bound){
   toggleSettings.dataset.bound='1';
