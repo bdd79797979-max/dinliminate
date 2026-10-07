@@ -2691,7 +2691,7 @@ const completeAfterExit=async ()=>{
   const width=cardWidth();
   const exitDistance=Math.max(Math.ceil(window.innerWidth*1.25),Math.ceil(width*1.45),560);
   const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(198-(magnitude*42),132,198));
+  // CP1199: give the released card a visible flight instead of an instant vanish.\n  const duration=Math.round(clamp(285-(magnitude*28),235,285));
   const direction=dx<0?-1:1;
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
