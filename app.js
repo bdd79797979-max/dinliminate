@@ -2543,7 +2543,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  // CP1171: preserve the transaction lock across draw/rebind cycles.
  let phase=inheritedSwipeLock?'locked':'idle',hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
  // CP1218 — tighter, quicker swipe feel without changing the card-stack architecture.
- let swipeThreshold=88,completionTimer=0;
+ let swipeThreshold=88,completionTimer=0,exitAnimation=null;
 
  card.style.touchAction='none';
  card.style.userSelect='none';
@@ -2574,6 +2574,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const resetCard=()=>{
   cancelMoveFrame();
   clearCompletionTimer();
+  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
   card.classList.remove('swipe-active');
   card.style.transition='';
   card.style.transform='';
@@ -2749,40 +2750,39 @@ const completeAfterExit=async ()=>{
   const decisionRow=decisionKind==='food'
     ?S.pool.find(item=>String(item?.id||'')===decisionId)
     :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
-  // CP1218/CP1238 — keep count feedback at the exact commit point while
-  // the actual data mutation waits for the completed visual handoff.
+  // CP1218/CP1239 — count feedback lands at the commit point; data mutation
+  // waits until the visual flight has completely cleared the viewport.
   previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe:false);
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
   card.dataset.swipeTransaction='active';
 
-  // CP1238 — flush the exact release position before starting the exit
-  // animation. This prevents a fast pointer release from animating out of a
-  // stale requestAnimationFrame frame and looking like the card vanished.
+  // CP1239 — make the committed exit one atomic browser animation.
+  // Start at the exact finger-release position, keep the card fully opaque,
+  // and do not let transitionend/rebind lifecycle events control completion.
   const releaseAbs=Math.abs(dx);
   const releaseRotation=direction*clamp((releaseAbs/width)*11,0,11);
+  const fromTransform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+releaseRotation.toFixed(2)+'deg)';
   card.style.transition='none';
   card.style.opacity='1';
   card.style.visibility='visible';
-  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+releaseRotation.toFixed(2)+'deg)';
+  card.style.transform=fromTransform;
   card.style.setProperty('--swipe-tint-alpha',String(clamp(releaseAbs/(Math.max(72,swipeThreshold)*2.7),0,.26)));
+  void card.offsetWidth;
 
-  // Measure the already-moved card so the destination is based on the actual
-  // viewport edges. The card therefore continues from the finger's exact
-  // release point until its whole surface clears the screen.
   const rect=card.getBoundingClientRect();
   const edgePadding=48;
   const remaining=direction<0 ? (rect.right+edgePadding) : (window.innerWidth-rect.left+edgePadding);
   const targetX=direction<0 ? (dx-remaining) : (dx+remaining);
+  const targetTransform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
   const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(285-(magnitude*36),200,285));
+  const duration=Math.round(clamp(285-(magnitude*28),225,285));
 
   if(next&&!staticWaitingCard){
    const revealPromotedNext=()=>{
     if(!next.isConnected)return;
     const nextMealId=String(next.dataset.mealId||'');
     const activeMealId=String(card.dataset.mealId||'');
-    // CP1181: card identity, not image readiness, controls promotion.
     if(staticWaitingCard&&(!nextMealId||nextMealId===activeMealId))return;
     next.dataset.swipePromoted='1';
     next.style.transition='none';
@@ -2797,20 +2797,40 @@ const completeAfterExit=async ()=>{
   }
 
   dismissSwipeHint();
-  card.addEventListener('transitionend',handleTransitionEnd);
+  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
 
-  // CP1238 — defer one paint so the browser has a real from-position before
-  // applying the off-screen destination. No opacity fade is used: the card
-  // stays fully visible until its transform has completed.
-  requestAnimationFrame(()=>{
-   if(phase!=='committing'||!card.isConnected)return;
+  const finishFlight=()=>{
+   if(phase!=='committing')return;
+   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
+   clearCompletionTimer();
+   completeAfterExit();
+  };
+
+  if(typeof card.animate==='function'){
+   exitAnimation=card.animate(
+    [{transform:fromTransform},{transform:targetTransform}],
+    {duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'}
+   );
+   exitAnimation.finished.then(()=>{
+    if(phase==='committing')finishFlight();
+   }).catch(()=>{});
+   completionTimer=window.setTimeout(()=>{
+    if(phase==='committing')finishFlight();
+   },duration+500);
+  }else{
+   // Fallback for engines without Web Animations.
    requestAnimationFrame(()=>{
     if(phase!=='committing'||!card.isConnected)return;
-    card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
-    card.style.transform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
-    completionTimer=window.setTimeout(completeAfterExit,duration+650);
+    requestAnimationFrame(()=>{
+     if(phase!=='committing'||!card.isConnected)return;
+     card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
+     card.style.transform=targetTransform;
+     completionTimer=window.setTimeout(()=>{
+      if(phase==='committing')finishFlight();
+     },duration+650);
+    });
    });
-  });
+  }
  };
  // CP1222: button decisions use the exact same off-screen commit path as a drag.
  // This preserves the existing handoff lifecycle while making Cut/Maybe feel
