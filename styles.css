@@ -10406,3 +10406,17 @@ becomes active.
 #restaurant .next-card .card-card-action{
   visibility:visible;
 }
+
+/* CP1172 — GPU-stabilize swipe layers for rapid handoff. */
+#food .swipe-card-stack>.card,
+#restaurant .restaurant-card-stack>.card{
+  will-change:transform,opacity;
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+  -webkit-backface-visibility:hidden!important;
+  backface-visibility:hidden!important;
+}
+#food .swipe-card-stack>.next-card,
+#restaurant .restaurant-card-stack>.next-card{
+  will-change:transform,opacity;
+}
