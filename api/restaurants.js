@@ -1255,9 +1255,12 @@ function requestQuery(req){
  try{return new URL(String(req?.url||'/'),'https://dinliminate.local').searchParams}catch{return new URLSearchParams()}
 }
 async function radiusEngineProviderQuery({tile,origin,radiusMiles,searchTerm=''}) {
+  const firstMirror=tile?.r && Number.isFinite(Number(tile.r))
+    ? Math.abs(Number(tile.r)) % OVERPASS.length
+    : 0;
   const endpoints=[
-    OVERPASS[tile?.r && Number.isFinite(Number(tile.r)) ? Math.abs(Number(tile.r)) % OVERPASS.length : 0],
-    OVERPASS[((tile?.q ? Math.abs(Number(tile.q)) : 1) + 1) % OVERPASS.length]
+    OVERPASS[firstMirror],
+    OVERPASS[(firstMirror+1) % OVERPASS.length]
   ];
   const jobs=[
     overpassPoints(
