@@ -7,17 +7,15 @@ const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi
 const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chick-fil-A","Popeyes","Subway","Sonic","Arby's","Whataburger","Five Guys","Raising Cane's","Wingstop","Bojangles","Cook Out","Dairy Queen","Zaxby's","Church's Chicken","Captain D's","Long John Silver's","Jimmy John's","Jersey Mike's","Firehouse Subs","Little Caesars","Domino's","Papa John's","Pizza Hut","Marco's Pizza","Krystal","Steak 'n Shake","White Castle","Freddy's","In-N-Out","Carl's Jr.","Panda Express","Jack in the Box","Hardee's","Del Taco","Checkers","Rally's"];
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
-const SEARCH_BUDGET_MS=7500;
-const WIDE_DISCOVERY_RESERVE_MS=3200;
+const SEARCH_BUDGET_MS=9000;
+const WIDE_DISCOVERY_RESERVE_MS=4800;
 const WIDE_RADIUS_THRESHOLD=50;
 const RADIUS_DISCOVERY_THRESHOLD=10;
 const WIDE_PROVIDER_RADIUS_CAP=50;
 const WIDE_PRIMARY_TIMEBOX_MS=2300;
-const WIDE_DISCOVERY_TIMEBOX_MS=3300;
-const RADIUS_DISCOVERY_TIMEBOX_MS=3200;
-const OVERPASS_HTTP_TIMEOUT_MS=3000;
-const WIDE_OVERPASS_RING_MILES=60.5;
-const WIDE_OVERPASS_RING_POINTS=8;
+const WIDE_DISCOVERY_TIMEBOX_MS=6200;
+const RADIUS_DISCOVERY_TIMEBOX_MS=4800;
+const OVERPASS_HTTP_TIMEOUT_MS=5000;
 const WIDE_OVERPASS_GROUP_SIZE=3;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
@@ -114,16 +112,38 @@ function queryMany(points,types=DINING_AMENITIES,timeoutSeconds=10){
 }
 function centers(lat,lon,r){
  const radius=clamp(r);
- if(radius<=25)return[{lat,lon,radius}];
- if(radius<=50)return[{lat,lon,radius:50}];
- // Overpass is queried in <=50-mile circles. A 12-point ring at 60 miles,
- // plus the origin circle, covers the requested 100-mile disk with overlap;
- // final filtering is always done from the true origin distance.
- const ring=WIDE_OVERPASS_RING_MILES,count=WIDE_OVERPASS_RING_POINTS,out=[{lat,lon,radius:50}];
+ // Deterministic overlapping search tiles. The final origin-distance filter
+ // still guarantees that only places inside the user's selected radius return.
+ // 1-10mi: one exact-radius circle.
+ if(radius<=10)return[{lat,lon,radius}];
+ // 11-25mi: 15mi tiles on a 6-point ring plus the origin.
+ if(radius<=25){
+  const tile=15,ring=15,count=6,out=[{lat,lon,radius:tile}];
+  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+  for(let i=0;i<count;i++){
+   const ang=i*2*Math.PI/count;
+   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
+  }
+  return out;
+ }
+ // 26-50mi: 30mi tiles on a 6-point ring plus the origin.
+ if(radius<=50){
+  const tile=30,ring=30,count=6,out=[{lat,lon,radius:tile}];
+  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+  for(let i=0;i<count;i++){
+   const ang=i*2*Math.PI/count;
+   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
+  }
+  return out;
+ }
+ // 51-100mi: a 40mi origin tile plus a 12-point 80mi outer ring of 40mi
+ // tiles. This fully covers the 100mi disk with overlap while keeping each
+ // upstream query comfortably below the 50mi provider cap.
+ const tile=40,ring=80,count=12,out=[{lat,lon,radius:tile}];
  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  for(let i=0;i<count;i++){
   const ang=i*2*Math.PI/count;
-  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:50});
+  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
  }
  return out;
 }
@@ -251,13 +271,14 @@ function searchQueryClause(lat,lon,radius,searchTerm){
 }
 function searchQueryMany(points,searchTerm,timeoutSeconds=10){return '[out:json][timeout:'+Math.max(6,Math.min(16,Number(timeoutSeconds)||10))+'];('+points.map(c=>searchQueryClause(c.lat,c.lon,c.radius,searchTerm)).join('')+');out center tags;'}
 function radiusDiscoveryPlan(lat,lon,radius){
- const r=clamp(radius),coverage=centers(lat,lon,r);
- if(r<=WIDE_RADIUS_THRESHOLD)return {mode:'nearby',reserveMs:0,coveragePoints:coverage.length,groups:[coverage]};
- // Keep each request small enough for the upstream timeout while covering
- // the entire requested disk with overlapping <=50-mile circles.
- const groups=[];
+ const r=clamp(radius),coverage=centers(lat,lon,r),groups=[];
  for(let i=0;i<coverage.length;i+=WIDE_OVERPASS_GROUP_SIZE)groups.push(coverage.slice(i,i+WIDE_OVERPASS_GROUP_SIZE));
- return {mode:'wide',reserveMs:WIDE_DISCOVERY_RESERVE_MS,coveragePoints:coverage.length,groups};
+ return {
+  mode:r>WIDE_RADIUS_THRESHOLD?'wide':'tiled',
+  reserveMs:r>WIDE_RADIUS_THRESHOLD?WIDE_DISCOVERY_RESERVE_MS:0,
+  coveragePoints:coverage.length,
+  groups
+ };
 }
 async function overpassPoints(points,originLat,originLon,radius,types='restaurant|fast_food',searchTerm='',endpoints=OVERPASS,timeout=OVERPASS_HTTP_TIMEOUT_MS){
  const term=normalizeSearchQuery(searchTerm),seconds=Math.max(6,Math.min(10,Math.ceil(Number(timeout||OVERPASS_HTTP_TIMEOUT_MS)/1000)));
@@ -275,24 +296,26 @@ async function overpassPoints(points,originLat,originLon,radius,types='restauran
  }
  return{rows:dedupe(rows),errors};
 }
-async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
- return overpassPoints(centers(lat,lon,radius),lat,lon,radius,types,searchTerm,OVERPASS,8500);
-}
-async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
+async function tiledRadiusOverpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
  const plan=radiusDiscoveryPlan(lat,lon,radius),rows=[],errors=[];
- // CP1160: each geographic batch uses one rotating Overpass mirror. This keeps
- // the 100-mile search bounded instead of allowing sequential mirror retries
- // to double the request duration.
  const endpoints=plan.groups.map((_,i)=>OVERPASS[i%OVERPASS.length]);
  const tasks=plan.groups.map((group,i)=>overpassPoints(
-   group,lat,lon,radius,'restaurant|fast_food',searchTerm,[endpoints[i]],OVERPASS_HTTP_TIMEOUT_MS
+   group,lat,lon,radius,types,searchTerm,[endpoints[i]],OVERPASS_HTTP_TIMEOUT_MS
  ));
  const settled=await Promise.allSettled(tasks);
  for(const result of settled){
-   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'wide discovery failed'));continue;}
-   rows.push(...(result.value.rows||[])); errors.push(...(result.value.errors||[]));
+   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'radius discovery failed'));continue;}
+   rows.push(...(result.value.rows||[]));
+   errors.push(...(result.value.errors||[]));
  }
  return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpoints.length};
+}
+async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
+ return tiledRadiusOverpass(lat,lon,radius,types,searchTerm);
+}
+async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
+ const result=await tiledRadiusOverpass(lat,lon,radius,'restaurant|fast_food',searchTerm);
+ return{...result};
 }
 const KNOWN_RESTAURANT_WEBSITES={
   "mcdonald's":'https://www.mcdonalds.com',"taco bell":'https://www.tacobell.com',"wendy's":'https://www.wendys.com',"the thirsty goat":'https://www.thirstygoatsango.com',"johnny's big burger":'https://thebigburger.com',"edward's steakhouse":'https://www.edwardssteakhouse.net',"shelbys trio":'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street',"thirsty goat":'https://www.thirstygoatsango.com',"burger king":'https://www.bk.com',"kfc":'https://www.kfc.com',"chick fil a":'https://www.chick-fil-a.com',"popeyes":'https://www.popeyes.com',"subway":'https://www.subway.com',"sonic":'https://www.sonicdrivein.com',"arby's":'https://www.arbys.com',"whataburger":'https://whataburger.com',"five guys":'https://www.fiveguys.com',"culver's":'https://www.culvers.com',"raising cane's":'https://www.raisingcanes.com',"wingstop":'https://www.wingstop.com',"bojangles":'https://www.bojangles.com',"cook out":'https://www.cookout.com',"dairy queen":'https://www.dairyqueen.com',"zaxby's":'https://www.zaxbys.com',"church's chicken":'https://www.churchs.com',"captain d's":'https://www.captainds.com',"long john silver's":'https://www.ljsilvers.com',"jimmy john's":'https://www.jimmyjohns.com',"jersey mike's":'https://www.jerseymikes.com',"firehouse subs":'https://www.firehousesubs.com',"little caesars":'https://littlecaesars.com',"domino's":'https://www.dominos.com',"papa john's":'https://www.papajohns.com',"pizza hut":'https://www.pizzahut.com',"marco's pizza":'https://www.marcos.com',"krystal":'https://www.krystal.com',"steak 'n shake":'https://www.steaknshake.com',"white castle":'https://www.whitecastle.com',"freddy's":'https://www.freddys.com',"panda express":'https://www.pandaexpress.com',"jack in the box":'https://www.jackinthebox.com',"hardee's":'https://www.hardees.com',"del taco":'https://www.deltaco.com',"checkers":'https://www.checkers.com',"rally's":'https://www.rallys.com',"chipotle":'https://www.chipotle.com',"applebee's":'https://www.applebees.com',"chili's":'https://www.chilis.com',"olive garden":'https://www.olivegarden.com',"waffle house":'https://www.wafflehouse.com'
@@ -1431,10 +1454,9 @@ if(mode==='search'){
  const discoveryPlan=radiusDiscoveryPlan(lat,lon,radius);
   const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
  const primaryBudget=Math.max(2800,SEARCH_BUDGET_MS-(wideSearch?discoveryPlan.reserveMs:0));
- // For 100-mile searches, keep the primary providers anchored to their proven
- // 50-mile operating envelope. The wide geographic expansion comes from the
- // redundant Overpass discovery pass. This prevents 100-mile provider result
- // caps from replacing nearby restaurants with a biased subset of the huge box.
+ // Wide searches keep primary providers inside their proven 50-mile envelope.
+ // Deterministic tiled discovery fills the full selected geographic disk, and
+ // the final true-distance filter removes every out-of-radius row.
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
  const discoveryPromise=wideSearch
    ? wideRadiusOverpass(lat,lon,radius,searchTerm)
@@ -1457,9 +1479,9 @@ if(mode==='search'){
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   // Wide searches keep the fast providers anchored to 50 miles, while
-   // Overpass supplies the outer-radius coverage. Photon stays as one bounded
-   // 50-mile context lookup; the old multi-point Photon expansion is removed.
+   // Wide searches keep the fast providers anchored to 50 miles. Tiled Overpass
+   // discovery supplies full-radius coverage instead of relying on a single
+   // timeout-prone geographic query.
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
      withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
@@ -1523,7 +1545,7 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
 
- // CP1160: radius discovery is started before the provider searches and merged
+ // CP1168: deterministic tiled radius discovery is started after the fast provider pass and merged
  // before final matching. 10/25/50 mile searches therefore get an actual
  // geographic discovery layer instead of inheriting a 100-result provider cap.
  if(discoveryPromise){
