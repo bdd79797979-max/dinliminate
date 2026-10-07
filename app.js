@@ -1,3 +1,4 @@
+// CP1176: cumulative restaurant radius client merge layered onto rapid-swipe main.
 // CP1171: preserve the swipe transaction lock across card rebinds.
 // CP1170: make meal swipe handoff immediate for rapid swipes.
 // CP1067: stabilize first card and make All/Maybe counts derive from the actual choice catalog.\n// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
@@ -3672,10 +3673,17 @@ const radius = Math.min(100,Math.max(1,Number(options?.radius ?? $('radius')?.va
 S.restaurantSearchRadius=radius;
 const searchTerm = String(S.restaurantQuery||'').trim().slice(0,100);
 const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+radius+':'+normalizeRestaurantSearch(searchTerm);
- let replacingSearchTarget=false;
  const previousSearchKey=String(S.restaurantSearchKey||'');
- replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
- if(replacingSearchTarget){
+ const previousOrigin=S.restaurantSearchOrigin&&Number.isFinite(Number(S.restaurantSearchOrigin.lat))&&Number.isFinite(Number(S.restaurantSearchOrigin.lon))
+   ? {lat:Number(S.restaurantSearchOrigin.lat),lon:Number(S.restaurantSearchOrigin.lon)}
+   : null;
+ const sameLocationQuery=!!previousOrigin
+   && Math.abs(previousOrigin.lat-Number(loc.lat))<=0.0002
+   && Math.abs(previousOrigin.lon-Number(loc.lon))<=0.0002
+   && normalizeRestaurantSearch(String(S.restaurantSearchQuery||''))===normalizeRestaurantSearch(searchTerm);
+ const priorPool=sameLocationQuery?[...(S.restaurantPool||[])]:[];
+ let replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
+ if(replacingSearchTarget&&!sameLocationQuery){
    // CP1078: never leave the previous location/radius/query cards on screen
    // while a materially different restaurant search is being rebuilt.
    S.restaurantPool=[];
@@ -3707,7 +3715,12 @@ S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
  const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
  return Number.isFinite(dist) && dist<=radius+0.001;
 });
-S.restaurantPool = dedupeRestaurantPool(incomingRows).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
+// CP1173: same-location radius changes are cumulative rather than destructive.
+ const mergedRows=sameLocationQuery?[...priorPool,...incomingRows]:incomingRows;
+ S.restaurantPool = dedupeRestaurantPool(mergedRows).filter(row=>{
+   const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
+   return Number.isFinite(dist)&&dist<=radius+0.001;
+ }).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
 S.restaurantSearchOrigin = {lat:Number(loc.lat),lon:Number(loc.lon)};
 S.restaurantSearchKey = searchKey;
  S.restaurantSearchTimeZone=String(d.hoursTimeZone||'');
@@ -3730,7 +3743,7 @@ save();
 } catch (err) {
 if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
 S.restaurantSearchDegraded=true;
- if(replacingSearchTarget){
+ if(replacingSearchTarget&&!sameLocationQuery){
    S.restaurantSearchTimeZone='';
    S.restaurantSearchKey='';
    S.restaurantPool=[];
