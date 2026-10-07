@@ -2187,7 +2187,7 @@ async function setFoodNextCardImage(nextCard,view){
    img.src=url;
    try{await img.decode?.();}catch{}
   }catch{continue;}
-  if(img.naturalWidth>0 || String(img.currentSrc||img.src||'')===url){
+  if(img.naturalWidth>0){
    nextCard.dataset.foodImageSource=url;
    nextCard.dataset.foodImageReady='1';
    return true;
