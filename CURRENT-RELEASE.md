@@ -1,30 +1,24 @@
-# CURRENT RELEASE — BUILD 1056 / CP1056
+# CURRENT RELEASE — BUILD 1211 / CP1211
 
-Date: 2026-10-06
+Date: 2026-10-07
 
-## Restaurant Hours filter
+## Restaurant Open filter
 
-CP1056 adds a compact Restaurant Hours control beside Search and Cuisine.
+CP1211 simplifies the Restaurant hours control to one binary filter.
 
 The Restaurant discovery rail is now:
-**Search — Cuisine — Hours**
+**Search — Cuisine — Open**
 
-Hours choices:
-- **All** — keep all restaurants in the current pool
-- **Open** — keep restaurants with an available open-state signal showing open
-- **Closed** — keep restaurants with an available open-state signal showing closed
+**Open inactive** — all restaurants in the current pool. The word Open is crossed out.
 
-Hours filtering is local to the already-loaded restaurant pool. Selecting All/Open/Closed does not open Restaurant Details and does not make a Place Details request.
+**Open active** — only restaurants confirmed open now. The word Open is white and underlined.
 
-## Restaurant Cuisine
+Turning Open on uses the existing smart hours enrichment/cache. Turning it off does not run enrichment and returns to the full restaurant pool.
 
-Cuisine continues to use the current Restaurant Cuisine Cuts taxonomy already in the app:
-Fast Food, Burgers, Pizza, Mexican, American, Italian, Asian, BBQ, Seafood, Breakfast.
+The All restaurant count therefore represents all restaurants when Open is off, and only confirmed-open restaurants when Open is on.
 
-## Google protection
-
-The existing Google hard stops remain unchanged: Photos 900; Text Search Pro 4500; Nearby Search Pro 4500; Text Search Enterprise 900; Place Details Enterprise 900; Place Details Essentials 9000. Billing month follows America/Los_Angeles. Unknown durable budget tracking fails closed.
+Legacy saved Closed Now state is normalized to All.
 
 ## Recovery
 
-CP1045 remains the protected recovery anchor. CP1055 is the production baseline for this new CP1056 candidate. No CP1056 deployment has been made.
+CP1210 remains the functional baseline for this change. CP1211 is a UI/behavior simplification on top of the existing Open Now enrichment system. No production deployment was made.
