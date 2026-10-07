@@ -1266,39 +1266,43 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#home .home-slogan',title:'DINLIMINATE',body:'Swipe through meals or restaurants until you find what you want.'},
-  {target:'#home .home-choice-rail',title:'GET STARTED',body:'Tap Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot']}
+  {target:'#home .home-choice-rail',title:'CHOOSE YOUR PATH',body:'Start with Home for meal ideas or Restaurant to find a place to eat. Tap either window to begin.',action:'home-choice',avoid:['#home .home-foot']},
+  {target:'#home .home-foot',title:'QUICK TOOLS',body:'Add Dinliminate to your phone, share the app, or replay this Tour anytime.',avoid:['#home .home-choice-rail']}
  ];
  if(screen==='food')return[
-  {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},
-  {target:'#foodCut',title:'CUT',body:'Remove this meal.'},
-  {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
-  {target:'#foodChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
-  {target:'#foodDetails',title:'Details',body:'See more about this meal.'},
-  {target:'#foodMealTimeToggle',title:'Meal Times',body:'Narrow down by meal time.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
-  {target:'#foodQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
-  {target:'#foodMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining meals and Maybes. See how many choices remain.'},
-  {target:'#foodMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
-  {target:'#foodMenu',title:'ENTER RESTAURANT',body:'Tap this tutorial bubble to continue through the Restaurant side of Dinliminate.',action:'enter-restaurant'}
+  {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left to Cut it or right for Maybe.'},
+  {target:'#foodCut',title:'CUT',body:'Remove the current meal from this round.'},
+  {target:'#foodMaybe',title:'MAYBE',body:'Keep the meal in consideration for your final choice.'},
+  {target:'#foodBack',title:'BACK',body:'Undo your most recent meal decision and return to the previous card.'},
+  {target:'#foodChoose',title:'CHOOSE',body:'Choose the current meal immediately and see your winner.',action:'choose'},
+  {target:'#foodDetails',title:'DETAILS',body:'Open the meal details, including nutrition, ingredients, notes, and photos.'},
+  {target:'#foodMealTimeToggle',title:'MEAL TIMES',body:'Show the Meal Times filters to narrow the deck to Breakfast, Lunch / Dinner, Snacks / Desserts, or your custom meal times.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
+  {target:'#foodQuickToggle',title:'CUISINE',body:'Open Cuisine to narrow the deck by cuisine type.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
+  {target:'#foodMaybeDeck',title:'ALL · MAYBES · COUNT',body:'Switch between all remaining meals and your Maybes, while keeping track of how many choices remain.'},
+  {target:'#foodMenu',title:'MENU',body:'Open the menu for Manage Meals, History, Settings, Family Mode, and more.',avoid:['#drawer']},
+  {target:'#foodMenu',title:'NEXT: RESTAURANTS',body:'Tap this Tour message to continue to the Restaurant side of Dinliminate.',action:'enter-restaurant'}
  ];
  if(screen==='restaurant')return[
-  {target:'#locate',title:'Current Location',body:'Use your current location.'},
-  {target:'#address',title:'Address Search',body:'Search from an address.'},
-  {target:'#find',title:'Refresh',body:'Refresh your restaurant results.'},
-  {target:'#radius',title:'Radius',body:'Choose how far to search.'},
-  {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.'},
-  {target:'#restCut',title:'CUT',body:'Remove this restaurant.'},
-  {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
-  {target:'#restChoose',title:'Choose',body:'Make your decision early.',action:'choose'},
-  {target:'#restaurantSearchToggle',title:'Restaurant Search',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
-  {target:'#restaurantQuickToggle',title:'Cuisine',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
-   {target:'#restaurantHoursToggle',title:'Open Now',body:'Show restaurants that are open now, closed now, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
-  {target:'#restaurantMaybeDeck',title:'All / Maybes / Count',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
-  {target:'#restaurantMenu',title:'Menu',body:'This opens the app menu.',avoid:['#drawer']},
-  {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this tutorial bubble to continue through the Meals side of Dinliminate.',action:'enter-food'}
+  {target:'#locate',title:'CURRENT LOCATION',body:'Use your current location to search for nearby restaurants.'},
+  {target:'#address',title:'ADDRESS',body:'Enter an address to search from a different starting point.'},
+  {target:'#find',title:'FIND RESTAURANTS',body:'Run the restaurant search using your selected location, radius, and filters.'},
+  {target:'#radius',title:'RADIUS',body:'Choose how far from the search location to look: 1, 3, 5, 10, 25, 50, or 100 miles.'},
+  {target:'#restaurantCard',title:'RESTAURANT CARD',body:'This is the restaurant you are deciding on. Swipe left to Cut it or right for Maybe.'},
+  {target:'#restCut',title:'CUT',body:'Remove the current restaurant from this round.'},
+  {target:'#restMaybe',title:'MAYBE',body:'Keep the restaurant in consideration for your final choice.'},
+  {target:'#restBack',title:'BACK',body:'Undo your most recent restaurant decision and return to the previous card.'},
+  {target:'#restChoose',title:'CHOOSE',body:'Choose the current restaurant immediately and see your winner.',action:'choose'},
+  {target:'#restaurantSearchToggle',title:'SEARCH',body:'Open Search to look for a specific restaurant or cuisine.',avoid:['#restaurantSearchBox']},
+  {target:'#restaurantQuickToggle',title:'CUISINE',body:'Open Cuisine to narrow the restaurant deck by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
+  {target:'#restaurantHoursToggle',title:'OPEN NOW',body:'Use this filter to show restaurants that are open now, closed now, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
+  {target:'#restaurantMaybeDeck',title:'ALL · MAYBES · COUNT',body:'Switch between all remaining restaurants and your Maybes, while keeping track of how many choices remain.'},
+  {target:'#restaurantMenu',title:'MENU',body:'Open the menu for Manage Meals, History, Settings, Family Mode, and more.',avoid:['#drawer']},
+  {target:'#restaurantMenu',title:'NEXT: MEALS',body:'Tap this Tour message to return to the Meals side of Dinliminate.',action:'enter-food'}
  ];
  if(screen==='winner')return[
-  {target:'#restart',title:'START OVER',body:'Tap Start Over to return to this decision path and continue the tutorial.',action:'winner-restart'}
+  {target:'#details',title:'WINNER DETAILS',body:'Open the winner details for the meal or restaurant you selected.'},
+  {target:'#share',title:'SHARE',body:'Share your winner with someone else.'},
+  {target:'#restart',title:'START OVER',body:'Return to the decision path and continue the Tour.',action:'winner-restart'}
  ];
  return[];
 }
