@@ -1254,6 +1254,58 @@ function requestQuery(req){
  }
  try{return new URL(String(req?.url||'/'),'https://dinliminate.local').searchParams}catch{return new URLSearchParams()}
 }
+function photonRow(feature,origin){
+ const p=feature?.properties||{},c=feature?.geometry?.coordinates||[],lon=n(c[0]),lat=n(c[1]),name=String(p.name||p.label||'').split(',')[0].trim();
+ if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+ const osmValue=String(p.osm_value||'').toLowerCase(),amenity=String(p.type||p.osm_key||'').toLowerCase(),fast=osmValue==='fast_food'||amenity==='fast_food'||isFastFoodName(name,String(p.brand||''),String(p.operator||''));
+ const website=String(p.website||p.url||'').trim(),dist=miles(origin.lat,origin.lon,lat,lon);
+ return {id:p.osm_id?'photon-'+p.osm_id:'photon-'+norm(name)+'-'+lat.toFixed(5)+'-'+lon.toFixed(5),name,category:fast?'Fast Food':(String(p.cuisine||'').trim()||'Restaurant'),fastFood:fast,cuisine:String(p.cuisine||''),providerType:String(p.osm_value||p.osm_key||p.type||''),address:[p.street,p.housenumber,p.city||p.town||p.village,p.state,p.postcode].filter(Boolean).join(', '),phone:String(p.phone||''),website:(/^https?:/.test(website)?website:(website?'https://'+website:'')),opening_hours:String(p.opening_hours||''),hoursSource:String(p.opening_hours||'')?'OpenStreetMap':'',lat,lon,distance:dist,photo:String(p.image||p.image_url||''),menuItems:[p.dish,p['dish:name'],p.menu_items,p['menu:items']].flatMap(v=>String(v||'').split(/[|;•,]/)).map(x=>x.trim()).filter(Boolean).slice(0,10),brand:String(p.brand||''),source:'Photon POI'};
+}
+async function photonPlaces(lat,lon,radius,searchTerm=''){
+ const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180))),bbox=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
+ const limit=radius>25?'250':'120',term=normalizeSearchQuery(searchTerm);
+ const terms=providerSearchTerms(term);
+ const base=[];
+ for(const qTerm of terms){
+   base.push(new URLSearchParams({q:qTerm||'restaurant',osm_tag:'amenity:restaurant',bbox,limit,lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
+   base.push(new URLSearchParams({q:qTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit,lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
+ }
+ const rows=[],errors=[];
+ const consume=(result)=>{if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));return}for(const feature of result.value?.features||[]){const pv=feature?.properties||{},ov=String(pv.osm_value||'').toLowerCase(),ok=String(pv.osm_key||'').toLowerCase();if(ok==='amenity'&&!DINING_AMENITIES.split('|').includes(ov)&&!FAST.test(String(pv.name||pv.brand||pv.operator||'')))continue;const row=photonRow(feature,{lat,lon});if(row&&row.distance<=radius&&!isClearlyNonDiningBusiness(row))rows.push(row)}};
+ for(const result of await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},2200))))consume(result);
+ const primaryFastCount=rows.filter(r=>r.fastFood).length;
+ const missingKnown=!term && radius<=25 && rows.length===0 ? TARGETED_FAST.filter(name=>!rows.some(r=>norm(r.name)===norm(name)||norm(r.name).includes(norm(name)))).slice(0,3) : [];
+ if(missingKnown.length){
+   const qs=missingKnown.map(q=>new URLSearchParams({q,bbox,limit:'10',lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
+   for(const result of await Promise.allSettled(qs.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},1800))))consume(result);
+ }
+ return {rows,errors};
+}
+
+async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=2400){
+ const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+ const extent=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
+ const terms=providerSearchTerms(searchTerm),categories=['Restaurant','Fast Food'],rows=[],errors=[];
+ const jobs=[];
+ for(const category of categories)for(const term of terms)jobs.push((async()=>{
+   const params=new URLSearchParams({SingleLine:term,category,location:lon+','+lat,searchExtent:extent,maxLocations:'50',outFields:'PlaceName,Type,Place_addr,City,Region,Country,Phone,URL',forStorage:'false',f:'json'});
+   return {category,data:await json('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?'+params.toString(),{},timeout)};
+ })());
+ const results=await Promise.allSettled(jobs);
+ for(const result of results){
+   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));continue}
+   const category=result.value.category;
+   for(const cand of result.value.data?.candidates||[]){
+     const a=cand?.location||{},cl=n(a.y),cn=n(a.x),attrs=cand?.attributes||{},name=String(attrs.PlaceName||cand.address||'').trim();
+     if(!name||!Number.isFinite(cl)||!Number.isFinite(cn))continue;
+     const fast=category==='Fast Food'||isFastFoodName(name,String(attrs.Type||''));
+     const row={id:'arcgis-'+norm(name)+'-'+cl.toFixed(5)+'-'+cn.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',providerType:String(attrs.Type||''),address:String(attrs.Place_addr||cand.address||''),phone:String(attrs.Phone||attrs.phone||''),website:String(attrs.URL||attrs.Url||attrs.url||''),opening_hours:'',lat:cl,lon:cn,distance:miles(lat,lon,cl,cn),photo:'',menuItems:[],brand:'',source:'ArcGIS POI'};
+     if(row.distance<=r&&!isClearlyNonDiningBusiness(row))rows.push(row);
+   }
+ }
+ return {rows,errors};
+}
+
 async function radiusEngineProviderQuery({tile,origin,radiusMiles,searchTerm=''}) {
   const firstMirror=tile?.r && Number.isFinite(Number(tile.r))
     ? Math.abs(Number(tile.r)) % OVERPASS.length
