@@ -2470,6 +2470,9 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
+ const cardIdentity=()=>String(card.dataset.mealId||card.dataset.restaurantPhotoKey||'');
+ const nextIdentity=()=>String(next?.dataset.mealId||next?.dataset.swipePreviewKey||next?.querySelector?.('img')?.dataset?.restaurantPhotoKey||'');
+ let quarantinedSwipeId='';
 
  // CP988: one physical gesture = one transaction. A committed card is
  // immediately removed from pointer input until its handoff is complete.
@@ -2572,6 +2575,8 @@ const completeAfterExit=async ()=>{
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
+  const outgoingId=quarantinedSwipeId||String(card.dataset.swipeOutgoingId||'');
+  card.dataset.swipeOutgoingId=outgoingId;
   // CP1181: snapshot the waiting card before action() can redraw/rebind it.
   const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
   const promotedImg=foodHandoff?next?.querySelector('img'):null;
@@ -2604,7 +2609,7 @@ const completeAfterExit=async ()=>{
      // CP1181: use the pre-action snapshot as the handoff source of truth.
      const recycledImg=card.querySelector('img');
      const currentMealId=String(S.pool?.[S.index]?.id||'');
-     if(currentMealId===promotedMealId){
+     if(currentMealId===promotedMealId && currentMealId!==outgoingId){
       if(recycledImg){
        if(promotedSrc)recycledImg.src=promotedSrc;
        if(promotedAlt)recycledImg.alt=promotedAlt;
@@ -2632,8 +2637,10 @@ const completeAfterExit=async ()=>{
      card.classList.remove('swipe-active');
      card.style.transition='none';
      card.style.transform='none';
-     card.style.opacity='1';
-     card.style.visibility='visible';
+     const reboundId=String(card.dataset.mealId||'');
+     const canRevealRebound=!!reboundId&&reboundId!==outgoingId;
+     card.style.opacity=canRevealRebound?'1':'0';
+     card.style.visibility=canRevealRebound?'visible':'hidden';
      card.style.removeProperty('--swipe-tint-alpha');
      card.dataset.swipe='';
      card.dataset.swipePhase='idle';
@@ -2643,6 +2650,8 @@ const completeAfterExit=async ()=>{
      card.style.pointerEvents='auto';
      card.dataset.swipeTransaction='';
      card.dataset.swipePhase='idle';
+     card.dataset.swipeOutgoingId='';
+     quarantinedSwipeId='';
     }
    }else{
     if(card.isConnected){
@@ -2674,6 +2683,8 @@ const completeAfterExit=async ()=>{
   const magnitude=clamp(Math.abs(speed),0,2.4);
   const duration=Math.round(clamp(198-(magnitude*42),132,198));
   const direction=dx<0?-1:1;
+  quarantinedSwipeId=cardIdentity();
+  card.dataset.swipeOutgoingId=quarantinedSwipeId;
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
   card.classList.remove('swipe-active');
@@ -2684,10 +2695,10 @@ const completeAfterExit=async ()=>{
   if(next){
    const revealPromotedNext=()=>{
     if(!next.isConnected)return;
-    const nextMealId=String(next.dataset.mealId||'');
-    const activeMealId=String(card.dataset.mealId||'');
-    // CP1181: card identity, not image readiness, controls promotion.
-    if(staticWaitingCard&&(!nextMealId||nextMealId===activeMealId))return;
+    const nextMealId=nextIdentity();
+    const activeMealId=quarantinedSwipeId||cardIdentity();
+    // CP1190: never promote a waiting card that still represents the outgoing item.
+    if(!nextMealId||nextMealId===activeMealId||nextMealId===quarantinedSwipeId)return;
     next.dataset.swipePromoted='1';
     next.style.transition='none';
     next.style.transform=staticWaitingCard?'none':'scale(1)';
