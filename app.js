@@ -2786,6 +2786,17 @@ const completeAfterExit=async ()=>{
   completionTimer=window.setTimeout(completeAfterExit,duration+180);
  };
 
+ // CP1222: button decisions use the exact same off-screen commit path as a drag.
+ // This preserves the existing handoff lifecycle while making Cut/Maybe feel
+ // like a real swipe instead of instantly removing the card.
+ card.__triggerSwipeDecision=(direction)=>{
+  if(phase!=='idle')return false;
+  const dir=Number(direction)<0?-1:1;
+  const distance=Math.max(48,swipeThreshold);
+  commit(dir*distance,0);
+  return true;
+ };
+
  const paintMove=()=>{
   moveFrame=null;
   if(phase!=='dragging')return;
@@ -4120,6 +4131,10 @@ function bindCardButton(id,handler){
    tutorialMarkChoose(id==='restChoose'?'restaurant':'food');
   }
   try{
+   const swipeCardId=(id==='foodCut'||id==='foodMaybe')?'foodCard':(id==='restCut'||id==='restMaybe')?'restaurantCard':'';
+   const swipeDecision=(id==='foodCut'||id==='restCut')?-1:(id==='foodMaybe'||id==='restMaybe')?1:0;
+   const swipeCard=swipeCardId?$(swipeCardId):null;
+   if(swipeDecision&&swipeCard?.__triggerSwipeDecision?.(swipeDecision))return;
    const result=handler?.(e);
    if(result&&typeof result.catch==='function')result.catch(()=>{});
   }catch{}
