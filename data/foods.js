@@ -513,7 +513,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.pexels.com/photos/6605654/pexels-photo-6605654.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1764756994472-e39e36c43ffe?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "ground beef",
       "breadcrumbs",
@@ -824,7 +824,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.pexels.com/photos/30518060/pexels-photo-30518060.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1572171579626-e79450374587?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "beef",
       "tomatoes",
@@ -1696,7 +1696,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/6659689/pexels-photo-6659689.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1632848129232-f816b590e5e3?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "bread",
       "peanut butter",
@@ -1993,7 +1993,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/19202817/pexels-photo-19202817.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1722041220514-f6a26e286f2e?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "bread",
       "bacon",
@@ -2683,7 +2683,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "American"
     ],
-    "image": "https://images.pexels.com/photos/5491281/pexels-photo-5491281.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1732850430367-93eb6c2d5484?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "ham",
       "mashed potatoes",
@@ -2884,7 +2884,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/13689827/pexels-photo-13689827.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1640290982696-758e885f1859?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "roast beef",
       "sandwich bread",

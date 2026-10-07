@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1235 / CP1235
+# CURRENT RELEASE — BUILD 1237 / CP1237
 
 Date: 2026-10-07
 
@@ -79,3 +79,7 @@ CP1210 remains the functional baseline for this change. CP1211 is a UI/behavior 
 ## Card name sizing
 
 CP1235 increases the Meal and Restaurant decision-card name text by approximately 50% (from 30px to 45px). Card geometry, upper controls, swipe behavior, and Tutorial behavior are unchanged.
+
+## Meal photo refresh — Unsplash pass
+
+CP1237 tests free Unsplash candidates against the requested meal-photo list. The clearly better matches now used in the catalog are Meatloaf & Mashed Potatoes, Peanut Butter & Jelly Sandwich & Chips, BLT, Ham Dinner, Roast Beef Sandwich & Chips, and Southern Vegetable Beef Soup. The remaining requested meals were intentionally retained because no free Unsplash result was clearly better or faithful enough to replace the current photo.
