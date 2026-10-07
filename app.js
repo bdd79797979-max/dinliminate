@@ -827,40 +827,50 @@ async function waitForRestaurantPhotoDecoded(url,timeoutMs=2500){
 async function prepareRestaurantPhotoDeck(rows,startIndex=0,needed=RESTAURANT_PHOTO_PREFETCH_COUNT+1){
  const source=Array.isArray(rows)?rows:[];
  if(!source.length||navigator.onLine===false)return {firstId:'',readyIds:[]};
+
+ // CP1214: photo readiness must never remove a restaurant from the
+ // decision pool or change the ALL/MAYBES count. Keep media failures as
+ // presentation state only, while the choice pool remains filter-driven.
+ const basePool=()=>restaurantPoolFiltered();
+ const candidates=()=>basePool().filter(row=>!row._photoUnavailable);
  let cursor=Math.max(0,Math.min(Number(startIndex)||0,Math.max(0,source.length-1)));
  const readyIds=[];
+ const tried=new Set();
  let safety=0;
- while(readyIds.length<needed&&safety<source.length+needed+4){
-  const pool=restaurantPoolFiltered();
+
+ while(readyIds.length<needed&&safety<source.length+needed+8){
+  const pool=candidates();
   if(!pool.length)break;
-  cursor=Math.max(0,Math.min(cursor,Math.max(0,pool.length-1)));
-  const batchSize=Math.min(needed-readyIds.length,Math.max(1,pool.length-cursor));
-  const batch=pool.slice(cursor,cursor+batchSize);
-  if(!batch.length)break;
-  const results=await Promise.all(batch.map(async row=>{
-   const data=await loadRestaurantPhoto(row).catch(()=>null);
-   if(!data?.url)return false;
-   return await waitForRestaurantPhotoDecoded(data.url);
-  }));
-  let failed=0;
-  results.forEach((ok,i)=>{
-   const row=batch[i];
-   if(ok)readyIds.push(row.id);
-   else{
-    row._photoUnavailable=true;
-    row._photoUnavailableAt=Date.now();
-    failed++;
+
+  let nextIndex=-1;
+  for(let i=Math.max(0,Math.min(cursor,pool.length-1));i<pool.length;i++){
+   if(!tried.has(String(pool[i]?.id||''))){nextIndex=i;break;}
+  }
+  if(nextIndex<0){
+   for(let i=0;i<Math.min(cursor,pool.length);i++){
+    if(!tried.has(String(pool[i]?.id||''))){nextIndex=i;break;}
    }
-  });
-  cursor=cursor+batch.length-failed;
-  safety+=batch.length;
-  if(cursor>=restaurantPoolFiltered().length)break;
+  }
+  if(nextIndex<0)break;
+
+  const row=pool[nextIndex];
+  tried.add(String(row?.id||''));
+  const data=await loadRestaurantPhoto(row).catch(()=>null);
+  const ok=!!data?.url&&await waitForRestaurantPhotoDecoded(data.url);
+  if(ok)readyIds.push(row.id);
+  else{
+   row._photoUnavailable=true;
+   row._photoUnavailableAt=Date.now();
+  }
+
+  cursor=nextIndex+1;
+  safety++;
  }
- const currentPool=restaurantPoolFiltered();
+
+ const currentPool=basePool();
  const first=currentPool.find(row=>readyIds.includes(row.id));
  return {firstId:String(first?.id||''),readyIds};
 }
-
 async function primeRestaurantPhotosBeforeFirstPaint(rows,startIndex=0){
  const pool=Array.isArray(rows)?rows:[];
  if(navigator.onLine===false)return;
@@ -1693,7 +1703,9 @@ function setMaybeDeck(kind, enabled){
 }
 function allChoiceRows(kind){
  if(kind==='food')return foodBasePool();
- return restaurantPoolHourFiltered().filter(row=>!row._photoUnavailable);
+ // CP1214: ALL is the decision pool, not the photo-readiness pool.
+ // A missing/unavailable photo must never lower the restaurant count.
+ return restaurantPoolHourFiltered();
 }
 function choiceDeckRows(kind){
  const all=allChoiceRows(kind);
@@ -3326,7 +3338,8 @@ function restaurantPoolBase(){
  });
 }
 function restaurantPoolFiltered(){
- const base=restaurantPoolHourFiltered().filter(row=>!row._photoUnavailable);
+ // CP1214: photo readiness is presentation-only and cannot remove choices.
+ const base=restaurantPoolHourFiltered();
  return S.maybeDeck ? base.filter(row=>row._maybe) : base;
 }
 function updateRestaurantStatus(){
