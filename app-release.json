@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1225,
+  "build": 1226,
   "sourceBranch": "fix/cp1218-swipe-polish",
-  "checkpoint": "CP1225",
+  "checkpoint": "CP1226",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1223-swipe-button-activation-fix",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1225 Fish Sticks last + Tour swipe guidance + CP1224 meal photo refresh + CP1223 Cut/Maybe button activation fix + CP1222 swipe button exit polish + CP1221 meal photo refresh + CP1220 swipe polish + CP1217 Restaurant Cuisine Cuts + CP1215 All/Maybes count fix",
+  "currentBaseline": "CP1226 Home Tour correction + CP1225 Fish Sticks last + Tour swipe guidance + CP1224 meal photo refresh + CP1223 Cut/Maybe button activation fix + CP1222 swipe button exit polish",
   "mealImageSystem": "CP1224 refreshed 6 weaker requested meal photos using approved Pexels hosts; 6 additional requested photos retained because available approved-host alternatives were not clearly better",
-  "tourAudit": "CP1225-current-meal-and-restaurant-swipe-guidance"
+  "tourAudit": "CP1226-home-tour-control-by-control"
 }
