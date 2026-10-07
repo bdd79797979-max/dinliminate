@@ -1,5 +1,5 @@
-const CACHE='dinliminate-shell-v1149';
-const IMAGE_CACHE='dinliminate-images-v4';
+const CACHE='dinliminate-shell-v1154';
+const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
 // CP1070 — Shell cache bump for Restaurant refine controls and tutorial home navigation.
@@ -167,7 +167,7 @@ async function touchCachedImage(req){
   }catch{}
 }
 
-const SHELL=['./','./index.html','./viewport.js?v=1092','./styles.css?v=1092','./app.js?v=1092','./logo.svg?v=1092','./data/foods.js?v=1149','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./app-icon.svg?v=1137','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./viewport.js?v=1092','./styles.css?v=1092','./app.js?v=1154','./logo.svg?v=1092','./data/foods.js?v=1154','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./app-icon.svg?v=1137','./fallback-food.svg','./fallback-restaurant.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([
@@ -198,6 +198,11 @@ self.addEventListener('fetch',event=>{
   if(url.origin!==self.location.origin&&!isImageRequest&&!imageHosts.includes(url.hostname))return;
 
   if(url.origin===self.location.origin&&url.pathname==='/api/image'){
+    const isMealImage=url.searchParams.get('meal')==='1';
+    if(isMealImage){
+      event.respondWith(fetch(req).catch(()=>Response.error()));
+      return;
+    }
     event.respondWith(
       caches.open(IMAGE_CACHE).then(cache=>
         cache.match(req).then(cached=>{

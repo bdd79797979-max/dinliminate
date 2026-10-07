@@ -29,11 +29,18 @@ module.exports=async function handler(req,res){
     if(u.protocol!=='https:'||!ALLOWED_HOSTS.has(u.hostname))return res.status(403).json({ok:false,error:'Image host not allowed'});
     const ctl=new AbortController();
     const timer=setTimeout(()=>ctl.abort(),8000);
-    let r;
+    let r,current=u;
     try{
-      r=await fetch(u.href,{signal:ctl.signal,redirect:'error',headers:{Accept:'image/webp,image/jpeg,image/png,image/apng,image/svg+xml,image/*;q=0.8,*/*;q=0.5'}});
+      for(let redirectCount=0;redirectCount<=3;redirectCount++){
+        if(current.protocol!=='https:'||!ALLOWED_HOSTS.has(current.hostname))throw new Error('Redirected image host not allowed');
+        r=await fetch(current.href,{signal:ctl.signal,redirect:'manual',headers:{Accept:'image/webp,image/jpeg,image/png,image/apng,image/svg+xml,image/*;q=0.8,*/*;q=0.5'}});
+        if(r.status<300||r.status>=400)break;
+        const location=r.headers.get('location');
+        if(!location||redirectCount===3)throw new Error('Too many image redirects');
+        current=new URL(location,current.href);
+      }
     }finally{clearTimeout(timer);}
-    if(!r.ok)return res.status(502).json({ok:false,error:'Upstream image unavailable'});
+    if(!r||!r.ok)return res.status(502).json({ok:false,error:'Upstream image unavailable'});
     const type=(r.headers.get('content-type')||'').split(';')[0].toLowerCase();
     if(!type.startsWith('image/'))return res.status(415).json({ok:false,error:'Upstream content is not an image'});
     const length=Number(r.headers.get('content-length')||0);
@@ -41,7 +48,8 @@ module.exports=async function handler(req,res){
     const data=Buffer.from(await r.arrayBuffer());
     if(data.length>MAX_BYTES)return res.status(413).json({ok:false,error:'Image too large'});
     res.setHeader('Content-Type',type);
-    res.setHeader('Cache-Control','public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
+    const isMealImage=String(req.query?.meal||'')==='1';
+    res.setHeader('Cache-Control',isMealImage?'no-store':'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
     res.setHeader('X-Content-Type-Options','nosniff');
     res.setHeader('Cross-Origin-Resource-Policy','same-origin');
     res.setHeader('Referrer-Policy','no-referrer');
