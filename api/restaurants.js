@@ -20,9 +20,9 @@ const WIDE_DISCOVERY_TIMEBOX_MS=12000;
 const RADIUS_DISCOVERY_TIMEBOX_MS=11500;
 const OVERPASS_HTTP_TIMEOUT_MS=5500;
 const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=2200;
-const RADIUS_OVERPASS_FAST_TIMEOUT_MS=3600;
-const RADIUS_EXPANSION_CONCURRENCY=3;
-const PHOTON_EXPANSION_CONCURRENCY=2;
+const RADIUS_OVERPASS_FAST_TIMEOUT_MS=5500;
+const RADIUS_EXPANSION_CONCURRENCY=7;
+const PHOTON_EXPANSION_CONCURRENCY=6;
 const WIDE_OVERPASS_GROUP_SIZE=1;
 const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
@@ -274,12 +274,9 @@ function radiusExpansionCenters(lat,lon,radius){
 async function radiusOverpassExpansion(lat,lon,radius,searchTerm=''){
  const points=radiusExpansionCenters(lat,lon,radius);
  if(!points.length)return{rows:[],errors:[],tiles:0,provider:'none'};
- // CP1189: never send a giant multi-tile Overpass query. Large combined
- // requests were timing out/aborting on the public mirrors, which caused
- // 25/50-mile searches to collapse back to the 10-mile provider floor.
- // Query one geographic tile at a time with bounded concurrency and a
- // second mirror fallback for each tile. The final origin-distance filter
- // remains authoritative, so partial mirror success is still useful.
+ // CP1190: retain CP1168's proven per-tile fan-out, but keep each tile
+ // independent and exact-distance filtered. Public mirrors are tried in
+ // sequence per tile so one slow mirror cannot poison every tile.
  const rows=[],errors=[];
  let cursor=0;
  const workers=Array.from({length:Math.min(RADIUS_EXPANSION_CONCURRENCY,points.length)},async()=>{
@@ -299,7 +296,6 @@ async function radiusOverpassExpansion(lat,lon,radius,searchTerm=''){
  await Promise.all(workers);
  return{rows:dedupe(rows),errors,tiles:points.length,provider:'Overpass tiled mirrors'};
 }
-
 async function photonRadiusExpansion(lat,lon,radius,searchTerm=''){
  const points=radiusExpansionCenters(lat,lon,radius),rows=[],errors=[];
  if(!points.length)return{rows,errors,tiles:0,provider:'none'};
@@ -1641,7 +1637,7 @@ if(mode==='search'){
          }
          return {rows:dedupe(rows),errors};
        }),
-       Math.min(RADIUS_DISCOVERY_TIMEBOX_MS,8500),
+       Math.min(RADIUS_DISCOVERY_TIMEBOX_MS,11500),
        'Radius discovery timed out'
      )
    : null;
