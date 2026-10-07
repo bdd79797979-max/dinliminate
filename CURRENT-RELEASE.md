@@ -83,3 +83,7 @@ CP1235 increases the Meal and Restaurant decision-card name text by approximatel
 ## Meal photo refresh — Unsplash pass
 
 CP1237 tests free Unsplash candidates against the requested meal-photo list. The clearly better matches now used in the catalog are Meatloaf & Mashed Potatoes, Peanut Butter & Jelly Sandwich & Chips, BLT, Ham Dinner, Roast Beef Sandwich & Chips, and Southern Vegetable Beef Soup. The remaining requested meals were intentionally retained because no free Unsplash result was clearly better or faithful enough to replace the current photo.
+
+## Swipe continuation correction — CP1238
+
+CP1238 changes the committed Meal and Restaurant swipe exit so the active card stays fully visible and continues from the exact finger-release position all the way off-screen. The release position is flushed synchronously before the animation starts, the destination is calculated from the card's actual viewport edges, and the card no longer fades out during the exit. The exit runs longer and remains locked until the transform finishes, reducing fast-swipe race conditions and the premature-disappear effect. The existing waiting-card and handoff lifecycle is unchanged.

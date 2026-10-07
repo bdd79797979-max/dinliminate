@@ -2729,22 +2729,18 @@ const completeAfterExit=async ()=>{
   completeAfterExit();
  }
 
- const commit=(dx,speed=0)=>{
+ const commit=(dx,speed=0)=>{ 
   if(phase!=='dragging')return;
-
-   cancelMoveFrame();
+  cancelMoveFrame();
   phase='committing';
   card.dataset.swipePhase='committing';
   card.dataset.swipeTransaction='active';
   card.style.pointerEvents='none';
   hapticTriggered=false;
-  suppressClickUntil=Date.now()+500;
+  suppressClickUntil=Date.now()+700;
   releasePointer();
 
   const width=cardWidth();
-  const exitDistance=Math.max(Math.ceil(window.innerWidth*1.25),Math.ceil(width*1.45),560);
-  const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(170-(magnitude*34),112,170));
   const direction=dx<0?-1:1;
   const decisionKind=cardId==='foodCard'?'food':'restaurant';
   const decisionId=decisionKind==='food'
@@ -2753,16 +2749,33 @@ const completeAfterExit=async ()=>{
   const decisionRow=decisionKind==='food'
     ?S.pool.find(item=>String(item?.id||'')===decisionId)
     :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
-  // CP1218 — count feedback lands at the exact commit point. The real
-  // mutation/redraw still waits for the existing safe card handoff.
+  // CP1218/CP1238 — keep count feedback at the exact commit point while
+  // the actual data mutation waits for the completed visual handoff.
   previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe:false);
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
   card.dataset.swipeTransaction='active';
-  card.classList.remove('swipe-active');
-  card.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1),opacity '+duration+'ms ease';
+
+  // CP1238 — flush the exact release position before starting the exit
+  // animation. This prevents a fast pointer release from animating out of a
+  // stale requestAnimationFrame frame and looking like the card vanished.
+  const releaseAbs=Math.abs(dx);
+  const releaseRotation=direction*clamp((releaseAbs/width)*11,0,11);
+  card.style.transition='none';
   card.style.opacity='1';
-  card.style.transform='translate3d('+(direction*exitDistance)+'px,0,0) rotate('+(direction*11)+'deg)';
+  card.style.visibility='visible';
+  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+releaseRotation.toFixed(2)+'deg)';
+  card.style.setProperty('--swipe-tint-alpha',String(clamp(releaseAbs/(Math.max(72,swipeThreshold)*2.7),0,.26)));
+
+  // Measure the already-moved card so the destination is based on the actual
+  // viewport edges. The card therefore continues from the finger's exact
+  // release point until its whole surface clears the screen.
+  const rect=card.getBoundingClientRect();
+  const edgePadding=48;
+  const remaining=direction<0 ? (rect.right+edgePadding) : (window.innerWidth-rect.left+edgePadding);
+  const targetX=direction<0 ? (dx-remaining) : (dx+remaining);
+  const magnitude=clamp(Math.abs(speed),0,2.4);
+  const duration=Math.round(clamp(285-(magnitude*36),200,285));
 
   if(next&&!staticWaitingCard){
    const revealPromotedNext=()=>{
@@ -2785,9 +2798,20 @@ const completeAfterExit=async ()=>{
 
   dismissSwipeHint();
   card.addEventListener('transitionend',handleTransitionEnd);
-  completionTimer=window.setTimeout(completeAfterExit,duration+180);
- };
 
+  // CP1238 — defer one paint so the browser has a real from-position before
+  // applying the off-screen destination. No opacity fade is used: the card
+  // stays fully visible until its transform has completed.
+  requestAnimationFrame(()=>{
+   if(phase!=='committing'||!card.isConnected)return;
+   requestAnimationFrame(()=>{
+    if(phase!=='committing'||!card.isConnected)return;
+    card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
+    card.style.transform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
+    completionTimer=window.setTimeout(completeAfterExit,duration+650);
+   });
+  });
+ };
  // CP1222: button decisions use the exact same off-screen commit path as a drag.
  // This preserves the existing handoff lifecycle while making Cut/Maybe feel
  // like a real swipe instead of instantly removing the card.
