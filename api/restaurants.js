@@ -5,7 +5,7 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const {runRadiusEngine}=require('../lib/radius-engine');
 const MAX_RADIUS=100;
-const API_VERSION='r48';
+const API_VERSION='r49';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -16,6 +16,10 @@ const SEARCH_BUDGET_MS=15000;
 const RADIUS_OVERPASS_FAST_TIMEOUT_MS=5500;
 const RADIUS_ENGINE_CONCURRENCY=7;
 const MAX_SEARCH_PER_MINUTE=60;
+const OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS=Math.max(1,Number.parseInt(process.env.GOOGLE_OPEN_NOW_ENRICH_LIMIT||'36',10)||36);
+const HOURS_MEMORY_CACHE_TTL=10*60*1000;
+const HOURS_MEMORY_NEGATIVE_TTL=3*60*1000;
+const hoursResolutionCache=new Map();
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
 async function withinBudget(promise,ms,label){
@@ -92,7 +96,7 @@ async function googleBudgetedJson(skuKey,url,opt={},timeout=9000){
     throw e;
   }
 }
-function rate(req,mode){const headers=req?.headers||{},client=String(headers['x-forwarded-for']||headers['client-ip']||headers['x-nf-client-connection-ip']||headers['cf-connecting-ip']||'anon').split(',')[0].trim()||'anon',key=mode+':'+client,now=Date.now(),old=buckets.get(key),max=(mode==='suggest'||mode==='reverse'||mode==='resolve')?40:(mode==='search'?MAX_SEARCH_PER_MINUTE:18);if(!old||now-old.t>60000){buckets.set(key,{t:now,c:1});return false}old.c++;return old.c>max}
+function rate(req,mode){const headers=req?.headers||{},client=String(headers['x-forwarded-for']||headers['client-ip']||headers['x-nf-client-connection-ip']||headers['cf-connecting-ip']||'anon').split(',')[0].trim()||'anon',key=mode+':'+client,now=Date.now(),old=buckets.get(key),max=(mode==='suggest'||mode==='reverse'||mode==='resolve')?40:(mode==='search'?MAX_SEARCH_PER_MINUTE:(mode==='hours'?6:18));if(!old||now-old.t>60000){buckets.set(key,{t:now,c:1});return false}old.c++;return old.c>max}
 function osmRow(el,origin){const t=el?.tags||{},lat=n(el?.lat??el?.center?.lat),lon=n(el?.lon??el?.center?.lon),name=String(t.name||'').trim();if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;const amen=String(t.amenity||'restaurant').toLowerCase(),fast=amen==='fast_food'||isFastFoodName(name,String(t.brand||''),String(t.operator||''));let website=String(t.website||t['contact:website']||'').trim();if(website&&!/^https?:\/\//i.test(website))website='https://'+website;const key=norm(name)+'|'+lat.toFixed(4)+'|'+lon.toFixed(4);return{id:el?.osm_id?'osm-'+el.osm_id:'osm-'+key.replace(/ /g,'-'),name,category:fast?'Fast Food':(String(t.cuisine||'').trim()||'Restaurant'),fastFood:fast,cuisine:String(t.cuisine||''),providerType:String(t.amenity||''),address:[t['addr:housenumber'],t['addr:street'],t['addr:city'],t['addr:state'],t['addr:postcode']].filter(Boolean).join(', '),phone:String(t.phone||t['contact:phone']||''),website,opening_hours:String(t.opening_hours||''),hoursSource:String(t.opening_hours||'')?'OpenStreetMap':'',lat,lon,distance:miles(origin.lat,origin.lon,lat,lon),photo:String(t.image||t.image_url||''),menuItems:[t.dish,t['dish:name'],t['menu:items'],t.menu_items].flatMap(v=>String(v||'').split(/[|;•,]/)).map(x=>x.trim()).filter(Boolean).slice(0,10),brand:String(t.brand||''),source:'OpenStreetMap'} }
 function queryClause(lat,lon,radius,types=DINING_AMENITIES){
  const m=Math.round(Math.min(50,radius)*1609.344);
@@ -1340,6 +1344,212 @@ async function suggest(q){
  const seen=new Set();return rows.filter(x=>{const k=norm(x.display);if(seen.has(k))return false;seen.add(k);return true}).slice(0,7)
 }
 async function reverse(lat,lon){try{const d=await json('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?'+new URLSearchParams({location:lon+','+lat,f:'json'}),{},7000);return String(d?.address?.Match_addr||'Current location')}catch{return'Current location'}}
+async function requestJsonBody(req,maxBytes=260000){
+  if(req?.body&&typeof req.body==='object')return req.body;
+  if(typeof req?.body==='string'){
+    if(Buffer.byteLength(req.body,'utf8')>maxBytes)throw new Error('Hours request is too large.');
+    try{return JSON.parse(req.body)}catch{throw new Error('Hours request body is invalid.');}
+  }
+  return await new Promise((resolve,reject)=>{
+    let raw='',size=0,done=false;
+    const finish=(fn,value)=>{if(done)return;done=true;fn(value);};
+    req?.on?.('data',chunk=>{
+      if(done)return;
+      raw+=String(chunk);
+      size+=Buffer.byteLength(String(chunk),'utf8');
+      if(size>maxBytes){finish(reject,new Error('Hours request is too large.'));try{req.destroy?.();}catch{}}
+    });
+    req?.on?.('end',()=>{
+      if(done)return;
+      if(!raw.trim())return finish(resolve,{});
+      try{finish(resolve,JSON.parse(raw))}catch{finish(reject,new Error('Hours request body is invalid.'));}});
+    req?.on?.('error',err=>finish(reject,err));
+  });
+}
+function hoursCacheKey(row){
+  const place=String(row?.googlePlaceId||'').trim();
+  if(place)return 'place:'+place;
+  return 'row:'+norm([row?.name,row?.address,row?.phone].filter(Boolean).join('|'));
+}
+function hoursCacheRead(row){
+  const key=hoursCacheKey(row),hit=hoursResolutionCache.get(key);
+  if(!hit)return null;
+  const age=Date.now()-Number(hit.t||0);
+  const ttl=hit.ok?HOURS_MEMORY_CACHE_TTL:HOURS_MEMORY_NEGATIVE_TTL;
+  if(age>ttl){hoursResolutionCache.delete(key);return null;}
+  return hit.value||null;
+}
+function hoursCacheWrite(row,value,ok=true){
+  const key=hoursCacheKey(row);
+  if(!key)return value;
+  hoursResolutionCache.set(key,{t:Date.now(),ok:!!ok,value:value||null});
+  return value||null;
+}
+function compactHoursRow(row){
+  return {
+    id:String(row?.id||''),
+    name:String(row?.name||'').slice(0,160),
+    address:String(row?.address||'').slice(0,240),
+    phone:String(row?.phone||'').slice(0,50),
+    website:String(row?.website||'').slice(0,700),
+    brand:String(row?.brand||'').slice(0,120),
+    lat:n(row?.lat),
+    lon:n(row?.lon),
+    distance:n(row?.distance),
+    googlePlaceId:String(row?.googlePlaceId||'').trim(),
+    opening_hours:String(row?.opening_hours||'').slice(0,1200),
+    openNow:typeof row?.openNow==='boolean'?row.openNow:null,
+    businessStatus:String(row?.businessStatus||''),
+    hoursSource:String(row?.hoursSource||''),
+    hoursTimeZone:String(row?.hoursTimeZone||'')
+  };
+}
+function hoursKnown(row){
+  return typeof row?.openNow==='boolean'||!!String(row?.opening_hours||'').trim()||/^(?:CLOSED_|OPEN_)/.test(String(row?.businessStatus||'').toUpperCase());
+}
+async function officialHoursForRow(row){
+  const website=safeWebsiteUrl(row?.website)||knownRestaurantWebsite(row);
+  if(!website)return null;
+  try{
+    const page=await fetchWebPage(website,2200,900000);
+    if(!page)return null;
+    const verified=verifiedWebsiteCandidate({...page,url:page.finalUrl||page.url},row.name,row.address,row.brand,row.phone);
+    if(!verified)return null;
+    const data=extractOfficialRestaurantData(page.html);
+    if(!data.opening_hours)return null;
+    return {
+      id:String(row.id||''),opening_hours:data.opening_hours,hoursSource:'Official Restaurant Website',
+      website:String(data.website||verified.url||website),phone:String(data.phone||row.phone||''),
+      openNow:null,googlePlaceId:String(row.googlePlaceId||'')
+    };
+  }catch{return null;}
+}
+async function googleTextHoursForRow(row){
+  if(!GOOGLE_KEY||!String(row?.name||'').trim())return null;
+  const q=[row.name,row.address].filter(Boolean).join(', ');
+  try{
+    const data=await googleBudgetedJson('text-search-enterprise','https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Goog-Api-Key':GOOGLE_KEY,
+        'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours.openNow,places.regularOpeningHours.weekdayDescriptions,places.businessStatus,places.primaryType,places.types'
+      },
+      body:JSON.stringify({
+        textQuery:q+' restaurant',
+        pageSize:3,
+        locationBias:{circle:{center:{latitude:n(row.lat),longitude:n(row.lon)},radius:3000}},
+        regionCode:'US'
+      })
+    },4800);
+    const candidates=(Array.isArray(data?.places)?data.places:[]).map(p=>{
+      const loc=p?.location||{},lat=n(loc.latitude),lon=n(loc.longitude),name=String(p?.displayName?.text||'').trim();
+      if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+      const targetName=restaurantNameSimilarity(row.name,name);
+      const addrScore=restaurantAddressSimilarity(row.address,String(p?.formattedAddress||''));
+      const distance=miles(n(row.lat),n(row.lon),lat,lon);
+      const exactName=norm(row.name)===norm(name);
+      const viable=(exactName||targetName>=0.70||nameVariantMatch(row.name,name))&&(addrScore>=0.72||distance<=0.35);
+      if(!viable||distance>1.5)return null;
+      const regularHours=Array.isArray(p?.regularOpeningHours?.weekdayDescriptions)
+        ?p.regularOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
+      const openNow=typeof p?.currentOpeningHours?.openNow==='boolean'?p.currentOpeningHours.openNow:null;
+      const businessStatus=String(p?.businessStatus||'');
+      if(businessStatus==='CLOSED_PERMANENTLY')return null;
+      return {
+        name,address:String(p?.formattedAddress||row.address||''),phone:String(p?.nationalPhoneNumber||row.phone||''),
+        website:String(p?.websiteUri||row.website||''),opening_hours:regularHours,openNow,
+        businessStatus,googlePlaceId:String(p?.id||row.googlePlaceId||''),distance,
+        score:(exactName?1:targetName)+(addrScore*0.5)+(distance<=0.2?0.2:0)
+      };
+    }).filter(Boolean).sort((a,b)=>b.score-a.score);
+    return candidates[0]||null;
+  }catch(e){
+    if(e?.code==='GOOGLE_SKU_BUDGET')return {__budget:true};
+    return null;
+  }
+}
+async function resolveHoursForRow(row,budget){
+  const cached=hoursCacheRead(row);
+  if(cached)return {...cached,_cacheHit:true};
+  const existing=compactHoursRow(row);
+  if(hoursKnown(existing))return {...existing,_resolvedSource:existing.hoursSource||'existing'};
+  const official=await officialHoursForRow(existing);
+  if(official){
+    hoursCacheWrite(row,official,true);
+    return {...official,_resolvedSource:'official-website'};
+  }
+  if(!GOOGLE_KEY||budget.callsUsed>=budget.maxCalls)return null;
+  if(budget.callsUsed>=budget.maxCalls)return null;
+  budget.callsUsed++;
+  const googleId=String(existing.googlePlaceId||'').trim();
+  if(googleId){
+    const result=await googlePlaceDetails(googleId).catch(()=>({ok:false}));
+    if(result?.ok){
+      const value={
+        id:existing.id,name:result.name||existing.name,address:result.address||existing.address,phone:result.phone||existing.phone,
+        website:result.website||existing.website,opening_hours:result.opening_hours||'',openNow:typeof result.openNow==='boolean'?result.openNow:null,
+        businessStatus:result.businessStatus||'',googlePlaceId:result.googlePlaceId||googleId,hoursSource:'Google Places'
+      };
+      hoursCacheWrite(row,value,true);
+      return {...value,_resolvedSource:'google-place-details'};
+    }
+  }
+  if(budget.callsUsed>=budget.maxCalls)return null;
+  budget.callsUsed++;
+  const result=await googleTextHoursForRow(existing);
+  if(result?.__budget){budget.budgetDenied++;return null;}
+  if(result){
+    const value={
+      id:existing.id,name:result.name||existing.name,address:result.address||existing.address,phone:result.phone||existing.phone,
+      website:result.website||existing.website,opening_hours:result.opening_hours||'',openNow:typeof result.openNow==='boolean'?result.openNow:null,
+      businessStatus:result.businessStatus||'',googlePlaceId:result.googlePlaceId||existing.googlePlaceId,hoursSource:'Google Places'
+    };
+    hoursCacheWrite(row,value,true);
+    return {...value,_resolvedSource:'google-text-search'};
+  }
+  hoursCacheWrite(row,null,false);
+  return null;
+}
+async function enrichOpenNowHours(rows,options={}){
+  const input=filterNonDiningRows(Array.isArray(rows)?rows:[]).map(compactHoursRow).filter(r=>r.id&&Number.isFinite(r.lat)&&Number.isFinite(r.lon));
+  const candidates=input.filter(r=>!hoursKnown(r)).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
+  const maxCalls=Math.max(1,Math.min(OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS,Number(options.maxGoogleCalls)||OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS));
+  const budget={callsUsed:0,maxCalls,budgetDenied:0};
+  const patches=[],stats={cacheHits:0,existing:input.length-candidates.length,officialWebsite:0,googlePlaceDetails:0,googleTextSearch:0,unknown:0};
+  const targetOpen=Math.min(50,Math.max(12,Math.ceil(input.length*0.20)));
+  const alreadyOpen=input.filter(r=>r.openNow===true).length;
+  let resolvedOpen=alreadyOpen;
+  let cursor=0;
+  const worker=async()=>{
+    while(true){
+      if(resolvedOpen>=targetOpen||cursor>=candidates.length||budget.callsUsed>=maxCalls)return;
+      const i=cursor++,row=candidates[i];
+      const result=await resolveHoursForRow(row,budget);
+      if(!result)continue;
+      if(result._cacheHit)stats.cacheHits++;
+      const src=String(result._resolvedSource||result.hoursSource||'');
+      if(src.includes('official'))stats.officialWebsite++;
+      else if(src.includes('place-details'))stats.googlePlaceDetails++;
+      else if(src.includes('text-search'))stats.googleTextSearch++;
+      if(result.openNow===true)resolvedOpen++;
+      patches.push(Object.fromEntries(Object.entries(result).filter(([k])=>!k.startsWith('_'))));
+    }
+  };
+  await Promise.all(Array.from({length:Math.min(3,candidates.length,4)},worker));
+  stats.unknown=Math.max(0,input.length-stats.existing-stats.cacheHits-stats.officialWebsite-stats.googlePlaceDetails-stats.googleTextSearch);
+  const health=await googleUsageHealth().catch(()=>null);
+  const relevantSkus=['place-details-enterprise','text-search-enterprise'];
+  const monthlyRemaining=Object.fromEntries(relevantSkus.map(sku=>{
+    const usage=Number(health?.usage?.[sku]?.requestCount)||0;
+    return [sku,Math.max(0,Number(HARD_LIMITS[sku]||0)-usage)];
+  }));
+  return {
+    ok:true,patches,counts:{total:input.length,alreadyKnown:stats.existing,cacheHits:stats.cacheHits,resolvedFromOfficialWebsite:stats.officialWebsite,resolvedByGooglePlaceDetails:stats.googlePlaceDetails,resolvedByGoogleTextSearch:stats.googleTextSearch,stillUnknown:stats.unknown,open:input.filter(r=>r.openNow===true).length+patches.filter(r=>r.openNow===true).length},
+    google:{callsUsed:budget.callsUsed,callsBudget:maxCalls,budgetDenied:budget.budgetDenied,monthlyRemaining},
+    targetOpen
+  };
+}
 function requestQuery(req){
  const source=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters&&typeof req.queryStringParameters==='object'?req.queryStringParameters:null);
  if(source){
@@ -1644,6 +1854,6 @@ const data={ok:true,version:API_VERSION,radiusEngine:'v2',coverageVerified:!engi
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,radiusEngineProviderQuery,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,enrichOpenNowHours,googleTextHoursForRow,officialHoursForRow,radiusEngineProviderQuery,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.
