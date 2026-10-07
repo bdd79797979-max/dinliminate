@@ -7,6 +7,9 @@ on:
       - "data/foods.js"
       - "qa/verify-meal-images.mjs"
       - "package.json"
+      - "app.js"
+      - "sw.js"
+      - "qa/cp1155-meal-deck-never-stuck-smoke.cjs"
 
 jobs:
   meal-image-audit:
@@ -18,4 +21,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm install --no-audit --no-fund
+      - run: node --check app.js
+      - run: node qa/cp1155-meal-deck-never-stuck-smoke.cjs
       - run: npm run audit:meal-images
