@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1228 / CP1228
+# CURRENT RELEASE — BUILD 1234 / CP1234
 
 Date: 2026-10-07
 
@@ -67,6 +67,10 @@ The Meal and Restaurant Tour sections remain unchanged.
 ## Home Tour positioning fix
 
 CP1228 keeps the three Home Tour messages unchanged but points each step at a real, visible homepage control. The first step targets the bottom Tour control instead of the tutorial bubble itself, preventing recursive positioning and keeping the tutorial bubble on-screen.
+
+## Card Cuisine and Details sizing
+
+CP1234 enlarges the Cuisine type text and Details control on Meal and Restaurant decision cards by approximately 50%. The Details control grows from the small inline target to a 42px tap target with a 23px icon, while card geometry and the upper controls remain unchanged. No Tutorial or swipe-stack behavior was modified.
 
 ## Recovery
 
