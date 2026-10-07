@@ -1,4 +1,4 @@
-const CACHE='dinliminate-shell-v1152';
+const CACHE='dinliminate-shell-v1154';
 const IMAGE_CACHE='dinliminate-images-v4';
 
 // CP1077 — Google usage tracker + release shell cache bump
@@ -167,7 +167,7 @@ async function touchCachedImage(req){
   }catch{}
 }
 
-const SHELL=['./','./index.html','./viewport.js?v=1092','./styles.css?v=1092','./app.js?v=1152','./logo.svg?v=1092','./data/foods.js?v=1149','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./app-icon.svg?v=1137','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./viewport.js?v=1092','./styles.css?v=1092','./app.js?v=1154','./logo.svg?v=1092','./data/foods.js?v=1149','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg','./app-icon.svg?v=1137','./fallback-food.svg','./fallback-restaurant.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([
