@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1225 / CP1225
+# CURRENT RELEASE — BUILD 1226 / CP1226
 
 Date: 2026-10-07
 
@@ -50,6 +50,10 @@ The remaining requested items — Peanut Butter & Jelly, BLT, Ham Dinner, Shrimp
 ## Meals deck order and Tour update
 
 CP1225 keeps the built-in Fish Sticks meal as the final card in the Meals deck, including filtered/Maybe views when Fish Sticks remains eligible. The Tour now explains the current swipe behavior on both Meal and Restaurant cards, including that committed cards slide fully off-screen before the next choice takes over.
+
+## Home Tour correction
+
+CP1226 updates only the Home Tour. The Home page now has separate Tour steps for Home, Restaurant, the top-right Menu, and the Add/Share/Tour tools, matching the current homepage controls.
 
 ## Recovery
 
