@@ -2923,7 +2923,14 @@ function previewDecisionCount(kind,type){
  btn.dataset.maybeCount=String(nextMaybes);
  btn.dataset.visibleCount=String(visible);
  const count=btn.querySelector('.maybe-control-count');
- if(count)count.textContent=String(visible);
+ if(count){
+  count.textContent=String(visible);
+  count.classList.remove('decision-count-updated');
+  void count.offsetWidth;
+  count.classList.add('decision-count-updated');
+  clearTimeout(count.__decisionCountTimer);
+  count.__decisionCountTimer=window.setTimeout(()=>count.classList.remove('decision-count-updated'),220);
+ }
 }
 function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe())}
 function appToast(message){
