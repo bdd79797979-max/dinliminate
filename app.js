@@ -1209,8 +1209,8 @@ S.winnerType = d.winnerType || 'food';
 S.restaurantSearchOrigin = d.restaurantSearchOrigin && Number.isFinite(Number(d.restaurantSearchOrigin.lat)) && Number.isFinite(Number(d.restaurantSearchOrigin.lon)) ? {lat:Number(d.restaurantSearchOrigin.lat),lon:Number(d.restaurantSearchOrigin.lon)} : null;
 S.restaurantSearchKey = String(d.restaurantSearchKey||'');
 S.locationSource = String(d.locationSource||'none');
-S.restaurantHours = ['all','open','closed'].includes(String(d.restaurantHours||'all')) ? String(d.restaurantHours||'all') : 'all';
-S.restaurantHoursCollapsed = Object.prototype.hasOwnProperty.call(d,'restaurantHoursCollapsed') ? !!d.restaurantHoursCollapsed : true;
+S.restaurantHours = String(d.restaurantHours||'all')==='open' ? 'open' : 'all';
+S.restaurantHoursCollapsed = true;
 S.locationFreshAt = Number.isFinite(Number(d.locationFreshAt)) ? Number(d.locationFreshAt) : null;
 S.quickCutsCollapsed = {food:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'food') ? !!d.quickCutsCollapsed.food : true,restaurant:Object.prototype.hasOwnProperty.call(d.quickCutsCollapsed||{},'restaurant') ? !!d.quickCutsCollapsed.restaurant : true};
 S.mealTimeCutsCollapsed = Object.prototype.hasOwnProperty.call(d,'mealTimeCutsCollapsed') ? !!d.mealTimeCutsCollapsed : true;
@@ -1347,7 +1347,7 @@ function tutorialStepsForScreen(screen){
   {target:'#restChoose',title:'CHOOSE',body:'Choose the current restaurant immediately and see your winner.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'SEARCH',body:'Open Search to look for a specific restaurant or cuisine.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'CUISINE',body:'Open Cuisine to narrow the restaurant deck by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
-  {target:'#restaurantHoursToggle',title:'OPEN NOW',body:'Use this filter to show restaurants that are open now, closed now, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
+  {target:'#restaurantHoursToggle',title:'OPEN',body:'Show only restaurants confirmed open now, or keep all restaurants in the current pool.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'ALL · MAYBES · COUNT',body:'Switch between all remaining restaurants and your Maybes, while keeping track of how many choices remain.'},
   {target:'#restaurantMenu',title:'MENU',body:'Open the menu for Manage Meals, History, Settings, Family Mode, and more.',avoid:['#drawer']},
   {target:'#restaurantMenu',title:'NEXT: MEALS',body:'Tap this Tour message to return to the Meals side of Dinliminate.',action:'enter-food'}
@@ -1738,40 +1738,26 @@ function bindMaybeDeckToggle(kind){
  renderMaybeDeckToggle(kind);
 }
 function renderRestaurantHours(){
- const toggle=$('restaurantHoursToggle'),chips=$('restaurantHoursQuick');if(!toggle||!chips)return;
- const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all';
- const collapsed=!!S.restaurantHoursCollapsed;
- const labels={all:'All',open:'Open Now',closed:'Closed Now'};
- chips.innerHTML=['all','open','closed'].map(value=>{
-   const active=mode===value;
-   return '<button class="chip restaurant-hours-chip'+(active?' is-active':'')+'" data-restaurant-hours="'+value+'" data-active="'+(active?'true':'false')+'" type="button" aria-pressed="'+(active?'true':'false')+'">'+labels[value]+'</button>';
- }).join('');
- chips.dataset.mode=mode;
- chips.classList.toggle('is-rail-collapsed',collapsed);
- chips.setAttribute('aria-hidden',String(collapsed));
- toggle.classList.toggle('is-open',!collapsed);
- toggle.classList.toggle('is-active',mode!=='all');
- toggle.dataset.mode=mode;
- toggle.setAttribute('data-active',mode);
- toggle.setAttribute('aria-expanded',String(!collapsed));
- toggle.setAttribute('aria-pressed',mode!=='all'?'true':'false');
- toggle.setAttribute('aria-label',(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:''));
- toggle.title=(collapsed?'Show ':'Hide ')+'Open Now'+(mode!=='all'?' — '+labels[mode]:'');
- chips.querySelectorAll('[data-restaurant-hours]').forEach(btn=>btn.onclick=event=>{
-   event.preventDefault();
-   event.stopPropagation();
-   const next=['all','open','closed'].includes(btn.dataset.restaurantHours)?btn.dataset.restaurantHours:'all';
-   S.restaurantHours=next;
-   S.restaurantIndex=0;
-   S.restaurantMaybeRound=false;
-   // Selecting a mode is an actual filter action. Keep the Hours rail visible
-   // so the active gold rim and current choice are immediately obvious.
-   S.restaurantHoursCollapsed=false;
-   renderRestaurantHours();
-   updateRestaurantStatus();
-   drawRestaurants();
-   save();
- });
+ const toggle=$('restaurantHoursToggle');if(!toggle)return;
+ const active=String(S.restaurantHours||'all')==='open';
+ // CP1211: Restaurant Hours is now a single binary filter. Legacy "closed"
+ // state is treated as the default all-restaurants state.
+ S.restaurantHours=active?'open':'all';
+ S.restaurantHoursCollapsed=true;
+ const chips=$('restaurantHoursQuick');
+ if(chips){
+  chips.innerHTML='';
+  chips.classList.add('is-rail-collapsed');
+  chips.setAttribute('aria-hidden','true');
+ }
+ toggle.classList.remove('is-open');
+ toggle.classList.toggle('is-active',active);
+ toggle.dataset.mode=active?'open':'all';
+ toggle.setAttribute('data-active',active?'true':'false');
+ toggle.setAttribute('aria-expanded','false');
+ toggle.setAttribute('aria-pressed',active?'true':'false');
+ toggle.setAttribute('aria-label',active?'Turn Open filter off — show all restaurants':'Show only restaurants open now');
+ toggle.title=active?'Show all restaurants':'Show only restaurants open now';
 }
 function bindRestaurantHours(){
  const toggle=$('restaurantHoursToggle');
@@ -1779,8 +1765,38 @@ function bindRestaurantHours(){
  toggle.onclick=event=>{
    event.preventDefault();
    event.stopPropagation();
-   setRestaurantRefinePanel('hours');
-   save();
+   const next=String(S.restaurantHours||'all')==='open'?'all':'open';
+   S.restaurantHours=next;
+   S.restaurantIndex=0;
+   S.restaurantMaybeRound=false;
+   renderRestaurantHours();
+   if(next==='open'){
+     const sameSearch=restaurantHoursEnrichmentKey===String(S.restaurantSearchKey||'');
+     const recentlyEnriched=sameSearch&&(Date.now()-restaurantHoursEnrichedAt)<10*60*1000;
+     if(!recentlyEnriched){
+       updateRestaurantStatus();
+       enrichRestaurantHoursForOpenNow().then(()=>{
+         if(S.screen!=='restaurant'||S.restaurantHours!=='open')return;
+         updateRestaurantStatus();
+         drawRestaurants();
+         save();
+       }).catch(()=>{
+         if(S.screen==='restaurant'&&S.restaurantHours==='open'){
+           updateRestaurantStatus();
+           drawRestaurants();
+           save();
+         }
+       });
+     }else{
+       updateRestaurantStatus();
+       drawRestaurants();
+       save();
+     }
+   }else{
+     updateRestaurantStatus();
+     drawRestaurants();
+     save();
+   }
  };
  renderRestaurantHours();
 }
@@ -3293,8 +3309,8 @@ function restaurantHoursState(row){
   return applicable&&sawClosed?'closed':(applicable?'closed':'unknown');
 }
 function restaurantHoursMatches(row){
-  const mode=['all','open','closed'].includes(String(S.restaurantHours||'all'))?String(S.restaurantHours||'all'):'all';
-  return mode==='all'||restaurantHoursState(row)===mode;
+  const mode=String(S.restaurantHours||'all')==='open'?'open':'all';
+  return mode==='all'||restaurantHoursState(row)==='open';
 }
 function restaurantPoolHourFiltered(){return restaurantPoolBase().filter(restaurantHoursMatches);}
 function restaurantChoiceIndex(rows,start,keepState=false){
@@ -3316,15 +3332,13 @@ function restaurantPoolFiltered(){
 function updateRestaurantStatus(){
  const el=$('status'); if(!el)return;
  const radius=Math.min(100,Math.max(1,Number(S.restaurantSearchRadius ?? $('radius')?.value)||10));
- const base=restaurantPoolBase();
  const total=restaurantPoolHourFiltered().length,degraded=S.restaurantSearchDegraded;
  if(!total){
-  const mode=['open','closed'].includes(String(S.restaurantHours||''))?String(S.restaurantHours):'all';
-  el.textContent=degraded?'Restaurant sources are unavailable. Try again.':(mode==='open'?'No restaurants are open now in this radius.':(mode==='closed'?'No restaurants are closed now in this radius.':'No restaurants match the current filters.'));
+  el.textContent=degraded?'Restaurant sources are unavailable. Try again.':(S.restaurantHours==='open'?'No restaurants are open now in this radius.':'No restaurants match the current filters.');
   return;
  }
- const mode=['open','closed'].includes(String(S.restaurantHours||''))?String(S.restaurantHours):'all';
- const modeLabel=mode==='open'?' · Open Now':(mode==='closed'?' · Closed Now':'');
+ const mode=S.restaurantHours==='open'?'open':'all';
+ const modeLabel=mode==='open'?' · Open Now':'';
  el.textContent=total+' restaurant'+(total===1?'':'s')+' · '+radius+' mi'+modeLabel;
 }
 
