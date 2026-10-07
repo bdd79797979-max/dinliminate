@@ -63,6 +63,15 @@ function targetDate(v) {
   if (Number.isNaN(d.getTime())) fail('INVALID_DATE', 'Invalid dinner time.');
   return d;
 }
+function safeHttpUrl(v,max=2000){
+  const s=String(v||'').trim();
+  if(!s)return '';
+  try{
+    const u=new URL(s);
+    if(!['https:','http:'].includes(u.protocol))return '';
+    return u.href.slice(0,Math.max(1,Number(max)||2000));
+  }catch{return '';}
+}
 function sanitizeCompareItem(item){return{id:String(item?.id||'').slice(0,160),name:String(item?.name||'').slice(0,160),category:String(item?.category||'').slice(0,80),cuisine:String(item?.cuisine||'').slice(0,120),image:safeHttpUrl(item?.image||item?.photo||'',2000),address:String(item?.address||'').slice(0,500),website:safeHttpUrl(item?.website||'',1200),phone:String(item?.phone||'').slice(0,100),distance:Number.isFinite(Number(item?.distance))?Number(item.distance):null};}
 function sanitizeSnapshot(input, type) {
   const raw = input && typeof input === 'object' ? input : {};

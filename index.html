@@ -4,7 +4,7 @@
 <!-- CP1070 Restaurant refine controls -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<script src="./viewport.js?v=1092"></script>
+<script src="./viewport.js?v=1155"></script>
 <meta name="theme-color" content="#090909">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dinliminate">
@@ -27,12 +27,12 @@
 })();
 </script>
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon.svg?v=1092" type="image/svg+xml">
+<link rel="icon" href="./icon.svg?v=1155" type="image/svg+xml">
 <title>Dinliminate — Meal Decisions Simplified</title>
 
 
-<link rel="preload" href="./styles.css?v=1124" as="style">
-<link rel="stylesheet" href="./styles.css?v=1124">
+<link rel="preload" href="./styles.css?v=1155" as="style">
+<link rel="stylesheet" href="./styles.css?v=1155">
 <style id="critical-boot-style">
 html,body{margin:0;background:#090909;color:#f5f5f5;min-height:100%;overscroll-behavior:none}
 *{box-sizing:border-box}
@@ -121,7 +121,7 @@ html.dinliminate-page-unloading body{background:#090909!important}
 
 <header class="top app-topbar" id="appTopbar">
   <div class="brand-mark" aria-label="Dinliminate">
-    <img class="dinliminate-logo-symbol" src="./logo.svg?v=1092" alt="" aria-hidden="true">
+    <img class="dinliminate-logo-symbol" src="./logo.svg?v=1155" alt="" aria-hidden="true">
     <span class="dinliminate-logo-wordmark">DINLIMINATE</span>
   </div>
   <button id="menu" class="menu" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -239,7 +239,7 @@ html.dinliminate-page-unloading body{background:#090909!important}
   <button id="foodMenu" class="menu interior-menu" aria-label="Menu"><span></span><span></span><span></span></button>
 </div>
 <div class="quick-section food-quick-section"><div class="quick food-quick-rail is-rail-collapsed" id="foodQuick" aria-hidden="true"></div><div class="quick meal-time-quick food-quick-rail is-rail-collapsed" id="mealTimeQuick" aria-hidden="true"></div></div>
-<div class="stage"><div class="swipe-card-stack" id="foodStack"><article class="card next-card hidden" id="foodNextCard" aria-hidden="true"><img id="foodNextImg" alt=""><div class="shade"></div></article><article class="card" id="foodCard"><img id="foodImg" alt=""><div class="shade"></div><div class="card-copy"><div class="card-cuisine-row food-cuisine-row"><small id="foodCat"></small><div class="card-header-actions"><button class="card-details card-card-action card-details-action icon-action" id="foodDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div><h3 id="foodName"></h3></div></article></div></div>
+<div class="stage"><div class="swipe-card-stack" id="foodStack"><article class="card next-card hidden" id="foodNextCard" aria-hidden="true"><img class="next-food-img" alt=""><div class="shade"></div><div class="card-copy next-food-copy"><div class="card-cuisine-row food-cuisine-row"><small class="next-food-cat"></small><div class="card-header-actions"><span class="card-details card-card-action card-details-action icon-action" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div><h3 class="next-food-name"></h3></div></article><article class="card" id="foodCard"><img id="foodImg" alt=""><div class="shade"></div><div class="card-copy"><div class="card-cuisine-row food-cuisine-row"><small id="foodCat"></small><div class="card-header-actions"><button class="card-details card-card-action card-details-action icon-action" id="foodDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div><h3 id="foodName"></h3></div></article></div></div>
 <div class="swipe-actions unified-swipe-actions" aria-label="Meal decision controls">
   <button class="round-action round-back secondary" id="foodBack" aria-label="Back"><span>↶</span></button>
   <button class="round-action round-cut cut" id="foodCut" aria-label="Cut"><span>✕</span></button>
@@ -342,9 +342,9 @@ html.dinliminate-page-unloading body{background:#090909!important}
 
 
 
-<script src="./data/foods.js?v=1149"></script>
+<script src="./data/foods.js?v=1155"></script>
 <script src="./data/restaurant-taxonomy.js"></script>
-<script src="./app.js?v=1124"></script>
+<script src="./app.js?v=1155"></script>
 </main>
 </body>
 </html>

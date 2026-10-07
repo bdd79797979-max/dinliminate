@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1103,
-  "sourceBranch": "cp1103-home-canonical",
-  "checkpoint": "CP1103",
-  "deploymentTrigger": "CP1103-home-canonical",
+  "build": 1155,
+  "sourceBranch": "cp1155-meal-deck-never-stuck",
+  "checkpoint": "CP1155",
+  "deploymentTrigger": "cp1155-meal-deck-never-stuck",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
-  "photoBehavior": "google-first-verified-photo-waterfall",
+  "photoBehavior": "official-first-meal-photo > exact meal backup > emergency Dinliminate food image",
   "photoPolicy": "existing verified quality photo > Google Places > official restaurant > exact venue > OSM > no card",
   "restaurantInfoPolicy": "Google first on detail enrichment > official restaurant website > verified venue data > unknown",
   "googleHardStops": "photos:900; text-search-pro:4500; nearby-search-pro:4500; text-search-enterprise:900; nearby-search-enterprise:900; place-details-enterprise:900; place-details-essentials:9000",
@@ -31,5 +31,5 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1103 canonical Home: clean transparent door windows, larger stacked D logo, repositioned entry labels, and lower utility actions"
+  "currentBaseline": "CP1155 meal deck never-stuck image handling"
 }

@@ -12,7 +12,7 @@ const requiredFiles=[
   'qa/google-usage-smoke.cjs','qa/restaurant-search-core-smoke.cjs',
   'qa/restaurant-photo-certification-smoke.cjs','qa/restaurant-hours-smoke.cjs',
   'qa/restaurant-decision-ui-smoke.cjs','qa/brand-pwa-final-smoke.cjs',
-  'qa/security-hardening-smoke.cjs'
+  'qa/security-hardening-smoke.cjs','qa/cp1155-meal-deck-never-stuck-smoke.cjs'
 ];
 
 function read(file){return fs.readFileSync(path.join(root,file),'utf8');}
@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='cp1092-home-polish'&&expectedCheckpoint==='CP1092');
+assert('launch candidate branch is explicit',expectedBranch==='cp1155-meal-deck-never-stuck'&&expectedCheckpoint==='CP1155');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -83,7 +83,7 @@ assert('Google photo exact-match checks name/address/location',gphoto.includes('
 assert('hours are timezone-aware',restaurants.includes("timezone:'auto'")&&app.includes('Intl.DateTimeFormat')&&app.includes('hoursTimeZone'));
 assert('Family requests are bounded',family.includes('REQUEST_TOO_LARGE')&&family.includes('64*1024')&&family.includes('limited(req,action,actionLimit)'));
 assert('Family snapshot URLs are safe',familyStore.includes('function safeHttpUrl')&&familyStore.includes("['https:','http:'].includes(u.protocol)"));
-assert('image proxy blocks redirects',image.includes("redirect:'error'"));
+assert('image proxy validates redirects',image.includes("redirect:'manual'")&&image.includes('Redirected image host not allowed')&&image.includes('redirectCount<=3'));
 assert('photo endpoints are throttled',gphoto.includes('photoRateLimited(req')&&rphoto.includes('restaurantPhotoRateLimited(req'));
 assert('swipe card does not resize',app.includes("translate3d('+dx.toFixed(1)+'px,0,0) rotate(")&&!app.slice(app.indexOf('function bindSwipeCard'),app.indexOf('function bindRestaurantSwipe')).includes("card.style.transform='scale("));
 assert('four decision controls remain canonical',
@@ -102,7 +102,8 @@ const checkpointSmoke=[
  ['CP1080 Hours Reliability','qa/restaurant-hours-smoke.cjs'],
  ['CP1081 Decision UI','qa/restaurant-decision-ui-smoke.cjs'],
  ['CP1084 Brand/PWA','qa/brand-pwa-final-smoke.cjs'],
- ['CP1085 Security','qa/security-hardening-smoke.cjs']
+ ['CP1085 Security','qa/security-hardening-smoke.cjs'],
+ ['CP1155 Meal deck never-stuck','qa/cp1155-meal-deck-never-stuck-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));
 

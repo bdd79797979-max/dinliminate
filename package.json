@@ -10,6 +10,8 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test:rc": "node qa/launch-rc.cjs"
+    "test:rc": "node qa/launch-rc.cjs",
+    "audit:meal-images": "node qa/verify-meal-images.mjs",
+    "audit:meal-images:two": "node qa/verify-meal-images.mjs --require-two"
   }
 }
