@@ -2448,7 +2448,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
    const waiting=next;
    if(waiting&&waiting.dataset.foodReady!=='1'){
     ensureFoodNextCardReady(waiting).then(ok=>{
-     if(!ok||phase!=='dragging')return;
+     if(phase!=='dragging')return;
+     if(!ok){
+      phase='idle';
+      releasePointer();
+      settleBack();
+      return;
+     }
      commit(dx,speed);
     });
     return;
