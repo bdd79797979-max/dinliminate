@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1190,
-  "sourceBranch": "release/cp1190-radius-arrow-cleanup",
+  "build": 1191,
+  "sourceBranch": "release/cp1191-radius-engine-v2-foundation",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1190",
-  "deploymentTrigger": "release/cp1190-radius-arrow-cleanup",
+  "checkpoint": "CP1191",
+  "deploymentTrigger": "release/cp1191-radius-engine-v2-foundation",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,6 +23,7 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1190 full per-tile radius fan-out + homepage chevron cleanup; CP1188 atomic swipe exit retained",
-  "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; every meal remains swipeable and image loading never blocks"
+  "currentBaseline": "CP1191 Radius Engine v2 foundation; CP1190 radius fan-out and homepage chevrons retained; CP1188 atomic swipe exit retained",
+  "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; every meal remains swipeable and image loading never blocks",
+  "radiusEngine": "CP1191 deterministic geographic coverage grid foundation; provider adapters and /api/restaurants integration follow after geometry validation"
 }
