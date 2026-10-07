@@ -1444,7 +1444,11 @@ if(mode==='search'){
      arcgisPlaces(lat,lon,providerRadius,searchTerm),
      searchTerm ? Promise.resolve({rows:[],errors:[]}) : googlePlaces(lat,lon,providerRadius),
      // OSM discovery is a fallback for a named search, not part of its critical path.
-     (!searchTerm && radius<=25) ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : Promise.resolve({rows:[],errors:[]})
+     // CP1157: keep large 25-mile searches out of the critical path. A 25-mile
+    // Overpass circle can be slow enough to exhaust the function budget even
+    // when ArcGIS/Photon/Google already returned a usable pool. Overpass remains
+    // available below as a fallback when the faster providers return nothing.
+    (!searchTerm && radius<=10) ? overpass(lat,lon,radius,'restaurant|fast_food',searchTerm) : null
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
@@ -1534,13 +1538,17 @@ let primaryBatch,parallelWide=null,fastProvider='none';
    }
  }
 const parallelOsmResult=!wideSearch && Array.isArray(primaryBatch) ? primaryBatch[3] : null;
-if(parallelOsmResult?.status==='fulfilled'){
+const hasParallelOsmValue=!!parallelOsmResult?.value;
+if(parallelOsmResult?.status==='fulfilled'&&hasParallelOsmValue){
   osmOut.rows.push(...(parallelOsmResult.value?.rows||[]));
   osmOut.errors.push(...(parallelOsmResult.value?.errors||[]));
 }else if(parallelOsmResult?.reason){
   osmOut.errors.push(String(parallelOsmResult.reason?.message||parallelOsmResult.reason||'Nearby hours discovery failed'));
 }
-const needsOverpass=!preliminary.length&&!parallelOsmResult;
+// CP1157: if the fast providers are empty and no primary Overpass task ran,
+// allow the bounded fallback below to discover restaurants instead of treating
+// a skipped task as a completed empty result.
+const needsOverpass=!preliminary.length&&!hasParallelOsmValue;
  if(discoveryPromise){
    if(wideSearch){
      const got=parallelWide;
