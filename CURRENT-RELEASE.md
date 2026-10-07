@@ -91,3 +91,7 @@ CP1238 changes the committed Meal and Restaurant swipe exit so the active card s
 ## Swipe flight stabilization — CP1239
 
 CP1239 replaces the committed Meal and Restaurant swipe exit with one browser-owned full-flight animation. The card starts at the exact release position, stays fully visible, travels until the entire card clears the viewport, and the visual handoff is not released until that flight completes.
+
+## Meal photo refresh — CP1240
+
+CP1240 replaces the Chicken Pot Pie card photo with a clearly better free Unsplash match. The Meatloaf card was already using a strong free Unsplash image; the remaining requested Southern dishes were retained because no clearly better faithful free Unsplash replacement was found.
