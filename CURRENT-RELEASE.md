@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1223 / CP1223
+# CURRENT RELEASE — BUILD 1224 / CP1224
 
 Date: 2026-10-07
 
@@ -40,6 +40,12 @@ CP1222 routes Meal and Restaurant Cut/Maybe button decisions through the existin
 ## Meal photo refresh
 
 CP1221 refreshes the requested Southern Vegetable Plate, Meatloaf & Mashed Potatoes, Peanut Butter & Jelly, Chicken Pot Pie, BLT, Ham Dinner, Roast Beef Sandwich, Chicken & Dumplings, Shrimp & Grits, Biscuits & Gravy, Southern Vegetable Beef Soup, White Chicken Chili, and Buttermilk & Cornbread catalog images. The replacements use the approved built-in meal image hosts (Pexels/Unsplash); no provider/meal data or nutrition values were changed.
+
+## Meal photo refresh
+
+CP1224 refreshes the clearest weak matches from the requested meal-photo set: Meatloaf, Southern Vegetable Plate, Chicken Pot Pie, Roast Beef Sandwich, Chicken & Dumplings, and Biscuits & Gravy. The replacement catalog images use approved Pexels/Unsplash hosts.
+
+The remaining requested items — Peanut Butter & Jelly, BLT, Ham Dinner, Shrimp & Grits, Southern Vegetable Beef Soup, and White Chicken Chili — were kept because the available approved-host alternatives were not clearly better or were less faithful to the meal.
 
 ## Recovery
 
