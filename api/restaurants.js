@@ -157,7 +157,7 @@ function providerCenters(lat,lon,radius){
  const r=clamp(radius);
  if(r<=1)return[{lat,lon,radius:r}];
  const spec=r<=3?{tile:2.1,ring:1.8,count:6}:r<=5?{tile:3.3,ring:3,count:6}:{tile:6,ring:6,count:6};
- const out=[{lat,lon,radius:spec.tile}];
+ const out=[{lat,lon,radius:radius}];
  const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  for(let i=0;i<spec.count;i++){
   const ang=i*2*Math.PI/spec.count;
