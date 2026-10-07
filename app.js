@@ -21,6 +21,7 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
+const isStandalonePWA=(()=>{try{return !!(window.matchMedia?.('(display-mode: standalone)').matches||window.navigator?.standalone===true);}catch{return false;}})();
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
 let APP_BUILD = '1186';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
@@ -2656,6 +2657,25 @@ const completeAfterExit=async ()=>{
   card.dataset.swipeOutgoingId=quarantinedSwipeId;
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
   dismissSwipeHint();
+
+  // CP1194: iOS Home Screen/PWA uses a different WebKit compositor path than
+  // Safari. Avoid the cloned transform layer entirely for meal swipes in
+  // standalone mode. The live card is removed from paint immediately, the
+  // decision redraw happens while hidden, then the new card is revealed.
+  // This intentionally favors deterministic rendering over the exit animation
+  // in the standalone PWA; Safari keeps the premium animated path.
+  if(isStandalonePWA && staticWaitingCard){
+    card.classList.remove('swipe-active');
+    card.style.transition='none';
+    card.style.transform='none';
+    card.style.opacity='0';
+    card.style.visibility='hidden';
+    card.style.pointerEvents='none';
+    card.dataset.swipe='';
+    foodSwipeHandoff=true;
+    completeAfterExit();
+    return;
+  }
 
   // CP1191: snapshot the outgoing card into its own exit layer.
   // The live card can now be repainted without ever becoming the old
