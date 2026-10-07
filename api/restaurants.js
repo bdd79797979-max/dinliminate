@@ -310,7 +310,7 @@ async function tiledRadiusOverpass(lat,lon,radius,types='restaurant|fast_food',s
    group,lat,lon,radius,types,searchTerm,endpointPairs[i],OVERPASS_HTTP_TIMEOUT_MS
  ));
  const settled=await Promise.allSettled(tasks);
- for(const result){
+ for(const result of settled){
    if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'radius discovery failed'));continue;}
    rows.push(...(result.value.rows||[]));
    errors.push(...(result.value.errors||[]));
