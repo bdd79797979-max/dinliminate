@@ -2063,7 +2063,9 @@ function drawFood(){
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
  if(!foodSwipeHandoff){primeFoodSwipeMedia();}
- maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
+ maybeShowInCardSwipeCoach();
+ if(!foodSwipeHandoff)bindFoodSwipe();
+ bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
 function foodCut(item=S.pool[S.index]){
@@ -2579,6 +2581,7 @@ const completeAfterExit=async ()=>{
   card.dataset.swipeOutgoingId=outgoingId;
   phase='completing';
   card.dataset.swipePhase='completing';
+  if(foodHandoff)foodSwipeHandoff=true;
 
   // CP1191: the animated outgoing visual is now a separate DOM layer.
   // Never repaint/recycle the element that is currently flying away.
@@ -2586,8 +2589,6 @@ const completeAfterExit=async ()=>{
   if(exitLayer){
     exitLayer.style.pointerEvents='none';
   }
-  if(foodHandoff)foodSwipeHandoff=true;
-
   try{
     await Promise.resolve(action?.());
   }catch(err){
@@ -2664,6 +2665,7 @@ const completeAfterExit=async ()=>{
   if(parent){
     exitLayer=card.cloneNode(true);
     exitLayer.removeAttribute('id');
+    exitLayer.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
     exitLayer.dataset.swipeExitLayer='1';
     exitLayer.setAttribute('aria-hidden','true');
     const parentRect=parent.getBoundingClientRect();
