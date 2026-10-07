@@ -1,3 +1,4 @@
+// CP1180: eliminate stale waiting-card reuse during rapid meal swipes.
 // CP1176: cumulative restaurant radius client merge layered onto rapid-swipe main.
 // CP1171: preserve the swipe transaction lock across card rebinds.
 // CP1170: make meal swipe handoff immediate for rapid swipes.
@@ -2567,49 +2568,32 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
+  const foodHandoff=staticWaitingCard&&cardId==='foodCard';
+  // CP1180: snapshot the waiting card before action() can redraw/rebind it.
+  const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
+  const promotedImg=foodHandoff?next?.querySelector('img'):null;
+  const promotedSrc=foodHandoff?String(promotedImg?.currentSrc||promotedImg?.src||promotedImg?.getAttribute('src')||''):'';
+  const promotedAlt=foodHandoff?String(promotedImg?.alt||''):'';
   phase='completing';
   card.dataset.swipePhase='completing';
-  const foodHandoff=staticWaitingCard&&cardId==='foodCard';
   if(foodHandoff)foodSwipeHandoff=true;
 
   if(foodHandoff){
-   // Keep the promoted waiting image visually authoritative while the
-   // recycled meal card is repainted behind it.
-   card.style.transition='none';
-   card.style.transform='none';
-   card.style.opacity='0';
-   card.style.visibility='hidden';
-   card.style.pointerEvents='none';
-   card.classList.remove('swipe-active');
-   card.style.removeProperty('--swipe-tint-alpha');
-   card.dataset.swipe='';
-  }
-
-  try{
-   await Promise.resolve(action?.());
-  }catch(err){
-   setTimeout(()=>{throw err;},0);
-  }finally{
-   if(foodHandoff){
     if(card.isConnected){
      /*
-      * The promoted waiting card is already the next rendered meal. Do not
-      * wait for drawFood() to fetch/decode another image before completing
-      * the handoff. Copy that promoted image into the recycled card immediately;
-      * warm the following card asynchronously so fast swipes stay responsive.
+      * CP1180: the promoted meal is the source of truth for this handoff.
+      * The waiting DOM node can be recycled by drawFood(), so never read its
+      * content after action() completes.
       */
-     const promotedImg=next?.querySelector('img');
      const recycledImg=card.querySelector('img');
-     const promotedMealId=String(next?.dataset.mealId||'');
-     if(promotedImg&&recycledImg){
-      const promotedSrc=String(promotedImg.currentSrc||promotedImg.src||promotedImg.getAttribute('src')||'');
+     if(recycledImg){
       if(promotedSrc)recycledImg.src=promotedSrc;
-      recycledImg.alt=promotedImg.alt||recycledImg.alt||'';
+      if(promotedAlt)recycledImg.alt=promotedAlt;
       recycledImg.referrerPolicy='no-referrer';
       recycledImg.style.transform='none';
       recycledImg.style.visibility='visible';
      }
-     // Switch the recycled layer into the current-card state immediately.
+     const currentMealId=String(S.pool?.[S.index]?.id||'');
      card.classList.remove('swipe-active');
      card.style.transition='none';
      card.style.transform='none';
@@ -2619,26 +2603,29 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
      card.dataset.swipe='';
      card.dataset.swipePhase='idle';
      card.style.pointerEvents='auto';
-     if(promotedMealId)card.dataset.mealId=promotedMealId;
-     if(next){
+     if(promotedMealId&&currentMealId===promotedMealId)card.dataset.mealId=promotedMealId;
+     if(next&&next.isConnected){
       next.style.transition='none';
       next.style.transform='none';
       next.style.opacity='0';
       next.style.visibility='hidden';
       next.style.pointerEvents='none';
       next.dataset.swipePromoted='';
-      const promotedCurrentImg=next.querySelector('img');
-      if(promotedCurrentImg)promotedCurrentImg.style.transform='none';
+      next.dataset.mealId='';
+      next.dataset.foodReady='0';
+      next.dataset.foodImageReady='0';
+      next.dataset.foodImageSource='';
+      const nextImg=next.querySelector('img');
+      if(nextImg)nextImg.style.transform='none';
      }
     }
+    // CP1180: prepare the actual following meal synchronously before clearing
+    // the transaction lock. Its DOM identity is established immediately even
+    // though its image continues loading asynchronously.
     foodSwipeHandoff=false;
+    if($('foodNextCard')?.isConnected)primeFoodSwipeMedia();
     card.dataset.swipeTransaction='';
     card.dataset.swipePhase='idle';
-    if($('foodNextCard')?.isConnected){
-     window.requestAnimationFrame(()=>{
-      if(!foodSwipeHandoff&&$('foodNextCard')?.isConnected)primeFoodSwipeMedia();
-     });
-    }
    }else{
     if(card.isConnected){
      resetCard();
@@ -2679,6 +2666,12 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   if(next){
    const revealPromotedNext=()=>{
     if(!next.isConnected)return;
+    const nextMealId=String(next.dataset.mealId||'');
+    const activeMealId=String(card.dataset.mealId||'');
+    // CP1180: correctness depends on card identity, not remote-image readiness.
+    // A fallback/remote image may load asynchronously without ever promoting
+    // a stale waiting card.
+    if(staticWaitingCard&&(!nextMealId||nextMealId===activeMealId))return;
     next.dataset.swipePromoted='1';
     next.style.transition='none';
     next.style.transform=staticWaitingCard?'none':'scale(1)';
@@ -2688,19 +2681,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
     const promotedImg=next.querySelector('img');
     if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
    };
-   if(staticWaitingCard&&next.dataset.foodReady!=='1'){
-    next.style.transition='none';
-    next.style.transform='none';
-    next.style.visibility='hidden';
-    next.style.opacity='0';
-    next.style.filter='none';
-    next.style.pointerEvents='none';
-    ensureFoodNextCardReady(next).then(ok=>{
-     if(ok&&phase==='committing')revealPromotedNext();
-    });
-   }else{
-    revealPromotedNext();
-   }
+   revealPromotedNext();
   }
 
   dismissSwipeHint();
