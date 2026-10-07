@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r38';
+const API_VERSION='r39';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -10,7 +10,7 @@ const cache=new Map(),buckets=new Map();
 const SEARCH_BUDGET_MS=15000;
 const WIDE_DISCOVERY_RESERVE_MS=11000;
 const WIDE_RADIUS_THRESHOLD=50;
-const RADIUS_DISCOVERY_THRESHOLD=10;
+const RADIUS_DISCOVERY_THRESHOLD=3;
 const WIDE_PROVIDER_RADIUS_CAP=50;
 const WIDE_PRIMARY_TIMEBOX_MS=3500;
 const WIDE_DISCOVERY_TIMEBOX_MS=12000;
@@ -1551,7 +1551,7 @@ if(mode==='search'){
  const primaryPromise=wideSearch
    ? [withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),nearbyProviderTimeout,'Wide ArcGIS lookup timed out')]
    : [
-     // CP1168/r38: 1/3/5/10-mile searches use overlapping provider tiles.
+     // CP1168/r39: 3/5/10-mile searches also add OSM discovery so provider result caps do not flatten the small-radius choices.
      // One ArcGIS/Photon query can hit a result ceiling; independent local
      // tiles recover nearby venues and the final origin-distance filter keeps
      // the selected radius exact.
