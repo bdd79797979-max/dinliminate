@@ -140,7 +140,7 @@ async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm='
 
 function wideRadiusCenters(lat,lon,radius){
   const r=clamp(radius);
-  const spec=r<=50?{tile:30,ring:30,count:6}:{tile:45,ring:65,count:12};
+  const spec=r<=50?{tile:30,ring:30,count:6}:{tile:50,ring:65,count:12};
   const out=[{lat,lon,radius:spec.tile}];
   const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
   for(let i=0;i<spec.count;i++){
@@ -151,13 +151,26 @@ function wideRadiusCenters(lat,lon,radius){
 }
 async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
   const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
-  const tasks=points.map((p,i)=>overpassPoints([p],lat,lon,radius,DINING_AMENITIES,searchTerm,[OVERPASS[i%OVERPASS.length]],5000));
+  // Keep the proven 50-mile path unchanged. For 100 miles, batch the 13
+  // coverage tiles into a few multi-center Overpass queries so the function
+  // does not spend its serverless budget on 13 independent HTTP requests.
+  const wide100=radius>50;
+  const chunks=wide100
+    ? Array.from({length:Math.ceil(points.length/4)},(_,i)=>points.slice(i*4,i*4+4))
+    : points.map(p=>[p]);
+  const tasks=chunks.map((chunk,i)=>{
+    const endpoints=wide100
+      ? [OVERPASS[i%OVERPASS.length],OVERPASS[(i+1)%OVERPASS.length]]
+      : [OVERPASS[i%OVERPASS.length]];
+    const timeout=wide100?5000:5000;
+    return overpassPoints(chunk,lat,lon,radius,DINING_AMENITIES,searchTerm,endpoints,timeout);
+  });
   const settled=await Promise.allSettled(tasks);
   for(const result of settled){
     if(result.status==='fulfilled'){
       rows.push(...(result.value?.rows||[]));
       errors.push(...(result.value?.errors||[]));
-    }else errors.push(String(result.reason?.message||result.reason||'Wide radius Overpass tile failed'));
+    }else errors.push(String(result.reason?.message||result.reason||'Wide radius Overpass batch failed'));
   }
   return{rows:dedupe(rows),errors,tileCount:points.length,tileRadiusMiles:points[0]?.radius||0,ringMiles:radius<=50?30:65};
 }
