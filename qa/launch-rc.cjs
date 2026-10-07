@@ -12,7 +12,7 @@ const requiredFiles=[
   'qa/google-usage-smoke.cjs','qa/restaurant-search-core-smoke.cjs',
   'qa/restaurant-photo-certification-smoke.cjs','qa/restaurant-hours-smoke.cjs',
   'qa/restaurant-decision-ui-smoke.cjs','qa/brand-pwa-final-smoke.cjs',
-  'qa/security-hardening-smoke.cjs'
+  'qa/security-hardening-smoke.cjs','qa/cp1155-meal-deck-never-stuck-smoke.cjs'
 ];
 
 function read(file){return fs.readFileSync(path.join(root,file),'utf8');}
@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='cp1092-home-polish'&&expectedCheckpoint==='CP1092');
+assert('launch candidate branch is explicit',expectedBranch==='cp1155-meal-deck-never-stuck'&&expectedCheckpoint==='CP1155');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -102,7 +102,8 @@ const checkpointSmoke=[
  ['CP1080 Hours Reliability','qa/restaurant-hours-smoke.cjs'],
  ['CP1081 Decision UI','qa/restaurant-decision-ui-smoke.cjs'],
  ['CP1084 Brand/PWA','qa/brand-pwa-final-smoke.cjs'],
- ['CP1085 Security','qa/security-hardening-smoke.cjs']
+ ['CP1085 Security','qa/security-hardening-smoke.cjs'],
+ ['CP1155 Meal deck never-stuck','qa/cp1155-meal-deck-never-stuck-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));
 
