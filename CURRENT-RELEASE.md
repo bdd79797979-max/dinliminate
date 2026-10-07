@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1226 / CP1226
+# CURRENT RELEASE — BUILD 1227 / CP1227
 
 Date: 2026-10-07
 
@@ -54,6 +54,15 @@ CP1225 keeps the built-in Fish Sticks meal as the final card in the Meals deck, 
 ## Home Tour correction
 
 CP1226 updates only the Home Tour. The Home page now has separate Tour steps for Home, Restaurant, the top-right Menu, and the Add/Share/Tour tools, matching the current homepage controls.
+
+## Home Tour core-flow correction
+
+CP1227 replaces the Home Tour with the three core elimination-app messages:
+“tap this button to move on to the next step.”
+“eliminate meals or restaurants until your choice is revealed.”
+“tap home or restaurant to get started.”
+
+The Meal and Restaurant Tour sections remain unchanged.
 
 ## Recovery
 
