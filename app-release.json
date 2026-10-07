@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1188,
-  "sourceBranch": "release/cp1188-atomic-swipe-exit",
-  "checkpoint": "CP1188",
-  "deploymentTrigger": "release/cp1188-atomic-swipe-exit",
+  "build": 1189,
+  "sourceBranch": "release/cp1189-radius-deep-fix",
+  "checkpoint": "CP1189",
+  "deploymentTrigger": "release/cp1189-radius-deep-fix",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -31,5 +31,5 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1188 atomic swipe exit with no recycled-card repaint"
+  "currentBaseline": "CP1189 throttled tiled radius expansion; CP1188 atomic swipe exit retained"
 }
