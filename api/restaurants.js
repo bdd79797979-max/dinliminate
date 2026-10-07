@@ -1548,7 +1548,7 @@ async function enrichOpenNowHours(rows,options={}){
     return [sku,Math.max(0,Number(HARD_LIMITS[sku]||0)-usage)];
   }));
   return {
-    ok:true,patches,counts:{total:input.length,alreadyKnown:stats.existing,cacheHits:stats.cacheHits,resolvedFromOfficialWebsite:stats.officialWebsite,resolvedByGooglePlaceDetails:stats.googlePlaceDetails,resolvedByGoogleTextSearch:stats.googleTextSearch,stillUnknown:stats.unknown,open:knownOpenNow+input.filter(r=>r.openNow===true).length+patches.filter(r=>r.openNow===true).length},
+    ok:true,patches,counts:{total:totalRestaurants,candidates:input.length,alreadyKnown:stats.existing,knownOpenNow,cacheHits:stats.cacheHits,resolvedFromOfficialWebsite:stats.officialWebsite,resolvedByGooglePlaceDetails:stats.googlePlaceDetails,resolvedByGoogleTextSearch:stats.googleTextSearch,stillUnknown:stats.unknown,open:knownOpenNow+input.filter(r=>r.openNow===true).length+patches.filter(r=>r.openNow===true).length},
     google:{callsUsed:budget.callsUsed,callsBudget:maxCalls,budgetDenied:budget.budgetDenied,monthlyRemaining},
     targetOpen
   };
@@ -1672,6 +1672,14 @@ if(mode==='health'){if(res.setHeader)res.setHeader('Cache-Control','public, max-
 if(mode==='suggest'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');return res.status(200).json({ok:true,results:await suggest(q.get('q'))});}
 if(mode==='resolve'){const x=await geocode(q.get('q'));return res.status(200).json({ok:true,...x})}
 if(mode==='reverse'){const lat=n(q.get('lat')),lon=n(q.get('lon'));if(!validCoords(lat,lon))return res.status(400).json({ok:false,message:'Coordinates are invalid.'});if(res.setHeader)res.setHeader('Cache-Control','public, max-age=300, s-maxage=300, stale-while-revalidate=600');return res.status(200).json({ok:true,display:await reverse(lat,lon)})}
+if(mode==='hours'){
+  const body=await requestJsonBody(req);
+  const rawRows=Array.isArray(body?.rows)?body.rows.slice(0,90):[];
+  if(!rawRows.length)return res.status(400).json({ok:false,message:'No restaurant hours candidates supplied.'});
+  const result=await enrichOpenNowHours(rawRows,{maxGoogleCalls:body?.maxGoogleCalls,totalRestaurants:body?.totalRestaurants,knownOpenNow:body?.knownOpenNow});
+  if(res.setHeader)res.setHeader('Cache-Control','private, no-store');
+  return res.status(200).json(result);
+ }
 if(mode==='details'){
   const placeId=String(q.get('placeId')||q.get('googlePlaceId')||'').trim();
   const name=String(q.get('name')||'').trim().slice(0,160);
