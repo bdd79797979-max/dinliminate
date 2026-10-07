@@ -2793,6 +2793,10 @@ const completeAfterExit=async ()=>{
   if(phase!=='idle')return false;
   const dir=Number(direction)<0?-1:1;
   const distance=Math.max(48,swipeThreshold);
+  // Treat a button press as a synthetic committed swipe so the existing
+  // commit() path can perform the full off-screen exit and handoff.
+  phase='dragging';
+  card.dataset.swipePhase='dragging';
   commit(dir*distance,0);
   return true;
  };
