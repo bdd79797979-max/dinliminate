@@ -16,7 +16,7 @@ const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1070';
+let APP_BUILD = '1164';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -2019,10 +2019,14 @@ function drawFood(){
   if(fb&&current!==fb){this.src=fb;return;}
   markMealImageUnavailable(this);
  };
- // Never paint the last-resort meal image while the real meal photo is loading.
- img.removeAttribute('src');
- img.style.visibility='hidden';
  const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
+ // Paint the approved meal photo immediately. A failed request falls through
+ // to the exact meal backup rather than leaving a blank card.
+ img.style.visibility='visible';
+ img.dataset.imageFallback='false';
+ if(primaryPhoto)img.src=primaryPhoto;
+ else if(backupPhoto)img.src=backupPhoto;
+ else markMealImageUnavailable(img);
  if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
   if(String(img.dataset.mealLoadToken||'')===loadToken){
    if(!ok)markMealImageUnavailable(img);
@@ -2322,11 +2326,17 @@ function setFoodNextCardImage(nextCard,view){
  img.dataset.fallback=backup;
  img.dataset.finalFallback=FINAL_FOOD_IMAGE;
  img.dataset.imageFallback='true';
- img.onerror=()=>markMealImageUnavailable(img);
- // Keep the waiting card hidden until the real meal photo has decoded.
- img.removeAttribute('src');
- img.style.visibility='hidden';
- nextCard.style.visibility='hidden';
+ img.onerror=function(){
+  const fb=this.dataset.fallback||'',current=this.currentSrc||this.src;
+  if(fb&&current!==fb){this.src=fb;this.dataset.imageFallback='false';return;}
+  markMealImageUnavailable(this);
+ };
+ // Do not make the waiting card itself invisible while the photo warms up.
+ img.style.visibility='visible';
+ nextCard.style.visibility='visible';
+ if(primary)img.src=primary;
+ else if(backup)img.src=backup;
+ else markMealImageUnavailable(img);
  nextCard.style.pointerEvents='none';
  const promise=loadMealPhotoCandidates(img,[primary,backup],nextCard).then(ok=>{
   if(!ok&&String(nextCard.dataset.mealLoadToken||'')===loadToken)markMealImageUnavailable(img);
