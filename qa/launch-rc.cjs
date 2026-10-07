@@ -12,7 +12,7 @@ const requiredFiles=[
   'qa/google-usage-smoke.cjs','qa/restaurant-search-core-smoke.cjs',
   'qa/restaurant-photo-certification-smoke.cjs','qa/restaurant-hours-smoke.cjs',
   'qa/restaurant-decision-ui-smoke.cjs','qa/brand-pwa-final-smoke.cjs',
-  'qa/security-hardening-smoke.cjs','qa/cp1155-meal-deck-never-stuck-smoke.cjs','qa/cp1161-meal-card-no-fallback-flash.cjs','qa/cp1162-tutorial-current-ui-smoke.cjs','qa/cp1163-meal-photo-refresh.cjs','qa/cp1164-meal-photo-reliable-paint.cjs'
+  'qa/security-hardening-smoke.cjs','qa/cp1155-meal-deck-never-stuck-smoke.cjs','qa/cp1161-meal-card-no-fallback-flash.cjs','qa/cp1162-tutorial-current-ui-smoke.cjs','qa/cp1163-meal-photo-refresh.cjs','qa/cp1165-remaining-meal-photo-refresh.cjs'
 ];
 
 function read(file){return fs.readFileSync(path.join(root,file),'utf8');}
@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='cp1164-meal-photo-reliable-paint'&&expectedCheckpoint==='CP1164');
+assert('launch candidate branch is explicit',expectedBranch==='cp1165-remaining-meal-photo-refresh'&&expectedCheckpoint==='CP1165');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -107,7 +107,7 @@ const checkpointSmoke=[
  ['CP1161 Meal first-paint no fallback flash','qa/cp1161-meal-card-no-fallback-flash.cjs'],
  ['CP1162 Tutorial current UI','qa/cp1162-tutorial-current-ui-smoke.cjs'],
  ['CP1163 Meal photo refresh','qa/cp1163-meal-photo-refresh.cjs'],
- ['CP1164 Meal photo reliable paint','qa/cp1164-meal-photo-reliable-paint.cjs'],
+ ['CP1165 Meal photo reliable paint','qa/cp1165-remaining-meal-photo-refresh.cjs'],
  ['CP1157 Restaurant radius','qa/cp1157-restaurant-radius-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));
