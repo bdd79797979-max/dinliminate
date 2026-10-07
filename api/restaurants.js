@@ -1405,7 +1405,8 @@ function compactHoursRow(row){
   };
 }
 function hoursKnown(row){
-  return typeof row?.openNow==='boolean'||!!String(row?.opening_hours||'').trim()||/^(?:CLOSED_|OPEN_)/.test(String(row?.businessStatus||'').toUpperCase());
+  const status=String(row?.businessStatus||'').toUpperCase();
+  return typeof row?.openNow==='boolean'||status==='CLOSED_PERMANENTLY'||status==='CLOSED_TEMPORARILY';
 }
 async function officialHoursForRow(row){
   const website=safeWebsiteUrl(row?.website)||knownRestaurantWebsite(row);
@@ -1547,7 +1548,7 @@ async function enrichOpenNowHours(rows,options={}){
     return [sku,Math.max(0,Number(HARD_LIMITS[sku]||0)-usage)];
   }));
   return {
-    ok:true,patches,counts:{total:input.length,alreadyKnown:stats.existing,cacheHits:stats.cacheHits,resolvedFromOfficialWebsite:stats.officialWebsite,resolvedByGooglePlaceDetails:stats.googlePlaceDetails,resolvedByGoogleTextSearch:stats.googleTextSearch,stillUnknown:stats.unknown,open:input.filter(r=>r.openNow===true).length+patches.filter(r=>r.openNow===true).length},
+    ok:true,patches,counts:{total:input.length,alreadyKnown:stats.existing,cacheHits:stats.cacheHits,resolvedFromOfficialWebsite:stats.officialWebsite,resolvedByGooglePlaceDetails:stats.googlePlaceDetails,resolvedByGoogleTextSearch:stats.googleTextSearch,stillUnknown:stats.unknown,open:knownOpenNow+input.filter(r=>r.openNow===true).length+patches.filter(r=>r.openNow===true).length},
     google:{callsUsed:budget.callsUsed,callsBudget:maxCalls,budgetDenied:budget.budgetDenied,monthlyRemaining},
     targetOpen
   };
