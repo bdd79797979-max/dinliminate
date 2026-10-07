@@ -113,6 +113,17 @@ familyNormalMode:'idle',familyDecisionType:'',familyNormalRoundId:'',familyNorma
 tutorialMode:false
 };
 const IMAGE_PROXY_HOSTS=new Set(['images.pexels.com','images.unsplash.com','commons.wikimedia.org','upload.wikimedia.org','thumb.wikimedia.org','static.wixstatic.com','static.spotapps.co','www.goodnes.com','hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','www.southernliving.com','southernbite.com','snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com','slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com','kookycrunch.com','cdn.apartmenttherapy.info','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.africanbites.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','www.sugardale.com','myhomemaderecipe.com','www.finedininglovers.com']);
+
+const BUILTIN_MEAL_IMAGE_HOSTS=new Set(['images.pexels.com','images.unsplash.com']);
+function isBuiltInMeal(item){
+ const id=String(item?.id||'');
+ return !!id&&getDefaultFoods().some(x=>String(x?.id||'')===id);
+}
+function isApprovedBuiltInMealImage(value){
+ const src=normalizeMealPhotoRef(value);
+ if(!/^https:\/\//i.test(src))return false;
+ try{return BUILTIN_MEAL_IMAGE_HOSTS.has(new URL(src).hostname.toLowerCase());}catch{return false;}
+}
 function imageProxyUrl(raw){
  const src=String(raw||'');
  if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
@@ -139,7 +150,12 @@ function dedupeMealPhotos(photos,max=8){
 }
 function mealPhotoList(item){
  const candidates=[];
- const add=(value)=>{const ref=normalizeMealPhotoRef(value);if(ref)candidates.push(ref);};
+ const add=(value)=>{
+  const ref=normalizeMealPhotoRef(value);
+  if(!ref)return;
+  if(isBuiltInMeal(item)&&!isApprovedBuiltInMealImage(ref))return;
+  candidates.push(ref);
+ };
  add(item?.image);
  add(item?.backupImage);
  for(const ref of Array.isArray(item?.images)?item.images:[])add(ref);
@@ -147,14 +163,17 @@ function mealPhotoList(item){
 }
 function mealOfficialPhoto(item){
  const value=normalizeMealPhotoRef(item?.officialImage);
- return value&&!value.startsWith('idb:')?value:'';
+ if(!value||value.startsWith('idb:'))return '';
+ if(isBuiltInMeal(item)&&!isApprovedBuiltInMealImage(value))return '';
+ return value;
 }
-// CP1154 — built-in meal photos remain URL-only; local data/blob references are not valid catalog photos.
+// CP1156 — built-in meal photos use only approved stable hosts; local data/blob references are not valid catalog photos.
 function assertBuiltInMealPhotoPolicy(item){
  if(!item)return true;
- const id=String(item.id||'');
- if(!getDefaultFoods().some(x=>String(x.id)===id))return true;
- return mealPhotoList(item).every(ref=>!/^data:|^blob:|^idb:/i.test(String(ref||'')));
+ if(!isBuiltInMeal(item))return true;
+ const refs=mealPhotoList(item);
+ const official=mealOfficialPhoto(item);
+ return [...(official?[official]:[]),...refs].every(ref=>isApprovedBuiltInMealImage(ref));
 }
 function foodPhoto(item){
  if(!item)return '';
