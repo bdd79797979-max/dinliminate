@@ -153,8 +153,34 @@ async function wideRadiusArcgis(lat,lon,radius,searchTerm=''){
   const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
   const wide100=radius>50;
   if(!wide100){
-    const one=await arcgisPlaces(lat,lon,Math.min(50,radius),searchTerm,3200);
-    return {rows:filterNonDiningRows(dedupe(one.rows||[])),errors:one.errors||[],tileCount:1,tileRadiusMiles:Math.min(50,radius),ringMiles:0};
+    // 50 miles gets the full 7-tile ArcGIS coverage grid instead of a
+    // single-origin lookup. This keeps the selected radius broad without
+    // relying on the timeout-prone multi-provider radius-engine path.
+    let cursor=0;
+    const worker=async()=>{
+      while(cursor<points.length){
+        const i=cursor++,p=points[i];
+        const result=await withinBudget(
+          arcgisPlaces(p.lat,p.lon,30,searchTerm,2800),
+          3500,
+          '50-mile ArcGIS tile timed out'
+        );
+        if(result?.__timeout){
+          errors.push('50-mile ArcGIS tile timed out');
+          continue;
+        }
+        rows.push(...(result?.rows||[]));
+        errors.push(...(result?.errors||[]));
+      }
+    };
+    await Promise.all(Array.from({length:5},()=>worker()));
+    return {
+      rows:filterNonDiningRows(dedupe(rows)),
+      errors,
+      tileCount:points.length,
+      tileRadiusMiles:30,
+      ringMiles:30
+    };
   }
   let cursor=0;
   const worker=async()=>{
@@ -1477,15 +1503,15 @@ if(mode==='search'){
  if(rate(req,mode))return res.status(429).json({ok:false,code:'RATE_LIMITED',message:'Restaurant search is temporarily busy. Please try again.'});
  if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');
  const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
- const wideSearch=radius>50;
+ const wideSearch=radius>=50;
 let radiusEngineResult={coverageVerified:false},engineTimedOut=false,engineRows=[],engineErrors=[],engineProviderStats={},radiusEngineElapsedMs=0,wideGoogleOut={rows:[],errors:[]};
 if(wideSearch){
   const wideStarted=Date.now();
   const wide100=radius>50;
   const wideArcgisPromise=withinBudget(
     wideRadiusArcgis(lat,lon,radius,searchTerm),
-    wide100?7500:5000,
-    wide100?'Wide tiled ArcGIS coverage timed out':'Wide ArcGIS lookup timed out'
+    wide100?7500:8500,
+    wide100?'Wide tiled ArcGIS coverage timed out':'50-mile tiled ArcGIS coverage timed out'
   );
   const wideGooglePromise=withinBudget(
     searchTerm?googleSearchPlaces(lat,lon,Math.min(radius,50),searchTerm):googlePlaces(lat,lon,Math.min(radius,50)),
