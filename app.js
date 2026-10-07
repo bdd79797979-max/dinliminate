@@ -8,6 +8,7 @@
 
 (() => {
 'use strict';
+// CP1191 — true swipe handoff: isolate outgoing visual from recycled live card.
 // CP954 restaurant first-paint restoration: exact/direct venue photos win before generic fallback.
 // CP945 photo-pipeline release sync: canonical Restaurant photo handoff + cache revision.
 const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.DINLIMINATE_FOODS : [];
@@ -2062,7 +2063,9 @@ function drawFood(){
  const foodBackButton=$('foodBack');if(foodBackButton){const familyBack=familyIsBrowseStage('meal')&&!familyBrowseSubmitted();foodBackButton.disabled=!familyBack&&S.foodActions.length===0;foodBackButton.setAttribute('aria-disabled',String(!familyBack&&S.foodActions.length===0));}
  renderMaybeDeckToggle('food');
  if(!foodSwipeHandoff){primeFoodSwipeMedia();}
- maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
+ maybeShowInCardSwipeCoach();
+ if(!foodSwipeHandoff)bindFoodSwipe();
+ bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
 function foodCut(item=S.pool[S.index]){
@@ -2470,6 +2473,9 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
+ const cardIdentity=()=>String(card.dataset.mealId||card.dataset.restaurantPhotoKey||'');
+ const nextIdentity=()=>String(next?.dataset.mealId||next?.dataset.swipePreviewKey||next?.querySelector?.('img')?.dataset?.restaurantPhotoKey||'');
+ let quarantinedSwipeId='';
 
  // CP988: one physical gesture = one transaction. A committed card is
  // immediately removed from pointer input until its handoff is complete.
@@ -2568,99 +2574,80 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
 const completeAfterExit=async ()=>{
   if(phase!=='committing')return;
   clearCompletionTimer();
-  card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
-  // CP1181: snapshot the waiting card before action() can redraw/rebind it.
-  const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
-  const promotedImg=foodHandoff?next?.querySelector('img'):null;
-  const promotedSrc=foodHandoff?String(promotedImg?.currentSrc||promotedImg?.src||promotedImg?.getAttribute('src')||''):'';
-  const promotedAlt=foodHandoff?String(promotedImg?.alt||''):'';
+
   phase='completing';
   card.dataset.swipePhase='completing';
+
+  // CP1193: NEVER clone or recycle the outgoing card while it is visible.
+  // The exact same DOM node is hidden first, updated while hidden, then
+  // reset and revealed only after the new meal is fully selected.
   if(foodHandoff)foodSwipeHandoff=true;
 
-  if(foodHandoff){
-   // Keep the promoted waiting image visually authoritative while the
-   // recycled meal card is repainted behind it.
-   card.style.transition='none';
-   card.style.transform='none';
-   card.style.opacity='0';
-   card.style.visibility='hidden';
-   card.style.pointerEvents='none';
-   card.classList.remove('swipe-active');
-   card.style.removeProperty('--swipe-tint-alpha');
-   card.dataset.swipe='';
-  }
+  card.style.transition='none';
+  card.style.visibility='hidden';
+  card.style.pointerEvents='none';
+  card.style.opacity='1';
+
+  // Defensive cleanup from CP1191/1192 if a stale exit layer exists.
+  const staleExit=card.__swipeExitLayer;
+  if(staleExit?.isConnected)staleExit.remove();
+  card.__swipeExitLayer=null;
 
   try{
-   await Promise.resolve(action?.());
+    await Promise.resolve(action?.());
   }catch(err){
-   setTimeout(()=>{throw err;},0);
+    setTimeout(()=>{throw err;},0);
   }finally{
-   if(foodHandoff){
-    if(card.isConnected){
-     // CP1181: use the pre-action snapshot as the handoff source of truth.
-     const recycledImg=card.querySelector('img');
-     const currentMealId=String(S.pool?.[S.index]?.id||'');
-     if(currentMealId===promotedMealId){
-      if(recycledImg){
-       if(promotedSrc)recycledImg.src=promotedSrc;
-       if(promotedAlt)recycledImg.alt=promotedAlt;
-       recycledImg.referrerPolicy='no-referrer';
-       recycledImg.style.transform='none';
-       recycledImg.style.visibility='visible';
-      }
-      card.dataset.mealId=promotedMealId;
-     }
-     if(next){
-      // Invalidate stale waiting state before preparing the real next card.
-      next.style.transition='none';
-      next.style.transform='none';
-      next.style.opacity='0';
-      next.style.visibility='hidden';
-      next.style.pointerEvents='none';
-      next.dataset.swipePromoted='';
-      next.dataset.mealId='';
-      next.dataset.foodReady='0';
-      next.dataset.foodImageReady='0';
-      next.dataset.foodImageSource='';
-      const nextImg=next.querySelector('img');
-      if(nextImg)nextImg.style.transform='none';
-     }
-     card.classList.remove('swipe-active');
-     card.style.transition='none';
-     card.style.transform='none';
-     card.style.opacity='1';
-     card.style.visibility='visible';
-     card.style.removeProperty('--swipe-tint-alpha');
-     card.dataset.swipe='';
-     card.dataset.swipePhase='idle';
-     // Establish the actual following card before unlocking the current card.
-     foodSwipeHandoff=false;
-     if($('foodNextCard')?.isConnected)primeFoodSwipeMedia();
-     card.style.pointerEvents='auto';
-     card.dataset.swipeTransaction='';
-     card.dataset.swipePhase='idle';
-    }
-   }else{
-    if(card.isConnected){
-     resetCard();
-    }
-   }
-  }
- };
+    if(foodHandoff){
+      // drawFood() has now populated the hidden live card with the new meal.
+      // Do not expose it until its transform and compositor state are clean.
+      card.style.transition='none';
+      card.style.transform='none';
+      card.style.opacity='1';
+      card.style.visibility='hidden';
+      card.style.pointerEvents='none';
+      card.style.removeProperty('--swipe-tint-alpha');
+      card.dataset.swipe='';
+      card.dataset.swipePhase='idle';
+      card.dataset.swipeTransaction='';
+      card.dataset.swipeOutgoingId='';
 
- function handleTransitionEnd(e){
-  if(phase!=='committing'||e.target!==card||e.propertyName!=='transform')return;
-  completeAfterExit();
- }
+      if($('foodNextCard')?.isConnected){
+        primeFoodSwipeMedia();
+      }
+
+      // Two frames gives WebKit a clean hidden->reset->visible lifecycle.
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          if(!card.isConnected)return;
+          if(S.screen!=='food'){
+            foodSwipeHandoff=false;
+            return;
+          }
+          card.style.transition='none';
+          card.style.transform='none';
+          card.style.opacity='1';
+          card.style.visibility='visible';
+          card.style.pointerEvents='auto';
+          card.dataset.swipePhase='idle';
+          card.dataset.swipeTransaction='';
+          foodSwipeHandoff=false;
+          bindFoodSwipe();
+        });
+      });
+    }else{
+      card.__swipeExitLayer=null;
+      if(card.isConnected)resetCard();
+    }
+  }
+};
 
  const commit=(dx,speed=0)=>{
   if(phase!=='dragging')return;
-
-   cancelMoveFrame();
+  cancelMoveFrame();
   phase='committing';
   card.dataset.swipePhase='committing';
   card.dataset.swipeTransaction='active';
@@ -2675,36 +2662,39 @@ const completeAfterExit=async ()=>{
   const duration=Math.round(clamp(198-(magnitude*42),132,198));
   const direction=dx<0?-1:1;
 
+  quarantinedSwipeId=cardIdentity();
+  card.dataset.swipeOutgoingId=quarantinedSwipeId;
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
-  card.classList.remove('swipe-active');
-  card.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1),opacity '+duration+'ms ease';
-  card.style.opacity='1';
+  dismissSwipeHint();
+
+  // CP1193: animate the ONE live card. There is no exit clone.
+  card.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1)';
+  card.style.willChange='transform';
   card.style.transform='translate3d('+(direction*exitDistance)+'px,0,0) rotate('+(direction*11)+'deg)';
 
+  // The waiting card is allowed underneath the outgoing card, but the
+  // outgoing card itself is never rebound/repainted while visible.
   if(next){
-   const revealPromotedNext=()=>{
-    if(!next.isConnected)return;
-    const nextMealId=String(next.dataset.mealId||'');
-    const activeMealId=String(card.dataset.mealId||'');
-    // CP1181: card identity, not image readiness, controls promotion.
-    if(staticWaitingCard&&(!nextMealId||nextMealId===activeMealId))return;
-    next.dataset.swipePromoted='1';
-    next.style.transition='none';
-    next.style.transform=staticWaitingCard?'none':'scale(1)';
-    next.style.visibility='visible';
-    next.style.opacity='1';
-    next.style.filter='none';
-    const promotedImg=next.querySelector('img');
-    if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
-   };
-   revealPromotedNext();
+    const nextMealId=nextIdentity();
+    if(nextMealId&&nextMealId!==quarantinedSwipeId){
+      next.dataset.swipePromoted='1';
+      next.style.transition='none';
+      next.style.transform=staticWaitingCard?'none':'scale(1)';
+      next.style.visibility='visible';
+      next.style.opacity='1';
+      next.style.filter='none';
+      const promotedImg=next.querySelector('img');
+      if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
+    }
   }
 
-  dismissSwipeHint();
-  card.addEventListener('transitionend',handleTransitionEnd);
-  completionTimer=window.setTimeout(completeAfterExit,duration+180);
- };
+  const finishExit=()=>{
+    if(phase!=='committing')return;
+    completeAfterExit();
+  };
 
+  window.setTimeout(finishExit,duration+24);
+};
  const paintMove=()=>{
   moveFrame=null;
   if(phase!=='dragging')return;
