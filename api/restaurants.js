@@ -7,18 +7,17 @@ const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi
 const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chick-fil-A","Popeyes","Subway","Sonic","Arby's","Whataburger","Five Guys","Raising Cane's","Wingstop","Bojangles","Cook Out","Dairy Queen","Zaxby's","Church's Chicken","Captain D's","Long John Silver's","Jimmy John's","Jersey Mike's","Firehouse Subs","Little Caesars","Domino's","Papa John's","Pizza Hut","Marco's Pizza","Krystal","Steak 'n Shake","White Castle","Freddy's","In-N-Out","Carl's Jr.","Panda Express","Jack in the Box","Hardee's","Del Taco","Checkers","Rally's"];
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
-const SEARCH_BUDGET_MS=7500;
-const WIDE_DISCOVERY_RESERVE_MS=3200;
+const SEARCH_BUDGET_MS=15000;
+const WIDE_DISCOVERY_RESERVE_MS=11000;
 const WIDE_RADIUS_THRESHOLD=50;
 const RADIUS_DISCOVERY_THRESHOLD=10;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2300;
-const WIDE_DISCOVERY_TIMEBOX_MS=3300;
-const RADIUS_DISCOVERY_TIMEBOX_MS=3200;
-const OVERPASS_HTTP_TIMEOUT_MS=3000;
-const WIDE_OVERPASS_RING_MILES=60.5;
-const WIDE_OVERPASS_RING_POINTS=8;
-const WIDE_OVERPASS_GROUP_SIZE=3;
+const WIDE_PRIMARY_TIMEBOX_MS=3500;
+const WIDE_DISCOVERY_TIMEBOX_MS=12000;
+const RADIUS_DISCOVERY_TIMEBOX_MS=11500;
+const OVERPASS_HTTP_TIMEOUT_MS=5500;
+const WIDE_OVERPASS_GROUP_SIZE=1;
+const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
@@ -114,16 +113,38 @@ function queryMany(points,types=DINING_AMENITIES,timeoutSeconds=10){
 }
 function centers(lat,lon,r){
  const radius=clamp(r);
- if(radius<=25)return[{lat,lon,radius}];
- if(radius<=50)return[{lat,lon,radius:50}];
- // Overpass is queried in <=50-mile circles. A 12-point ring at 60 miles,
- // plus the origin circle, covers the requested 100-mile disk with overlap;
- // final filtering is always done from the true origin distance.
- const ring=WIDE_OVERPASS_RING_MILES,count=WIDE_OVERPASS_RING_POINTS,out=[{lat,lon,radius:50}];
+ // Deterministic overlapping search tiles. The final origin-distance filter
+ // still guarantees that only places inside the user's selected radius return.
+ // 1-10mi: one exact-radius circle.
+ if(radius<=10)return[{lat,lon,radius}];
+ // 11-25mi: 15mi tiles on a 6-point ring plus the origin.
+ if(radius<=25){
+  const tile=15,ring=15,count=6,out=[{lat,lon,radius:tile}];
+  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+  for(let i=0;i<count;i++){
+   const ang=i*2*Math.PI/count;
+   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
+  }
+  return out;
+ }
+ // 26-50mi: 30mi tiles on a 6-point ring plus the origin.
+ if(radius<=50){
+  const tile=30,ring=30,count=6,out=[{lat,lon,radius:tile}];
+  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+  for(let i=0;i<count;i++){
+   const ang=i*2*Math.PI/count;
+   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
+  }
+  return out;
+ }
+ // 51-100mi: a 40mi origin tile plus a 12-point 75mi outer ring of 40mi
+ // tiles. This fully covers the 100mi disk with overlap while keeping each
+ // upstream query comfortably below the 50mi provider cap.
+ const tile=40,ring=75,count=12,out=[{lat,lon,radius:tile}];
  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  for(let i=0;i<count;i++){
   const ang=i*2*Math.PI/count;
-  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:50});
+  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
  }
  return out;
 }
@@ -251,48 +272,57 @@ function searchQueryClause(lat,lon,radius,searchTerm){
 }
 function searchQueryMany(points,searchTerm,timeoutSeconds=10){return '[out:json][timeout:'+Math.max(6,Math.min(16,Number(timeoutSeconds)||10))+'];('+points.map(c=>searchQueryClause(c.lat,c.lon,c.radius,searchTerm)).join('')+');out center tags;'}
 function radiusDiscoveryPlan(lat,lon,radius){
- const r=clamp(radius),coverage=centers(lat,lon,r);
- if(r<=WIDE_RADIUS_THRESHOLD)return {mode:'nearby',reserveMs:0,coveragePoints:coverage.length,groups:[coverage]};
- // Keep each request small enough for the upstream timeout while covering
- // the entire requested disk with overlapping <=50-mile circles.
- const groups=[];
- for(let i=0;i<coverage.length;i+=WIDE_OVERPASS_GROUP_SIZE)groups.push(coverage.slice(i,i+WIDE_OVERPASS_GROUP_SIZE));
- return {mode:'wide',reserveMs:WIDE_DISCOVERY_RESERVE_MS,coveragePoints:coverage.length,groups};
+ const r=clamp(radius),coverage=centers(lat,lon,r),groups=[];
+ const groupSize=r>WIDE_RADIUS_THRESHOLD?WIDE_OVERPASS_GROUP_SIZE:TILED_OVERPASS_GROUP_SIZE;
+ for(let i=0;i<coverage.length;i+=groupSize)groups.push(coverage.slice(i,i+groupSize));
+ return {
+  mode:r>WIDE_RADIUS_THRESHOLD?'wide':'tiled',
+  reserveMs:r>WIDE_RADIUS_THRESHOLD?WIDE_DISCOVERY_RESERVE_MS:0,
+  coveragePoints:coverage.length,
+  groups
+ };
 }
 async function overpassPoints(points,originLat,originLon,radius,types='restaurant|fast_food',searchTerm='',endpoints=OVERPASS,timeout=OVERPASS_HTTP_TIMEOUT_MS){
- const term=normalizeSearchQuery(searchTerm),seconds=Math.max(6,Math.min(10,Math.ceil(Number(timeout||OVERPASS_HTTP_TIMEOUT_MS)/1000)));
+ const term=normalizeSearchQuery(searchTerm),seconds=Math.max(6,Math.min(16,Math.ceil(Number(timeout||OVERPASS_HTTP_TIMEOUT_MS)/1000)));
  const data=term?searchQueryMany(points,term,seconds):queryMany(points,types,seconds),rows=[],errors=[];
- // Use one mirror at a time, falling back to the next only when needed.
- // This avoids hammering public Overpass mirrors with duplicate concurrent requests.
+ // Use one mirror at a time per tile. When a mirror errors or returns an empty
+ // result, immediately try the next mirror for that same geographic tile.
  for(const ep of endpoints){
   try{
    const payload=await json(ep+'?data='+encodeURIComponent(data),{},timeout);
-   for(const el of payload?.elements||[]){const r=osmRow(el,{lat:originLat,lon:originLon});if(r&&r.distance<=radius)rows.push(r);}
-   return{rows:dedupe(rows),errors};
+   const elements=payload?.elements||[];
+   for(const el of elements){const r=osmRow(el,{lat:originLat,lon:originLon});if(r&&r.distance<=radius)rows.push(r);}
+   if(elements.length)return{rows:dedupe(rows),errors};
+   errors.push('Overpass returned no elements');
   }catch(e){
    errors.push(String(e?.message||e||'request failed'));
   }
  }
  return{rows:dedupe(rows),errors};
 }
-async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
- return overpassPoints(centers(lat,lon,radius),lat,lon,radius,types,searchTerm,OVERPASS,8500);
-}
-async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
+async function tiledRadiusOverpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
  const plan=radiusDiscoveryPlan(lat,lon,radius),rows=[],errors=[];
- // CP1160: each geographic batch uses one rotating Overpass mirror. This keeps
- // the 100-mile search bounded instead of allowing sequential mirror retries
- // to double the request duration.
- const endpoints=plan.groups.map((_,i)=>OVERPASS[i%OVERPASS.length]);
+ const endpointPairs=plan.groups.map((_,i)=>[
+   OVERPASS[i%OVERPASS.length],
+   OVERPASS[(i+1)%OVERPASS.length]
+ ]);
  const tasks=plan.groups.map((group,i)=>overpassPoints(
-   group,lat,lon,radius,'restaurant|fast_food',searchTerm,[endpoints[i]],OVERPASS_HTTP_TIMEOUT_MS
+   group,lat,lon,radius,types,searchTerm,endpointPairs[i],OVERPASS_HTTP_TIMEOUT_MS
  ));
  const settled=await Promise.allSettled(tasks);
  for(const result of settled){
-   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'wide discovery failed'));continue;}
-   rows.push(...(result.value.rows||[])); errors.push(...(result.value.errors||[]));
+   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'radius discovery failed'));continue;}
+   rows.push(...(result.value.rows||[]));
+   errors.push(...(result.value.errors||[]));
  }
- return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpoints.length};
+ return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpointPairs.length*2};
+}
+async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
+ return tiledRadiusOverpass(lat,lon,radius,types,searchTerm);
+}
+async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
+ const result=await tiledRadiusOverpass(lat,lon,radius,'restaurant|fast_food',searchTerm);
+ return{...result};
 }
 const KNOWN_RESTAURANT_WEBSITES={
   "mcdonald's":'https://www.mcdonalds.com',"taco bell":'https://www.tacobell.com',"wendy's":'https://www.wendys.com',"the thirsty goat":'https://www.thirstygoatsango.com',"johnny's big burger":'https://thebigburger.com',"edward's steakhouse":'https://www.edwardssteakhouse.net',"shelbys trio":'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street',"thirsty goat":'https://www.thirstygoatsango.com',"burger king":'https://www.bk.com',"kfc":'https://www.kfc.com',"chick fil a":'https://www.chick-fil-a.com',"popeyes":'https://www.popeyes.com',"subway":'https://www.subway.com',"sonic":'https://www.sonicdrivein.com',"arby's":'https://www.arbys.com',"whataburger":'https://whataburger.com',"five guys":'https://www.fiveguys.com',"culver's":'https://www.culvers.com',"raising cane's":'https://www.raisingcanes.com',"wingstop":'https://www.wingstop.com',"bojangles":'https://www.bojangles.com',"cook out":'https://www.cookout.com',"dairy queen":'https://www.dairyqueen.com',"zaxby's":'https://www.zaxbys.com',"church's chicken":'https://www.churchs.com',"captain d's":'https://www.captainds.com',"long john silver's":'https://www.ljsilvers.com',"jimmy john's":'https://www.jimmyjohns.com',"jersey mike's":'https://www.jerseymikes.com',"firehouse subs":'https://www.firehousesubs.com',"little caesars":'https://littlecaesars.com',"domino's":'https://www.dominos.com',"papa john's":'https://www.papajohns.com',"pizza hut":'https://www.pizzahut.com',"marco's pizza":'https://www.marcos.com',"krystal":'https://www.krystal.com',"steak 'n shake":'https://www.steaknshake.com',"white castle":'https://www.whitecastle.com',"freddy's":'https://www.freddys.com',"panda express":'https://www.pandaexpress.com',"jack in the box":'https://www.jackinthebox.com',"hardee's":'https://www.hardees.com',"del taco":'https://www.deltaco.com',"checkers":'https://www.checkers.com',"rally's":'https://www.rallys.com',"chipotle":'https://www.chipotle.com',"applebee's":'https://www.applebees.com',"chili's":'https://www.chilis.com',"olive garden":'https://www.olivegarden.com',"waffle house":'https://www.wafflehouse.com'
@@ -1218,26 +1248,59 @@ function sameRestaurant(x,r){
 }
 function dedupe(rows){
   const ordered=[...(rows||[])].filter(Boolean).sort((a,b)=>providerPriority(a)-providerPriority(b));
-  const map=new Map();
+  const map=new Map(),index=new Map();
+  const normId=v=>String(v||'').trim();
+  const cellKey=(lat,lon)=>Number.isFinite(Number(lat))&&Number.isFinite(Number(lon))
+    ?Math.floor(Number(lat)*100)+'|'+Math.floor(Number(lon)*100):'';
+  function candidateKeys(row){
+    const out=[];
+    const id=normId(row?.id);
+    if(id)out.push('id:'+id);
+    const name=restaurantNameKey(row?.name);
+    if(name)out.push('name:'+name);
+    const addr=restaurantAddressKey(row?.address||'');
+    if(addr)out.push('addr:'+addr);
+    const phone=phoneKey(row?.phone);
+    if(phone)out.push('phone:'+phone);
+    const website=websiteKey(row?.website);
+    if(website)out.push('web:'+website);
+    const cell=cellKey(row?.lat,row?.lon);
+    if(cell){
+      const [la,lo]=cell.split('|').map(Number);
+      for(let dlat=-1;dlat<=1;dlat++)for(let dlon=-1;dlon<=1;dlon++)out.push('cell:'+(la+dlat)+'|'+(lo+dlon));
+    }
+    return [...new Set(out)];
+  }
+  function mergeInto(target,r){
+    target.fastFood=target.fastFood||r.fastFood;
+    if(typeof r.openNow==='boolean' && (typeof target.openNow!=='boolean' || String(r.source||'').startsWith('Google')))target.openNow=r.openNow;
+    for(const f of ['address','phone','website','opening_hours','photo','cuisine','brand','operator'])if(!target[f]&&r[f])target[f]=r[f];
+    if(!target.googlePlaceId&&r.googlePlaceId)target.googlePlaceId=r.googlePlaceId;
+    target.menuItems=[...new Set([...(target.menuItems||[]),...(r.menuItems||[])])].slice(0,10);
+    if(!target.hoursSource&&r.hoursSource)target.hoursSource=r.hoursSource;
+  }
   for(const r of ordered){
+    const candidates=new Set();
+    for(const ck of candidateKeys(r))for(const key of (index.get(ck)||[]))candidates.add(key);
     let key=null;
-    for(const [k,x] of map){if(sameRestaurant(x,r)){key=k;break}}
+    for(const candidate of candidates){
+      const x=map.get(candidate);
+      if(x&&sameRestaurant(x,r)){key=candidate;break}
+    }
     if(!key){
       const nameKey=norm(r.name),addr=normAddress(r.address||''),phone=phoneKey(r.phone),website=websiteKey(r.website);
       key=(nameKey+'|'+(addr||phone||website||('geo-'+Math.round(r.lat*1000)+'|'+Math.round(r.lon*1000)))).slice(0,220);
       let suffix=1;
       while(map.has(key)) key=key+'|'+(++suffix);
+      map.set(key,{...r});
+    }else{
+      mergeInto(map.get(key),r);
     }
-    if(!map.has(key))map.set(key,{...r});
-    else{
-      const x=map.get(key);
-      x.fastFood=x.fastFood||r.fastFood;
-      if(typeof r.openNow==='boolean' && (typeof x.openNow!=='boolean' || String(r.source||'').startsWith('Google')))x.openNow=r.openNow;
-      for(const f of ['address','phone','website','opening_hours','photo','cuisine','brand','operator'])if(!x[f]&&r[f])x[f]=r[f];
-      if(!x.googlePlaceId&&r.googlePlaceId)x.googlePlaceId=r.googlePlaceId;
-
-      x.menuItems=[...new Set([...(x.menuItems||[]),...(r.menuItems||[])])].slice(0,10);
-      if(!x.hoursSource&&r.hoursSource)x.hoursSource=r.hoursSource;
+    const storedKeys=candidateKeys(map.get(key));
+    for(const ck of storedKeys){
+      let bucket=index.get(ck);
+      if(!bucket){bucket=[];index.set(ck,bucket);}
+      if(!bucket.includes(key))bucket.push(key);
     }
   }
   return[...map.values()].sort((a,b)=>a.distance-b.distance);
@@ -1431,10 +1494,9 @@ if(mode==='search'){
  const discoveryPlan=radiusDiscoveryPlan(lat,lon,radius);
   const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
  const primaryBudget=Math.max(2800,SEARCH_BUDGET_MS-(wideSearch?discoveryPlan.reserveMs:0));
- // For 100-mile searches, keep the primary providers anchored to their proven
- // 50-mile operating envelope. The wide geographic expansion comes from the
- // redundant Overpass discovery pass. This prevents 100-mile provider result
- // caps from replacing nearby restaurants with a biased subset of the huge box.
+ // Wide searches keep primary providers inside their proven 50-mile envelope.
+ // Deterministic tiled discovery fills the full selected geographic disk, and
+ // the final true-distance filter removes every out-of-radius row.
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
  const discoveryPromise=wideSearch
    ? wideRadiusOverpass(lat,lon,radius,searchTerm)
@@ -1457,9 +1519,9 @@ if(mode==='search'){
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   // Wide searches keep the fast providers anchored to 50 miles, while
-   // Overpass supplies the outer-radius coverage. Photon stays as one bounded
-   // 50-mile context lookup; the old multi-point Photon expansion is removed.
+   // Wide searches keep the fast providers anchored to 50 miles. Each provider gets
+   // a full wide-search timebox, while tiled Overpass discovery supplies the
+   // outer-radius coverage through independent, redundant tile requests.
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
      withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
@@ -1523,7 +1585,7 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
 
- // CP1160: radius discovery is started before the provider searches and merged
+ // CP1168: deterministic tiled radius discovery runs alongside the fast provider pass and is merged
  // before final matching. 10/25/50 mile searches therefore get an actual
  // geographic discovery layer instead of inheriting a 100-result provider cap.
  if(discoveryPromise){
@@ -1596,7 +1658,7 @@ let primaryBatch,parallelWide=null,fastProvider='none';
    const classification=RESTAURANT_TAXONOMY.classifyRestaurant({...r,website,phone}); const canonicalCategory=classification.primary||r.category||'American'; const classifiedFastFood=classification.tags.includes('Fast Food'); const photo=restaurantPhotoMeta(r); return {...r,category:canonicalCategory,fastFood:classifiedFastFood,quickCutTags:classification.tags,quickCutEvidence:classification.evidence,...photo,website,phone,websiteSource:r.website?'provider':(known?'known-brand':(cached?'official-search':'google-search-fallback')),phoneSource:phone?'provider':'google-search-fallback',hoursTimeZone:String(hoursTimeZone||r.hoursTimeZone||''),hoursSource:r.hoursSource||(r.opening_hours?(String(r.source||'').startsWith('OpenStreetMap')||String(r.source||'').startsWith('Photon')?'OpenStreetMap':'provider'):'')};
   });
  const hoursCoverage={knownOpenNow:rows.filter(r=>typeof r.openNow==='boolean').length,openingHours:rows.filter(r=>!!String(r.opening_hours||'').trim()).length,unknown:rows.filter(r=>!restaurantHasAnyHoursData(r)).length,hoursSourceBreakdown:rows.reduce((acc,r)=>{const k=String(r.hoursSource||'unknown');acc[k]=(acc[k]||0)+1;return acc;}, {})};
-const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:wideSearch?WIDE_OVERPASS_RING_POINTS+1:1,hoursCoverage, primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
+const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:discoveryPlan.coveragePoints,hoursCoverage, primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
