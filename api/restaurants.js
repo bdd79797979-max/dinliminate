@@ -1,4 +1,5 @@
 // CP1189: radius searches use independent origin coverage plus throttled, exact-distance expansion for every selected radius.
+// CP1201 final wide-radius preview: 50/100-mile bounded discovery.
 // CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
 // CP1173: cumulative restaurant radius search — retained only as historical context.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
