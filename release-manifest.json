@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1164,
-  "sourceBranch": "cp1164-meal-photo-reliable-paint",
+  "build": 1165,
+  "sourceBranch": "cp1165-remaining-meal-photo-refresh",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1164",
-  "deploymentTrigger": "cp1164-meal-photo-reliable-paint",
+  "checkpoint": "CP1165",
+  "deploymentTrigger": "cp1165-remaining-meal-photo-refresh",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,6 +23,6 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1164 reliable meal-photo first paint with cache-version bump",
+  "currentBaseline": "CP1165 remaining meal-photo refresh with approved-host sources",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; every meal remains swipeable and image loading never blocks"
 }
