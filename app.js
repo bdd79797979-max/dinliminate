@@ -1060,6 +1060,19 @@ if(builtInButtermilkCornbread){
  }
 }
 S.deletedCustomMeals = Array.isArray(d.deletedCustomMeals) ? d.deletedCustomMeals.map(item=>({...item,images:mealPhotoList(item)})) : [];
+
+// CP1152 — restore the built-in meal label Chicken Fried Steak after older saved overrides.
+let needsChickenFriedSteakNameRepairSave=false;
+const repairChickenFriedSteakName=(item)=>{
+ if(!item||String(item.id)!=='chicken-fried-steak')return false;
+ if(normKey(item.name)!=='country fried steak')return false;
+ item.name='Chicken Fried Steak';
+ return true;
+};
+for(const item of S.custom) if(repairChickenFriedSteakName(item)) needsChickenFriedSteakNameRepairSave=true;
+for(const item of S.deletedCustomMeals||[]) if(repairChickenFriedSteakName(item)) needsChickenFriedSteakNameRepairSave=true;
+for(const item of S.pool||[]) if(repairChickenFriedSteakName(item)) needsChickenFriedSteakNameRepairSave=true;
+if(S.winnerItem&&repairChickenFriedSteakName(S.winnerItem)) needsChickenFriedSteakNameRepairSave=true;
 S.winnerType = d.winnerType || 'food';
 S.restaurantSearchOrigin = d.restaurantSearchOrigin && Number.isFinite(Number(d.restaurantSearchOrigin.lat)) && Number.isFinite(Number(d.restaurantSearchOrigin.lon)) ? {lat:Number(d.restaurantSearchOrigin.lat),lon:Number(d.restaurantSearchOrigin.lon)} : null;
 S.restaurantSearchKey = String(d.restaurantSearchKey||'');
@@ -1078,7 +1091,7 @@ S.mealTimeSettings={custom:Array.isArray(d.mealTimeSettings?.custom)?d.mealTimeS
 ensureMealTimeSettings();
 const availableMealTimeNames=mealTimeNames();
 S.mealTimeFilters=new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).map(currentMealTimeName).filter(x=>availableMealTimeNames.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(availableMealTimeNames);
-if(needsButtermilkRepairSave)save();
+if(needsButtermilkRepairSave||needsChickenFriedSteakNameRepairSave)save();
 if(S.locationSource==='device' && S.location)S.locationSource='last';
 S.restaurantSearchDegraded = !!d.restaurantSearchDegraded;
 S.schemaVersion = STORAGE_VERSION;
