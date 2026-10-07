@@ -22,6 +22,7 @@ function run(radius){
   }
   out.push({radius:radius,total:data.total,fastFood:data.fastFoodCount,latencyMs:data.searchLatencyMs,discoveryMode:data.discoveryMode,groups:data.discoveryGroups,coverage:data.discoveryCoveragePoints,overpass:data.providers?.overpass||0,providerErrors:data.providerErrors||[]});
  }
+ for(let i=1;i<out.length;i++) assert.ok(out[i].total>=out[i-1].total,'radius counts must not shrink: '+out[i-1].radius+'mi='+out[i-1].total+', '+out[i].radius+'mi='+out[i].total);
  console.log('CP1168 radius data: '+JSON.stringify(out,null,2));
  for(const row of out.filter(x=>x.radius>=25)){
   assert.ok(row.groups>=3,'radius '+row.radius+' should use multiple geographic batches');
