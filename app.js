@@ -1,3 +1,4 @@
+// CP1171: preserve the swipe transaction lock across card rebinds.
 // CP1170: make meal swipe handoff immediate for rapid swipes.
 // CP1067: stabilize first card and make All/Maybe counts derive from the actual choice catalog.\n// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
 // CP950 final tree sync: Meal swipe gate removed; keep this commit as the deploy source of truth.
@@ -2464,11 +2465,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  const staticWaitingCard=cardId==='foodCard';
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
+ const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
 
  // CP988: one physical gesture = one transaction. A committed card is
  // immediately removed from pointer input until its handoff is complete.
  let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0;
- let phase='idle',hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
+ // CP1171: preserve the transaction lock across draw/rebind cycles.
+ let phase=inheritedSwipeLock?'locked':'idle',hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
  let swipeThreshold=90,completionTimer=0;
 
  card.style.touchAction='none';
@@ -2476,7 +2479,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  card.style.webkitUserSelect='none';
  card.style.webkitTouchCallout='none';
  card.style.pointerEvents='auto';
- card.dataset.swipePhase='idle';
+ card.dataset.swipePhase=phase;
 
  card.querySelectorAll('img').forEach(img=>{
   img.draggable=false;
@@ -2509,6 +2512,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
   card.dataset.swipePhase='idle';
+  card.dataset.swipeTransaction='';
   phase='idle';
   if(next){
    if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
@@ -2627,6 +2631,8 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
      }
     }
     foodSwipeHandoff=false;
+    card.dataset.swipeTransaction='';
+    card.dataset.swipePhase='idle';
     if($('foodNextCard')?.isConnected){
      window.requestAnimationFrame(()=>{
       if(!foodSwipeHandoff&&$('foodNextCard')?.isConnected)primeFoodSwipeMedia();
@@ -2651,6 +2657,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
    cancelMoveFrame();
   phase='committing';
   card.dataset.swipePhase='committing';
+  card.dataset.swipeTransaction='active';
   card.style.pointerEvents='none';
   hapticTriggered=false;
   suppressClickUntil=Date.now()+500;
@@ -2748,6 +2755,12 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
    return;
   }
   if(e.button!=null&&e.button!==0)return;
+  if(phase==='locked'){
+   if(card.dataset.swipeTransaction==='active')return;
+   phase='idle';
+   card.dataset.swipePhase='idle';
+  }
+  if(card.dataset.swipeTransaction==='active')return;
   if(phase!=='idle'||card.dataset.swipePhase!=='idle')return;
   if(e.target.closest?.('button,a,input,select'))return;
   downX=e.clientX;
