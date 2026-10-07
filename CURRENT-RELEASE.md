@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1234 / CP1234
+# CURRENT RELEASE — BUILD 1235 / CP1235
 
 Date: 2026-10-07
 
@@ -75,3 +75,7 @@ CP1234 enlarges the Cuisine type text and Details control on Meal and Restaurant
 ## Recovery
 
 CP1210 remains the functional baseline for this change. CP1211 is a UI/behavior simplification on top of the existing Open Now enrichment system. No production deployment was made.
+
+## Card name sizing
+
+CP1235 increases the Meal and Restaurant decision-card name text by approximately 50% (from 30px to 45px). Card geometry, upper controls, swipe behavior, and Tutorial behavior are unchanged.
