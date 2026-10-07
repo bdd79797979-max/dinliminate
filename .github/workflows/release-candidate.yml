@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run release candidate gate
-        run: npm run test:rc
-
       - name: Run CP1165 live radius verification
         run: node qa/cp1165-radius-live-verification.cjs
+
+      - name: Run release candidate gate
+        run: npm run test:rc
