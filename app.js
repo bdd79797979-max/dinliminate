@@ -2532,10 +2532,19 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
      const recycledImg=card.querySelector('img');
      if(promotedImg&&recycledImg){
       const promotedSrc=String(promotedImg.currentSrc||promotedImg.src||'');
-      if(promotedSrc)recycledImg.src=promotedSrc;
+      if(promotedSrc){
+       // CP1158: do not hide the already-visible waiting card until the
+       // recycled active card has the promoted image decoded and ready.
+       recycledImg.src=promotedSrc;
+       try{
+        if(typeof recycledImg.decode==='function')await recycledImg.decode();
+       }catch{}
+      }
       if(promotedImg.alt)recycledImg.alt=promotedImg.alt;
+      recycledImg.style.visibility='visible';
       recycledImg.style.transform='none';
      }
+     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
      card.classList.remove('swipe-active');
      card.style.transition='none';
      card.style.transform='none';
