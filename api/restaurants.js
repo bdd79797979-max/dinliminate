@@ -1,6 +1,7 @@
+// CP1173: cumulative restaurant radius search — stable 10-mile core plus radius-specific Photon expansion.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r39';
+const API_VERSION='r40';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -242,39 +243,70 @@ async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=2400){
  return {rows,errors};
 }
 
-const WIDE_PHOTON_RING_MILES=60;
-const WIDE_PHOTON_RING_POINTS=12;
-const WIDE_PHOTON_QUERY_TIMEOUT_MS=3200;
-function widePhotonCenters(lat,lon,radius){
- const ring=Math.min(WIDE_PHOTON_RING_MILES,Math.max(55,Number(radius)||100));
- const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
- const out=[{lat,lon}];
- for(let i=0;i<WIDE_PHOTON_RING_POINTS;i++){
-  const ang=i*2*Math.PI/WIDE_PHOTON_RING_POINTS;
-  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b});
+function radiusExpansionSpec(radius){
+ const r=clamp(radius);
+ if(r<=10)return null;
+ if(r<=25)return {tile:15,ring:15,count:6};
+ if(r<=50)return {tile:30,ring:30,count:6};
+ return {tile:50,ring:60,count:10};
+}
+function radiusExpansionCenters(lat,lon,radius){
+ const spec=radiusExpansionSpec(radius);
+ if(!spec)return [];
+ const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+ const out=[{lat,lon,radius:spec.tile}];
+ for(let i=0;i<spec.count;i++){
+  const ang=i*2*Math.PI/spec.count;
+  out.push({
+   lat:lat+Math.sin(ang)*a,
+   lon:lon+Math.cos(ang)*b,
+   radius:spec.tile
+  });
  }
  return out;
 }
-async function photonWideCenterPlaces(lat,lon,searchExtentRadius,searchTerm=''){
+async function photonRadiusExpansion(lat,lon,radius,searchTerm=''){
+ const points=radiusExpansionCenters(lat,lon,radius),rows=[],errors=[];
+ if(!points.length)return{rows,errors,tiles:0,provider:'none'};
+ const tasks=points.map(p=>photonWideCenterPlaces(
+   p.lat,p.lon,p.radius,lat,lon,radius,searchTerm
+ ));
+ const settled=await Promise.allSettled(tasks);
+ for(const result of settled){
+  if(result.status!=='fulfilled'){
+   errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));
+   continue;
+  }
+  rows.push(...(result.value?.rows||[]));
+  errors.push(...(result.value?.errors||[]));
+ }
+ return{rows:dedupe(rows),errors,tiles:points.length,provider:'Photon expansion'};
+}
+
+async function photonWideCenterPlaces(tileLat,tileLon,searchExtentRadius,originLat,originLon,selectedRadius,searchTerm=''){
  const r=Math.min(50,Math.max(1,Number(searchExtentRadius)||50));
- const latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
- const bbox=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
+ const latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(tileLat*Math.PI/180)));
+ const bbox=[tileLon-lonD,tileLat-latD,tileLon+lonD,tileLat+latD].join(',');
  const base=[
-  new URLSearchParams({q:searchTerm||'restaurant',osm_tag:'amenity:restaurant',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'11'}),
-  new URLSearchParams({q:searchTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'11'})
+  new URLSearchParams({q:searchTerm||'restaurant',osm_tag:'amenity:restaurant',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(tileLat),lon:String(tileLon),zoom:'11'}),
+  new URLSearchParams({q:searchTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(tileLat),lon:String(tileLon),zoom:'11'})
  ];
  const rows=[],errors=[];
  const settled=await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},WIDE_PHOTON_QUERY_TIMEOUT_MS)));
  for(const result of settled){
-  if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));continue}
+  if(result.status!=='fulfilled'){
+   errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));
+   continue;
+  }
   for(const feature of result.value?.features||[]){
-   const row=photonRow(feature,{lat,lon});
-   if(row&&row.distance<=100&&!isClearlyNonDiningBusiness(row))rows.push(row);
+   const row=photonRow(feature,{lat:originLat,lon:originLon});
+   if(row&&row.distance<=selectedRadius&&!isClearlyNonDiningBusiness(row))rows.push(row);
   }
  }
- return {rows,errors};
+ return{rows,errors};
 }
-async function firstProviderWithRows(tasks,timeoutMs=1800){
+
+function firstProviderWithRows(tasks,timeoutMs=1800){
  const started=Date.now();
  return new Promise(resolve=>{
    let settled=0,done=false;
@@ -1538,12 +1570,10 @@ if(mode==='search'){
  // Wide searches keep primary providers inside their proven 50-mile envelope.
  // Deterministic tiled discovery fills the full selected geographic disk, and
  // the final true-distance filter removes every out-of-radius row.
- const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
+ const providerRadius=wideSearch?WIDE_PROVIDER_RADIUS_CAP:10;
  const discoveryPromise=wideSearch
-   ? wideRadiusOverpass(lat,lon,radius,searchTerm)
-   : (radius>=RADIUS_DISCOVERY_THRESHOLD
-      ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),RADIUS_DISCOVERY_TIMEBOX_MS,'Radius discovery timed out')
-      : null);
+   ? withinBudget(photonRadiusExpansion(lat,lon,radius,searchTerm),WIDE_DISCOVERY_TIMEBOX_MS,'Wide radius expansion timed out')
+   : null;
  // CP1158: nearby provider calls are individually time-boxed. The previous
  // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
  // upstream could hold the serverless function until Vercel's 30-second cap.
@@ -1555,8 +1585,8 @@ if(mode==='search'){
      // One ArcGIS/Photon query can hit a result ceiling; independent local
      // tiles recover nearby venues and the final origin-distance filter keeps
      // the selected radius exact.
-     withinBudget(radius<=10?tiledPhotonPlaces(lat,lon,providerRadius,searchTerm):photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
-     withinBudget(radius<=10?tiledArcgisPlaces(lat,lon,providerRadius,searchTerm):arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
+     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
+     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
      searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out')
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
