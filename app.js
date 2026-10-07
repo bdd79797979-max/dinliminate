@@ -1331,8 +1331,8 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#tutorialBubble',title:'TOUR',body:'tap this button to move on to the next step.'},
-  {target:'#home',title:'HOW IT WORKS',body:'eliminate meals or restaurants until your choice is revealed.',avoid:['#foodStart','#restStart','#menu']},
+  {target:'#tutorialModeToggle',title:'TOUR',body:'tap this button to move on to the next step.',avoid:['#home .home-foot']},
+  {target:'#home-slogan',title:'HOW IT WORKS',body:'eliminate meals or restaurants until your choice is revealed.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
   {target:'#home .home-choice-rail',title:'GET STARTED',body:'tap home or restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#menu']}
  ];
  if(screen==='food')return[
