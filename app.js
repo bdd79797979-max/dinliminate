@@ -6434,6 +6434,8 @@ async function familyLeave(){const s=familySessionRead();if(!await appConfirm('L
 async function familyRotateCode(){const s=familySessionRead();if(!s?.token)return;try{const d=await familyApi('rotate-code',{token:s.token});familySessionWrite({...s,family:{...(s.family||{}),joinCode:d.joinCode}});await familyRefreshState();}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}}
 function familyBackFromMode(){S.familyNormalMode='idle';S.familyNormalAutoResume=false;S.familyDecisionType='';S.familyVotedIds=new Set();familyResetCompareState();stopFamilyLobbyPolling();home();}
 
+$('foodHomeBack')?.addEventListener('click',(event)=>{event.preventDefault();event.stopPropagation();home();});
+$('restaurantHomeBack')?.addEventListener('click',(event)=>{event.preventDefault();event.stopPropagation();home();});
 $('familyMode')?.addEventListener('click',()=>navigateFromDrawer(familyOpen));$('familyBackTop')?.addEventListener('click',familyBackFromMode);
 $('familyCreateChoice')?.addEventListener('click',familyShowCreate);$('familyJoinChoice')?.addEventListener('click',familyShowJoin);$('familyCreateBack')?.addEventListener('click',familyShowEntry);$('familyJoinBack')?.addEventListener('click',familyShowEntry);
 $('familyCreateSubmit')?.addEventListener('click',familyCreate);$('familyJoinSubmit')?.addEventListener('click',familyJoin);$('familyLeave')?.addEventListener('click',familyLeave);$('familyCopyCode')?.addEventListener('click',familyCopyCode);$('familyShareCode')?.addEventListener('click',familyShareCode);$('familyRotateCode')?.addEventListener('click',familyRotateCode);
