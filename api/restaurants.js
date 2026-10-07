@@ -1487,12 +1487,12 @@ const googleResultSettled=wideSearch?wideGoogleOut:await withinBudget((searchTer
 const googleOut=googleResultSettled?.__timeout?{rows:[],errors:['Google radius enrichment timed out']}:(googleResultSettled||{rows:[],errors:[]});
 
 let preliminary=filterNonDiningRows(dedupe([
-   ...(engineRows||[]),
+   ...(recoveredEngineRows||[]),
    ...(googleOut.rows||[])
  ]));
  let osmOut={rows:[...(recoveredEngineRows||[])],errors:[...(engineErrors||[])]};
  let primaryBatch=engineProviderStats;
- let fastProvider='radius-engine-v2';
+ let fastProvider=wideSearch?'wide-radius':'radius-engine-v2';
 
  const preliminarySearchMatches=searchTerm
    ? preliminary.filter(row=>restaurantSearchMatches(row,searchTerm)).length
