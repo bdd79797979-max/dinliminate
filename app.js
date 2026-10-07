@@ -1,6 +1,6 @@
 // CP1181: stale waiting-card safe rapid swipe handoff.
 // CP1180: eliminate stale waiting-card reuse during rapid meal swipes.
-// CP1176: cumulative restaurant radius client merge layered onto rapid-swipe main.
+// CP1186: radius changes always rebuild an independent restaurant pool; no prior-radius carry-forward.
 // CP1171: preserve the swipe transaction lock across card rebinds.
 // CP1170: make meal swipe handoff immediate for rapid swipes.
 // CP1067: stabilize first card and make All/Maybe counts derive from the actual choice catalog.\n// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
@@ -3678,7 +3678,7 @@ const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+
    && Math.abs(previousOrigin.lat-Number(loc.lat))<=0.0002
    && Math.abs(previousOrigin.lon-Number(loc.lon))<=0.0002
    && normalizeRestaurantSearch(String(S.restaurantSearchQuery||''))===normalizeRestaurantSearch(searchTerm);
- const priorPool=sameLocationQuery?[...(S.restaurantPool||[])]:[];
+ // CP1186: radius changes must never inherit a prior-radius pool.
  let replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
  if(replacingSearchTarget&&!sameLocationQuery){
    // CP1078: never leave the previous location/radius/query cards on screen
@@ -3712,8 +3712,8 @@ S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
  const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
  return Number.isFinite(dist) && dist<=radius+0.001;
 });
-// CP1173: same-location radius changes are cumulative rather than destructive.
- const mergedRows=sameLocationQuery?[...priorPool,...incomingRows]:incomingRows;
+// CP1186: each requested radius is rebuilt from its own provider response.
+ const mergedRows=incomingRows;
  S.restaurantPool = dedupeRestaurantPool(mergedRows).filter(row=>{
    const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
    return Number.isFinite(dist)&&dist<=radius+0.001;

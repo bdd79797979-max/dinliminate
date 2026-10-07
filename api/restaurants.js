@@ -1,9 +1,9 @@
-// CP1183: independent 25/50 provider-radius search.
+// CP1186: radius searches are independent and each selected radius gets direct origin coverage.
 // CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
-// CP1173: cumulative restaurant radius search — stable 10-mile core plus radius-specific Photon expansion.
+// CP1173: cumulative restaurant radius search — retained only as historical context.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r43';
+const API_VERSION='r44';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -157,7 +157,7 @@ function providerCenters(lat,lon,radius){
  const r=clamp(radius);
  if(r<=1)return[{lat,lon,radius:r}];
  const spec=r<=3?{tile:2.1,ring:1.8,count:6}:r<=5?{tile:3.3,ring:3,count:6}:{tile:6,ring:6,count:6};
- const out=[{lat,lon,radius:spec.tile}];
+ const out=[{lat,lon,radius:radius}];
  const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  for(let i=0;i<spec.count;i++){
   const ang=i*2*Math.PI/spec.count;
