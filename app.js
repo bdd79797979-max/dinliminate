@@ -2540,7 +2540,8 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
  let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0;
  // CP1171: preserve the transaction lock across draw/rebind cycles.
  let phase=inheritedSwipeLock?'locked':'idle',hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
- let swipeThreshold=90,completionTimer=0;
+ // CP1218 — tighter, quicker swipe feel without changing the card-stack architecture.
+ let swipeThreshold=88,completionTimer=0;
 
  card.style.touchAction='none';
  card.style.userSelect='none';
@@ -2598,7 +2599,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   if(phase!=='dragging'&&phase!=='idle')return;
   phase='idle';
   card.classList.remove('swipe-active');
-  card.style.transition='transform .22s cubic-bezier(.22,1,.36,1),opacity .22s ease';
+  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease';
   card.style.transform='translate3d(0,0,0) rotate(0deg)';
   card.style.opacity='1';
   card.style.visibility='visible';
@@ -2611,7 +2612,7 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
     card.style.transition='';
     card.style.transform='';
    }
-  },225);
+  },185);
  };
 
  const releasePointer=()=>{
@@ -2635,6 +2636,9 @@ const completeAfterExit=async ()=>{
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
+  // CP1218 — acknowledge the decision visually at release time. The actual
+  // state mutation/redraw remains in the existing handoff path.
+  previewDecisionCount(cardId==='foodCard'?'food':'restaurant',direction==='cut'?'cut':'maybe');
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
   const restaurantHandoff=cardId==='restaurantCard';
   // CP1181: snapshot the waiting card before action() can redraw/rebind it.
@@ -2741,7 +2745,7 @@ const completeAfterExit=async ()=>{
   const width=cardWidth();
   const exitDistance=Math.max(Math.ceil(window.innerWidth*1.25),Math.ceil(width*1.45),560);
   const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(198-(magnitude*42),132,198));
+  const duration=Math.round(clamp(170-(magnitude*34),112,170));
   const direction=dx<0?-1:1;
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
@@ -2781,12 +2785,12 @@ const completeAfterExit=async ()=>{
   const dx=lastX-downX;
   if(Math.abs(dx)<=3)return;
   const absX=Math.abs(dx),width=cardWidth();
-  swipeThreshold=clamp(Math.round(width*.23),76,118);
-  const progress=clamp(absX/swipeThreshold,0,1.45);
+  swipeThreshold=clamp(Math.round(width*.21),72,108);
+  const progress=clamp(absX/swipeThreshold,0,1.5);
   const rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
   card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
   card.style.opacity='1';
-  card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*3.1),0,.24)));
+  card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*2.7),0,.26)));
   card.dataset.swipe=dx<0?'cut':'maybe';
   if(progress>=1&&!hapticTriggered){
    hapticTriggered=true;
@@ -2807,7 +2811,7 @@ const completeAfterExit=async ()=>{
   const speed=Number.isFinite(velocityX)?velocityX/1000:0;
   swipeThreshold=clamp(Math.round(cardWidth()*.23),76,118);
   const distanceCommit=Math.abs(dx)>=swipeThreshold;
-  const flickCommit=Math.abs(dx)>=52&&Math.abs(speed)>=.55;
+  const flickCommit=Math.abs(dx)>=48&&Math.abs(speed)>=.50;
   if(distanceCommit||flickCommit)commit(dx,speed);
   else{
    phase='idle';
@@ -2907,6 +2911,20 @@ function cycleFoodPhotoFromTap(target){
  return true;
 }
 
+function previewDecisionCount(kind,type){
+ const btn=$(kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck');
+ if(!btn)return;
+ const all=Math.max(0,Number(btn.dataset.allCount)||0);
+ const maybes=Math.max(0,Number(btn.dataset.maybeCount)||0);
+ const nextAll=Math.max(0,all-(type==='cut'?1:0));
+ const nextMaybes=Math.max(0,maybes+(type==='maybe'?1:0));
+ const visible=btn.dataset.mode==='maybe'?nextMaybes:nextAll;
+ btn.dataset.allCount=String(nextAll);
+ btn.dataset.maybeCount=String(nextMaybes);
+ btn.dataset.visibleCount=String(visible);
+ const count=btn.querySelector('.maybe-control-count');
+ if(count)count.textContent=String(visible);
+}
 function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe())}
 function appToast(message){
 document.querySelector('#appToast')?.remove();
@@ -4075,7 +4093,10 @@ function bindCardButton(id,handler){
   const last=Number(el.__dinliminateLastActivation)||0;
   if(now-last<180)return;
   el.__dinliminateLastActivation=now;
-  if(premiumDecision)el.classList.add('is-pressed');
+  if(premiumDecision){
+   el.classList.add('is-pressed');
+   if(id==='foodCut'||id==='restCut'||id==='foodMaybe'||id==='restMaybe')triggerSwipeHaptic();
+  }
   clearPress();
   e?.preventDefault?.();
   e?.stopPropagation?.();
