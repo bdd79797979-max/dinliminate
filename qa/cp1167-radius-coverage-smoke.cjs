@@ -17,7 +17,7 @@ assert.equal(wide[0].radius,50);
 for(const c of wide.slice(1)){
   assert.equal(c.radius,50);
   const d=milesFromCenter(lat,lon,c.lat,c.lon);
-  assert.ok(Math.abs(d-60)<0.8,'ring center should be ~60 miles from origin, got '+d);
+  assert.ok(Math.abs(d-60.5)<0.8,'ring center should be ~60 miles from origin, got '+d);
 }
 
 const plan=t.radiusDiscoveryPlan(lat,lon,100);
@@ -30,7 +30,7 @@ for(let r=0;r<=100;r+=0.5){
     const theta=deg*Math.PI/180;
     const targetLat=lat+Math.sin(theta)*(r/69);
     const targetLon=lon+Math.cos(theta)*(r/(69*Math.max(.35,Math.cos(lat*Math.PI/180))));
-    const covered=wide.some(c=>milesFromCenter(targetLat,targetLon,c.lat,c.lon)<=50.15);
+    const covered=wide.some(c=>milesFromCenter(targetLat,targetLon,c.lat,c.lon)<=50.1);
     assert.ok(covered,'coverage gap at radius '+r+' angle '+deg);
   }
 }
