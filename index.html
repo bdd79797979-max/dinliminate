@@ -1,3 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- CP1070 Restaurant refine controls -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="./viewport.js?v=1186"></script>
+<meta name="theme-color" content="#090909">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dinliminate">
+<meta name="format-detection" content="telephone=no">
+<script>
+/* CP1186 — identify the iOS Home Screen/PWA runtime before first paint. */
+try {
+  const standalone = !!window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (standalone) document.documentElement.classList.add('dinliminate-standalone');
+} catch {}
+/* CP1142 — hide the outgoing app before the browser can paint its reload snapshot. */
+(() => {
+  const root = document.documentElement;
+  const hideForNavigation = () => {
+    try { root.classList.add('dinliminate-page-unloading'); } catch {}
+  };
+  try { root.classList.add('dinliminate-booting'); } catch {}
+  window.addEventListener('beforeunload', hideForNavigation, {capture:true});
+  window.addEventListener('pagehide', hideForNavigation, {capture:true});
+  window.addEventListener('pageshow', () => {
+    try {
+      root.classList.remove('dinliminate-page-unloading');
+    } catch {}
+  }, {capture:true});
+})();
+</script>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg?v=1186" type="image/svg+xml">
+<title>Dinliminate — Meal Decisions Simplified</title>
+
+
+<link rel="preload" href="./styles.css?v=1186" as="style">
+<link rel="stylesheet" href="./styles.css?v=1186">
+<style id="critical-boot-style">
+html,body{margin:0;background:#090909;color:#f5f5f5;min-height:100%;overscroll-behavior:none}
+*{box-sizing:border-box}
+button{font:inherit;border:0}
+.hidden{display:none!important}
+html.dinliminate-booting .app,
+html.dinliminate-page-unloading .app{visibility:hidden!important}
+html.dinliminate-booting,
+html.dinliminate-page-unloading,
+html.dinliminate-booting body,
+html.dinliminate-page-unloading body{background:#090909!important}
+.app{
+  position:fixed;inset:0;width:min(100vw,430px);max-width:430px;height:100dvh;min-height:100dvh;
+  margin:0 auto;padding:0;overflow:hidden;background:#080706;
+  isolation:isolate;
+}
+.app-topbar{
+  position:absolute;inset:0 0 auto 0;z-index:80;width:100%;height:auto;min-height:0;
+  margin:0;padding:calc(env(safe-area-inset-top) + 6px) 10px 0;
+  display:flex;align-items:center;justify-content:flex-start;gap:2px;background:transparent;
+}
+.dinliminate-logo-symbol{width:84px;height:84px;display:block;flex:0 0 84px}
+.dinliminate-logo-wordmark{
+  margin:0;color:#f4d99b;font:900 12px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  letter-spacing:.20em;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.66)
+}
+.app-topbar #menu{
+  position:absolute;top:calc(env(safe-area-inset-top) + 7px);right:8px;width:40px;height:40px;
+  display:grid;place-items:center;gap:3px;padding:0;border:0;border-radius:12px;
+  background:rgba(9,8,7,.20);box-shadow:0 2px 8px rgba(0,0,0,.24);color:#e8cf98;
+}
+.app-topbar #menu span{display:block;width:18px;height:1.5px;background:#e8cf98;border-radius:99px}
+#home{
+  position:absolute;inset:0;width:100%;height:100dvh;margin:0;padding:0;overflow:hidden;display:block;
+  background:#080706 url("./assets/home-door.jpg?v=1109") center/cover no-repeat;text-align:center;
+}
+.home-choice-rail{position:absolute;inset:0;z-index:20;width:100%;height:100%;margin:0;padding:0;display:block;pointer-events:none}
+.home-choice-zone{
+  position:absolute;top:35.2%;height:18%;margin:0;padding:0;display:flex;align-items:flex-start;justify-content:center;
+  width:30%;pointer-events:auto;appearance:none;-webkit-appearance:none;background:transparent;border:0;color:#fff;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+#foodStart{left:18%}
+#restStart{right:18%}
+.home-choice-content{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:9px;
+  margin:0;padding:0;background:transparent;border:0;box-shadow:none;white-space:nowrap;
+}
+.home-choice-content strong{
+  display:inline-block;margin:0;padding:0;font:800 12px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  letter-spacing:.17em;color:#fffaf1;text-align:center;text-shadow:0 2px 6px rgba(0,0,0,.58)
+}
+.home-choice-arrow{
+  color:#e8cf98;font:400 22px/1 Georgia,"Times New Roman",serif;text-shadow:0 2px 7px rgba(0,0,0,.62)
+}
+.home-foot{
+  position:absolute;left:0;right:0;bottom:max(0px,calc(env(safe-area-inset-bottom) - 10px));z-index:30;
+  width:100%;margin:0;padding:0 8px;display:flex;justify-content:center;align-items:flex-end;background:transparent;
+}
+.home-foot-actions{display:flex;flex-direction:row;align-items:flex-end;justify-content:center;gap:18px;width:auto;margin:0}
+.home-icon-action{
+  width:78px;min-width:78px;height:54px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;background:transparent;border:0;color:#f7efdf;
+}
+.home-icon-action .home-foot-icon{width:24px;height:24px;display:block}
+.home-icon-action .home-icon-label{font:600 10px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;letter-spacing:.10em;color:#f7efdf}
+@media(max-width:390px){
+ .dinliminate-logo-symbol{width:76px;height:76px;flex-basis:76px}
+ .dinliminate-logo-wordmark{font-size:10px;letter-spacing:.17em}
+ .app-topbar #menu{right:10px}
+ .home-intro{top:20.5%}
+ .home-intro h1{font-size:28px}
+ .home-intro .sub{font-size:10.5px}
+ .home-choice-zone{top:35.2%;height:18%}
+ .home-choice-content strong{font-size:11px;letter-spacing:.13em}
+ .home-choice-arrow{font-size:20px}
+ .home-foot-actions{gap:9px}
+ .home-icon-action{width:70px;min-width:70px}
+}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="offline-indicator hidden" id="offlineIndicator" role="status" aria-live="polite">Offline · saved meal choices still work</div>
+<div class="storage-indicator hidden" id="storageIndicator" role="status" aria-live="polite">Could not save some changes on this device.</div>
+
+<header class="top app-topbar" id="appTopbar">
+  <div class="brand-mark" aria-label="Dinliminate">
+    <img class="dinliminate-logo-symbol" src="./logo.svg?v=1186" alt="" aria-hidden="true">
     <span class="dinliminate-logo-wordmark">DINLIMINATE</span>
   </div>
   <button id="menu" class="menu" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -149,3 +278,93 @@
   <div class="hungry-wheel-stage">
     <div class="hungry-wheel-pointer" aria-hidden="true"></div>
     <div class="hungry-wheel-ring"><svg id="hungryWheel" viewBox="0 0 360 360" role="img" aria-label="Dinner wheel"></svg></div>
+  </div>
+  <div id="hungryWheelResult" class="hungry-wheel-result hidden">
+    <div class="hungry-wheel-result-image-wrap"><img id="hungryWheelResultImg" alt=""></div>
+    <div class="hungry-wheel-result-copy"><span>THE WHEEL CHOSE</span><b id="hungryWheelResultName"></b></div>
+  </div>
+  <div class="hungry-wheel-actions"><button class="cut" id="hungryWheelSpin" type="button">Spin the Wheel</button><button class="secondary hidden" id="hungryWheelChoose" type="button">Choose This</button></div>
+</div>
+<div id="hungryRestaurantPanel" class="hungry-restaurant-panel hidden" aria-hidden="true">
+  <div class="hungry-mystery-copy">
+    <span>MYSTERY PICK</span>
+    <b>Let fate choose tonight.</b>
+    <small id="hungryRestaurantCount"></small>
+  </div>
+  <div class="hungry-mystery-stage">
+    <div class="hungry-mystery-card" id="hungryMysteryCard">
+      <div class="hungry-mystery-blur"></div>
+      <img id="hungryMysteryImg" alt="" aria-hidden="true">
+      <div class="hungry-mystery-cover">
+        <span class="hungry-mystery-seal" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M24 9v6M24 33v6M9 24h6M33 24h6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="m24 16 2.4 5.1L32 24l-5.6 2.9L24 32l-2.4-5.1L16 24l5.6-2.9L24 16Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        </span>
+        <b>MYSTERY</b><small>Tap to reveal</small>
+      </div>
+    </div>
+  </div>
+  <div id="hungryMysteryResult" class="hungry-mystery-result hidden">
+    <div class="hungry-mystery-result-image-wrap"><img id="hungryMysteryResultImg" alt=""></div>
+    <div class="hungry-mystery-result-copy"><span>YOUR MYSTERY RESTAURANT</span><b id="hungryMysteryResultName"></b><small id="hungryMysteryResultMeta"></small></div>
+  </div>
+  <div class="hungry-mystery-actions"><button class="cut" id="hungryMysteryReveal" type="button">Reveal Restaurant</button><button class="secondary hidden" id="hungryMysteryChoose" type="button">Choose This</button><button class="secondary hidden" id="hungryMysteryAgain" type="button">Try Another</button></div>
+</div></div><img id="winImg" alt=""><div class="winner-actions"><button class="cut" id="details">Details</button><button class="secondary" id="share">Share</button><button class="secondary" id="restart">Start over</button></div></section>
+
+<div class="location-permission-bg hidden" id="locationPermissionBg" aria-hidden="true"></div>
+<div class="location-permission-modal hidden" id="locationPermissionModal" role="dialog" aria-modal="true" aria-labelledby="locationPermissionTitle" aria-describedby="locationPermissionText">
+  <div class="location-permission-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="24" cy="24" r="3.2" fill="currentColor"/><path d="M24 5.5v6M24 36.5v6M5.5 24h6M36.5 24h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </div>
+  <div class="location-permission-kicker">NEARBY RESTAURANTS</div>
+  <h3 id="locationPermissionTitle">Know your location</h3>
+  <p id="locationPermissionText">Use your location to find restaurants around you. Dinliminate uses it only to set your search area.</p>
+  <div class="location-permission-actions">
+    <button class="location-permission-secondary" id="locationPermissionCancel" type="button">Not now</button>
+    <button class="location-permission-primary" id="locationPermissionAllow" type="button">Allow Location</button>
+  </div>
+</div>
+
+<div class="drawer-bg hidden" id="drawerBg"></div><aside class="drawer hidden" id="drawer" aria-label="Main menu">
+  <div class="drawer-head">
+    <div class="drawer-brand">
+      <span class="drawer-kicker">DINLIMINATE</span>
+      <strong>Meal Decisions Simplified</strong>
+      <span>Your dinner, beautifully decided.</span>
+    </div>
+    <button class="drawer-close" id="drawerClose" type="button" aria-label="Close menu">×</button>
+  </div>
+  <div class="drawer-section-label">NAVIGATION</div>
+  <nav class="drawer-nav" aria-label="App navigation">
+    <button class="drawer-row" id="manage" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 5.5h12M6 9.5h8M6 14.5h12M6 18.5h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span><b>Manage Meals</b><small>Add, edit, hide, delete, or restore</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+    <button class="drawer-row" id="history" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4l2.8 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span><b>History</b><small>See your previous decisions</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+    <button class="drawer-row" id="settings" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 7h12M6 12h12M6 17h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="7" r="1.9" fill="#171716" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="12" r="1.9" fill="#171716" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="17" r="1.9" fill="#171716" stroke="currentColor" stroke-width="1.5"/></svg></span><span><b>Settings</b><small>Tools, data, privacy, and app details</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+    <button class="drawer-row" id="familyMode" type="button"><span class="drawer-row-main"><span class="drawer-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8.2" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15.8" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.8 18c.4-3 2-4.5 4.4-4.5s4 1.5 4.4 4.5M11.4 18c.4-2.2 1.8-3.4 4.2-3.4 2.2 0 3.7 1.2 4.1 3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><span><b>Family Mode</b><small>Decide dinner together</small></span></span><span class="drawer-row-chevron" aria-hidden="true">›</span></button>
+  </nav>
+  <div class="drawer-footer">
+    <div class="drawer-footer-rule"><span>DINLIMINATE</span><span>BUILD</span></div>
+    <button class="drawer-start" id="backToStart" type="button"><span class="drawer-start-icon" aria-hidden="true">←</span><span><b>Back to Start</b><small>Return to the home screen</small></span></button>
+  </div>
+</aside>
+
+
+
+<script src="./data/foods.js?v=1186"></script>
+<script src="./data/restaurant-taxonomy.js"></script>
+<script src="./app.js?v=1186"></script>
+</main>
+</body>
+</html>
+
+<!-- CP1063 deployment trigger: final viewport architecture is complete. -->
+
+<!-- CP1068 deployment sync -->
+<!-- CP1068 deployment sync -->
+<!-- CP1068 deployment sync -->
+
+<!-- CP1068 final deployment trigger -->
+
+<!-- CP1069 final Meal Times deployment trigger -->
+<!-- CP1069 FINAL VERCEL TRIGGER -->
+<!-- CP1071 tutorial repair deployment trigger -->
+
+<!-- CP1130 Git deploy trigger -->
