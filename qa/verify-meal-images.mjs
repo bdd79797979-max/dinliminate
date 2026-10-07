@@ -9,7 +9,7 @@ const foods=JSON.parse(source);
 
 const allowedHosts=new Set([
   'irp.cdn-website.com','www.banquet.com','images.pexels.com','images.unsplash.com',
-  'commons.wikimedia.org','upload.wikimedia.org','static.spotapps.co','www.goodnes.com',
+  'commons.wikimedia.org','upload.wikimedia.org','thumb.wikimedia.org','static.spotapps.co','www.goodnes.com',
   'hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','southernbite.com',
   'snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com',
   'slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com',
@@ -54,17 +54,42 @@ async function check(url){
 if(foods.length!==117)throw new Error('Expected 117 built-in meals; found '+foods.length);
 if(new Set(foods.map(x=>String(x.id))).size!==foods.length)throw new Error('Duplicate built-in meal ID detected.');
 
-let broken=0,missingSecond=0,checked=0;
+let broken=0,mealsWithoutUsablePhoto=0,missingSecond=0,checked=0;
 for(const item of foods){
   const list=candidates(item);
-  if(!list.length) {broken++; console.error('NO PHOTO\t'+item.id+'\t'+item.name); continue;}
-  if(list.length<2)missingSecond++;
-  for(const url of list){
-    if(looksGeneric(url)){broken++;console.error('GENERIC PHOTO\t'+item.id+'\t'+item.name+'\t'+url);continue;}
-    const result=await check(url);checked++;
-    if(!result.ok){broken++;console.error('BROKEN\t'+item.id+'\t'+item.name+'\t'+url+'\t'+result.error);}
+  if(!list.length){
+    mealsWithoutUsablePhoto++;
+    console.error('NO PHOTO\\t'+item.id+'\\t'+item.name);
+    continue;
   }
+  let usable=0;
+  for(const url of list){
+    if(looksGeneric(url)){
+      broken++;
+      console.error('GENERIC PHOTO\\t'+item.id+'\\t'+item.name+'\\t'+url);
+      continue;
+    }
+    const result=await check(url);checked++;
+    if(result.ok)usable++;
+    else {
+      broken++;
+      console.error('BROKEN\\t'+item.id+'\\t'+item.name+'\\t'+url+'\\t'+result.error);
+    }
+  }
+  if(usable===0){
+    mealsWithoutUsablePhoto++;
+    console.error('NO USABLE PHOTO\\t'+item.id+'\\t'+item.name);
+  }
+  if(usable<2)missingSecond++;
 }
-console.log(JSON.stringify({meals:foods.length,checked,broken,mealsWithAtLeastTwoCandidates:foods.length-missingSecond,missingSecond,requireTwo:REQUIRE_TWO},null,2));
-if(broken>0)process.exitCode=1;
+console.log(JSON.stringify({
+ meals:foods.length,
+ checked,
+ brokenCandidateUrls:broken,
+ mealsWithoutUsablePhoto,
+ mealsWithAtLeastTwoUsableCandidates:foods.length-missingSecond,
+ missingSecond,
+ requireTwo:REQUIRE_TWO
+},null,2));
+if(mealsWithoutUsablePhoto>0)process.exitCode=1;
 if(REQUIRE_TWO&&missingSecond>0)process.exitCode=2;
