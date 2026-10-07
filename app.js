@@ -45,6 +45,7 @@ Potato:'https://images.pexels.com/photos/273825/pexels-photo-273825.jpeg?auto=co
 };
 const REST_QUICK_IMAGES = {
 'Fast Food':'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=85',
+Southern:'https://images.pexels.com/photos/2397401/pexels-photo-2397401.jpeg?auto=compress&cs=tinysrgb&w=900',
 Burgers:'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=85',
 Pizza:'https://images.unsplash.com/photo-1579684947550-22e945225d9a?auto=format&fit=crop&w=900&q=85',
 Mexican:'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=85',
@@ -5620,7 +5621,7 @@ async function appDiagnosisView(existingModal){
    const restaurantSearchBox=$('restaurantQuery')||document.querySelector('#restaurantSearchBox input');
    restaurantSearchBox?info('restaurant','Restaurant search','Restaurant search remains available in source but is intentionally hidden in the current UI.','The visible Restaurant shell does not expose a Search control right now.'):fail('restaurant','Restaurant search','Restaurant search input is missing from the source.');
    const restTaxonomy=Array.isArray(REST_QUICK)?REST_QUICK:[];
-   const expectedRest=['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast'];
+   const expectedRest=['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast','Southern'];
    expectedRest.every(x=>restTaxonomy.includes(x))?pass('restaurant','Restaurant Cuisine Cuts','Restaurant Cuisine Cuts include Fast Food and the current cuisine/category taxonomy.'):fail('restaurant','Restaurant Cuisine Cuts','The Restaurant taxonomy is missing one or more required categories.','Expected Fast Food, Burgers, Pizza, Mexican, American, Italian, Asian, BBQ, Seafood, Breakfast.');
    const hoursControl=!!document.getElementById('restaurantHoursToggle');
    hoursControl?pass('restaurant','Restaurant Hours filter','Search, Cuisine, and Hours are available on the Restaurant discovery rail.','Hours offers All / Open / Closed and filters the loaded pool locally without opening Restaurant Details.'):fail('restaurant','Restaurant Hours filter','The Restaurant Hours control is missing from the current shell.','Expected Search — Cuisine — Hours on the discovery rail.');
