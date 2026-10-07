@@ -2115,8 +2115,42 @@ function cachePreparedFoodCards(){
  return indices.map(index=>pool[index]).filter(Boolean);
 }
 
+function ensurePreparedFoodNextCardMarkup(nextCard){
+ if(!nextCard)return null;
+ let img=nextCard.querySelector('img.next-food-img')||nextCard.querySelector('img#foodNextImg');
+ if(!img){
+  img=document.createElement('img');
+  nextCard.insertBefore(img,nextCard.firstChild);
+ }
+ img.classList.add('next-food-img');
+ img.removeAttribute('id');
+
+ let copy=nextCard.querySelector('.next-food-copy');
+ if(!copy){
+  copy=document.createElement('div');
+  copy.className='card-copy next-food-copy';
+  copy.innerHTML='<div class="card-cuisine-row food-cuisine-row"><small class="next-food-cat"></small><div class="card-header-actions"><span class="card-details card-card-action card-details-action icon-action" aria-hidden="true"></span></div></div><h3 class="next-food-name"></h3>';
+  nextCard.appendChild(copy);
+ }
+ let nameEl=copy.querySelector('.next-food-name');
+ let catEl=copy.querySelector('.next-food-cat');
+ if(!nameEl){
+  nameEl=document.createElement('h3');
+  nameEl.className='next-food-name';
+  copy.appendChild(nameEl);
+ }
+ if(!catEl){
+  catEl=document.createElement('small');
+  catEl.className='next-food-cat';
+  const row=copy.querySelector('.card-cuisine-row')||copy;
+  row.insertBefore(catEl,row.firstChild);
+ }
+ return {img,nameEl,catEl};
+}
+
 function setFoodNextCardImage(nextCard,view){
- const img=nextCard?.querySelector('img.next-food-img');
+ const parts=ensurePreparedFoodNextCardMarkup(nextCard);
+ const img=parts?.img;
  if(!img)return Promise.resolve(false);
  const primary=String(view?.primary||'').trim();
  const backup=String(view?.backup||'').trim();
@@ -2174,8 +2208,9 @@ function populateFoodNextCard(view){
  nextCard.dataset.foodReady='0';
  nextCard.dataset.foodImageReady='0';
 
- const nameEl=nextCard.querySelector('.next-food-name');
- const catEl=nextCard.querySelector('.next-food-cat');
+ const parts=ensurePreparedFoodNextCardMarkup(nextCard);
+ const nameEl=parts?.nameEl;
+ const catEl=parts?.catEl;
  if(nameEl)nameEl.textContent=view?.name||'';
  if(catEl)catEl.textContent=view?.category||'';
 
