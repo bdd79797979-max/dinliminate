@@ -3678,7 +3678,7 @@ const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+
    && Math.abs(previousOrigin.lat-Number(loc.lat))<=0.0002
    && Math.abs(previousOrigin.lon-Number(loc.lon))<=0.0002
    && normalizeRestaurantSearch(String(S.restaurantSearchQuery||''))===normalizeRestaurantSearch(searchTerm);
- const priorPool=sameLocationQuery?[...(S.restaurantPool||[])]:[];
+ // CP1186: radius changes must never inherit a prior-radius pool.
  let replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
  if(replacingSearchTarget&&!sameLocationQuery){
    // CP1078: never leave the previous location/radius/query cards on screen
