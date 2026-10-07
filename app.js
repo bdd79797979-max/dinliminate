@@ -1,6 +1,6 @@
 // CP1181: stale waiting-card safe rapid swipe handoff.
 // CP1180: eliminate stale waiting-card reuse during rapid meal swipes.
-// CP1176: cumulative restaurant radius client merge layered onto rapid-swipe main.
+// CP1186: radius changes always rebuild an independent restaurant pool; no prior-radius carry-forward.
 // CP1171: preserve the swipe transaction lock across card rebinds.
 // CP1170: make meal swipe handoff immediate for rapid swipes.
 // CP1067: stabilize first card and make All/Maybe counts derive from the actual choice catalog.\n// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
