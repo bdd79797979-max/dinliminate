@@ -2591,7 +2591,7 @@ const completeAfterExit=async ()=>{
   phase='completing';
   card.dataset.swipePhase='completing';
   if(foodHandoff)foodSwipeHandoff=true;
-  if(restaurantHandoffrestaurantSwipeHandoff=true;
+  if(restaurantHandoff)restaurantSwipeHandoff=true;
 
   if(foodHandoff){
    // Keep the promoted waiting image visually authoritative while the
