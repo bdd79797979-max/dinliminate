@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-const RESTAURANT_TAGS = ['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast'];
+const RESTAURANT_TAGS = ['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast','Southern'];
 
 const RESTAURANT_SEARCH_ALIASES = {
   'Fast Food':['fast food','fastfood','quick service','quick-service','drive thru','drive through','drive-thru'],
