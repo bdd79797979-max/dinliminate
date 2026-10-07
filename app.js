@@ -1335,7 +1335,7 @@ function tutorialStepsForScreen(screen){
   {target:'#home .home-foot',title:'QUICK TOOLS',body:'Add Dinliminate to your phone, share the app, or replay this Tour anytime.',avoid:['#home .home-choice-rail']}
  ];
  if(screen==='food')return[
-  {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left to Cut it or right for Maybe.'},
+  {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
   {target:'#foodCut',title:'CUT',body:'Remove the current meal from this round.'},
   {target:'#foodMaybe',title:'MAYBE',body:'Keep the meal in consideration for your final choice.'},
   {target:'#foodBack',title:'BACK',body:'Undo your most recent meal decision and return to the previous card.'},
@@ -1352,7 +1352,7 @@ function tutorialStepsForScreen(screen){
   {target:'#address',title:'ADDRESS',body:'Enter an address to search from a different starting point.'},
   {target:'#find',title:'FIND RESTAURANTS',body:'Run the restaurant search using your selected location, radius, and filters.'},
   {target:'#radius',title:'RADIUS',body:'Choose how far from the search location to look: 1, 3, 5, 10, 25, 50, or 100 miles.'},
-  {target:'#restaurantCard',title:'RESTAURANT CARD',body:'This is the restaurant you are deciding on. Swipe left to Cut it or right for Maybe.'},
+  {target:'#restaurantCard',title:'RESTAURANT CARD',body:'This is the restaurant you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
   {target:'#restCut',title:'CUT',body:'Remove the current restaurant from this round.'},
   {target:'#restMaybe',title:'MAYBE',body:'Keep the restaurant in consideration for your final choice.'},
   {target:'#restBack',title:'BACK',body:'Undo your most recent restaurant decision and return to the previous card.'},
@@ -1669,13 +1669,21 @@ function mealTimesFor(item){
 }
 function mealTimeFor(item){ return mealTimesFor(item)[0]||mealTimeNames()[0]||'Lunch / Dinner'; }
 function foodBasePool(){
- return allFoods().filter(item=>{
+ const rows=allFoods().filter(item=>{
   if(S.hidden.has(item.id)||S.foodCuts.has(item.id))return false;
   if(S.mealTimeFilters?.size){const times=mealTimesFor(item);if(!times.some(t=>S.mealTimeFilters.has(t)))return false;}
   const cuts=Array.isArray(item.quickCuts)?item.quickCuts:[item.category];
   if([...S.cutCats].some(label=>cuts.includes(label)))return false;
   return true;
  });
+ // CP1225: keep Fish Sticks as the final card in every Meals deck,
+ // including filtered and Maybe views, without changing catalog data.
+ const fishIndex=rows.findIndex(item=>String(item?.id||'')==='fish-sticks');
+ if(fishIndex>=0){
+  const [fish]=rows.splice(fishIndex,1);
+  rows.push(fish);
+ }
+ return rows;
 }
 function foodPool(){
  const base=foodBasePool();
