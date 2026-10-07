@@ -1,3 +1,4 @@
+// CP1170: make meal swipe handoff immediate for rapid swipes.
 // CP1067: stabilize first card and make All/Maybe counts derive from the actual choice catalog.\n// CP988: Swipe Engine v2 — atomic gestures, immediate exit, exact-once completion.
 // CP950 final tree sync: Meal swipe gate removed; keep this commit as the deploy source of truth.
 
@@ -2586,26 +2587,24 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   }finally{
    if(foodHandoff){
     if(card.isConnected){
-     // Keep the promoted waiting card visible until the recycled main card
-     // has finished its first paint. This prevents a blank frame on mobile.
-     const readyPromise=card.__mealReadyPromise;
-     if(readyPromise){
-      await Promise.race([
-       readyPromise,
-       new Promise(resolve=>window.setTimeout(resolve,1200))
-      ]);
-     }
-     await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+     /*
+      * The promoted waiting card is already the next rendered meal. Do not
+      * wait for drawFood() to fetch/decode another image before completing
+      * the handoff. Copy that promoted image into the recycled card immediately;
+      * warm the following card asynchronously so fast swipes stay responsive.
+      */
      const promotedImg=next?.querySelector('img');
      const recycledImg=card.querySelector('img');
+     const promotedMealId=String(next?.dataset.mealId||'');
      if(promotedImg&&recycledImg){
-      const promotedSrc=String(promotedImg.currentSrc||promotedImg.src||'');
+      const promotedSrc=String(promotedImg.currentSrc||promotedImg.src||promotedImg.getAttribute('src')||'');
       if(promotedSrc)recycledImg.src=promotedSrc;
-      if(promotedImg.alt)recycledImg.alt=promotedImg.alt;
+      recycledImg.alt=promotedImg.alt||recycledImg.alt||'';
+      recycledImg.referrerPolicy='no-referrer';
       recycledImg.style.transform='none';
+      recycledImg.style.visibility='visible';
      }
-     // Reveal the replacement and hide the promoted card in the same frame.
-     // The browser should therefore never paint an empty gap between them.
+     // Switch the recycled layer into the current-card state immediately.
      card.classList.remove('swipe-active');
      card.style.transition='none';
      card.style.transform='none';
@@ -2615,18 +2614,24 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
      card.dataset.swipe='';
      card.dataset.swipePhase='idle';
      card.style.pointerEvents='auto';
+     if(promotedMealId)card.dataset.mealId=promotedMealId;
      if(next){
       next.style.transition='none';
       next.style.transform='none';
       next.style.opacity='0';
       next.style.visibility='hidden';
+      next.style.pointerEvents='none';
       next.dataset.swipePromoted='';
       const promotedCurrentImg=next.querySelector('img');
       if(promotedCurrentImg)promotedCurrentImg.style.transform='none';
      }
     }
-    if($('foodNextCard')?.isConnected){primeFoodSwipeMedia();}
     foodSwipeHandoff=false;
+    if($('foodNextCard')?.isConnected){
+     window.requestAnimationFrame(()=>{
+      if(!foodSwipeHandoff&&$('foodNextCard')?.isConnected)primeFoodSwipeMedia();
+     });
+    }
    }else{
     if(card.isConnected){
      resetCard();
