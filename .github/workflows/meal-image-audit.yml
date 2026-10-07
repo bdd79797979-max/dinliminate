@@ -19,7 +19,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
       - run: npm install --no-audit --no-fund
       - run: node --check app.js
       - run: node qa/cp1155-meal-deck-never-stuck-smoke.cjs
