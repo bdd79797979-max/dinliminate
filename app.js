@@ -2008,7 +2008,8 @@ function drawFood(){
  }
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1,photoIndex=0;item._mealPhotoIndex=0;
- const foodCard=$('foodCard');if(foodCard)foodCard.dataset.mealId=item.id;\n const handoffRendering=!!foodSwipeHandoff;
+ const foodCard=$('foodCard');if(foodCard)foodCard.dataset.mealId=item.id;
+ const handoffRendering=!!foodSwipeHandoff;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;
  let mealReadyResolve=()=>{};
@@ -2580,7 +2581,8 @@ const completeAfterExit=async ()=>{
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
-  const foodHandoff=staticWaitingCard&&cardId==='foodCard';\n  const restaurantHandoff=cardId==='restaurantCard';
+  const foodHandoff=staticWaitingCard&&cardId==='foodCard';
+  const restaurantHandoff=cardId==='restaurantCard';
   // CP1181: snapshot the waiting card before action() can redraw/rebind it.
   const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
   const promotedImg=foodHandoff?next?.querySelector('img'):null;
@@ -2588,7 +2590,8 @@ const completeAfterExit=async ()=>{
   const promotedAlt=foodHandoff?String(promotedImg?.alt||''):'';
   phase='completing';
   card.dataset.swipePhase='completing';
-  if(foodHandoff)foodSwipeHandoff=true;\n  if(restaurantHandoff)restaurantSwipeHandoff=true;
+  if(foodHandoff)foodSwipeHandoff=true;
+  if(restaurantHandoffrestaurantSwipeHandoff=true;
 
   if(foodHandoff){
    // Keep the promoted waiting image visually authoritative while the
@@ -3863,7 +3866,8 @@ bindCardButton('restCut', () => restaurantCut(current));
 bindCardButton('restMaybe', () => restaurantMaybe(current));
 bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');}else winner(current)});
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
-bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');\nconst handoffRestaurantCard=$('restaurantCard');
+bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
+const handoffRestaurantCard=$('restaurantCard');
 if(restaurantSwipeHandoff&&handoffRestaurantCard){
   handoffRestaurantCard.style.opacity='0';
   handoffRestaurantCard.style.visibility='hidden';
