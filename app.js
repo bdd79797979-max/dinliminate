@@ -6,7 +6,8 @@
 // CP954 restaurant first-paint restoration: exact/direct venue photos win before generic fallback.
 // CP945 photo-pipeline release sync: canonical Restaurant photo handoff + cache revision.
 const getDefaultFoods = () => Array.isArray(window.DINLIMINATE_FOODS) ? window.DINLIMINATE_FOODS : [];
-const DEFAULT_FOOD_IMAGE = 'https://images.pexels.com/photos/16365767/pexels-photo-16365767.jpeg?auto=compress&cs=tinysrgb&w=1800';
+// CP1149 — meal photo policy: official source first, exact same-meal backup second, never a generic food fallback.
+const DEFAULT_FOOD_IMAGE = '';
 const $ = (id) => document.getElementById(id);
 
 const KEY = 'dinliminate.clean.cp1';
@@ -132,25 +133,43 @@ function mealPhotoList(item){
  const single=normalizeMealPhotoRef(item?.image);
  return single?[single]:[];
 }
+function mealOfficialPhoto(item){
+ const value=normalizeMealPhotoRef(item?.officialImage);
+ return value&&!value.startsWith('idb:')?value:'';
+}
 function foodPhoto(item){
-if(!item)return HUNGRY_IMAGE;
-const primary=normalizeMealPhotoRef(mealPhotoList(item)[0]);
-if(primary && !primary.startsWith('idb:'))return imageProxyUrl(primary);
-const src=String(item.image||'');
-if(src && !src.startsWith('idb:'))return imageProxyUrl(src);
-const groups=Array.isArray(item.quickCuts)&&item.quickCuts.length?item.quickCuts:[item.category];
-for(const label of groups){if(QUICK_IMAGES[label])return imageProxyUrl(QUICK_IMAGES[label]);}
-return QUICK_IMAGES.American;
+ if(!item)return '';
+ const official=mealOfficialPhoto(item);
+ if(official)return imageProxyUrl(official);
+ const primary=normalizeMealPhotoRef(mealPhotoList(item)[0]);
+ if(primary && !primary.startsWith('idb:'))return imageProxyUrl(primary);
+ return '';
+}
+function foodPhotoFallback(item){
+ if(!item)return '';
+ const official=mealOfficialPhoto(item);
+ const refs=mealPhotoList(item);
+ for(const ref of refs){
+  const value=normalizeMealPhotoRef(ref);
+  if(!value||value===official)continue;
+  if(value.startsWith('idb:'))continue;
+  return imageProxyUrl(value);
+ }
+ return '';
 }
 async function resolveMealPhotoRef(ref,item=null){
  const value=normalizeMealPhotoRef(ref);if(!value)return '';
- if(value.startsWith('idb:')){const data=await getStoredPhoto(value.slice(4));return data||foodPhoto(item);}
+ if(value.startsWith('idb:')){const data=await getStoredPhoto(value.slice(4));return data||'';}
  return imageProxyUrl(value);
 }
 async function hydrateMealPhotoGallery(item){
- const refs=mealPhotoList(item);if(!refs.length)return [foodPhoto(item)];
- const loaded=[];for(const ref of refs){try{const src=await resolveMealPhotoRef(ref,item);if(src)loaded.push(src);}catch{}}
- return loaded.length?loaded:[foodPhoto(item)];
+ const refs=mealPhotoList(item);if(!refs.length){
+  const primary=foodPhoto(item);
+  return primary?[primary]:[];
+ }
+ const loaded=[];
+ for(const ref of refs){try{const src=await resolveMealPhotoRef(ref,item);if(src)loaded.push(src);}catch{}}
+ return loaded;
 }
 function ensureMealCardPhotoPager(card,count,index){
  if(!card)return null;
@@ -398,8 +417,14 @@ const lat=Number(row?.lat),lon=Number(row?.lon);
 const destination=Number.isFinite(lat)&&Number.isFinite(lon)?lat+','+lon:(row?.address||row?.name||'restaurant');
 return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
 }
-const FINAL_FOOD_IMAGE='./fallback-food.svg';
+const FINAL_FOOD_IMAGE='';
 const FINAL_RESTAURANT_IMAGE='./fallback-restaurant.svg';
+function markMealImageUnavailable(img){
+ if(!img)return;
+ img.dataset.imageFallback='true';
+ img.removeAttribute('src');
+ img.style.visibility='hidden';
+}
 function bindImageFallbackAttrs(selector){
  document.querySelectorAll(selector).forEach(img=>{
   img.referrerPolicy='no-referrer';img.loading='eager';
@@ -408,7 +433,7 @@ function bindImageFallbackAttrs(selector){
    const fallback=img.dataset.fallback||'',current=img.currentSrc||img.src;
    if(fallback&&current!==fallback){img.src=fallback;return;}
    if(final&&current!==final){img.dataset.imageFallback='true';img.src=final;return;}
-   img.dataset.imageFallback='true';
+   markMealImageUnavailable(img);
   });
  });
 }
@@ -926,7 +951,7 @@ async function hydrateCustomPhotos(){
  for(const item of S.custom){
   const refs=mealPhotoList(item),loaded=await hydrateStoredMealPhotoList(item);
   if(loaded.length){const clean=dedupeMealPhotos(loaded,8);item.images=clean;item.image=clean[0];if(clean.length!==refs.length)changed=true;}
-  else if(refs.some(x=>String(x).startsWith('idb:'))){item.images=[];item.image=DEFAULT_FOOD_IMAGE;changed=true;}
+  else if(refs.some(x=>String(x).startsWith('idb:'))){item.images=[];item.image='';changed=true;}
  }
  for(const item of (S.customQuickCuts||[])){
   const key='quickcut:'+String(item.id);
@@ -951,7 +976,7 @@ async function migrateCustomPhotos(){
  for(const item of S.custom){
   const photos=dedupeMealPhotos(mealPhotoList(item),8);if(!photos.length||!photos.some(x=>String(x).startsWith('data:image/')))continue;
   const refs=await storeMealPhotoSet(item.id,photos);
-  item.images=refs;item.image=refs[0]||DEFAULT_FOOD_IMAGE;changed=true;
+  item.images=refs;item.image=refs[0]||'';changed=true;
  }
  if(changed)save();
 }
@@ -1860,8 +1885,11 @@ function drawFood(){
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1,photoIndex=0;item._mealPhotoIndex=0;
  const foodCard=$('foodCard'); if(foodCard)foodCard.dataset.mealId=item.id;
- img.src=foodPhoto(item);img.dataset.fallback=foodPhotoFallback(item);img.dataset.finalFallback=FINAL_FOOD_IMAGE;img.alt=item.name;img.referrerPolicy='no-referrer';img.loading='eager';
- img.onerror=function(){const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}};
+ const primaryPhoto=foodPhoto(item);
+ const backupPhoto=foodPhotoFallback(item);
+ img.dataset.fallback=backupPhoto;img.dataset.finalFallback=FINAL_FOOD_IMAGE;img.alt=item.name;img.referrerPolicy='no-referrer';img.loading='eager';
+ img.onerror=function(){const fb=this.dataset.fallback||'',current=this.currentSrc||this.src;if(fb&&current!==fb){this.src=fb;return;}markMealImageUnavailable(this);};
+ if(primaryPhoto){img.src=primaryPhoto;}else{markMealImageUnavailable(img);}
  if(foodCard){
   foodCard.querySelector('.maybe-stamp')?.remove();
   const photoPager=ensureMealCardPhotoPager(foodCard,photoCount,photoIndex);
@@ -2171,15 +2199,16 @@ function prepareFoodNextCard(){
  nimg.referrerPolicy='no-referrer';
  nimg.loading='eager';
  nimg.draggable=false;
+ const nextPrimaryPhoto=foodPhoto(next);
  nimg.dataset.fallback=foodPhotoFallback(next);
  nimg.dataset.finalFallback=FINAL_FOOD_IMAGE;
  nimg.onerror=function(){
-  const fb=this.dataset.fallback||'',final=this.dataset.finalFallback||FINAL_FOOD_IMAGE,current=this.currentSrc||this.src;
+  const fb=this.dataset.fallback||'',current=this.currentSrc||this.src;
   if(fb&&current!==fb){this.src=fb;return;}
-  if(final&&current!==final){this.dataset.imageFallback='true';this.src=final;}
+  markMealImageUnavailable(this);
  };
  nimg.style.transform='none';
- nimg.src=foodPhoto(next);
+ if(nextPrimaryPhoto){nimg.style.visibility='visible';nimg.src=nextPrimaryPhoto;}else{markMealImageUnavailable(nimg);}
 }
 function bindRestaurantPhotoPinch(target){
   const img=target?.tagName==='IMG'?target:target?.querySelector?.('img');
@@ -4294,7 +4323,7 @@ function detailsSheet(item,type){
    const detailPhotos=mealPhotoList(item),detailHero=detailPhotos.length>1?'<div class="detail-photo-gallery"><img class="history-detail-photo" src="'+esc(image)+'" data-final-fallback="'+FINAL_FOOD_IMAGE+'" alt="'+esc(item.name)+'"><button type="button" class="meal-card-photo-pager detail-photo-gallery-count" data-detail-photo-count aria-label="View next meal photo">1 / '+detailPhotos.length+'</button></div>':'<div class="detail-hero detail-meal-hero"><img class="history-detail-photo" src="'+esc(image)+'" data-final-fallback="'+FINAL_FOOD_IMAGE+'" alt="'+esc(item.name)+'"></div>';
 const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="detail-title-block detail-unified-title"><span class="detail-kicker">MEAL</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+' · Meal</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+detailRows+'</section>'+nutrition+notesSection+hide+'</div>';
    const modal=openModal('detailsModal','Details',body);
-   bindImageFallback('#detailsModal img',foodPhoto(item),FINAL_FOOD_IMAGE);
+   bindImageFallback('#detailsModal img',foodPhotoFallback(item),FINAL_FOOD_IMAGE);
    if(detailPhotos.length>1){
     const gallery=modal.querySelector('.detail-photo-gallery'),gimg=gallery?.querySelector('.history-detail-photo'),gcount=gallery?.querySelector('[data-detail-photo-count]');let gidx=0;
     const renderGallery=()=>hydrateMealPhotoGallery({...item,images:detailPhotos}).then(photos=>{const total=photos.length||detailPhotos.length;gidx=((gidx%total)+total)%total;if(gimg)swapImageWhenReady(gimg,photos[gidx]||image);if(gcount)gcount.textContent=(gidx+1)+' / '+total;});
@@ -5052,7 +5081,7 @@ if(!name)return;
 if(isEdit&&isBuiltInEdit){
  const id=String(item.id),idx=S.custom.findIndex(x=>String(x.id)===id),previous=idx>=0?S.custom[idx]:null;let savedPhotos;
  try{savedPhotos=await storeMealPhotoSet(id,editorPhotos);}catch(err){appToast(err.message);return;}
- const orderedPhotos=dedupeMealPhotos(savedPhotos,8),coverPhoto=orderedPhotos[0]||DEFAULT_FOOD_IMAGE;
+ const orderedPhotos=dedupeMealPhotos(savedPhotos,8),coverPhoto=orderedPhotos[0]||'';
  const updated={...defaultItem,...(previous||{}),builtInEdit:true,builtInId:id,id,name,primary:defaultItem.primary,category:cat,quickCuts,mealTimes,images:orderedPhotos,image:coverPhoto,description,ingredients,recipe,nutrition};
  if(idx>=0)S.custom[idx]=updated;else S.custom.push(updated);S.maybe.delete(id);S.hidden.delete(id);
 } else if(isEdit){

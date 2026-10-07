@@ -1,4 +1,6 @@
 const ALLOWED_HOSTS=new Set([
+  'irp.cdn-website.com',
+  'www.banquet.com',
   'images.pexels.com',
   'images.unsplash.com',
   'commons.wikimedia.org',
