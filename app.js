@@ -3712,8 +3712,8 @@ S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
  const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
  return Number.isFinite(dist) && dist<=radius+0.001;
 });
-// CP1173: same-location radius changes are cumulative rather than destructive.
- const mergedRows=sameLocationQuery?[...priorPool,...incomingRows]:incomingRows;
+// CP1186: each requested radius is rebuilt from its own provider response.
+ const mergedRows=incomingRows;
  S.restaurantPool = dedupeRestaurantPool(mergedRows).filter(row=>{
    const dist=milesBetween(row.lat,row.lon,loc.lat,loc.lon);
    return Number.isFinite(dist)&&dist<=radius+0.001;
