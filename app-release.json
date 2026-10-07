@@ -1,12 +1,12 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1221,
+  "build": 1222,
   "sourceBranch": "fix/cp1218-swipe-polish",
-  "checkpoint": "CP1221",
+  "checkpoint": "CP1222",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP1220-swipe-physics-and-decision-feedback",
+  "swipeAudit": "CP1222-swipe-button-offscreen-exit",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "official-first-meal-photo > exact meal backup > emergency Dinliminate food image",
   "photoPolicy": "existing verified quality photo > Google Places > official restaurant > exact venue > OSM > no card",
@@ -32,6 +32,6 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1221 meal photo refresh + CP1220 swipe polish + CP1217 Restaurant Cuisine Cuts + CP1215 All/Maybes count fix",
+  "currentBaseline": "CP1222 swipe button exit polish + CP1221 meal photo refresh + CP1220 swipe polish + CP1217 Restaurant Cuisine Cuts + CP1215 All/Maybes count fix",
   "mealImageSystem": "CP1221 refreshed 13 requested meal photos using approved Pexels/Unsplash hosts"
 }
