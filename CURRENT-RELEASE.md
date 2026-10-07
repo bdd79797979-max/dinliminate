@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1217 / CP1217
+# CURRENT RELEASE — BUILD 1220 / CP1220
 
 Date: 2026-10-07
 
@@ -26,6 +26,10 @@ CP1214/CP1215 fix a restaurant-count bug where photo preparation could mark unav
 ## Restaurant Cuisine Cuts
 
 CP1216 adds Indian and Mediterranean as first-class Restaurant Cuisine Cuts, with category search aliases, provider/name signals, menu corroboration, and dedicated chip imagery. The full Restaurant Cuisine Cut set is now 13 categories.
+
+## Swipe interaction polish
+
+CP1218–CP1220 refine the existing Meal and Restaurant swipe system without changing the card-stack lifecycle. Committed swipes now use a tighter 21% gesture threshold (72–108px clamp), a lighter flick threshold, faster off-screen completion, and a shorter clean return when a swipe is released before commit. Cut/Maybe buttons receive immediate press feedback and a light haptic. The All/Maybes count gives immediate commit-time feedback, including correct handling when the committed restaurant was already a Maybe. No next-card promotion animation or new stack behavior was added.
 
 ## Recovery
 
