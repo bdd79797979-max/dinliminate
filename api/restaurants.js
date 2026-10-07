@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r37';
+const API_VERSION='r38';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -147,6 +147,47 @@ function centers(lat,lon,r){
   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
  }
  return out;
+}
+
+function providerCenters(lat,lon,radius){
+ const r=clamp(radius);
+ if(r<=1)return[{lat,lon,radius:r}];
+ const spec=r<=3?{tile:2.1,ring:1.8,count:6}:r<=5?{tile:3.3,ring:3,count:6}:{tile:6,ring:6,count:6};
+ const out=[{lat,lon,radius:spec.tile}];
+ const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+ for(let i=0;i<spec.count;i++){
+  const ang=i*2*Math.PI/spec.count;
+  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:spec.tile});
+ }
+ return out;
+}
+
+async function tiledPhotonPlaces(lat,lon,radius,searchTerm=''){
+ const points=providerCenters(lat,lon,radius),rows=[],errors=[];
+ // Two tiles at a time avoids hammering public providers while still giving
+ // small radii deterministic geographic coverage instead of one capped query.
+ for(let i=0;i<points.length;i+=2){
+  const settled=await Promise.allSettled(points.slice(i,i+2).map(p=>photonPlaces(p.lat,p.lon,p.radius,searchTerm)));
+  for(const result of settled){
+   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'Photon tile failed'));continue;}
+   rows.push(...(result.value?.rows||[]));
+   errors.push(...(result.value?.errors||[]));
+  }
+ }
+ return{rows:dedupe(rows),errors,tiles:points.length};
+}
+
+async function tiledArcgisPlaces(lat,lon,radius,searchTerm=''){
+ const points=providerCenters(lat,lon,radius),rows=[],errors=[];
+ for(let i=0;i<points.length;i+=2){
+  const settled=await Promise.allSettled(points.slice(i,i+2).map(p=>arcgisPlaces(p.lat,p.lon,p.radius,searchTerm)));
+  for(const result of settled){
+   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'ArcGIS tile failed'));continue;}
+   rows.push(...(result.value?.rows||[]));
+   errors.push(...(result.value?.errors||[]));
+  }
+ }
+ return{rows:dedupe(rows),errors,tiles:points.length};
 }
 
 function photonRow(feature,origin){
@@ -1506,15 +1547,16 @@ if(mode==='search'){
  // CP1158: nearby provider calls are individually time-boxed. The previous
  // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
  // upstream could hold the serverless function until Vercel's 30-second cap.
- const nearbyProviderTimeout=Math.min(4200,Math.max(2800,primaryBudget));
+ const nearbyProviderTimeout=radius<=10?10000:Math.min(4200,Math.max(2800,primaryBudget));
  const primaryPromise=wideSearch
    ? [withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),nearbyProviderTimeout,'Wide ArcGIS lookup timed out')]
    : [
-     // Named restaurant searches use the fast local providers first. This keeps
-     // common searches (Wendy's, McDonald's, etc.) from waiting on slower
-     // Google Text Search and Overpass calls before the UI can show results.
-     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
-     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
+     // CP1168/r38: 1/3/5/10-mile searches use overlapping provider tiles.
+     // One ArcGIS/Photon query can hit a result ceiling; independent local
+     // tiles recover nearby venues and the final origin-distance filter keeps
+     // the selected radius exact.
+     withinBudget(radius<=10?tiledPhotonPlaces(lat,lon,providerRadius,searchTerm):photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
+     withinBudget(radius<=10?tiledArcgisPlaces(lat,lon,providerRadius,searchTerm):arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
      searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out')
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
@@ -1588,6 +1630,8 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  // CP1168: deterministic tiled radius discovery runs alongside the fast provider pass and is merged
  // before final matching. 10/25/50 mile searches therefore get an actual
  // geographic discovery layer instead of inheriting a 100-result provider cap.
+ // CP1168/r38 also tiles the primary providers for 1/3/5/10 miles so the
+ // smallest radius choices no longer collapse onto the same capped result set.
  if(discoveryPromise){
    const got=wideSearch ? parallelWide : await discoveryPromise;
    if(got&&!got.__timeout){
@@ -1662,6 +1706,6 @@ const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radi
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant,providerCenters};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.
