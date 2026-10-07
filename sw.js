@@ -1,5 +1,5 @@
 const CACHE='dinliminate-shell-v1154';
-const IMAGE_CACHE='dinliminate-images-v4';
+const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
 // CP1070 — Shell cache bump for Restaurant refine controls and tutorial home navigation.
