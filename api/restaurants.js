@@ -1,8 +1,9 @@
+// CP1183: independent 25/50 provider-radius search.
 // CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
 // CP1173: cumulative restaurant radius search — stable 10-mile core plus radius-specific Photon expansion.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r42';
+const API_VERSION='r43';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -1578,7 +1579,15 @@ if(mode==='search'){
  // Wide searches keep primary providers inside their proven 50-mile envelope.
  // Deterministic tiled discovery fills the full selected geographic disk, and
  // the final true-distance filter removes every out-of-radius row.
- const providerRadius=wideSearch?WIDE_PROVIDER_RADIUS_CAP:10;
+ // CP1183: 25/50-mile searches query their requested radius directly.
+ // Small searches keep the stable 10-mile core. For 25/50, direct provider
+ // coverage is primary and the tiled expansion layer remains supplemental.
+ // The final origin-distance filter still enforces the exact selected radius.
+ const providerRadius=wideSearch
+   ? WIDE_PROVIDER_RADIUS_CAP
+   : radius>=25
+     ? Math.min(radius,WIDE_PROVIDER_RADIUS_CAP)
+     : 10;
  const discoveryPromise=radius>10
    ? withinBudget(
        Promise.allSettled([
