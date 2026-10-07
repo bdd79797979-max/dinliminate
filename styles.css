@@ -10557,3 +10557,8 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 
 /* CP1235 — enlarge Meal/Restaurant card names 50%; leave card geometry and upper controls unchanged. */
 #food .card-copy h3,#restaurant .restaurant-card-stack .card-copy h3{font-size:45px!important;line-height:1.02!important;}
+
+
+/* CP1236 — enlarge Restaurant card location + distance by 50%; do not change card geometry. */
+#restaurant .restaurant-card-location-distance{font-size:13.5px!important;line-height:1.35!important;}
+@media(max-width:390px){#restaurant .restaurant-card-location-distance{font-size:13.5px!important;line-height:1.35!important;}}
