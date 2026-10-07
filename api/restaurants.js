@@ -132,7 +132,7 @@ function photonRow(feature,origin){
 }
 async function photonPlaces(lat,lon,radius,searchTerm=''){
  const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180))),bbox=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
- const limit=radius>25?'250':'120',term=normalizeSearchQuery(searchTerm);
+ const limit=radius>=25?'250':'120',term=normalizeSearchQuery(searchTerm);
  const terms=providerSearchTerms(term);
  const base=[];
  for(const qTerm of terms){
@@ -1454,19 +1454,25 @@ if(mode==='search'){
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   // Wide searches need two independent discovery layers to preserve the full
-   // requested radius. ArcGIS stays capped at 50 miles for fast local context,
-   // while Photon performs the 100-mile ring expansion in parallel.
-   const wideTasks=[
+   // Wide searches keep a complete 50-mile base plus bounded outer expansion.
+   // The base is identical to the proven 50-mile provider envelope, so outer
+   // discovery can only add restaurants; it must never replace the base set.
+   // Keep the exact proven 50-mile provider set as the foundation of every
+  // wider search. Then add a bounded 100-mile Photon expansion separately.
+  // This guarantees that a 100-mile search cannot lose restaurants that were
+  // already found inside 50 miles just because the outer expansion is slow.
+  const wideTasks=[
+     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon base lookup timed out'),
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
-     withinBudget(photonWidePlaces(lat,lon,radius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
-     withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
+     withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out'),
+     withinBudget(photonPlaces(lat,lon,radius,searchTerm),Math.min(2600,SEARCH_BUDGET_MS),'Wide Photon expansion timed out')
    ];
    const settled=await Promise.allSettled(wideTasks);
    primaryBatch={
-     arcgis:settled[0],
-     widePhoton:settled[1],
-     google:settled[2]
+     widePhotonBase:settled[0],
+     arcgis:settled[1],
+     google:settled[2],
+     widePhotonExpansion:settled[3]
    };
    fastProvider='wide';
    const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
@@ -1490,10 +1496,16 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
    if(primaryBatch?.arcgis?.status==='fulfilled')arcgisResult=primaryBatch.arcgis;
    else if(primaryBatch?.arcgis?.reason)arcgisResult={status:'rejected',reason:primaryBatch.arcgis.reason};
-   if(primaryBatch?.widePhoton?.status==='fulfilled'){
-     widePhotonResult=primaryBatch.widePhoton;
-   }else if(primaryBatch?.widePhoton?.reason){
-     widePhotonResult={status:'rejected',reason:primaryBatch.widePhoton.reason};
+   if(primaryBatch?.widePhotonBase?.status==='fulfilled'){
+     widePhotonResult=primaryBatch.widePhotonBase;
+   }else if(primaryBatch?.widePhotonBase?.reason){
+     widePhotonResult={status:'rejected',reason:primaryBatch.widePhotonBase.reason};
+   }
+   if(primaryBatch?.widePhotonExpansion?.status==='fulfilled'){
+     const expansion=primaryBatch.widePhotonExpansion.value||{};
+     widePhotonResult={status:'fulfilled',value:{rows:[...(widePhotonResult?.value?.rows||[]),...(expansion.rows||[])],errors:[...(widePhotonResult?.value?.errors||[]),...(expansion.errors||[])]}};
+   }else if(primaryBatch?.widePhotonExpansion?.reason){
+     widePhotonResult={...widePhotonResult,reason:primaryBatch.widePhotonExpansion.reason};
    }
    if(primaryBatch?.google?.status==='fulfilled'){
      googleResult=primaryBatch.google;
