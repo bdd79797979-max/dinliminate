@@ -29,3 +29,6 @@ jobs:
 
       - name: Run release candidate gate
         run: npm run test:rc
+
+      - name: Run live restaurant radius test
+        run: node qa/cp1166-radius-live-test.cjs
