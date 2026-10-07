@@ -3541,7 +3541,7 @@ for(let attempt=0;attempt<2;attempt++){
 }
 throw lastError||new Error('Restaurant service unavailable.');
 }
-async function searchRestaurants() {
+async function searchRestaurants(options={}) {
 invalidateAddressSuggestions();
 const searchSeq = ++restaurantSearchSeq;
 restaurantSearchController?.abort();
@@ -3563,7 +3563,7 @@ if (searchSeq !== restaurantSearchSeq) return;
 if (!rr.ok || !rd.ok) throw new Error(rr.status===429 ? 'Address lookup is temporarily busy. Please try again.' : (rd.message || 'Could not locate that address.'));
 const visibleLabel=displayRestaurantLocationLabel(rd.display,q); loc = {lat:rd.lat, lon:rd.lon, label:visibleLabel}; S.location = loc; S.locationSource='address'; renderLocationSource(); $('address').value = visibleLabel;
 }
-const radius = Math.min(100,Math.max(1,Number($('radius').value)||10));
+const radius = Math.min(100,Math.max(1,Number(options?.radius ?? $('radius')?.value)||10));
 const searchTerm = String(S.restaurantQuery||'').trim().slice(0,100);
 const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+radius+':'+normalizeRestaurantSearch(searchTerm);
  let replacingSearchTarget=false;
@@ -5979,10 +5979,11 @@ $('locationPermissionAllow')?.addEventListener('click',async()=>{
 $('find').onclick = () => {
   searchRestaurants();
 };
-$('radius').addEventListener('change', () => {
+$('radius').addEventListener('change', event => {
+ const selectedRadius=Math.min(100,Math.max(1,Number(event?.currentTarget?.value)||10));
  const hasLocation=!!S.location || !!$('address')?.value.trim();
  if(!hasLocation){$('status').textContent='Enter an address or use your location.';renderFindButton();return;}
- searchRestaurants();
+ searchRestaurants({radius:selectedRadius});
 });
 $('address').addEventListener('input', () => {
   if(locationRequestActive){
