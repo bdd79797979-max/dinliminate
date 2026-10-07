@@ -118,6 +118,16 @@ function imageProxyUrl(raw){
  if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
  try{const u=new URL(src);if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;return '/api/image?url='+encodeURIComponent(u.href);}catch{return src;}
 }
+function mealImageUrl(raw){
+ const src=normalizeMealPhotoRef(raw);
+ if(!/^https:\/\//i.test(src))return src;
+ if(src.startsWith('/api/image?'))return src.includes('meal=1')?src:src.replace('/api/image?','/api/image?meal=1&');
+ try{
+  const u=new URL(src);
+  if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;
+  return '/api/image?meal=1&url='+encodeURIComponent(u.href);
+ }catch{return src;}
+}
 function normalizeMealPhotoRef(value){return String(value??'').trim();}
 function dedupeMealPhotos(photos,max=8){
  const out=[],seen=new Set();
@@ -128,21 +138,31 @@ function dedupeMealPhotos(photos,max=8){
  return out;
 }
 function mealPhotoList(item){
- const list=dedupeMealPhotos(item?.images,8);
- if(list.length)return list;
- const single=normalizeMealPhotoRef(item?.image);
- return single?[single]:[];
+ const candidates=[];
+ const add=(value)=>{const ref=normalizeMealPhotoRef(value);if(ref)candidates.push(ref);};
+ add(item?.image);
+ add(item?.backupImage);
+ for(const ref of Array.isArray(item?.images)?item.images:[])add(ref);
+ return dedupeMealPhotos(candidates,8);
 }
 function mealOfficialPhoto(item){
  const value=normalizeMealPhotoRef(item?.officialImage);
  return value&&!value.startsWith('idb:')?value:'';
 }
+// CP1154 — built-in meal photos remain URL-only; local data/blob references are not valid catalog photos.
+function assertBuiltInMealPhotoPolicy(item){
+ if(!item)return true;
+ const id=String(item.id||'');
+ if(!getDefaultFoods().some(x=>String(x.id)===id))return true;
+ return mealPhotoList(item).every(ref=>!/^data:|^blob:|^idb:/i.test(String(ref||'')));
+}
 function foodPhoto(item){
  if(!item)return '';
+ if(!assertBuiltInMealPhotoPolicy(item))return '';
  const official=mealOfficialPhoto(item);
- if(official)return imageProxyUrl(official);
+ if(official)return mealImageUrl(official);
  const primary=normalizeMealPhotoRef(mealPhotoList(item)[0]);
- if(primary && !primary.startsWith('idb:'))return imageProxyUrl(primary);
+ if(primary && !primary.startsWith('idb:'))return mealImageUrl(primary);
  return '';
 }
 function foodPhotoFallback(item){
@@ -153,14 +173,14 @@ function foodPhotoFallback(item){
   const value=normalizeMealPhotoRef(ref);
   if(!value||value===official)continue;
   if(value.startsWith('idb:'))continue;
-  return imageProxyUrl(value);
+  return mealImageUrl(value);
  }
  return '';
 }
 async function resolveMealPhotoRef(ref,item=null){
  const value=normalizeMealPhotoRef(ref);if(!value)return '';
  if(value.startsWith('idb:')){const data=await getStoredPhoto(value.slice(4));return data||'';}
- return imageProxyUrl(value);
+ return mealImageUrl(value);
 }
 async function hydrateMealPhotoGallery(item){
  const refs=mealPhotoList(item);if(!refs.length){
@@ -4222,8 +4242,12 @@ winImg.classList.toggle('hungry-image', hungry);
  if(!hungry)winImg.dataset.noGenericFallback='1';
 winImg.classList.toggle('hidden',hungry);
 const winnerBaseFallback=S.winnerType==='restaurant'?restaurantFallbackImage(item):HUNGRY_IMAGE;
-const winnerImage=imageProxyUrl(item?.image || item?.photo || item?.photoFallback || winnerBaseFallback);
-const winnerFallback=imageProxyUrl(item?.photoFallback || item?.image || winnerBaseFallback);
+const winnerImage=S.winnerType==='food'
+  ? mealImageUrl(item?.image || item?.photo || item?.photoFallback || winnerBaseFallback)
+  : imageProxyUrl(item?.image || item?.photo || item?.photoFallback || winnerBaseFallback);
+const winnerFallback=S.winnerType==='food'
+  ? mealImageUrl(item?.photoFallback || item?.image || winnerBaseFallback)
+  : imageProxyUrl(item?.photoFallback || item?.image || winnerBaseFallback);
 winImg.src = winnerImage;
 winImg.dataset.fallback = winnerFallback;
 winImg.alt = item.name || 'Hungry';
@@ -4390,7 +4414,9 @@ function bindDetailNotes(modal,item,type){
 function detailsSheet(item,type){
  if(item?.category==='Hungry')return;
  const isRestaurant=type==='restaurant';
- const image=imageProxyUrl(item.image||item.photo||item.photoFallback||(isRestaurant?restaurantFallbackImage(item):HUNGRY_IMAGE));
+ const image=isRestaurant
+  ? imageProxyUrl(item.image||item.photo||item.photoFallback||restaurantFallbackImage(item))
+  : mealImageUrl(item.image||item.photo||item.photoFallback||HUNGRY_IMAGE);
  const note=itemNote(item,type);
  const notePreview=note.replace(/\s+/g,' ').trim();
  const notesSection='<section class="detail-section detail-notes-section" id="detailNotesSection"><div class="detail-section-head"><div><div class="detail-section-title">Notes</div><p class="detail-section-helper">Private to this device.</p></div><div class="detail-notes-actions"><button class="detail-notes-toggle" id="detailNotesToggle" type="button" aria-expanded="false"><span class="detail-notes-toggle-icon" aria-hidden="true">✎</span><span> '+(note?'Edit note':'Add a note')+'</span></button></div></div><div class="detail-note-row '+(note?'':'hidden')+'" id="detailNoteRow"><p class="detail-note-preview" id="detailNotesPreview">'+esc(notePreview)+'</p><div class="detail-note-row-actions"><button class="detail-note-edit" id="detailNoteEdit" type="button" aria-label="Edit note for '+esc(item.name)+'" title="Edit note"><span aria-hidden="true">✎</span><span>Edit</span></button><button class="detail-notes-delete" id="detailNotesDelete" type="button" aria-label="Delete note for '+esc(item.name)+'" title="Delete note"><span aria-hidden="true">×</span></button></div></div><p class="detail-notes-empty '+(note?'hidden':'')+'" id="detailNotesEmpty">Add a quick reminder, favorite, or thought.</p><div class="detail-notes-editor hidden" id="detailNotesEditor"><textarea id="detailNotesInput" maxlength="1200" rows="4" placeholder="Write a note about this '+(isRestaurant?'restaurant':'meal')+'…"></textarea><div class="detail-notes-editor-actions"><button class="secondary" id="detailNotesCancel" type="button">Cancel</button><button class="detail-notes-save" id="detailNotesSave" type="button">Save Note</button></div></div></section>';
@@ -4470,7 +4496,9 @@ const body='<div class="detail-unified detail-meal">'+detailHero+'<div class="de
 
 function historyImageSource(row){
  const fallback=row?.type==='restaurant'?restaurantFallbackImage(row):HUNGRY_IMAGE;
- return imageProxyUrl(row?.image||row?.photoFallback||fallback);
+ return row?.type==='restaurant'
+  ? imageProxyUrl(row?.image||row?.photoFallback||fallback)
+  : mealImageUrl(row?.image||row?.photoFallback||fallback);
 }
 function recordHistory(item, type, options={}) {
 const history = readHistory();
