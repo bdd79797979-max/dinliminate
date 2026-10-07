@@ -4999,7 +4999,7 @@ elegant Dine In/Out visual identity{
   border-radius:6px!important;
   background:transparent!important;
   color:#5d5b57!important;
-  font-size:14px!important;
+  font-size:13.5px!important;
   font-weight:900!important;
   line-height:1!important;
   transition:color .18s ease,background .18s ease,transform .18s ease!important;
@@ -10548,8 +10548,8 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 
 
 /* CP1234 — enlarge card Cuisine type + Details control without changing upper controls or card geometry. */
-#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:14px!important;}
+#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:13.5px!important;}
 #food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}
-#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:23px!important;height:23px!important;flex-basis:23px!important;}
+#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:22.5px!important;height:22.5px!important;flex-basis:22.5px!important;}
 #food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}
-@media(max-width:390px){#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:14px!important;}#food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:23px!important;height:23px!important;flex-basis:23px!important;}#food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}}
+@media(max-width:390px){#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:13.5px!important;}#food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:22.5px!important;height:22.5px!important;flex-basis:22.5px!important;}#food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}}
