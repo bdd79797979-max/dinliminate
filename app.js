@@ -20,8 +20,9 @@ const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
+let restaurantSwipeHandoff=false;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1186';
+let APP_BUILD = '1187';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -2007,7 +2008,7 @@ function drawFood(){
  }
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1,photoIndex=0;item._mealPhotoIndex=0;
- const foodCard=$('foodCard');if(foodCard)foodCard.dataset.mealId=item.id;
+ const foodCard=$('foodCard');if(foodCard)foodCard.dataset.mealId=item.id;\n const handoffRendering=!!foodSwipeHandoff;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;
  let mealReadyResolve=()=>{};
@@ -2029,6 +2030,14 @@ function drawFood(){
  // Paint the approved meal photo immediately. A failed request falls through
  // to the exact meal backup rather than leaving a blank card.
  img.style.visibility='visible';
+ // CP1187: during swipe handoff the recycled card stays hidden until the promoted
+ // next card has become the authoritative current card. Safari otherwise can
+ // repaint the recycled card for one frame before the next card is ready.
+ if(handoffRendering&&foodCard){
+   foodCard.style.opacity='0';
+   foodCard.style.visibility='hidden';
+   foodCard.style.pointerEvents='none';
+ }
  img.dataset.imageFallback='false';
  if(primaryPhoto)img.src=primaryPhoto;
  else if(backupPhoto)img.src=backupPhoto;
@@ -2571,7 +2580,7 @@ const completeAfterExit=async ()=>{
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
-  const foodHandoff=staticWaitingCard&&cardId==='foodCard';
+  const foodHandoff=staticWaitingCard&&cardId==='foodCard';\n  const restaurantHandoff=cardId==='restaurantCard';
   // CP1181: snapshot the waiting card before action() can redraw/rebind it.
   const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
   const promotedImg=foodHandoff?next?.querySelector('img'):null;
@@ -2579,7 +2588,7 @@ const completeAfterExit=async ()=>{
   const promotedAlt=foodHandoff?String(promotedImg?.alt||''):'';
   phase='completing';
   card.dataset.swipePhase='completing';
-  if(foodHandoff)foodSwipeHandoff=true;
+  if(foodHandoff)foodSwipeHandoff=true;\n  if(restaurantHandoff)restaurantSwipeHandoff=true;
 
   if(foodHandoff){
    // Keep the promoted waiting image visually authoritative while the
@@ -2647,6 +2656,15 @@ const completeAfterExit=async ()=>{
    }else{
     if(card.isConnected){
      resetCard();
+    }
+    if(restaurantHandoff){
+     restaurantSwipeHandoff=false;
+     const freshRestaurantCard=$('restaurantCard');
+     if(freshRestaurantCard){
+      freshRestaurantCard.style.opacity='1';
+      freshRestaurantCard.style.visibility='visible';
+      freshRestaurantCard.style.pointerEvents='auto';
+     }
     }
    }
   }
@@ -3845,7 +3863,12 @@ bindCardButton('restCut', () => restaurantCut(current));
 bindCardButton('restMaybe', () => restaurantMaybe(current));
 bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');}else winner(current)});
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
-bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
+bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');\nconst handoffRestaurantCard=$('restaurantCard');
+if(restaurantSwipeHandoff&&handoffRestaurantCard){
+  handoffRestaurantCard.style.opacity='0';
+  handoffRestaurantCard.style.visibility='hidden';
+  handoffRestaurantCard.style.pointerEvents='none';
+}
 bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
 const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
