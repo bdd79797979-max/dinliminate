@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1194,
-  "sourceBranch": "release/cp1194-meatloaf-photo",
-  "checkpoint": "CP1194",
-  "deploymentTrigger": "release/cp1194-meatloaf-photo",
+  "build": 1195,
+  "sourceBranch": "release/cp1195-meal-photo-refresh",
+  "checkpoint": "CP1195",
+  "deploymentTrigger": "release/cp1195-meal-photo-refresh",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1005-faster-flick-response",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,5 +32,6 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1194 Meatloaf photo replacement; CP1193 Radius Engine v2 retained"
+  "currentBaseline": "CP1195 meal photo refresh for 11 requested meals; CP1193 Radius Engine v2 retained",
+  "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; CP1195 refreshed Southern Vegetable Plate, PB&J, Chicken Pot Pie, BLT, Ham Dinner, Roast Beef Sandwich, Chicken & Dumplings, Shrimp & Grits, Biscuits & Gravy, Southern Vegetable Beef Soup, and White Chicken Chili"
 }
