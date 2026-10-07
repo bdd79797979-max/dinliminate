@@ -1477,7 +1477,7 @@ if(mode==='search'){
  if(rate(req,mode))return res.status(429).json({ok:false,code:'RATE_LIMITED',message:'Restaurant search is temporarily busy. Please try again.'});
  if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');
  const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
- const wideSearch=radius>25;
+ const wideSearch=radius>50;
 let radiusEngineResult={coverageVerified:false},engineTimedOut=false,engineRows=[],engineErrors=[],engineProviderStats={},radiusEngineElapsedMs=0,wideGoogleOut={rows:[],errors:[]};
 if(wideSearch){
   const wideStarted=Date.now();
