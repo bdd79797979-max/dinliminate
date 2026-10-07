@@ -1457,18 +1457,19 @@ if(mode==='search'){
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   // Wide searches need two independent discovery layers to preserve the full
-   // requested radius. ArcGIS stays capped at 50 miles for fast local context,
-   // while Photon performs the 100-mile ring expansion in parallel.
+   // Wide searches keep the fast providers anchored to 50 miles, while
+   // Overpass supplies the outer-radius coverage. Photon stays as one bounded
+   // 50-mile context lookup; the old multi-point Photon expansion is removed.
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
+     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
      withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
    ];
    const settled=await Promise.allSettled(wideTasks);
    primaryBatch={
      arcgis:settled[0],
-     widePhoton:{status:'fulfilled',value:{rows:[],errors:[]}},
-     google:settled[1]
+     widePhoton:settled[1],
+     google:settled[2]
    };   fastProvider='wide';
    const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
    parallelWide=discoveryRemaining>500
