@@ -7,9 +7,10 @@ new vm.Script(app,{filename:'app.js'});
 
 assert.match(app,/const FINAL_FOOD_IMAGE='\.\/fallback-food\.svg';/);
 assert.match(app,/function loadMealPhotoCandidates\(img,candidates,target\)/);
-assert.match(app,/img\.src=FINAL_FOOD_IMAGE;/);
-assert.match(app,/img\.removeAttribute\('src'\);/);
-assert.match(app,/img\.style\.visibility='hidden';/);
+assert.match(app,/img\.style\.visibility='visible';/);
+assert.match(app,/if\(primaryPhoto\)img\.src=primaryPhoto;/);
+assert.match(app,/if\(backupPhoto\)img\.src=backupPhoto;/);
+assert.doesNotMatch(app,/img\.removeAttribute\('src'\);\s*img\.style\.visibility='hidden';/);
 assert.match(app,/nextCard\.dataset\.foodImageReady='0';/);
 assert.match(app,/nextCard\.style\.visibility='visible';/);
 assert.match(app,/target\.dataset\.mealLoadToken/);

@@ -51,7 +51,8 @@ async function check(url){
   finally{clearTimeout(timer);}
 }
 
-if(foods.length!==117)throw new Error('Expected 117 built-in meals; found '+foods.length);
+if(foods.length!==116)throw new Error('Expected 116 built-in meals; found '+foods.length);
+if(foods.some(x=>String(x.id)==='chili-cheese-baked-potato'))throw new Error('Retired Chili Cheese Baked Potato must not return to the built-in catalog.');
 if(new Set(foods.map(x=>String(x.id))).size!==foods.length)throw new Error('Duplicate built-in meal ID detected.');
 
 let broken=0,mealsWithoutUsablePhoto=0,missingSecond=0,checked=0;

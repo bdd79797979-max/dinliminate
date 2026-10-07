@@ -11,7 +11,7 @@
   "description": "Meal decisions without the endless scrolling.",
   "icons": [
     {
-      "src": "./app-icon.svg?v=1157",
+      "src": "./app-icon.svg?v=1164",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
