@@ -4,7 +4,7 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const {runRadiusEngine}=require('../lib/radius-engine');
 const MAX_RADIUS=100;
-const API_VERSION='r47';
+const API_VERSION='r48';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -1429,6 +1429,31 @@ if(mode==='search'){
    : (radiusEngineResult?.providerStats||{});
  const radiusEngineElapsedMs=Date.now()-radiusEngineStarted;
 
+ // CP1200: never expose a transient provider outage as an empty radius deck.
+ // Keep the radius engine primary, but recover from an empty/near-empty pass
+ // using the same direct providers that powered the proven CP1192 path.
+ let recoveredEngineRows=[...(engineRows||[])];
+ const recoveryErrors=[];
+ if(recoveredEngineRows.length<5){
+  const recoveryRadius=Math.min(radius,50);
+  const recoveryTasks=[
+   withinBudget(arcgisPlaces(lat,lon,recoveryRadius,searchTerm,3000),4500,'Radius ArcGIS recovery timed out'),
+   withinBudget(photonPlaces(lat,lon,recoveryRadius,searchTerm),4500,'Radius Photon recovery timed out')
+  ];
+  if(!searchTerm)recoveryTasks.push(withinBudget(googlePlaces(lat,lon,recoveryRadius),4500,'Radius Google recovery timed out'));
+  const recovery=await Promise.allSettled(recoveryTasks);
+  for(const result of recovery){
+   if(result.status==='fulfilled'&&!result.value?.__timeout){
+    recoveredEngineRows.push(...(result.value?.rows||[]));
+    recoveryErrors.push(...(result.value?.errors||[]));
+   }else if(result.status==='rejected'){
+    recoveryErrors.push(String(result.reason?.message||result.reason||'Radius recovery failed'));
+   }
+  }
+  recoveredEngineRows=filterNonDiningRows(dedupe(recoveredEngineRows));
+ }
+ if(recoveryErrors.length)engineErrors.push(...recoveryErrors);
+
  // Google remains a supplementary identity/hours/search source. It is never
  // the authority for geographic radius coverage.
  const googleSearchRadius=Math.min(radius,50);
@@ -1448,7 +1473,7 @@ if(mode==='search'){
    ...(engineRows||[]),
    ...(googleOut.rows||[])
  ]));
- let osmOut={rows:[...(engineRows||[])],errors:[...(engineErrors||[])]};
+ let osmOut={rows:[...(recoveredEngineRows||[])],errors:[...(engineErrors||[])]};
  let primaryBatch=engineProviderStats;
  let fastProvider='radius-engine-v2';
 
