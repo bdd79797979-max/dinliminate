@@ -136,6 +136,31 @@ async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm='
  return overpassPoints([tile],lat,lon,radius,types,searchTerm,[OVERPASS[0],OVERPASS[1]],RADIUS_OVERPASS_FAST_TIMEOUT_MS);
 }
 
+
+function wideRadiusCenters(lat,lon,radius){
+  const r=clamp(radius);
+  const spec=r<=50?{tile:30,ring:30,count:6}:{tile:45,ring:65,count:12};
+  const out=[{lat,lon,radius:spec.tile}];
+  const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+  for(let i=0;i<spec.count;i++){
+    const ang=i*2*Math.PI/spec.count;
+    out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:spec.tile});
+  }
+  return out;
+}
+async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
+  const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
+  const tasks=points.map((p,i)=>overpassPoints([p],lat,lon,radius,DINING_AMENITIES,searchTerm,[OVERPASS[i%OVERPASS.length]],5000));
+  const settled=await Promise.allSettled(tasks);
+  for(const result of settled){
+    if(result.status==='fulfilled'){
+      rows.push(...(result.value?.rows||[]));
+      errors.push(...(result.value?.errors||[]));
+    }else errors.push(String(result.reason?.message||result.reason||'Wide radius Overpass tile failed'));
+  }
+  return{rows:dedupe(rows),errors,tileCount:points.length,tileRadiusMiles:points[0]?.radius||0,ringMiles:radius<=50?30:65};
+}
+
 const KNOWN_RESTAURANT_WEBSITES={
   "mcdonald's":'https://www.mcdonalds.com',"taco bell":'https://www.tacobell.com',"wendy's":'https://www.wendys.com',"the thirsty goat":'https://www.thirstygoatsango.com',"johnny's big burger":'https://thebigburger.com',"edward's steakhouse":'https://www.edwardssteakhouse.net',"shelbys trio":'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street',"thirsty goat":'https://www.thirstygoatsango.com',"burger king":'https://www.bk.com',"kfc":'https://www.kfc.com',"chick fil a":'https://www.chick-fil-a.com',"popeyes":'https://www.popeyes.com',"subway":'https://www.subway.com',"sonic":'https://www.sonicdrivein.com',"arby's":'https://www.arbys.com',"whataburger":'https://whataburger.com',"five guys":'https://www.fiveguys.com',"culver's":'https://www.culvers.com',"raising cane's":'https://www.raisingcanes.com',"wingstop":'https://www.wingstop.com',"bojangles":'https://www.bojangles.com',"cook out":'https://www.cookout.com',"dairy queen":'https://www.dairyqueen.com',"zaxby's":'https://www.zaxbys.com',"church's chicken":'https://www.churchs.com',"captain d's":'https://www.captainds.com',"long john silver's":'https://www.ljsilvers.com',"jimmy john's":'https://www.jimmyjohns.com',"jersey mike's":'https://www.jerseymikes.com',"firehouse subs":'https://www.firehousesubs.com',"little caesars":'https://littlecaesars.com',"domino's":'https://www.dominos.com',"papa john's":'https://www.papajohns.com',"pizza hut":'https://www.pizzahut.com',"marco's pizza":'https://www.marcos.com',"krystal":'https://www.krystal.com',"steak 'n shake":'https://www.steaknshake.com',"white castle":'https://www.whitecastle.com',"freddy's":'https://www.freddys.com',"panda express":'https://www.pandaexpress.com',"jack in the box":'https://www.jackinthebox.com',"hardee's":'https://www.hardees.com',"del taco":'https://www.deltaco.com',"checkers":'https://www.checkers.com',"rally's":'https://www.rallys.com',"chipotle":'https://www.chipotle.com',"applebee's":'https://www.applebees.com',"chili's":'https://www.chilis.com',"olive garden":'https://www.olivegarden.com',"waffle house":'https://www.wafflehouse.com'
 };
@@ -1404,72 +1429,64 @@ if(mode==='search'){
  if(rate(req,mode))return res.status(429).json({ok:false,code:'RATE_LIMITED',message:'Restaurant search is temporarily busy. Please try again.'});
  if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');
  const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
- const radiusEngineStarted=Date.now();
- const radiusEnginePromise=runRadiusEngine({
-   lat,
-   lon,
-   radiusMiles:radius,
-   searchTerm,
-   providers:[{name:'radius-discovery',query:radiusEngineProviderQuery}],
-   dedupe,
-   concurrency:RADIUS_ENGINE_CONCURRENCY
- });
- const radiusEngineResult=await withinBudget(
-   radiusEnginePromise,
-   Math.min(13000,SEARCH_BUDGET_MS-500),
-   'Radius Engine v2 timed out'
- );
- const engineTimedOut=!!radiusEngineResult?.__timeout;
- const engineRows=engineTimedOut?[]:(radiusEngineResult?.rows||[]);
- const engineErrors=engineTimedOut
-   ? ['Radius Engine v2 timed out']
-   : (radiusEngineResult?.errors||[]);
- const engineProviderStats=engineTimedOut
-   ? {}
-   : (radiusEngineResult?.providerStats||{});
- const radiusEngineElapsedMs=Date.now()-radiusEngineStarted;
-
- // CP1200: never expose a transient provider outage as an empty radius deck.
- // Keep the radius engine primary, but recover from an empty/near-empty pass
- // using the same direct providers that powered the proven CP1192 path.
- let recoveredEngineRows=[...(engineRows||[])];
- const recoveryErrors=[];
- if(recoveredEngineRows.length<5){
+ const wideSearch=radius>25;
+let radiusEngineResult={coverageVerified:false},engineTimedOut=false,engineRows=[],engineErrors=[],engineProviderStats={},radiusEngineElapsedMs=0,wideGoogleOut={rows:[],errors:[]};
+if(wideSearch){
+  const wideStarted=Date.now(),providerRadius=50;
+  const tasks=[
+    withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,3200),5000,'Wide ArcGIS lookup timed out'),
+    withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),5000,'Wide Photon lookup timed out'),
+    withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),5000,'Wide Google lookup timed out'),
+    withinBudget(wideRadiusOverpass(lat,lon,radius,searchTerm),11000,'Wide Overpass coverage timed out')
+  ];
+  const settled=await Promise.allSettled(tasks);
+  const get=(i,label)=>settled[i]?.status==='fulfilled'&&!settled[i].value?.__timeout?settled[i].value:{rows:[],errors:[label]};
+  const arc=get(0,'Wide ArcGIS unavailable'),pho=get(1,'Wide Photon unavailable'),goo=get(2,'Wide Google unavailable'),osm=get(3,'Wide Overpass unavailable');
+  wideGoogleOut=goo;
+  engineRows=filterNonDiningRows(dedupe([...(arc.rows||[]),...(pho.rows||[]),...(goo.rows||[]),...(osm.rows||[])]));
+  engineErrors=[...(arc.errors||[]),...(pho.errors||[]),...(goo.errors||[]),...(osm.errors||[])];
+  engineProviderStats={
+    ArcGIS:{tiles:1,rows:(arc.rows||[]).length,errors:(arc.errors||[]).length},
+    Photon:{tiles:1,rows:(pho.rows||[]).length,errors:(pho.errors||[]).length},
+    Google:{tiles:1,rows:(goo.rows||[]).length,errors:(goo.errors||[]).length},
+    Overpass:{tiles:osm.tileCount||wideRadiusCenters(lat,lon,radius).length,rows:(osm.rows||[]).length,errors:(osm.errors||[]).length}
+  };
+  radiusEngineElapsedMs=Date.now()-wideStarted;
+  radiusEngineResult={coverageVerified:true,tileCount:osm.tileCount||wideRadiusCenters(lat,lon,radius).length,tileRadiusMiles:osm.tileRadiusMiles||0,ringMiles:osm.ringMiles||0};
+}else{
+  const radiusEngineStarted=Date.now();
+  const radiusEnginePromise=runRadiusEngine({lat,lon,radiusMiles:radius,searchTerm,providers:[{name:'radius-discovery',query:radiusEngineProviderQuery}],dedupe,concurrency:RADIUS_ENGINE_CONCURRENCY});
+  radiusEngineResult=await withinBudget(radiusEnginePromise,Math.min(13000,SEARCH_BUDGET_MS-500),'Radius Engine v2 timed out');
+  engineTimedOut=!!radiusEngineResult?.__timeout;
+  engineRows=engineTimedOut?[]:(radiusEngineResult?.rows||[]);
+  engineErrors=engineTimedOut?['Radius Engine v2 timed out']:(radiusEngineResult?.errors||[]);
+  engineProviderStats=engineTimedOut?{}:(radiusEngineResult?.providerStats||{});
+  radiusEngineElapsedMs=Date.now()-radiusEngineStarted;
+}
+let recoveredEngineRows=[...(engineRows||[])];
+const recoveryErrors=[];
+if(!wideSearch&&recoveredEngineRows.length<5){
   const recoveryRadius=Math.min(radius,50);
   const recoveryTasks=[
-   withinBudget(arcgisPlaces(lat,lon,recoveryRadius,searchTerm,3000),4500,'Radius ArcGIS recovery timed out'),
-   withinBudget(photonPlaces(lat,lon,recoveryRadius,searchTerm),4500,'Radius Photon recovery timed out')
+    withinBudget(arcgisPlaces(lat,lon,recoveryRadius,searchTerm,3000),4500,'Radius ArcGIS recovery timed out'),
+    withinBudget(photonPlaces(lat,lon,recoveryRadius,searchTerm),4500,'Radius Photon recovery timed out')
   ];
   if(!searchTerm)recoveryTasks.push(withinBudget(googlePlaces(lat,lon,recoveryRadius),4500,'Radius Google recovery timed out'));
   const recovery=await Promise.allSettled(recoveryTasks);
   for(const result of recovery){
-   if(result.status==='fulfilled'&&!result.value?.__timeout){
-    recoveredEngineRows.push(...(result.value?.rows||[]));
-    recoveryErrors.push(...(result.value?.errors||[]));
-   }else if(result.status==='rejected'){
-    recoveryErrors.push(String(result.reason?.message||result.reason||'Radius recovery failed'));
-   }
+    if(result.status==='fulfilled'&&!result.value?.__timeout){
+      recoveredEngineRows.push(...(result.value?.rows||[]));
+      recoveryErrors.push(...(result.value?.errors||[]));
+    }else if(result.status==='rejected')recoveryErrors.push(String(result.reason?.message||result.reason||'Radius recovery failed'));
   }
   recoveredEngineRows=filterNonDiningRows(dedupe(recoveredEngineRows));
- }
- if(recoveryErrors.length)engineErrors.push(...recoveryErrors);
+}
+if(recoveryErrors.length)engineErrors.push(...recoveryErrors);
+const googleSearchRadius=Math.min(radius,50);
+const googleResultSettled=wideSearch?wideGoogleOut:await withinBudget((searchTerm?googleSearchPlaces(lat,lon,googleSearchRadius,searchTerm):googlePlaces(lat,lon,googleSearchRadius)),radius<=10?4200:3200,'Google radius enrichment timed out');
+const googleOut=googleResultSettled?.__timeout?{rows:[],errors:['Google radius enrichment timed out']}:(googleResultSettled||{rows:[],errors:[]});
 
- // Google remains a supplementary identity/hours/search source. It is never
- // the authority for geographic radius coverage.
- const googleSearchRadius=Math.min(radius,50);
- const googleSearchPromise=searchTerm
-   ? googleSearchPlaces(lat,lon,googleSearchRadius,searchTerm)
-   : googlePlaces(lat,lon,googleSearchRadius);
- const googleResultSettled=await withinBudget(
-   googleSearchPromise,
-   radius<=10?4200:3200,
-   'Google radius enrichment timed out'
- );
- const googleOut=googleResultSettled?.__timeout
-   ? {rows:[],errors:['Google radius enrichment timed out']}
-   : (googleResultSettled||{rows:[],errors:[]});
-
- let preliminary=filterNonDiningRows(dedupe([
+let preliminary=filterNonDiningRows(dedupe([
    ...(engineRows||[]),
    ...(googleOut.rows||[])
  ]));
