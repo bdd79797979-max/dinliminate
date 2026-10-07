@@ -1,8 +1,8 @@
-// CP1175: fix radius expansion timeout constant and harden expansion runtime.
+// CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
 // CP1173: cumulative restaurant radius search — stable 10-mile core plus radius-specific Photon expansion.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r41';
+const API_VERSION='r42';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -267,6 +267,12 @@ function radiusExpansionCenters(lat,lon,radius){
  }
  return out;
 }
+async function radiusOverpassExpansion(lat,lon,radius,searchTerm=''){
+ const points=radiusExpansionCenters(lat,lon,radius);
+ if(!points.length)return{rows:[],errors:[],tiles:0,provider:'none'};
+ return overpassPoints(points,lat,lon,radius,'restaurant|fast_food',searchTerm,OVERPASS,OVERPASS_HTTP_TIMEOUT_MS);
+}
+
 async function photonRadiusExpansion(lat,lon,radius,searchTerm=''){
  const points=radiusExpansionCenters(lat,lon,radius),rows=[],errors=[];
  if(!points.length)return{rows,errors,tiles:0,provider:'none'};
@@ -1574,7 +1580,25 @@ if(mode==='search'){
  // the final true-distance filter removes every out-of-radius row.
  const providerRadius=wideSearch?WIDE_PROVIDER_RADIUS_CAP:10;
  const discoveryPromise=radius>10
-   ? withinBudget(photonRadiusExpansion(lat,lon,radius,searchTerm),WIDE_DISCOVERY_TIMEBOX_MS,'Radius expansion timed out')
+   ? withinBudget(
+       Promise.allSettled([
+         photonRadiusExpansion(lat,lon,radius,searchTerm),
+         radius<=50 ? radiusOverpassExpansion(lat,lon,radius,searchTerm) : Promise.resolve({rows:[],errors:[],provider:'none'})
+       ]).then(results=>{
+         const rows=[],errors=[];
+         for(const result of results){
+           if(result.status==='fulfilled'){
+             rows.push(...(result.value?.rows||[]));
+             errors.push(...(result.value?.errors||[]));
+           }else{
+             errors.push(String(result.reason?.message||result.reason||'Radius expansion provider failed'));
+           }
+         }
+         return {rows:dedupe(rows),errors};
+       }),
+       WIDE_DISCOVERY_TIMEBOX_MS,
+       'Radius expansion timed out'
+     )
    : null;
  // CP1158: nearby provider calls are individually time-boxed. The previous
  // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
