@@ -2577,64 +2577,73 @@ const completeAfterExit=async ()=>{
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
-  const outgoingId=quarantinedSwipeId||String(card.dataset.swipeOutgoingId||'');
-  card.dataset.swipeOutgoingId=outgoingId;
+
   phase='completing';
   card.dataset.swipePhase='completing';
+
+  // CP1193: NEVER clone or recycle the outgoing card while it is visible.
+  // The exact same DOM node is hidden first, updated while hidden, then
+  // reset and revealed only after the new meal is fully selected.
   if(foodHandoff)foodSwipeHandoff=true;
 
-  // CP1191: the animated outgoing visual is now a separate DOM layer.
-  // Never repaint/recycle the element that is currently flying away.
-  const exitLayer=card.__swipeExitLayer;
-  if(exitLayer){
-    exitLayer.style.pointerEvents='none';
-  }
+  card.style.transition='none';
+  card.style.visibility='hidden';
+  card.style.pointerEvents='none';
+  card.style.opacity='1';
+
+  // Defensive cleanup from CP1191/1192 if a stale exit layer exists.
+  const staleExit=card.__swipeExitLayer;
+  if(staleExit?.isConnected)staleExit.remove();
+  card.__swipeExitLayer=null;
+
   try{
     await Promise.resolve(action?.());
   }catch(err){
     setTimeout(()=>{throw err;},0);
   }finally{
     if(foodHandoff){
-      // drawFood() may synchronously paint the new meal into the real card.
-      // Keep that real card hidden until the outgoing visual is gone.
+      // drawFood() has now populated the hidden live card with the new meal.
+      // Do not expose it until its transform and compositor state are clean.
       card.style.transition='none';
       card.style.transform='none';
       card.style.opacity='1';
       card.style.visibility='hidden';
       card.style.pointerEvents='none';
+      card.style.removeProperty('--swipe-tint-alpha');
       card.dataset.swipe='';
       card.dataset.swipePhase='idle';
       card.dataset.swipeTransaction='';
       card.dataset.swipeOutgoingId='';
-      card.__swipeExitLayer=null;
-      foodSwipeHandoff=false;
-      if($('foodNextCard')?.isConnected)primeFoodSwipeMedia();
 
-      const revealNewCard=()=>{
-        if(!card.isConnected)return;
-        card.style.transition='none';
-        card.style.transform='none';
-        card.style.opacity='1';
-        card.style.visibility='visible';
-        card.style.pointerEvents='auto';
-        card.dataset.swipePhase='idle';
-        card.dataset.swipeTransaction='';
-        quarantinedSwipeId='';
-        bindFoodSwipe();
-      };
-      // Let WebKit finish the exit-layer composite before handing the
-      // recycled card back to the compositor.
-      requestAnimationFrame(()=>requestAnimationFrame(revealNewCard));
+      if($('foodNextCard')?.isConnected){
+        primeFoodSwipeMedia();
+      }
+
+      // Two frames gives WebKit a clean hidden->reset->visible lifecycle.
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          if(!card.isConnected)return;
+          if(S.screen!=='food'){
+            foodSwipeHandoff=false;
+            return;
+          }
+          card.style.transition='none';
+          card.style.transform='none';
+          card.style.opacity='1';
+          card.style.visibility='visible';
+          card.style.pointerEvents='auto';
+          card.dataset.swipePhase='idle';
+          card.dataset.swipeTransaction='';
+          foodSwipeHandoff=false;
+          bindFoodSwipe();
+        });
+      });
     }else{
       card.__swipeExitLayer=null;
       if(card.isConnected)resetCard();
     }
   }
 };
- function handleTransitionEnd(e){
-  if(phase!=='committing'||e.target!==card||e.propertyName!=='transform')return;
-  completeAfterExit();
- }
 
  const commit=(dx,speed=0)=>{
   if(phase!=='dragging')return;
@@ -2652,62 +2661,22 @@ const completeAfterExit=async ()=>{
   const magnitude=clamp(Math.abs(speed),0,2.4);
   const duration=Math.round(clamp(198-(magnitude*42),132,198));
   const direction=dx<0?-1:1;
+
   quarantinedSwipeId=cardIdentity();
   card.dataset.swipeOutgoingId=quarantinedSwipeId;
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
   dismissSwipeHint();
 
-  // CP1191: snapshot the outgoing card into its own exit layer.
-  // The live card can now be repainted without ever becoming the old
-  // visual again, eliminating the old-card/repaint race on iOS WebKit.
-  const parent=card.parentElement;
-  let exitLayer=null;
-  if(parent){
-    exitLayer=card.cloneNode(true);
-    exitLayer.removeAttribute('id');
-    exitLayer.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
-    exitLayer.dataset.swipeExitLayer='1';
-    exitLayer.setAttribute('aria-hidden','true');
-    const parentRect=parent.getBoundingClientRect();
-    const cardRect=card.getBoundingClientRect();
-    Object.assign(exitLayer.style,{
-      position:'absolute',
-      left:(cardRect.left-parentRect.left)+'px',
-      top:(cardRect.top-parentRect.top)+'px',
-      width:cardRect.width+'px',
-      height:cardRect.height+'px',
-      margin:'0',
-      zIndex:'999',
-      pointerEvents:'none',
-      transition:'none',
-      opacity:'1',
-      visibility:'visible',
-      transform:getComputedStyle(card).transform==='none'?'none':getComputedStyle(card).transform,
-      willChange:'transform'
-    });
-    exitLayer.querySelectorAll('img').forEach(img=>{
-      img.draggable=false;
-      img.style.pointerEvents='none';
-    });
-    parent.appendChild(exitLayer);
-    card.__swipeExitLayer=exitLayer;
-  }
+  // CP1193: animate the ONE live card. There is no exit clone.
+  card.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1)';
+  card.style.willChange='transform';
+  card.style.transform='translate3d('+(direction*exitDistance)+'px,0,0) rotate('+(direction*11)+'deg)';
 
-  // Freeze the live card before any state redraw. It is not part of the
-  // outgoing animation anymore.
-  card.classList.remove('swipe-active');
-  card.style.transition='none';
-  card.style.transform='none';
-  card.style.opacity='1';
-  card.style.visibility='hidden';
-  card.style.pointerEvents='none';
-
+  // The waiting card is allowed underneath the outgoing card, but the
+  // outgoing card itself is never rebound/repainted while visible.
   if(next){
-    const revealPromotedNext=()=>{
-      if(!next.isConnected)return;
-      const nextMealId=nextIdentity();
-      const activeMealId=quarantinedSwipeId||cardIdentity();
-      if(!nextMealId||nextMealId===activeMealId||nextMealId===quarantinedSwipeId)return;
+    const nextMealId=nextIdentity();
+    if(nextMealId&&nextMealId!==quarantinedSwipeId){
       next.dataset.swipePromoted='1';
       next.style.transition='none';
       next.style.transform=staticWaitingCard?'none':'scale(1)';
@@ -2716,8 +2685,7 @@ const completeAfterExit=async ()=>{
       next.style.filter='none';
       const promotedImg=next.querySelector('img');
       if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
-    };
-    revealPromotedNext();
+    }
   }
 
   const finishExit=()=>{
@@ -2725,17 +2693,7 @@ const completeAfterExit=async ()=>{
     completeAfterExit();
   };
 
-  if(exitLayer){
-    requestAnimationFrame(()=>{
-      if(phase!=='committing'||!exitLayer.isConnected)return;
-      exitLayer.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1)';
-      exitLayer.style.transform='translate3d('+(direction*exitDistance)+'px,0,0) rotate('+(direction*11)+'deg)';
-      window.setTimeout(finishExit,duration+36);
-    });
-  }else{
-    // Defensive fallback if the DOM parent disappeared.
-    window.setTimeout(finishExit,duration+36);
-  }
+  window.setTimeout(finishExit,duration+24);
 };
  const paintMove=()=>{
   moveFrame=null;
