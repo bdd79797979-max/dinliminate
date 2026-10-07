@@ -1,6 +1,6 @@
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r36';
+const API_VERSION='r37';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -8,12 +8,17 @@ const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chi
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
 const SEARCH_BUDGET_MS=7500;
-const WIDE_DISCOVERY_RESERVE_MS=4500;
+const WIDE_DISCOVERY_RESERVE_MS=3200;
 const WIDE_RADIUS_THRESHOLD=50;
+const RADIUS_DISCOVERY_THRESHOLD=10;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2600;
-const WIDE_DISCOVERY_TIMEBOX_MS=4700;
-const OVERPASS_HTTP_TIMEOUT_MS=4200;
+const WIDE_PRIMARY_TIMEBOX_MS=2300;
+const WIDE_DISCOVERY_TIMEBOX_MS=3300;
+const RADIUS_DISCOVERY_TIMEBOX_MS=3200;
+const OVERPASS_HTTP_TIMEOUT_MS=3000;
+const WIDE_OVERPASS_RING_MILES=63;
+const WIDE_OVERPASS_RING_POINTS=8;
+const WIDE_OVERPASS_GROUP_SIZE=3;
 const MAX_SEARCH_PER_MINUTE=60;
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
@@ -114,7 +119,7 @@ function centers(lat,lon,r){
  // Overpass is queried in <=50-mile circles. A 12-point ring at 60 miles,
  // plus the origin circle, covers the requested 100-mile disk with overlap;
  // final filtering is always done from the true origin distance.
- const ring=60,count=12,out=[{lat,lon,radius:50}];
+ const ring=WIDE_OVERPASS_RING_MILES,count=WIDE_OVERPASS_RING_POINTS,out=[{lat,lon,radius:50}];
  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  for(let i=0;i<count;i++){
   const ang=i*2*Math.PI/count;
@@ -251,7 +256,7 @@ function radiusDiscoveryPlan(lat,lon,radius){
  // Keep each request small enough for the upstream timeout while covering
  // the entire requested disk with overlapping <=50-mile circles.
  const groups=[];
- for(let i=0;i<coverage.length;i+=4)groups.push(coverage.slice(i,i+4));
+ for(let i=0;i<coverage.length;i+=WIDE_OVERPASS_GROUP_SIZE)groups.push(coverage.slice(i,i+WIDE_OVERPASS_GROUP_SIZE));
  return {mode:'wide',reserveMs:WIDE_DISCOVERY_RESERVE_MS,coveragePoints:coverage.length,groups};
 }
 async function overpassPoints(points,originLat,originLon,radius,types='restaurant|fast_food',searchTerm='',endpoints=OVERPASS,timeout=OVERPASS_HTTP_TIMEOUT_MS){
@@ -275,21 +280,19 @@ async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm='
 }
 async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
  const plan=radiusDiscoveryPlan(lat,lon,radius),rows=[],errors=[];
- // Give every geographic batch two independent Overpass mirrors. A single
- // overloaded mirror must not erase an entire slice of the 100-mile search.
- const endpointPairs=plan.groups.map((_,i)=>[
-   OVERPASS[i%OVERPASS.length],
-   OVERPASS[(i+1)%OVERPASS.length]
- ]);
+ // CP1160: each geographic batch uses one rotating Overpass mirror. This keeps
+ // the 100-mile search bounded instead of allowing sequential mirror retries
+ // to double the request duration.
+ const endpoints=plan.groups.map((_,i)=>OVERPASS[i%OVERPASS.length]);
  const tasks=plan.groups.map((group,i)=>overpassPoints(
-   group,lat,lon,radius,'restaurant|fast_food',searchTerm,endpointPairs[i],OVERPASS_HTTP_TIMEOUT_MS
+   group,lat,lon,radius,'restaurant|fast_food',searchTerm,[endpoints[i]],OVERPASS_HTTP_TIMEOUT_MS
  ));
  const settled=await Promise.allSettled(tasks);
  for(const result of settled){
    if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'wide discovery failed'));continue;}
    rows.push(...(result.value.rows||[])); errors.push(...(result.value.errors||[]));
  }
- return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpointPairs.length};
+ return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpoints.length};
 }
 const KNOWN_RESTAURANT_WEBSITES={
   "mcdonald's":'https://www.mcdonalds.com',"taco bell":'https://www.tacobell.com',"wendy's":'https://www.wendys.com',"the thirsty goat":'https://www.thirstygoatsango.com',"johnny's big burger":'https://thebigburger.com',"edward's steakhouse":'https://www.edwardssteakhouse.net',"shelbys trio":'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street',"thirsty goat":'https://www.thirstygoatsango.com',"burger king":'https://www.bk.com',"kfc":'https://www.kfc.com',"chick fil a":'https://www.chick-fil-a.com',"popeyes":'https://www.popeyes.com',"subway":'https://www.subway.com',"sonic":'https://www.sonicdrivein.com',"arby's":'https://www.arbys.com',"whataburger":'https://whataburger.com',"five guys":'https://www.fiveguys.com',"culver's":'https://www.culvers.com',"raising cane's":'https://www.raisingcanes.com',"wingstop":'https://www.wingstop.com',"bojangles":'https://www.bojangles.com',"cook out":'https://www.cookout.com',"dairy queen":'https://www.dairyqueen.com',"zaxby's":'https://www.zaxbys.com',"church's chicken":'https://www.churchs.com',"captain d's":'https://www.captainds.com',"long john silver's":'https://www.ljsilvers.com',"jimmy john's":'https://www.jimmyjohns.com',"jersey mike's":'https://www.jerseymikes.com',"firehouse subs":'https://www.firehousesubs.com',"little caesars":'https://littlecaesars.com',"domino's":'https://www.dominos.com',"papa john's":'https://www.papajohns.com',"pizza hut":'https://www.pizzahut.com',"marco's pizza":'https://www.marcos.com',"krystal":'https://www.krystal.com',"steak 'n shake":'https://www.steaknshake.com',"white castle":'https://www.whitecastle.com',"freddy's":'https://www.freddys.com',"panda express":'https://www.pandaexpress.com',"jack in the box":'https://www.jackinthebox.com',"hardee's":'https://www.hardees.com',"del taco":'https://www.deltaco.com',"checkers":'https://www.checkers.com',"rally's":'https://www.rallys.com',"chipotle":'https://www.chipotle.com',"applebee's":'https://www.applebees.com',"chili's":'https://www.chilis.com',"olive garden":'https://www.olivegarden.com',"waffle house":'https://www.wafflehouse.com'
@@ -1433,7 +1436,11 @@ if(mode==='search'){
  // redundant Overpass discovery pass. This prevents 100-mile provider result
  // caps from replacing nearby restaurants with a biased subset of the huge box.
  const providerRadius=wideSearch?Math.min(radius,WIDE_PROVIDER_RADIUS_CAP):radius;
- const discoveryPromise=wideSearch ? wideRadiusOverpass(lat,lon,radius,searchTerm) : null;
+ const discoveryPromise=wideSearch
+   ? wideRadiusOverpass(lat,lon,radius,searchTerm)
+   : (radius>=RADIUS_DISCOVERY_THRESHOLD
+      ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),RADIUS_DISCOVERY_TIMEBOX_MS,'Radius discovery timed out')
+      : null);
  // CP1158: nearby provider calls are individually time-boxed. The previous
  // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
  // upstream could hold the serverless function until Vercel's 30-second cap.
@@ -1446,20 +1453,16 @@ if(mode==='search'){
      // Google Text Search and Overpass calls before the UI can show results.
      withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
-     searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out'),
-     // OSM discovery is a fallback for a named search, not part of its critical path.
-     // CP1157: keep large 25-mile searches out of the critical path. Overpass
-     // remains available below as a fallback when the faster providers return nothing.
-     (!searchTerm && radius<=10) ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),nearbyProviderTimeout,'Overpass lookup timed out') : null
+     searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out')
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   // Wide searches need two independent discovery layers to preserve the full
-   // requested radius. ArcGIS stays capped at 50 miles for fast local context,
-   // while Photon performs the 100-mile ring expansion in parallel.
+   // Wide searches keep the fast providers anchored to 50 miles, while
+   // Overpass supplies the outer-radius coverage. Photon stays as one bounded
+   // 50-mile context lookup; the old multi-point Photon expansion is removed.
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
-     withinBudget(photonWidePlaces(lat,lon,radius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
+     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
      withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
    ];
    const settled=await Promise.allSettled(wideTasks);
@@ -1467,8 +1470,7 @@ let primaryBatch,parallelWide=null,fastProvider='none';
      arcgis:settled[0],
      widePhoton:settled[1],
      google:settled[2]
-   };
-   fastProvider='wide';
+   };   fastProvider='wide';
    const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
    parallelWide=discoveryRemaining>500
      ? await withinBudget(discoveryPromise,Math.min(WIDE_DISCOVERY_TIMEBOX_MS,discoveryRemaining),'Wide radius discovery timed out')
@@ -1517,68 +1519,52 @@ let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch)photonOut.errors=[...(photonOut.errors||[]),...(widePhotonOut.errors||[])];
  const arcgisOut=arcgisResult.status==='fulfilled'?arcgisResult.value:{rows:[],errors:[String(arcgisResult.reason?.message||arcgisResult.reason||'ArcGIS unavailable')]};
  let googleOut=googleResult.status==='fulfilled'?googleResult.value:{rows:[],errors:[String(googleResult.reason?.message||googleResult.reason||'Google Places unavailable')]};
+
  let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
  let osmOut={rows:[],errors:[]};
- // A named search is only successful when at least one preliminary row actually
- // matches the user's term. Photon/ArcGIS can legally return a non-empty nearby
- // set for a search phrase that they cannot resolve, so checking only
- // preliminary.length can suppress the Google/OSM fallback and leave the user
- // with an empty final deck.
+
+ // CP1160: radius discovery is started before the provider searches and merged
+ // before final matching. 10/25/50 mile searches therefore get an actual
+ // geographic discovery layer instead of inheriting a 100-result provider cap.
+ if(discoveryPromise){
+   const got=wideSearch ? parallelWide : await discoveryPromise;
+   if(got&&!got.__timeout){
+     osmOut.rows.push(...(got.rows||[]));
+     osmOut.errors.push(...(got.errors||[]));
+   }else{
+     osmOut.errors.push(wideSearch?'Wide radius discovery timed out':'Radius discovery timed out');
+   }
+   preliminary=filterNonDiningRows(dedupe([
+     ...(preliminary||[]),
+     ...(osmOut.rows||[])
+   ]));
+ }
+
  const preliminarySearchMatches=searchTerm
    ? preliminary.filter(row=>restaurantSearchMatches(row,searchTerm)).length
    : preliminary.length;
 
- // Named searches should fall back whenever the fast providers produced no
- // search-compatible venue, not merely when they produced zero rows.
  if(searchTerm && preliminarySearchMatches===0){
    const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
    const fallbackBudget=Math.min(3200,remaining);
    if(fallbackBudget>600){
      const fallbackTasks=[
        withinBudget(googleSearchPlaces(lat,lon,providerRadius,searchTerm),fallbackBudget,'Google named search fallback timed out'),
-       radius<=25
-         ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(2200,fallbackBudget),'OSM named search fallback timed out')
+       (radius<=25 && (!discoveryPromise || !osmOut.rows.length))
+         ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(1800,fallbackBudget),'OSM named search fallback timed out')
          : Promise.resolve({rows:[],errors:[]})
      ];
      const fallback=await Promise.allSettled(fallbackTasks);
      if(fallback[0]?.status==='fulfilled')googleOut=fallback[0].value||googleOut;
-     if(fallback[1]?.status==='fulfilled')osmOut=fallback[1].value||osmOut;
-     preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[]),...(osmOut.rows||[])]));
+     if(fallback[1]?.status==='fulfilled')osmOut.rows.push(...(fallback[1].value?.rows||[]));
+     if(fallback[1]?.status==='fulfilled')osmOut.errors.push(...(fallback[1].value?.errors||[]));
+     preliminary=filterNonDiningRows(dedupe([
+       ...(googleOut.rows||[]),
+       ...(photonOut.rows||[]),
+       ...(arcgisOut.rows||[]),
+       ...(osmOut.rows||[])
+     ]));
    }
- }
-const parallelOsmResult=!wideSearch && Array.isArray(primaryBatch) ? primaryBatch[3] : null;
-const hasParallelOsmValue=!!parallelOsmResult?.value;
-if(parallelOsmResult?.status==='fulfilled'&&hasParallelOsmValue){
-  osmOut.rows.push(...(parallelOsmResult.value?.rows||[]));
-  osmOut.errors.push(...(parallelOsmResult.value?.errors||[]));
-}else if(parallelOsmResult?.reason){
-  osmOut.errors.push(String(parallelOsmResult.reason?.message||parallelOsmResult.reason||'Nearby hours discovery failed'));
-}
-// CP1157: if the fast providers are empty and no primary Overpass task ran,
-// allow the bounded fallback below to discover restaurants instead of treating
-// a skipped task as a completed empty result.
-const needsOverpass=!preliminary.length&&!hasParallelOsmValue;
- if(discoveryPromise){
-   if(wideSearch){
-     const got=parallelWide;
-     if(got&&!got.__timeout){osmOut.rows.push(...(got.rows||[]));osmOut.errors.push(...(got.errors||[]))}
-     else osmOut.errors.push('Wide radius discovery timed out');
-   }else{
-     const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
-     const discoveryBudget=Math.min(5000,remaining);
-     if(discoveryBudget>1200){
-       const got=await withinBudget(discoveryPromise,discoveryBudget,'Provider-backed query expansion timed out');
-       if(got&&!got.__timeout){osmOut.rows.push(...(got.rows||[]));osmOut.errors.push(...(got.errors||[]))}
-       else osmOut.errors.push('Provider-backed query expansion timed out');
-     }else osmOut.errors.push('Search budget reached before provider expansion.');
-   }
- }else if(needsOverpass&&!wideSearch){
-   const remaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
-   if(remaining>700){
-     const got=await withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(2200,remaining),'Overpass expansion timed out');
-     if(got&&!got.__timeout){osmOut.rows.push(...(got.rows||[]));osmOut.errors.push(...(got.errors||[]))}
-     else osmOut.errors.push('Restaurant discovery expansion timed out');
-   }else osmOut.errors.push('Search budget reached before restaurant discovery expansion.');
  }
  let contactOut={rows:[],errors:[]};
  const contactCandidates=filterNonDiningRows(dedupe([...preliminary,...osmOut.rows]));
@@ -1610,7 +1596,7 @@ const needsOverpass=!preliminary.length&&!hasParallelOsmValue;
    const classification=RESTAURANT_TAXONOMY.classifyRestaurant({...r,website,phone}); const canonicalCategory=classification.primary||r.category||'American'; const classifiedFastFood=classification.tags.includes('Fast Food'); const photo=restaurantPhotoMeta(r); return {...r,category:canonicalCategory,fastFood:classifiedFastFood,quickCutTags:classification.tags,quickCutEvidence:classification.evidence,...photo,website,phone,websiteSource:r.website?'provider':(known?'known-brand':(cached?'official-search':'google-search-fallback')),phoneSource:phone?'provider':'google-search-fallback',hoursTimeZone:String(hoursTimeZone||r.hoursTimeZone||''),hoursSource:r.hoursSource||(r.opening_hours?(String(r.source||'').startsWith('OpenStreetMap')||String(r.source||'').startsWith('Photon')?'OpenStreetMap':'provider'):'')};
   });
  const hoursCoverage={knownOpenNow:rows.filter(r=>typeof r.openNow==='boolean').length,openingHours:rows.filter(r=>!!String(r.opening_hours||'').trim()).length,unknown:rows.filter(r=>!restaurantHasAnyHoursData(r)).length,hoursSourceBreakdown:rows.reduce((acc,r)=>{const k=String(r.hoursSource||'unknown');acc[k]=(acc[k]||0)+1;return acc;}, {})};
-const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:wideSearch?WIDE_PHOTON_RING_POINTS+1:1,hoursCoverage, primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
+const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:wideSearch?WIDE_OVERPASS_RING_POINTS+1:1,hoursCoverage, primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}

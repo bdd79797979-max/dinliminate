@@ -12,7 +12,7 @@ const requiredFiles=[
   'qa/google-usage-smoke.cjs','qa/restaurant-search-core-smoke.cjs',
   'qa/restaurant-photo-certification-smoke.cjs','qa/restaurant-hours-smoke.cjs',
   'qa/restaurant-decision-ui-smoke.cjs','qa/brand-pwa-final-smoke.cjs',
-  'qa/security-hardening-smoke.cjs','qa/cp1155-meal-deck-never-stuck-smoke.cjs'
+  'qa/security-hardening-smoke.cjs','qa/cp1155-meal-deck-never-stuck-smoke.cjs','qa/cp1161-meal-card-no-fallback-flash.cjs'
 ];
 
 function read(file){return fs.readFileSync(path.join(root,file),'utf8');}
@@ -104,6 +104,7 @@ const checkpointSmoke=[
  ['CP1084 Brand/PWA','qa/brand-pwa-final-smoke.cjs'],
  ['CP1085 Security','qa/security-hardening-smoke.cjs'],
  ['CP1155 Meal deck never-stuck','qa/cp1155-meal-deck-never-stuck-smoke.cjs'],
+ ['CP1161 Meal first-paint no fallback flash','qa/cp1161-meal-card-no-fallback-flash.cjs'],
  ['CP1157 Restaurant radius','qa/cp1157-restaurant-radius-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));

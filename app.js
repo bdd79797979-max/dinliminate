@@ -527,6 +527,7 @@ function loadMealPhotoCandidates(img,candidates,target){
     try{await probe.decode?.();}catch{}
     if(!stillCurrent()){finish(false);return;}
     img.src=url;
+    img.style.visibility='visible';
     img.dataset.imageFallback='false';
     target.dataset.foodImageSource=url;
     finish(true);
@@ -1988,8 +1989,9 @@ function drawFood(){
   if(fb&&current!==fb){this.src=fb;return;}
   markMealImageUnavailable(this);
  };
- img.src=FINAL_FOOD_IMAGE;
- img.style.visibility='visible';
+ // Never paint the last-resort meal image while the real meal photo is loading.
+ img.removeAttribute('src');
+ img.style.visibility='hidden';
  const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
  if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
   if(String(img.dataset.mealLoadToken||'')===loadToken){
@@ -2280,7 +2282,7 @@ function setFoodNextCardImage(nextCard,view){
  const backup=String(view?.backup||'').trim();
  const loadToken=String(Number(nextCard.dataset.mealLoadToken||0)+1);
  nextCard.dataset.mealLoadToken=loadToken;
- nextCard.dataset.foodImageReady='1';
+ nextCard.dataset.foodImageReady='0';
  nextCard.dataset.foodImageSource='';
  img.alt=view.name||'';
  img.referrerPolicy='no-referrer';
@@ -2291,13 +2293,16 @@ function setFoodNextCardImage(nextCard,view){
  img.dataset.finalFallback=FINAL_FOOD_IMAGE;
  img.dataset.imageFallback='true';
  img.onerror=()=>markMealImageUnavailable(img);
- img.src=FINAL_FOOD_IMAGE;
- nextCard.style.visibility='visible';
+ // Keep the waiting card hidden until the real meal photo has decoded.
+ img.removeAttribute('src');
+ img.style.visibility='hidden';
+ nextCard.style.visibility='hidden';
  nextCard.style.pointerEvents='none';
- loadMealPhotoCandidates(img,[primary,backup],nextCard).then(ok=>{
+ const promise=loadMealPhotoCandidates(img,[primary,backup],nextCard).then(ok=>{
   if(!ok&&String(nextCard.dataset.mealLoadToken||'')===loadToken)markMealImageUnavailable(img);
+  if(String(nextCard.dataset.mealLoadToken||'')===loadToken)nextCard.dataset.foodImageReady=ok?'1':'-1';
+  return ok;
  });
- const promise=Promise.resolve(true);
  nextCard.__foodReadyPromise=promise;
  nextCard.__foodImageReadyPromise=promise;
  return promise;
@@ -2619,14 +2624,30 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
   card.style.transform='translate3d('+(direction*exitDistance)+'px,0,0) rotate('+(direction*11)+'deg)';
 
   if(next){
-   next.dataset.swipePromoted='1';
-   next.style.transition='none';
-   next.style.transform=staticWaitingCard?'none':'scale(1)';
-   next.style.visibility='visible';
-   next.style.opacity='1';
-   next.style.filter='none';
-   const promotedImg=next.querySelector('img');
-   if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
+   const revealPromotedNext=()=>{
+    if(!next.isConnected)return;
+    next.dataset.swipePromoted='1';
+    next.style.transition='none';
+    next.style.transform=staticWaitingCard?'none':'scale(1)';
+    next.style.visibility='visible';
+    next.style.opacity='1';
+    next.style.filter='none';
+    const promotedImg=next.querySelector('img');
+    if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
+   };
+   if(staticWaitingCard&&next.dataset.foodReady!=='1'){
+    next.style.transition='none';
+    next.style.transform='none';
+    next.style.visibility='hidden';
+    next.style.opacity='0';
+    next.style.filter='none';
+    next.style.pointerEvents='none';
+    ensureFoodNextCardReady(next).then(ok=>{
+     if(ok&&phase==='committing')revealPromotedNext();
+    });
+   }else{
+    revealPromotedNext();
+   }
   }
 
   dismissSwipeHint();
