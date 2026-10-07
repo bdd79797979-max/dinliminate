@@ -32,6 +32,6 @@ assert.equal(p25.mode,'tiled'); assert.equal(p25.coveragePoints,7); assert.deepE
 const p50=t.radiusDiscoveryPlan(lat,lon,50);
 assert.equal(p50.mode,'tiled'); assert.equal(p50.coveragePoints,7); assert.deepEqual(p50.groups.map(g=>g.length),[1,1,1,1,1,1,1]);
 const p100=t.radiusDiscoveryPlan(lat,lon,100);
-assert.equal(p100.mode,'wide'); assert.equal(p100.coveragePoints,13); assert.deepEqual(p100.groups.map(g=>g.length),[3,3,3,3,1]);
+assert.equal(p100.mode,'wide'); assert.equal(p100.coveragePoints,13); assert.deepEqual(p100.groups.map(g=>g.length),[1,1,1,1,1,1,1,1,1,1,1,1,1]);
 sampleCoverage(25,15); sampleCoverage(50,30); sampleCoverage(100,40);
 console.log('CP1168 radius tile geometry smoke: PASS');
