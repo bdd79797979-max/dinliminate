@@ -2641,6 +2641,10 @@ const completeAfterExit=async ()=>{
       card.dataset.swipePhase='idle';
       card.dataset.swipeTransaction='';
       foodSwipeHandoff=false;
+      // CP1197b: refresh the waiting preview AFTER the live card is settled.
+      // This keeps the preview one meal ahead without letting it participate
+      // in the swipe handoff/promotion lifecycle.
+      primeFoodSwipeMedia();
       bindFoodSwipe();
      };
      requestAnimationFrame(()=>requestAnimationFrame(reveal));
