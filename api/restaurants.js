@@ -19,6 +19,7 @@ const MAX_SEARCH_PER_MINUTE=60;
 const OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS=Math.max(1,Number.parseInt(process.env.GOOGLE_OPEN_NOW_ENRICH_LIMIT||'36',10)||36);
 const HOURS_MEMORY_CACHE_TTL=10*60*1000;
 const HOURS_MEMORY_NEGATIVE_TTL=3*60*1000;
+const OPEN_NOW_ENRICH_TIME_BUDGET_MS=Math.max(4000,Number.parseInt(process.env.GOOGLE_OPEN_NOW_ENRICH_TIME_MS||'9000',10)||9000);
 const hoursResolutionCache=new Map();
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
@@ -1520,13 +1521,14 @@ async function enrichOpenNowHours(rows,options={}){
   const knownOpenNow=Math.max(0,Number(options.knownOpenNow)||0);
   const budget={callsUsed:0,maxCalls,budgetDenied:0};
   const patches=[],stats={cacheHits:0,existing:input.length-candidates.length,officialWebsite:0,googlePlaceDetails:0,googleTextSearch:0,unknown:0};
+  const deadline=Date.now()+OPEN_NOW_ENRICH_TIME_BUDGET_MS;
   const targetOpen=Math.min(50,Math.max(12,Math.ceil(totalRestaurants*0.20)));
   const alreadyOpen=knownOpenNow+input.filter(r=>r.openNow===true).length;
   let resolvedOpen=alreadyOpen;
   let cursor=0;
   const worker=async()=>{
     while(true){
-      if(resolvedOpen>=targetOpen||cursor>=candidates.length||budget.callsUsed>=maxCalls)return;
+      if(resolvedOpen>=targetOpen||cursor>=candidates.length||budget.callsUsed>=maxCalls||Date.now()>=deadline)return;
       const i=cursor++,row=candidates[i];
       const result=await resolveHoursForRow(row,budget);
       if(!result)continue;
