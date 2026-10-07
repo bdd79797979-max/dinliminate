@@ -2636,9 +2636,6 @@ const completeAfterExit=async ()=>{
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
-  // CP1218 — acknowledge the decision visually at release time. The actual
-  // state mutation/redraw remains in the existing handoff path.
-  previewDecisionCount(cardId==='foodCard'?'food':'restaurant',direction==='cut'?'cut':'maybe');
   const foodHandoff=staticWaitingCard&&cardId==='foodCard';
   const restaurantHandoff=cardId==='restaurantCard';
   // CP1181: snapshot the waiting card before action() can redraw/rebind it.
@@ -2747,6 +2744,16 @@ const completeAfterExit=async ()=>{
   const magnitude=clamp(Math.abs(speed),0,2.4);
   const duration=Math.round(clamp(170-(magnitude*34),112,170));
   const direction=dx<0?-1:1;
+  const decisionKind=cardId==='foodCard'?'food':'restaurant';
+  const decisionId=decisionKind==='food'
+    ?String(card.dataset.mealId||'')
+    :String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
+  const decisionRow=decisionKind==='food'
+    ?S.pool.find(item=>String(item?.id||'')===decisionId)
+    :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
+  // CP1218 — count feedback lands at the exact commit point. The real
+  // mutation/redraw still waits for the existing safe card handoff.
+  previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe:false);
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
   card.dataset.swipeTransaction='active';
@@ -2911,13 +2918,15 @@ function cycleFoodPhotoFromTap(target){
  return true;
 }
 
-function previewDecisionCount(kind,type){
+function previewDecisionCount(kind,type,wasMaybe=false){
  const btn=$(kind==='food'?'foodMaybeDeck':'restaurantMaybeDeck');
  if(!btn)return;
  const all=Math.max(0,Number(btn.dataset.allCount)||0);
  const maybes=Math.max(0,Number(btn.dataset.maybeCount)||0);
  const nextAll=Math.max(0,all-(type==='cut'?1:0));
- const nextMaybes=Math.max(0,maybes+(type==='maybe'?1:0));
+ const nextMaybes=Math.max(0,maybes
+   +(type==='maybe'&&!wasMaybe?1:0)
+   -(type==='cut'&&wasMaybe?1:0));
  const visible=btn.dataset.mode==='maybe'?nextMaybes:nextAll;
  btn.dataset.allCount=String(nextAll);
  btn.dataset.maybeCount=String(nextMaybes);
