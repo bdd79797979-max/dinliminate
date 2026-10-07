@@ -77,6 +77,7 @@ restaurantHoursCollapsed:true,
 location:null,
 locationSource:'none',
 restaurantSearchLatencyMs:0,
+restaurantSearchRadius:10,
 saved:false,
 storageWarning:false,
 restaurantSearchDegraded:false,
@@ -3172,7 +3173,7 @@ function restaurantPoolFiltered(){
 }
 function updateRestaurantStatus(){
  const el=$('status'); if(!el)return;
- const radius=Math.min(100,Number($('radius')?.value)||10);
+ const radius=Math.min(100,Math.max(1,Number(S.restaurantSearchRadius ?? $('radius')?.value)||10));
  const base=restaurantPoolBase();
  const total=restaurantPoolHourFiltered().length,degraded=S.restaurantSearchDegraded;
  if(!total){
@@ -3564,6 +3565,7 @@ if (!rr.ok || !rd.ok) throw new Error(rr.status===429 ? 'Address lookup is tempo
 const visibleLabel=displayRestaurantLocationLabel(rd.display,q); loc = {lat:rd.lat, lon:rd.lon, label:visibleLabel}; S.location = loc; S.locationSource='address'; renderLocationSource(); $('address').value = visibleLabel;
 }
 const radius = Math.min(100,Math.max(1,Number(options?.radius ?? $('radius')?.value)||10));
+S.restaurantSearchRadius=radius;
 const searchTerm = String(S.restaurantQuery||'').trim().slice(0,100);
 const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+radius+':'+normalizeRestaurantSearch(searchTerm);
  let replacingSearchTarget=false;
@@ -3586,6 +3588,10 @@ const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=search&lat
 const d = await responseJson(rr,'Restaurant search returned an invalid response. Please try again.');
 if (searchSeq !== restaurantSearchSeq) return;
 if (!rr.ok || !d.ok) throw new Error(rr.status===429 ? 'Restaurant search is temporarily busy. Please try again.' : (d.message || 'Restaurant search failed.'));
+const returnedRadius=Number(d.radiusMiles);
+if(Number.isFinite(returnedRadius)&&Math.abs(returnedRadius-radius)>0.001){
+ throw new Error('Restaurant search returned the wrong radius. Please try again.');
+}
 S.restaurantSearchDegraded = !!(d.providerErrors?.length);
 S.restaurantSearchLatencyMs = Number(d.searchLatencyMs)||0;
 S.restaurantSearchQuery = String(d.searchQuery||searchTerm||'');
