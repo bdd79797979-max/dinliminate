@@ -1,4 +1,4 @@
-name: CP1168 Radius Tile Live Test
+name: CP1168 Radius Tile Live Test (rerun)
 
 on:
   push:
