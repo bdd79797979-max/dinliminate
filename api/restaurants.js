@@ -1571,8 +1571,8 @@ if(mode==='search'){
  // Deterministic tiled discovery fills the full selected geographic disk, and
  // the final true-distance filter removes every out-of-radius row.
  const providerRadius=wideSearch?WIDE_PROVIDER_RADIUS_CAP:10;
- const discoveryPromise=wideSearch
-   ? withinBudget(photonRadiusExpansion(lat,lon,radius,searchTerm),WIDE_DISCOVERY_TIMEBOX_MS,'Wide radius expansion timed out')
+ const discoveryPromise=radius>10
+   ? withinBudget(photonRadiusExpansion(lat,lon,radius,searchTerm),WIDE_DISCOVERY_TIMEBOX_MS,'Radius expansion timed out')
    : null;
  // CP1158: nearby provider calls are individually time-boxed. The previous
  // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
