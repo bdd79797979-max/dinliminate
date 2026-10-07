@@ -137,26 +137,25 @@ function mealOfficialPhoto(item){
  const value=normalizeMealPhotoRef(item?.officialImage);
  return value&&!value.startsWith('idb:')?value:'';
 }
-function foodPhoto(item){
- if(!item)return '';
- const official=mealOfficialPhoto(item);
- if(official)return imageProxyUrl(official);
- const primary=normalizeMealPhotoRef(mealPhotoList(item)[0]);
- if(primary && !primary.startsWith('idb:'))return imageProxyUrl(primary);
- return '';
+function mealImageSources(item){
+ if(!item)return [];
+ const sources=[],seen=new Set();
+ const add=(value)=>{
+  const ref=normalizeMealPhotoRef(value);
+  if(!ref||ref.startsWith('idb:')||seen.has(ref))return;
+  seen.add(ref);
+  sources.push(imageProxyUrl(ref));
+ };
+ // Deterministic order: official source first, then explicitly supplied
+ // exact-meal backups. No category/generic fallback is ever inserted.
+ add(item?.officialImage);
+ for(const ref of Array.isArray(item?.images)?item.images:[])add(ref);
+ add(item?.backupImage);
+ add(item?.image);
+ return sources;
 }
-function foodPhotoFallback(item){
- if(!item)return '';
- const official=mealOfficialPhoto(item);
- const refs=mealPhotoList(item);
- for(const ref of refs){
-  const value=normalizeMealPhotoRef(ref);
-  if(!value||value===official)continue;
-  if(value.startsWith('idb:'))continue;
-  return imageProxyUrl(value);
- }
- return '';
-}
+function foodPhoto(item){return mealImageSources(item)[0]||'';}
+function foodPhotoFallback(item){return mealImageSources(item)[1]||'';}
 async function resolveMealPhotoRef(ref,item=null){
  const value=normalizeMealPhotoRef(ref);if(!value)return '';
  if(value.startsWith('idb:')){const data=await getStoredPhoto(value.slice(4));return data||'';}
@@ -2098,13 +2097,15 @@ function nextFoodIndexList(count=FOOD_SWIPE_PRELOAD_DEPTH){
 function buildPreparedFoodCard(item){
  if(!item)return null;
  const refs=mealPhotoList(item);
+ const sources=mealImageSources(item);
  return {
   id:String(item.id||item.name||''),
   name:String(item.name||''),
   category:String(item.category||''),
   maybe:S.maybe.has(item.id),
-  primary:foodPhoto(item),
-  backup:foodPhotoFallback(item),
+  sources,
+  primary:sources[0]||'',
+  backup:sources[1]||'',
   photoRefs:refs,
   photoCount:refs.length||1
  };
@@ -2119,8 +2120,7 @@ function cachePreparedFoodCards(){
   const view=buildPreparedFoodCard(item);if(!view?.id)continue;
   active.add(view.id);
   preparedFoodSwipeCards.set(view.id,view);
-  preloadSwipeImage(view.primary);
-  preloadSwipeImage(view.backup);
+  for(const src of view.sources)preloadSwipeImage(src);
  }
  for(const id of [...preparedFoodSwipeCards.keys()]){
   if(!active.has(id))preparedFoodSwipeCards.delete(id);
@@ -2161,12 +2161,13 @@ function ensurePreparedFoodNextCardMarkup(nextCard){
  return {img,nameEl,catEl};
 }
 
-function setFoodNextCardImage(nextCard,view){
+async function setFoodNextCardImage(nextCard,view){
  const parts=ensurePreparedFoodNextCardMarkup(nextCard);
  const img=parts?.img;
- if(!img)return Promise.resolve(false);
- const primary=String(view?.primary||'').trim();
- const backup=String(view?.backup||'').trim();
+ if(!img)return false;
+ const sources=Array.isArray(view?.sources)&&view.sources.length
+  ?view.sources.slice()
+  :mealImageSources(view);
  nextCard.dataset.foodImageReady='0';
  nextCard.dataset.foodImageSource='';
  img.alt=view.name||'';
@@ -2174,35 +2175,27 @@ function setFoodNextCardImage(nextCard,view){
  img.loading='eager';
  img.decoding='async';
  img.draggable=false;
- img.dataset.fallback=backup;
+ img.dataset.fallback='';
  img.dataset.finalFallback=FINAL_FOOD_IMAGE;
- const waitFor=src=>new Promise(resolve=>{
-  if(!src){resolve(false);return;}
-  let done=false;
-  const finish=ok=>{if(done)return;done=true;resolve(!!ok);};
-  img.onload=async()=>{
+
+ for(const src of sources){
+  const url=String(src||'').trim();
+  if(!url)continue;
+  const record=await preloadSwipeImage(url);
+  if(!record?.ok)continue;
+  try{
+   img.src=url;
    try{await img.decode?.();}catch{}
-   if(String(img.currentSrc||img.src||'')===src||img.naturalWidth>0){
-    nextCard.dataset.foodImageSource=src;
-    finish(true);
-   }else finish(false);
-  };
-  img.onerror=()=>{
-   if(backup&&String(img.currentSrc||img.src||'')!==backup){
-    img.src=backup;
-    return;
-   }
-   markMealImageUnavailable(img);
-   finish(false);
-  };
-  try{img.src=src;}catch{finish(false);}
- });
- const promise=waitFor(primary||backup);
- nextCard.__foodImageReadyPromise=promise;
- promise.then(ok=>{
-  if(nextCard.dataset.foodImageReady==='0')nextCard.dataset.foodImageReady=ok?'1':'-1';
- });
- return promise;
+  }catch{continue;}
+  if(img.naturalWidth>0 || String(img.currentSrc||img.src||'')===url){
+   nextCard.dataset.foodImageSource=url;
+   nextCard.dataset.foodImageReady='1';
+   return true;
+  }
+ }
+ markMealImageUnavailable(img);
+ nextCard.dataset.foodImageReady='-1';
+ return false;
 }
 
 function populateFoodNextCard(view){
@@ -2268,19 +2261,36 @@ function ensureFoodNextCardReady(nextCard){
 
 const swipeImagePreloads=new Map();
 function preloadSwipeImage(src){
- const url=String(src||'').trim();if(!url)return;
- if(swipeImagePreloads.has(url))return;
+ const url=String(src||'').trim();
+ if(!url)return Promise.resolve({ok:false,url:''});
+ const existing=swipeImagePreloads.get(url);
+ if(existing)return existing.promise;
  const img=new Image();
  img.decoding='async';
  img.loading='eager';
  img.referrerPolicy='no-referrer';
- img.src=url;
- swipeImagePreloads.set(url,img);
- while(swipeImagePreloads.size>12){
+ const promise=new Promise(resolve=>{
+  let settled=false;
+  const finish=ok=>{
+   if(settled)return;
+   settled=true;
+   resolve({ok:!!ok,url,img});
+  };
+  img.onload=async()=>{
+   try{await img.decode?.();}catch{}
+   finish(img.naturalWidth>0);
+  };
+  img.onerror=()=>finish(false);
+  try{img.src=url;}catch{finish(false);}
+ });
+ const record={img,promise,ok:null};
+ swipeImagePreloads.set(url,record);
+ promise.then(result=>{record.ok=result.ok;});
+ while(swipeImagePreloads.size>24){
   const first=swipeImagePreloads.keys().next().value;
   swipeImagePreloads.delete(first);
  }
- try{img.decode?.().catch(()=>{});}catch{}
+ return promise;
 }
 
 function primeFoodSwipeMedia(){
