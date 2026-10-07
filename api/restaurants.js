@@ -3,7 +3,7 @@
 // CP1173: cumulative restaurant radius search — retained only as historical context.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
 const MAX_RADIUS=100;
-const API_VERSION='r44';
+const API_VERSION='r45';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -19,7 +19,8 @@ const WIDE_PRIMARY_TIMEBOX_MS=3500;
 const WIDE_DISCOVERY_TIMEBOX_MS=12000;
 const RADIUS_DISCOVERY_TIMEBOX_MS=11500;
 const OVERPASS_HTTP_TIMEOUT_MS=5500;
-const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=3200;
+const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=3000;
+const RADIUS_OVERPASS_FAST_TIMEOUT_MS=5200;
 const WIDE_OVERPASS_GROUP_SIZE=1;
 const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
@@ -271,7 +272,26 @@ function radiusExpansionCenters(lat,lon,radius){
 async function radiusOverpassExpansion(lat,lon,radius,searchTerm=''){
  const points=radiusExpansionCenters(lat,lon,radius);
  if(!points.length)return{rows:[],errors:[],tiles:0,provider:'none'};
- return overpassPoints(points,lat,lon,radius,'restaurant|fast_food',searchTerm,OVERPASS,OVERPASS_HTTP_TIMEOUT_MS);
+ // CP1187: radius expansion must not wait sequentially on public Overpass mirrors.
+ // Submit the single multi-tile query to multiple mirrors concurrently and merge
+ // successful responses. This makes the 25/50-mile coverage layer independent of
+ // whichever public mirror happens to be slow or rate-limited.
+ const data=queryMany(points,'restaurant|fast_food',7);
+ const tasks=OVERPASS.map(ep=>json(ep+'?data='+encodeURIComponent(data),{},RADIUS_OVERPASS_FAST_TIMEOUT_MS));
+ const settled=await Promise.allSettled(tasks),rows=[],errors=[];
+ let successful=0;
+ for(const result of settled){
+  if(result.status!=='fulfilled'){
+    errors.push(String(result.reason?.message||result.reason||'Overpass mirror failed'));
+    continue;
+  }
+  successful++;
+  for(const el of result.value?.elements||[]){
+    const row=osmRow(el,{lat,lon});
+    if(row&&row.distance<=radius&&!isClearlyNonDiningBusiness(row))rows.push(row);
+  }
+ }
+ return{rows:dedupe(rows),errors,tiles:points.length,provider:'Overpass fast mirrors',mirrors:successful};
 }
 
 async function photonRadiusExpansion(lat,lon,radius,searchTerm=''){
@@ -1591,7 +1611,11 @@ if(mode==='search'){
  const discoveryPromise=radius>10
    ? withinBudget(
        Promise.allSettled([
-         photonRadiusExpansion(lat,lon,radius,searchTerm),
+         // CP1187: Overpass is the authoritative wide-radius expansion layer.
+         // Photon expansion was firing 14+ public queries for a 25-mile search
+         // and was consuming the same time budget as the useful radius coverage.
+         // Keep the expansion bounded to one multi-tile query sent to concurrent
+         // mirrors so 25/50-mile searches can finish before the request budget.
          radius<=50 ? radiusOverpassExpansion(lat,lon,radius,searchTerm) : Promise.resolve({rows:[],errors:[],provider:'none'})
        ]).then(results=>{
          const rows=[],errors=[];
@@ -1605,8 +1629,8 @@ if(mode==='search'){
          }
          return {rows:dedupe(rows),errors};
        }),
-       WIDE_DISCOVERY_TIMEBOX_MS,
-       'Radius expansion timed out'
+       Math.min(RADIUS_DISCOVERY_TIMEBOX_MS,8500),
+       'Radius discovery timed out'
      )
    : null;
  // CP1158: nearby provider calls are individually time-boxed. The previous
