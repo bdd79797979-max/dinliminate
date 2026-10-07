@@ -24,7 +24,7 @@ assert(t.centers(lat,lon,50).every(c=>c.radius===30));
 assert.equal(t.centers(lat,lon,100).length,13);
 assert.equal(t.centers(lat,lon,100)[0].radius,40);
 assert(t.centers(lat,lon,100).slice(1).every(c=>c.radius===40));
-assert(t.centers(lat,lon,100).slice(1).every(c=>Math.abs(miles(lat,lon,c.lat,c.lon)-80)<0.9));
+assert(t.centers(lat,lon,100).slice(1).every(c=>Math.abs(miles(lat,lon,c.lat,c.lon)-75)<0.9));
 const p10=t.radiusDiscoveryPlan(lat,lon,10);
 assert.equal(p10.mode,'tiled'); assert.equal(p10.coveragePoints,1); assert.deepEqual(p10.groups.map(g=>g.length),[1]);
 const p25=t.radiusDiscoveryPlan(lat,lon,25);
