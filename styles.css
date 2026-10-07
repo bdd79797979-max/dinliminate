@@ -10318,3 +10318,91 @@ body:has(.app.home-active)::after{
     transform:translate(2px,0)!important;
   }
 }
+
+/* CP1169 — fixed card Cuisine/Details row. */
+/*
+Keep Cuisine and Details in a single, fixed-height grid row on both the
+active and waiting meal/restaurant cards. Details is an icon-only control:
+no pill, border, background, shadow, or size change when the waiting card
+becomes active.
+*/
+#food .card-cuisine-row,
+#restaurant .card-cuisine-row,
+#food .food-cuisine-row,
+#restaurant .restaurant-cuisine-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 32px!important;
+  align-items:center!important;
+  width:100%!important;
+  min-height:28px!important;
+  height:28px!important;
+  gap:8px!important;
+}
+#food .card-header-actions,
+#restaurant .card-header-actions{
+  width:32px!important;
+  min-width:32px!important;
+  height:28px!important;
+  min-height:28px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  margin:0!important;
+  padding:0!important;
+  position:relative!important;
+}
+#food .card-card-action,
+#restaurant .card-card-action,
+#food .card-details,
+#restaurant .card-details{
+  box-sizing:border-box!important;
+  width:28px!important;
+  min-width:28px!important;
+  max-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  max-height:28px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  outline:none!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:rgba(255,255,255,.92)!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  flex:0 0 28px!important;
+}
+#food .card-card-action:hover,
+#food .card-card-action:active,
+#food .card-card-action:focus,
+#food .card-card-action:focus-visible,
+#restaurant .card-card-action:hover,
+#restaurant .card-card-action:active,
+#restaurant .card-card-action:focus,
+#restaurant .card-card-action:focus-visible{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:none!important;
+}
+#food .card-card-action .details-icon,
+#restaurant .card-card-action .details-icon{
+  width:19px!important;
+  height:19px!important;
+  display:block!important;
+  flex:0 0 19px!important;
+}
+#food .next-card .card-cuisine-row,
+#restaurant .next-card .card-cuisine-row,
+#food .next-card .card-header-actions,
+#restaurant .next-card .card-header-actions,
+#food .next-card .card-card-action,
+#restaurant .next-card .card-card-action{
+  visibility:visible;
+}
