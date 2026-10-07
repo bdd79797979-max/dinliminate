@@ -10420,3 +10420,15 @@ becomes active.
 #restaurant .restaurant-card-stack>.next-card{
   will-change:transform,opacity;
 }
+
+
+/* CP1177 — shared card info row: Cuisine text with Details immediately beside it. */
+#food .card-info-row,#restaurant .card-info-row{display:flex!important;align-items:center!important;justify-content:flex-start!important;width:max-content!important;max-width:100%!important;min-width:0!important;height:28px!important;min-height:28px!important;max-height:28px!important;gap:6px!important;margin:0 0 8px 0!important;padding:0!important;}
+#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{display:inline-block!important;width:auto!important;max-width:240px!important;min-width:0!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;background:transparent!important;background-image:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;color:#ddd4c7!important;font-size:9px!important;font-weight:800!important;line-height:1.3!important;letter-spacing:.02em!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+#food .card-details-inline,#restaurant .card-details-inline{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 28px!important;width:28px!important;min-width:28px!important;max-width:28px!important;height:28px!important;min-height:28px!important;max-height:28px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;background-image:none!important;box-shadow:none!important;outline:0!important;color:#f0e5cf!important;line-height:0!important;text-decoration:none!important;}
+#food .card-details-inline:hover,#food .card-details-inline:active,#food .card-details-inline:focus,#food .card-details-inline:focus-visible,#restaurant .card-details-inline:hover,#restaurant .card-details-inline:active,#restaurant .card-details-inline:focus,#restaurant .card-details-inline:focus-visible{background:transparent!important;border:0!important;box-shadow:none!important;outline:0!important;}
+#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{display:block!important;width:15px!important;height:15px!important;margin:0!important;flex:0 0 15px!important;}
+#food .next-card .card-info-row,#restaurant .next-card .card-info-row{visibility:visible!important;transform:none!important;}
+#food .card-info-row .card-header-actions,#restaurant .card-info-row .card-header-actions{display:contents!important;}
+#restaurant .restaurant-card-meta-row{justify-content:flex-start!important;}
+@media(max-width:390px){#food .card-info-row,#restaurant .card-info-row{gap:6px!important;height:28px!important;min-height:28px!important;margin-bottom:8px!important;}#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:8px!important;}}
