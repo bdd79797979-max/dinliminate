@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1220,
+  "build": 1221,
   "sourceBranch": "fix/cp1218-swipe-polish",
-  "checkpoint": "CP1220",
+  "checkpoint": "CP1221",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1220-swipe-physics-and-decision-feedback",
@@ -32,6 +32,6 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1220 swipe interaction polish + CP1217 Restaurant Cuisine Cuts + CP1215 All/Maybes count fix",
-  "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; CP1195 refreshed Southern Vegetable Plate, PB&J, Chicken Pot Pie, BLT, Ham Dinner, Roast Beef Sandwich, Chicken & Dumplings, Shrimp & Grits, Biscuits & Gravy, Southern Vegetable Beef Soup, and White Chicken Chili"
+  "currentBaseline": "CP1221 meal photo refresh + CP1220 swipe polish + CP1217 Restaurant Cuisine Cuts + CP1215 All/Maybes count fix",
+  "mealImageSystem": "CP1221 refreshed 13 requested meal photos using approved Pexels/Unsplash hosts"
 }
