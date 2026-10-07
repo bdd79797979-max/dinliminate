@@ -7,15 +7,15 @@ const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi
 const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chick-fil-A","Popeyes","Subway","Sonic","Arby's","Whataburger","Five Guys","Raising Cane's","Wingstop","Bojangles","Cook Out","Dairy Queen","Zaxby's","Church's Chicken","Captain D's","Long John Silver's","Jimmy John's","Jersey Mike's","Firehouse Subs","Little Caesars","Domino's","Papa John's","Pizza Hut","Marco's Pizza","Krystal","Steak 'n Shake","White Castle","Freddy's","In-N-Out","Carl's Jr.","Panda Express","Jack in the Box","Hardee's","Del Taco","Checkers","Rally's"];
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
-const SEARCH_BUDGET_MS=10000;
-const WIDE_DISCOVERY_RESERVE_MS=5200;
+const SEARCH_BUDGET_MS=14000;
+const WIDE_DISCOVERY_RESERVE_MS=9000;
 const WIDE_RADIUS_THRESHOLD=50;
 const RADIUS_DISCOVERY_THRESHOLD=10;
 const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=2300;
-const WIDE_DISCOVERY_TIMEBOX_MS=6500;
+const WIDE_PRIMARY_TIMEBOX_MS=4000;
+const WIDE_DISCOVERY_TIMEBOX_MS=10000;
 const RADIUS_DISCOVERY_TIMEBOX_MS=6500;
-const OVERPASS_HTTP_TIMEOUT_MS=5000;
+const OVERPASS_HTTP_TIMEOUT_MS=4500;
 const WIDE_OVERPASS_GROUP_SIZE=1;
 const TILED_OVERPASS_GROUP_SIZE=1;
 const MAX_SEARCH_PER_MINUTE=60;
@@ -283,15 +283,17 @@ function radiusDiscoveryPlan(lat,lon,radius){
  };
 }
 async function overpassPoints(points,originLat,originLon,radius,types='restaurant|fast_food',searchTerm='',endpoints=OVERPASS,timeout=OVERPASS_HTTP_TIMEOUT_MS){
- const term=normalizeSearchQuery(searchTerm),seconds=Math.max(6,Math.min(10,Math.ceil(Number(timeout||OVERPASS_HTTP_TIMEOUT_MS)/1000)));
+ const term=normalizeSearchQuery(searchTerm),seconds=Math.max(6,Math.min(16,Math.ceil(Number(timeout||OVERPASS_HTTP_TIMEOUT_MS)/1000)));
  const data=term?searchQueryMany(points,term,seconds):queryMany(points,types,seconds),rows=[],errors=[];
- // Use one mirror at a time, falling back to the next only when needed.
- // This avoids hammering public Overpass mirrors with duplicate concurrent requests.
+ // Use one mirror at a time per tile. When a mirror errors or returns an empty
+ // result, immediately try the next mirror for that same geographic tile.
  for(const ep of endpoints){
   try{
    const payload=await json(ep+'?data='+encodeURIComponent(data),{},timeout);
-   for(const el of payload?.elements||[]){const r=osmRow(el,{lat:originLat,lon:originLon});if(r&&r.distance<=radius)rows.push(r);}
-   return{rows:dedupe(rows),errors};
+   const elements=payload?.elements||[];
+   for(const el of elements){const r=osmRow(el,{lat:originLat,lon:originLon});if(r&&r.distance<=radius)rows.push(r);}
+   if(elements.length)return{rows:dedupe(rows),errors};
+   errors.push('Overpass returned no elements');
   }catch(e){
    errors.push(String(e?.message||e||'request failed'));
   }
@@ -300,17 +302,20 @@ async function overpassPoints(points,originLat,originLon,radius,types='restauran
 }
 async function tiledRadiusOverpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
  const plan=radiusDiscoveryPlan(lat,lon,radius),rows=[],errors=[];
- const endpoints=plan.groups.map((_,i)=>OVERPASS[i%OVERPASS.length]);
+ const endpointPairs=plan.groups.map((_,i)=>[
+   OVERPASS[i%OVERPASS.length],
+   OVERPASS[(i+1)%OVERPASS.length]
+ ]);
  const tasks=plan.groups.map((group,i)=>overpassPoints(
-   group,lat,lon,radius,types,searchTerm,[endpoints[i]],OVERPASS_HTTP_TIMEOUT_MS
+   group,lat,lon,radius,types,searchTerm,endpointPairs[i],OVERPASS_HTTP_TIMEOUT_MS
  ));
  const settled=await Promise.allSettled(tasks);
- for(const result of settled){
+ for(const result){
    if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'radius discovery failed'));continue;}
    rows.push(...(result.value.rows||[]));
    errors.push(...(result.value.errors||[]));
  }
- return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpoints.length};
+ return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpointPairs.length*2};
 }
 async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
  return tiledRadiusOverpass(lat,lon,radius,types,searchTerm);
@@ -1514,9 +1519,9 @@ if(mode==='search'){
    ];
 let primaryBatch,parallelWide=null,fastProvider='none';
  if(wideSearch){
-   // Wide searches keep the fast providers anchored to 50 miles. Tiled Overpass
-   // discovery supplies full-radius coverage instead of relying on a single
-   // timeout-prone geographic query.
+   // Wide searches keep the fast providers anchored to 50 miles. Each provider gets
+   // a full wide-search timebox, while tiled Overpass discovery supplies the
+   // outer-radius coverage through independent, redundant tile requests.
    const wideTasks=[
      withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
      withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
