@@ -1,4 +1,4 @@
-# CURRENT RELEASE — BUILD 1227 / CP1227
+# CURRENT RELEASE — BUILD 1228 / CP1228
 
 Date: 2026-10-07
 
@@ -63,6 +63,10 @@ CP1227 replaces the Home Tour with the three core elimination-app messages:
 “tap home or restaurant to get started.”
 
 The Meal and Restaurant Tour sections remain unchanged.
+
+## Home Tour positioning fix
+
+CP1228 keeps the three Home Tour messages unchanged but points each step at a real, visible homepage control. The first step targets the bottom Tour control instead of the tutorial bubble itself, preventing recursive positioning and keeping the tutorial bubble on-screen.
 
 ## Recovery
 
