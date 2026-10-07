@@ -1119,6 +1119,32 @@ S.restaurantPool = Array.isArray(d.restaurantPool) ? d.restaurantPool : [];
 S.custom = Array.isArray(d.custom) ? d.custom.map(item=>({...item,images:mealPhotoList(item)})) : [];
 S.customQuickCuts = Array.isArray(d.customQuickCuts) ? d.customQuickCuts : [];
 
+// CP1163 — permanently remove retired built-in meals from restored local state.
+const RETIRED_BUILTIN_MEAL_IDS = new Set(['chili-cheese-baked-potato']);
+let needsRetiredMealCleanupSave=false;
+const hasRetiredMealId=(item)=>RETIRED_BUILTIN_MEAL_IDS.has(String(item?.id||''));
+const filterRetiredMeals=(items)=>{
+ if(!Array.isArray(items))return items;
+ const filtered=items.filter(item=>!hasRetiredMealId(item));
+ if(filtered.length!==items.length)needsRetiredMealCleanupSave=true;
+ return filtered;
+};
+S.custom=filterRetiredMeals(S.custom);
+S.deletedCustomMeals=filterRetiredMeals(Array.isArray(d.deletedCustomMeals)?d.deletedCustomMeals.map(item=>({...item,images:mealPhotoList(item)})):[]);
+S.pool=filterRetiredMeals(Array.isArray(S.pool)?S.pool:[]);
+S.foodActions=Array.isArray(S.foodActions)?S.foodActions.filter(action=>{
+ const keep=!RETIRED_BUILTIN_MEAL_IDS.has(String(action?.id||''));
+ if(!keep)needsRetiredMealCleanupSave=true;
+ return keep;
+}):[];
+for(const id of RETIRED_BUILTIN_MEAL_IDS){
+ if(S.hidden.delete(id))needsRetiredMealCleanupSave=true;
+ if(S.deleted.delete(id))needsRetiredMealCleanupSave=true;
+ if(S.foodCuts.delete(id))needsRetiredMealCleanupSave=true;
+ if(S.maybe.delete(id))needsRetiredMealCleanupSave=true;
+ if(S.winnerItem&&hasRetiredMealId(S.winnerItem)){S.winnerItem=null;S.winnerType='food';needsRetiredMealCleanupSave=true;}
+}
+
 // CP1032 — repair historical Buttermilk overrides after catalog cleanup.
 let needsButtermilkRepairSave=false;
 const legacyStandaloneButtermilk=S.custom.find(item=>String(item.id)==='buttermilk'&&normKey(item.name)==='buttermilk');
@@ -1170,7 +1196,7 @@ S.mealTimeSettings={custom:Array.isArray(d.mealTimeSettings?.custom)?d.mealTimeS
 ensureMealTimeSettings();
 const availableMealTimeNames=mealTimeNames();
 S.mealTimeFilters=new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).map(currentMealTimeName).filter(x=>availableMealTimeNames.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(availableMealTimeNames);
-if(needsButtermilkRepairSave||needsChickenFriedSteakNameRepairSave)save();
+if(needsButtermilkRepairSave||needsChickenFriedSteakNameRepairSave||needsRetiredMealCleanupSave)save();
 if(S.locationSource==='device' && S.location)S.locationSource='last';
 S.restaurantSearchDegraded = !!d.restaurantSearchDegraded;
 S.schemaVersion = STORAGE_VERSION;
