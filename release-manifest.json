@@ -2,7 +2,7 @@
   "name": "Dinliminate",
   "version": "1.0",
   "build": 1239,
-  "sourceBranch": "release/cp1195-meal-photo-refresh",
+  "sourceBranch": "fix/cp1239-swipe-flight",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
