@@ -1768,9 +1768,33 @@ function renderRestaurantHours(){
    // so the active gold rim and current choice are immediately obvious.
    S.restaurantHoursCollapsed=false;
    renderRestaurantHours();
-   updateRestaurantStatus();
-   drawRestaurants();
-   save();
+   if(next==='open'){
+     const sameSearch=restaurantHoursEnrichmentKey===String(S.restaurantSearchKey||'');
+     const recentlyEnriched=sameSearch&&(Date.now()-restaurantHoursEnrichedAt)<10*60*1000;
+     if(!recentlyEnriched){
+       updateRestaurantStatus();
+       enrichRestaurantHoursForOpenNow().then(()=>{
+         if(S.screen!=='restaurant'||S.restaurantHours!=='open')return;
+         updateRestaurantStatus();
+         drawRestaurants();
+         save();
+       }).catch(()=>{
+         if(S.screen==='restaurant'&&S.restaurantHours==='open'){
+           updateRestaurantStatus();
+           drawRestaurants();
+           save();
+         }
+       });
+     }else{
+       updateRestaurantStatus();
+       drawRestaurants();
+       save();
+     }
+   }else{
+     updateRestaurantStatus();
+     drawRestaurants();
+     save();
+   }
  });
 }
 function bindRestaurantHours(){
@@ -3843,6 +3867,7 @@ S.restaurantSearchBudgetMs = Number(d.searchBudgetMs)||12000;
 S.restaurantSearchOrigin = {lat:Number(loc.lat),lon:Number(loc.lon)};
 S.restaurantSearchKey = searchKey;
  S.restaurantSearchTimeZone=String(d.hoursTimeZone||'');
+if(S.restaurantHours==='open'){restaurantHoursEnrichmentKey='';restaurantHoursEnrichedAt=0;await enrichRestaurantHoursForOpenNow();}
 S.restaurantIndex = 0; S.restaurantActions = []; S.restaurantMaybeRound = false;
 S.winnerItem = null;
 if(S.restaurantPool.length) {
