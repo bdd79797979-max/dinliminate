@@ -10545,3 +10545,11 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 @media(prefers-reduced-motion:reduce){
   .canonical-maybe-control .maybe-control-count.decision-count-updated{animation:none!important}
 }
+
+
+/* CP1234 — enlarge card Cuisine type + Details control without changing upper controls or card geometry. */
+#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:14px!important;}
+#food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}
+#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:23px!important;height:23px!important;flex-basis:23px!important;}
+#food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}
+@media(max-width:390px){#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:14px!important;}#food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:23px!important;height:23px!important;flex-basis:23px!important;}#food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}}
