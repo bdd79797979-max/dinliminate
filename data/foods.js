@@ -1962,7 +1962,7 @@ window.DINLIMINATE_FOODS = [
       "American",
       "Southern"
     ],
-    "image": "https://images.pexels.com/photos/29535632/pexels-photo-29535632.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1628642585518-2d63c2beab6b?auto=format&fit=crop&w=1800&q=85",
     "backupImage": "https://images.pexels.com/photos/39070794/pexels-photo-39070794.jpeg?auto=compress&cs=tinysrgb&w=1400",
     "ingredients": [
       "chicken",
