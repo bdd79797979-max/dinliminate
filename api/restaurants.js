@@ -136,10 +136,10 @@ function centers(lat,lon,r){
   }
   return out;
  }
- // 51-100mi: a 40mi origin tile plus a 12-point 80mi outer ring of 40mi
+ // 51-100mi: a 40mi origin tile plus a 12-point 75mi outer ring of 40mi
  // tiles. This fully covers the 100mi disk with overlap while keeping each
  // upstream query comfortably below the 50mi provider cap.
- const tile=40,ring=80,count=12,out=[{lat,lon,radius:tile}];
+ const tile=40,ring=75,count=12,out=[{lat,lon,radius:tile}];
  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
  for(let i=0;i<count;i++){
   const ang=i*2*Math.PI/count;
