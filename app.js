@@ -2593,6 +2593,19 @@ const completeAfterExit=async ()=>{
   if(foodHandoff)foodSwipeHandoff=true;
   if(restaurantHandoff)restaurantSwipeHandoff=true;
 
+  // CP1188: once a swipe has committed, the swiped card is never allowed to
+  // become visible again while the next state is being calculated. The next
+  // card has already been promoted underneath it, so hiding the old card at
+  // transition completion removes the one-frame Safari reappearance.
+  card.style.transition='none';
+  card.style.transform='none';
+  card.style.opacity='0';
+  card.style.visibility='hidden';
+  card.style.pointerEvents='none';
+  card.classList.remove('swipe-active');
+  card.style.removeProperty('--swipe-tint-alpha');
+  card.dataset.swipe='';
+
   if(foodHandoff){
    // Keep the promoted waiting image visually authoritative while the
    // recycled meal card is repainted behind it.
@@ -2657,17 +2670,21 @@ const completeAfterExit=async ()=>{
      card.dataset.swipePhase='idle';
     }
    }else{
-    if(card.isConnected){
-     resetCard();
-    }
+    // Restaurant redraws replace the card node. Never call resetCard() here:
+    // that can briefly resurrect the just-swiped node while drawRestaurants()
+    // is finishing its photo preparation.
     if(restaurantHandoff){
      restaurantSwipeHandoff=false;
      const freshRestaurantCard=$('restaurantCard');
      if(freshRestaurantCard){
+      freshRestaurantCard.style.transition='none';
+      freshRestaurantCard.style.transform='none';
       freshRestaurantCard.style.opacity='1';
       freshRestaurantCard.style.visibility='visible';
       freshRestaurantCard.style.pointerEvents='auto';
      }
+    }else if(card.isConnected){
+     resetCard();
     }
    }
   }
@@ -2697,6 +2714,7 @@ const completeAfterExit=async ()=>{
   const direction=dx<0?-1:1;
 
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
+  card.dataset.swipeTransaction='active';
   card.classList.remove('swipe-active');
   card.style.transition='transform '+duration+'ms cubic-bezier(.18,.84,.22,1),opacity '+duration+'ms ease';
   card.style.opacity='1';
