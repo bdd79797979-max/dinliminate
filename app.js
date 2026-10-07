@@ -1331,8 +1331,10 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#home .home-choice-rail',title:'CHOOSE YOUR PATH',body:'Start with Home for meal ideas or Restaurant to find a place to eat. Tap either window to begin.',action:'home-choice',avoid:['#home .home-foot']},
-  {target:'#home .home-foot',title:'QUICK TOOLS',body:'Add Dinliminate to your phone, share the app, or replay this Tour anytime.',avoid:['#home .home-choice-rail']}
+  {target:'#foodStart',title:'HOME',body:'Tap Home to start making your meal decision.'},
+  {target:'#restStart',title:'RESTAURANT',body:'Tap Restaurant to find and decide on a nearby restaurant.'},
+  {target:'#menu',title:'MENU',body:'Open the menu for Manage Meals, History, Settings, Family Mode, and other app features.'},
+  {target:'#home .home-foot',title:'HOME TOOLS',body:'Add puts Dinliminate on your phone, Share sends the app to someone, and Tour replays this guide.',avoid:['#foodStart','#restStart','#menu']}
  ];
  if(screen==='food')return[
   {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
