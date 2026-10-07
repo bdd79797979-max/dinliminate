@@ -83,7 +83,7 @@ assert('Google photo exact-match checks name/address/location',gphoto.includes('
 assert('hours are timezone-aware',restaurants.includes("timezone:'auto'")&&app.includes('Intl.DateTimeFormat')&&app.includes('hoursTimeZone'));
 assert('Family requests are bounded',family.includes('REQUEST_TOO_LARGE')&&family.includes('64*1024')&&family.includes('limited(req,action,actionLimit)'));
 assert('Family snapshot URLs are safe',familyStore.includes('function safeHttpUrl')&&familyStore.includes("['https:','http:'].includes(u.protocol)"));
-assert('image proxy blocks redirects',image.includes("redirect:'error'"));
+assert('image proxy validates redirects',image.includes("redirect:'manual'")&&image.includes('Redirected image host not allowed')&&image.includes('redirectCount<=3'));
 assert('photo endpoints are throttled',gphoto.includes('photoRateLimited(req')&&rphoto.includes('restaurantPhotoRateLimited(req'));
 assert('swipe card does not resize',app.includes("translate3d('+dx.toFixed(1)+'px,0,0) rotate(")&&!app.slice(app.indexOf('function bindSwipeCard'),app.indexOf('function bindRestaurantSwipe')).includes("card.style.transform='scale("));
 assert('four decision controls remain canonical',
