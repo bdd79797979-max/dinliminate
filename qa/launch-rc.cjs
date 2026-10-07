@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='cp1155-meal-deck-never-stuck'&&expectedCheckpoint==='CP1155');
+assert('launch candidate branch is explicit',expectedBranch==='cp1157-radius-no-25mi-overpass-bottleneck'&&expectedCheckpoint==='CP1157');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -103,7 +103,8 @@ const checkpointSmoke=[
  ['CP1081 Decision UI','qa/restaurant-decision-ui-smoke.cjs'],
  ['CP1084 Brand/PWA','qa/brand-pwa-final-smoke.cjs'],
  ['CP1085 Security','qa/security-hardening-smoke.cjs'],
- ['CP1155 Meal deck never-stuck','qa/cp1155-meal-deck-never-stuck-smoke.cjs']
+ ['CP1155 Meal deck never-stuck','qa/cp1155-meal-deck-never-stuck-smoke.cjs'],
+ ['CP1157 Restaurant radius','qa/cp1157-restaurant-radius-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));
 
