@@ -10499,15 +10499,14 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 }
 
 
-/* CP1211 — Minimal Restaurant Open filter.
-   Open matches Search/Cuisine typography, is crossed out when inactive,
-   and becomes white + underlined when active. No dropdown/chips. */
+/* CP1212 — Open inactive state matches Search/Cuisine exactly.
+   Active Open is the only state rendered white. */
 #restaurant .restaurant-hours-toggle{
   color:#f0eee9!important;
   text-shadow:none!important;
   text-decoration-line:line-through!important;
   text-decoration-thickness:1px!important;
-  text-decoration-color:currentColor!important;
+  text-decoration-color:#f0eee9!important;
   text-underline-offset:3px!important;
   text-decoration-skip-ink:none!important;
 }
