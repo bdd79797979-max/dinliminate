@@ -10520,3 +10520,28 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
   text-underline-offset:3px!important;
   text-decoration-skip-ink:none!important;
 }
+
+
+/* CP1219 — swipe decision feedback polish. Keep the waiting card static. */
+.unified-swipe-actions .round-cut.is-pressed,
+.unified-swipe-actions .round-maybe.is-pressed{
+  transform:scale(.93)!important;
+  filter:brightness(1.08)!important;
+}
+.unified-swipe-actions .round-cut.is-pressed{
+  box-shadow:0 8px 24px #ef334044,0 0 0 2px #ef33401c!important;
+}
+.unified-swipe-actions .round-maybe.is-pressed{
+  box-shadow:0 8px 24px #28c76f44,0 0 0 2px #28c76f1c!important;
+}
+.canonical-maybe-control .maybe-control-count.decision-count-updated{
+  animation:cp1219DecisionCount .22s cubic-bezier(.22,1,.36,1);
+}
+@keyframes cp1219DecisionCount{
+  0%{transform:scale(.88);opacity:.55}
+  60%{transform:scale(1.12);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .canonical-maybe-control .maybe-control-count.decision-count-updated{animation:none!important}
+}
