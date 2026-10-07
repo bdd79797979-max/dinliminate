@@ -10,12 +10,12 @@ assert.equal((app.match(/function foodPhotoFallback\(/g)||[]).length,1,'foodPhot
 assert.match(app,/const preparedFoodSwipeCards=new Map\(\)/);
 assert.match(app,/function nextFoodIndexList\(/);
 assert.match(app,/function buildPreparedFoodCard\(/);
-assert.match(app,/function populateFoodNextCard\(/);
+assert.match(app,/function populateFoodNextCard\(/);\nassert.match(app,/function ensurePreparedFoodNextCardMarkup\(/);
 assert.match(app,/function ensureFoodNextCardReady\(/);
 assert.match(app,/preloadSwipeImage\(view\.primary\)/);
 assert.match(app,/preloadSwipeImage\(view\.backup\)/);
 assert.match(app,/ensureFoodNextCardReady\(waiting\)/);
-assert.doesNotMatch(app,/foodSwipeCardWarmHost/);
+assert.doesNotMatch(app,/foodSwipeCardWarmHost/);\nassert.match(app,/nextCard\.querySelector\('img\.next-food-img'\)\|\|nextCard\.querySelector\('img#foodNextImg'\)/);
 assert.doesNotMatch(app,/swipeCardLayoutPreloads/);
 assert.match(html,/id="foodNextCard"[^>]*aria-hidden="true"/);
 assert.match(html,/class="[^"]*next-food-img[^"]*"/);
