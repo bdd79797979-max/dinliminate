@@ -2337,12 +2337,14 @@ function drawFood(options={}){
    foodCard.style.pointerEvents='none';
  }
  img.dataset.imageFallback='false';
+ img.dataset.mealPhotoLoaded='false';
  if(primaryPhoto)img.src=primaryPhoto;
  else if(backupPhoto)img.src=backupPhoto;
  else markMealImageUnavailable(img);
  if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
   if(String(img.dataset.mealLoadToken||'')===loadToken){
    if(!ok)markMealImageUnavailable(img);
+   if(ok)img.dataset.mealPhotoLoaded='true';
    mealReadyResolve(!!ok);
   }else{
    mealReadyResolve(false);
@@ -2988,6 +2990,10 @@ const completeAfterExit=async ()=>{
   card.classList.remove('swipe-active');
   card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';
+
+  // CP1291: let the hidden outgoing card commit to paint before any redraw
+  // reuses its DOM node. This removes the one-frame "card comes back" flash.
+  await waitForNextPaints(1);
 
   if(foodHandoff){
    // CP1197: the waiting card remains underneath as a separate, inert preview.
@@ -5242,6 +5248,11 @@ function visibleCardDetailImage(item,type){
  if(type==='restaurant'){
   const key=String(item?.id||item?.canonicalId||'').trim();
   const currentKey=String(img.dataset.restaurantPhotoKey||'').trim();
+  if(!key||!currentKey||key!==currentKey)return '';
+ }else{
+  const key=String(item?.id||'').trim();
+  const currentKey=String(card?.dataset.mealId||'').trim();
+  // The Meals card DOM node is reused. Never reuse its prior bitmap for a new meal.
   if(!key||!currentKey||key!==currentKey)return '';
  }
  const src=String(img.currentSrc||img.src||'').trim();
