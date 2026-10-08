@@ -10632,3 +10632,11 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
  #foodEditorForm .meal-editor-name-row{grid-template-columns:1fr}
  #foodEditorForm .meal-autofill-action{justify-self:start}
 }
+
+
+/* CP1268 — keep the optional AI Meal Auto-Fill controls out of the UI until the service is connected. */
+.meal-autofill-action,
+.meal-autofill-refresh,
+.meal-autofill-status,
+.meal-autofill-basis,
+.meal-editor-duplicate-hint{display:none!important}
