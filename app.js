@@ -1514,6 +1514,7 @@ function tutorialStepsForScreen(screen){
   {target:'#address',title:'ADDRESS SEARCH',body:'Search from an address.'},
   {target:'#find',title:'REFRESH',body:'Refresh your restaurant results.'},
   {target:'#radius',title:'RADIUS',body:'Choose how far to search.'},
+  {target:'#restaurantHomeBack',title:'BACK TO HOME',body:'Return to the homepage.'},
   {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.'},
   {target:'#restCut',title:'CUT',body:'Remove this restaurant.'},
   {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
