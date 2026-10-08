@@ -153,3 +153,8 @@ The built-in Biscuits & Gravy meal now uses the exact Pixabay image selected by 
 ## CP1264 — five requested meal photos
 
 Updated the built-in photos for Buttermilk & Cornbread, Cabbage & Sausage, Chocolate Covered Peanuts, Peanut Butter & Jelly Sandwich & Chips, and Chicken & Dumplings using the exact user-selected Pixabay/Unsplash images. Pixabay and Unsplash hosts were already in the approved built-in meal-photo allowlist.
+
+
+## CP1265 — working meal photos
+
+Replaced the four blocked Pixabay meal-photo sources with working Pexels sources for **Buttermilk & Cornbread**, **Cabbage & Sausage**, **Chocolate Covered Peanuts**, and **Chicken & Dumplings**. The selected Unsplash **Peanut Butter & Jelly Sandwich & Chips** photo remains unchanged. The service-worker shell cache was bumped so existing PWA installations can pick up the refreshed meal catalog rather than retaining the older cached `foods.js`.
