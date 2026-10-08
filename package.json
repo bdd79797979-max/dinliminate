@@ -16,6 +16,7 @@
     "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs",
     "test:tutorial": "node qa/cp1243-tutorial-pointer-guard-smoke.cjs",
     "test:decision": "node qa/cp1244-decision-transaction-smoke.cjs",
-    "test:meal-catalog": "node qa/cp1245-meal-catalog-smoke.cjs"
+    "test:meal-catalog": "node qa/cp1245-meal-catalog-smoke.cjs",
+    "test:swipe-handoff": "node qa/cp1246-no-black-handoff-smoke.cjs"
   }
 }
