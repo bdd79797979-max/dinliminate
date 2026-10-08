@@ -32,7 +32,6 @@ const getDefaultFoods = () => Array.isArray(FOODS) ? FOODS : [];
 const DEFAULT_FOOD_IMAGE = '';
 
 const KEY = 'dinliminate.clean.cp1';
-const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
@@ -1371,6 +1370,9 @@ if ('serviceWorker' in navigator) window.addEventListener('load', async () => {
     await reg.update().catch(() => {});
   } catch(error){console.error('Dinliminate error',error)}
 });
+configureStorage({$,restaurantCanonicalId,allFoods,normKey,mealPhotoList,dedupeMealPhotos,DEFAULT_FOOD_IMAGE,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,STORAGE_VERSION,KEY});
+configureMigrations({loadItemNotes,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,mealPhotoList,normKey,DEFAULT_FOOD_IMAGE,STORAGE_VERSION,KEY});
+
 bindMealPhotoCountControls();
 load();
 renderLocationSource();
@@ -1411,8 +1413,6 @@ try{
 configureTutorial({show,startFood,openRestaurant,winner,closeDrawer});
 bindTutorialUI();
 
-configureStorage({$,restaurantCanonicalId,allFoods,normKey,mealPhotoList,dedupeMealPhotos,DEFAULT_FOOD_IMAGE,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,STORAGE_VERSION,KEY});
-configureMigrations({loadItemNotes,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,mealPhotoList,normKey,DEFAULT_FOOD_IMAGE,STORAGE_VERSION,KEY});
 
 export { HISTORY_KEY };
 
