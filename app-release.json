@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1244,
-  "sourceBranch": "fix/cp1244-decision-transaction",
-  "checkpoint": "CP1244",
+  "build": 1245,
+  "sourceBranch": "fix/cp1245-meal-photo-refresh",
+  "checkpoint": "CP1245",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1241-overlap-next-card-input-handoff",
@@ -32,10 +32,12 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1244 Cut/Maybe transaction race fix + CP1243 tutorial pointer-level target guard + CP1241 overlap next-card input handoff + CP1240 Chicken Pot Pie photo refresh + CP1239 atomic full-flight swipe exit",
+  "currentBaseline": "CP1245 meal photo/catalog refresh + CP1244 Cut/Maybe transaction race fix + CP1243 tutorial pointer guard + CP1241 overlap handoff + CP1239 full-flight swipe",
   "mealImageSystem": "CP1237 tested free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
   "tutorialAudit": "CP1243-pointer-level-target-guard-and-tour-lifecycle",
-  "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe"
+  "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe",
+  "photoRefresh": "CP1245-Unsplash-refresh-meatloaf-southern-vegetables-chicken-dumplings-beef-soup; retain stronger existing PBJ/Biscuits-Gravy/White-Chicken-Chili where no clearly better free Unsplash match",
+  "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final"
 }
