@@ -484,7 +484,8 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.unsplash.com/photo-1566740933449-11e38b77e6e5?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.unsplash.com/photo-1540432797114-187727adf19b?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=3000",
+    "backupImage": "https://images.unsplash.com/photo-1566740933449-11e38b77e6e5?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "corn",
       "green beans",
@@ -824,7 +825,8 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.unsplash.com/photo-1600441397207-1913d3c09b2a?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.unsplash.com/photo-1519699788450-ad34386a3bfc?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=3000",
+    "backupImage": "https://images.unsplash.com/photo-1600441397207-1913d3c09b2a?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "beef",
       "tomatoes",
@@ -1220,7 +1222,8 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.pexels.com/photos/36903815/pexels-photo-36903815.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1522237825450-a0c44eecddb4?ixlib=rb-4.1.0&q=85&fm=jpg&crop=entropy&cs=srgb&dl=jodie-morgan-PAa_MJztyUY-unsplash.jpg",
+    "backupImage": "https://images.pexels.com/photos/36903815/pexels-photo-36903815.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "biscuits",
       "sausage",
