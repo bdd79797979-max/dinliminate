@@ -10696,7 +10696,7 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
   color:#e7cc91!important;
 }
 .app.home-active #home .home-slogan{
-  bottom:calc(env(safe-area-inset-bottom) + 234px)!important;
+  bottom:calc(env(safe-area-inset-bottom) + 236px)!important;
   color:#e7cc91!important;
 }
 @media(max-width:390px){
@@ -10706,7 +10706,7 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
     border-radius:4px!important;
   }
   .app.home-active #home .home-slogan{
-    bottom:calc(env(safe-area-inset-bottom) + 214px)!important;
+    bottom:calc(env(safe-area-inset-bottom) + 216px)!important;
   }
 }
 
