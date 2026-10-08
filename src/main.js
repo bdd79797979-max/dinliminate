@@ -6286,5 +6286,5 @@ $('familySetupOpen')?.addEventListener('click',()=>{const a=$('familySetupOpen')
 $('familySetupBack')?.addEventListener('click',()=>familyNormalBack(S.familyDecisionType||'meal'));$('foodFamilyNormalStart')?.addEventListener('click',()=>familyStartRoundFromNormal('meal'));$('restaurantFamilyNormalStart')?.addEventListener('click',()=>familyStartRoundFromNormal('restaurant'));
 $('familyCreateName')?.addEventListener('keydown',e=>{if(e.key==='Enter')familyCreate();});$('familyJoinName')?.addEventListener('keydown',e=>{if(e.key==='Enter')familyJoin();});$('familyJoinCode')?.addEventListener('input',e=>{const v=e.target.value.replace(/[^a-z0-9]/gi,'').toUpperCase().slice(0,6);e.target.value=v.length>3?v.slice(0,3)+' · '+v.slice(3):v;});
 
-})();
-// CP1069 FINAL DEPLOYMENT TRIGGER
+
+export { show, startFood, openRestaurant, winner, closeDrawer };
