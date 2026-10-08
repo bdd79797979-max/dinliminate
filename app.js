@@ -2845,6 +2845,14 @@ async function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
  const isOverlapCard=options?.overlap===true;
  const next=$(nextId);
  const staticWaitingCard=cardId==='foodCard';
+ // CP1280: a card DOM node can be rebound many times during a rapid swipe
+ // sequence. Cancel any prior Web Animation on that node before installing a
+ // new swipe binding so an old compositor animation can never repaint the
+ // reused card after the new state has taken over.
+ try{card.getAnimations?.().forEach(anim=>{try{anim.cancel();}catch{}});}catch{}
+ const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
+ card.dataset.swipeBindingToken=swipeBindingToken;
+ const bindingStillCurrent=()=>String(card.dataset.swipeBindingToken||'')===swipeBindingToken;
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
@@ -2967,7 +2975,7 @@ async function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
 
  // CP1181: repaired completeAfterExit from known-good CP1179 flow.
 const completeAfterExit=async ()=>{
-  if(phase!=='committing')return;
+  if(phase!=='committing'||!bindingStillCurrent())return;
   clearCompletionTimer();
   card.removeEventListener('transitionend',handleTransitionEnd);
   const direction=String(card.dataset.swipeDirection||'');
@@ -3016,7 +3024,7 @@ const completeAfterExit=async ()=>{
       if(ready)await Promise.race([ready,new Promise(resolve=>setTimeout(resolve,900))]);
      }catch{}
      const reveal=()=>{
-      if(!card.isConnected)return;
+      if(!card.isConnected||!bindingStillCurrent())return;
       card.classList.remove('swipe-active');
       card.style.transition='none';
       card.style.transform='none';
@@ -3146,7 +3154,7 @@ const completeAfterExit=async ()=>{
   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
 
   const finishFlight=()=>{
-   if(phase!=='committing')return;
+   if(phase!=='committing'||!bindingStillCurrent())return;
    if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
    clearCompletionTimer();
 
@@ -3209,7 +3217,7 @@ const completeAfterExit=async ()=>{
     if(phase==='committing')finishFlight();
    }).catch(()=>{});
    completionTimer=window.setTimeout(()=>{
-    if(phase==='committing')finishFlight();
+    if(phase==='committing'&&bindingStillCurrent())finishFlight();
    },duration+500);
   }else{
    // Fallback for engines without Web Animations.
@@ -5277,7 +5285,9 @@ async function detailsSheet(item,type){
  const image=isRestaurant
   ? (cardImage||imageProxyUrl(item.image||item.photo||item.photoFallback||restaurantFallbackImage(item)))
   : (cardImage||foodPhoto(item)||mealImageUrl(item.image||item.photo||item.photoFallback||HUNGRY_IMAGE));
- await waitForVisualImage(image,sourceImage,900);
+ // CP1280: the card is already the authoritative visual source. Do not block
+ // opening Details on a second network/decode wait; warm the same URL and let
+ // the modal reuse the browser's decoded resource immediately.
  warmDetailImage(image);
  const note=itemNote(item,type);
  const notePreview=note.replace(/\s+/g,' ').trim();
