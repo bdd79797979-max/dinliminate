@@ -1,7 +1,8 @@
 import { state as S } from '../../state/store.js';
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
-import { imageProxyUrl, mealImageUrl, bindImageFallback, restaurantFallbackImage, hydrateRestaurantPhoto, mealTimesFor, restaurantCategory, openModal, detailsSheet, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { imageProxyUrl, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, mealTimesFor, openModal, detailsSheet, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { restaurantFallbackImage, restaurantCategory } from '../restaurants/index.js';
 
 
 const HISTORY_KEY = 'dinliminate.clean.history';

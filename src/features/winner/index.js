@@ -2,7 +2,8 @@ import { state as S } from '../../state/store.js';
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { recordHistory } from '../history/index.js';
-import { imageProxyUrl, mealImageUrl, foodPhoto, foodPhotoFallback, restaurantFallbackImage, hydrateRestaurantPhoto, show, triggerSwipeHaptic, bindRestaurantPhotoPinch, dedupeRestaurantPool, restaurantHidden, restaurantCategory, restaurantQuickMatches, restaurantMatchesQuery, familyHideWinnerMeta, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { imageProxyUrl, mealImageUrl, foodPhoto, foodPhotoFallback, hydrateRestaurantPhoto, show, triggerSwipeHaptic, bindRestaurantPhotoPinch, familyHideWinnerMeta, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { restaurantFallbackImage, dedupeRestaurantPool, restaurantHidden, restaurantCategory, restaurantQuickMatches, restaurantMatchesQuery } from '../restaurants/index.js';
 
 function hideCelebration(){
  const el=$('celebration');
