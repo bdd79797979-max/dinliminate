@@ -6687,8 +6687,8 @@ renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
 hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
-// CP1138 — reveal only after the correct persisted screen has been painted.
-requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
+/* CP1261 — choose and render the persisted destination first, then release the
+   boot curtain. The old order scheduled the reveal before this branch ran. */
 if (S.saved && S.screen === 'food' && S.pool.length) {
 show('food'); foodQuick(); drawFood();
 } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
@@ -6696,6 +6696,9 @@ show('restaurant'); restaurantQuick(); drawRestaurants();
 } else {
 home();
 }
+requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  document.documentElement.classList.remove('dinliminate-booting');
+}));
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({
