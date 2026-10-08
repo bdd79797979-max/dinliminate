@@ -120,6 +120,8 @@ schemaVersion:7,
 notes:{},
 foodHistory:[],
 restaurantHistory:[],
+foodRestoreExact:false,
+restaurantRestoreExact:false,
 restaurantSearchOrigin:null,
 restaurantSearchKey:'',
 quickCutsCollapsed:{food:true,restaurant:true},
@@ -1070,6 +1072,7 @@ function restoreFoodDecisionState(state){
   ...(Array.isArray(item?.images)?{images:[...item.images]}:{})
  }));
  S.index=Math.max(0,Math.min(Number(state.index)||0,Math.max(0,S.pool.length-1)));
+ S.foodRestoreExact=true;
  return true;
 }
 
@@ -1100,6 +1103,7 @@ function restoreRestaurantDecisionState(state){
  const ordered=state.poolIds.map(id=>byId.get(String(id))).filter(Boolean);
  if(ordered.length)S.restaurantPool=ordered;
  S.restaurantIndex=Math.max(0,Math.min(Number(state.index)||0,Math.max(0,restaurantPoolFiltered().length-1)));
+ S.restaurantRestoreExact=true;
  return true;
 }
 
@@ -2299,12 +2303,18 @@ function drawFood(){
  // The live meal card remains the only swipeable/committed card; the waiting card is
  // a separate, pointer-inert preview that is refreshed independently.
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
- if(S.maybeDeck){
+ const restoreExact=!!S.foodRestoreExact;
+ S.foodRestoreExact=false;
+ if(!restoreExact){
+  if(S.maybeDeck){
+   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
+  }else if(!S.foodMaybeRound){
+   const ni=foodChoiceIndex(S.pool,S.index,false);
+   if(ni>=0)S.index=ni;
+   else if(S.maybe.size)S.foodMaybeRound=true;
+  }
+ }else{
   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
- }else if(!S.foodMaybeRound){
-  const ni=foodChoiceIndex(S.pool,S.index,false);
-  if(ni>=0)S.index=ni;
-  else if(S.maybe.size)S.foodMaybeRound=true;
  }
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1,photoIndex=0;item._mealPhotoIndex=0;
@@ -4387,8 +4397,10 @@ if($('retryRestaurantSearch')) $('retryRestaurantSearch').onclick=searchRestaura
 if($('clearRestaurantSearch')) $('clearRestaurantSearch').onclick=()=>{S.restaurantQuery=''; if($('restaurantQuery'))$('restaurantQuery').value=''; drawRestaurants(); save();};
 return;
 }
+const restoreExact=!!S.restaurantRestoreExact;
+S.restaurantRestoreExact=false;
 S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
-if(!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
+if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
 const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
 if(drawSeq!==restaurantDrawSeq)return;
 rows=restaurantPoolFiltered();
