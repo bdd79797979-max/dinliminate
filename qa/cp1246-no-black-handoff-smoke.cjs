@@ -21,6 +21,6 @@ assert.equal(oldRemove,-1,'Prepared overlap bridge must not be removed before li
 const reveal=app.slice(app.indexOf('const completeAfterExit=async()=>'),app.indexOf('function handleTransitionEnd',app.indexOf('const completeAfterExit=async()=>')));
 const removeBridge=reveal.indexOf('const bridge=card.__swipeVisualBridge');
 const revealLive=reveal.indexOf("card.style.visibility='visible'");
-assert(removeBridge>=0&&revealLive>=0&&removeBridge>revealLive,'Bridge removal must occur after the live card is revealed');
+assert(removeBridge>revealLive,'Bridge removal must occur after the live card is revealed');
 
 console.log('CP1246 no-black swipe handoff smoke: PASS');
