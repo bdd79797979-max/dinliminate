@@ -4,11 +4,12 @@ import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { imageProxyUrl, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
 import { mealTimesFor } from '../meals/index.js';
+import { save } from '../../state/storage.js';
 import { restaurantCategory } from '../restaurants/index.js';
 import { restaurantFallbackImage } from '../../main.js';
 
 
-const HISTORY_KEY = 'dinliminate.clean.history';
+const HISTORY_KEY='dinliminate:v1';
 function historyImageSource(row){
  const fallback=row?.type==='restaurant'?restaurantFallbackImage(row):HUNGRY_IMAGE;
  return row?.type==='restaurant'
@@ -49,18 +50,8 @@ familyMode:!!options.familyMode
 writeHistory(history);
 return true;
 }
-function readHistory() {
-try {
- const parsed=JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
- return Array.isArray(parsed) ? parsed.filter(row=>row&&typeof row==='object').slice(0,120) : [];
-} catch { return []; }
-}
-function writeHistory(rows) {
-try {
-localStorage.setItem(HISTORY_KEY, JSON.stringify((rows||[]).slice(0,120)));
-S.storageWarning=false; updateStorageIndicator();
-return true;
-} catch {
+function readHistory(){return Array.isArray(S.history)?S.history.filter(row=>row&&typeof row==='object').slice(0,120):[];}
+function writeHistory(rows){S.history=(rows||[]).filter(row=>row&&typeof row==='object').slice(0,120);S.storageWarning=!save();updateStorageIndicator();return !S.storageWarning;} catch {
 S.storageWarning=true; updateStorageIndicator();
 return false;
 }

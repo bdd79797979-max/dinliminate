@@ -14,7 +14,7 @@ function clearLegacySwipeInstructions(){
 }
 function dismissSwipeHint(){
  clearLegacySwipeInstructions();
- try{localStorage.setItem('dinliminate.swipeHint.v5','1')}catch(error){console.error('Dinliminate error',error)}
+ S.swipeHintDismissed=true;save();
 }
 document.addEventListener('pointerdown',event=>{
  const target=event.target;
@@ -24,7 +24,7 @@ document.addEventListener('pointerdown',event=>{
  }
 },true);
 function maybeShowInCardSwipeCoach(){
- try{if(localStorage.getItem('dinliminate.swipeHint.v5')||localStorage.getItem('dinliminate.swipeHint.v4')){clearLegacySwipeInstructions();return;}}catch(error){console.error('Dinliminate error',error)}
+ if(S.swipeHintDismissed){clearLegacySwipeInstructions();return;}
  const card=S.screen==='restaurant' ? $('restaurantCard') : $('foodCard');
  if(!card || card.querySelector('.swipe-card-coach'))return;
  const coach=document.createElement('div');

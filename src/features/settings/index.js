@@ -3,7 +3,7 @@ const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { appToast, appConfirm, openModal } from '../../ui/modal.js';
-import { save } from '../../state/storage.js';
+import { save, clearPersistedStorage } from '../../state/storage.js';
 import { buildFood, foodQuick, mealTimeNames } from '../meals/index.js';
 import { readHistory } from '../history/index.js';
 import { imageProxyUrl, home } from '../../main.js';
@@ -148,8 +148,8 @@ async function clearAllDinliminateStorage(){
   try{familySessionClear();}catch(error){console.error('Dinliminate error',error)}
   try{
     const keys=[];
-    for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith('dinliminate.'))keys.push(key);}
-    keys.forEach(key=>localStorage.removeItem(key));
+     clearPersistedStorage();
+
   }catch(error){console.error('Dinliminate error',error)}
   try{restaurantWebsiteCache.clear();restaurantWebsiteInflight.clear();}catch(error){console.error('Dinliminate error',error)}
   try{
@@ -182,7 +182,7 @@ function resetRound(){
   S.hungryWheelSpinToken++;S.hungryWheelSpinning=false;S.hungryWheelChoice=null;S.hungryWheelRotation=0;S.hungryWheelDisplayItems=null;S.hungryWheelLandedId=null;S.hungryWheelSpinPhase='idle';S.hungryWheelVelocity=0;S.hungryWheelFrame=null;
   S.winnerItem=null;S.winnerType='food';S.foodActions=[];S.restaurantActions=[];S.foodHistory=[];S.restaurantHistory=[];S.maybe.clear();S.foodMaybeRound=false;S.cutCats.clear();S.foodCuts.clear();S.restaurantCuts.clear();S.restaurantMaybeRound=false;
   S.pool=[];S.restaurantPool=[];S.restaurantSearchOrigin=null;S.index=0;S.restaurantIndex=0;S.restaurantQuery='';S.restaurantHours='all';S.restaurantHoursCollapsed=true;S.restaurantSearchKey='';S.restaurantSearchDegraded=false;S.saved=false;
-  try{localStorage.removeItem(KEY);}catch(error){console.error('Dinliminate error',error)}
+  save();
   home();
 }
 async function updateAppFlow(){

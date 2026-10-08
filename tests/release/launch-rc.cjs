@@ -108,6 +108,8 @@ assert.ok(main.includes("import RESTAURANT_TAXONOMY from '../data/restaurant-tax
 assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
 assert.equal(main.includes('function diagnosisMiles'),false,'production main must not contain diagnostics');
 assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production main must not contain empty catches');
+assert.equal(main.includes('localStorage.'),false,'production main must not persist localStorage directly');
+assert.equal(fs.existsSync(path.join(root,'styles.css')),false,'legacy monolithic stylesheet must be removed');
 assert.ok(fs.existsSync(path.join(root,'dev','diagnostics','index.html')),'development diagnostics must be outside production app');
 assert.ok(index.indexOf('./boot.js?v='+build)<index.indexOf('./viewport.js?v='+build),'boot.js must load before viewport.js');
 assert.ok(sw.includes('./boot.js?v='+build),'sw.js must precache boot.js');

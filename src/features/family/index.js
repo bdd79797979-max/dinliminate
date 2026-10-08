@@ -6,12 +6,12 @@ import { startFood } from '../swipe/index.js';
 import { openRestaurant, restaurantPoolFiltered, drawRestaurants } from '../restaurants/index.js';
 import { drawFood } from '../swipe/index.js';
 import { winner } from '../winner/index.js';
+import { save } from '../../state/storage.js';
 
-const FAMILY_SESSION_KEY='dinliminate.family.v1';
 
-function familySessionRead(){try{const d=JSON.parse(localStorage.getItem(FAMILY_SESSION_KEY)||'null');return d&&typeof d.token==='string'&&d.token?d:null;}catch{return null;}}
-function familySessionWrite(value){try{localStorage.setItem(FAMILY_SESSION_KEY,JSON.stringify(value));}catch(error){console.error('Dinliminate error',error)}}
-function familySessionClear(){try{localStorage.removeItem(FAMILY_SESSION_KEY);}catch(error){console.error('Dinliminate error',error)}}
+function familySessionRead(){const d=S.familySession;return d&&typeof d.token==='string'&&d.token?d:null;}
+function familySessionWrite(value){S.familySession=value&&typeof value==='object'?value:null;save();}
+function familySessionClear(){S.familySession=null;save();}
 function familySetStatus(id,message,kind=''){const el=$(id);if(!el)return;el.textContent=message||'';el.dataset.state=kind;}
 async function familyApi(action,payload={}){const response=await fetch('./api/family',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action,...payload})});let data=null;try{data=await response.json();}catch(error){console.error('Dinliminate error',error)}if(!response.ok||!data?.ok){const e=new Error(data?.message||'Family Mode could not complete that request.');e.code=data?.code||'FAMILY_REQUEST_FAILED';e.status=response.status;throw e;}return data;}
 
