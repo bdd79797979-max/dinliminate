@@ -4404,7 +4404,7 @@ if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S
 const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
 if(drawSeq!==restaurantDrawSeq)return;
 rows=restaurantPoolFiltered();
-if(prepared.firstId){
+if(prepared.firstId&&!restoreExact){
  const readyIndex=rows.findIndex(row=>String(row.id)===String(prepared.firstId));
  if(readyIndex>=0)S.restaurantIndex=readyIndex;
 }
