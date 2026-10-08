@@ -43,6 +43,32 @@ const e2e=read('tests/e2e/behavior.spec.mjs');
 const vercel=read('vercel.json');
 const build=Number(release.build);
 
+const targetModulePaths=[
+  'src/main.js',
+  'src/state/store.js','src/state/storage.js','src/state/migrations.js',
+  'src/features/swipe/index.js','src/features/meals/index.js','src/features/restaurants/index.js',
+  'src/features/winner/index.js','src/features/history/index.js','src/features/family/index.js',
+  'src/features/settings/index.js','src/features/tutorial/index.js',
+  'src/api/client.js','src/ui/dom.js','src/ui/esc.js','src/ui/modal.js'
+];
+for(const file of targetModulePaths){
+  assert.equal(exists(file),true,'native ESM module is missing: '+file);
+}
+const productionModuleFiles=targetModulePaths;
+for(const file of productionModuleFiles){
+  const source=read(file);
+  assert.equal((source.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production module contains an empty catch: '+file);
+  assert.equal((source.match(/String\\([^)]*\\)\\.includes\\(/g)||[]).length,0,'production module contains forbidden String(...).includes diagnostic check: '+file);
+  assert.equal(source.includes('window.__DINLIMINATE_'),false,'production module publishes a Dinliminate global: '+file);
+  assert.equal((source.match(/window\\.[A-Za-z_$][\\w$]*\\s*=/g)||[]).length,0,'production module assigns a window global: '+file);
+}
+const storeSource=read('src/state/store.js');
+assert.match(storeSource,/export const store=Object\.freeze\(\{/,'store module must export the central store');
+assert.match(storeSource,/get\(key\)/,'central store must expose get');
+assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
+assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
+assert.ok(read('index.html').includes('<script type="module" src="./src/main.js?v='+build+'"></script>'),'production entry must be native ESM');
+
 assert.ok(Number.isInteger(build)&&build>0,'release build must be a positive integer');
 assert.match(String(release.buildDate||''),/^\d{4}-\d{2}-\d{2}$/,'release build date must be YYYY-MM-DD');
 assert.equal(releaseManifest.build,build,'release-manifest build must match app-release build');
