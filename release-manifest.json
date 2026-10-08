@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1240,
-  "sourceBranch": "fix/cp1240-unsplash-meal-photo",
+  "build": 1241,
+  "sourceBranch": "fix/cp1241-overlap-next-swipe",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1240",
+  "checkpoint": "CP1241",
   "deploymentTrigger": "release/cp1195-meal-photo-refresh",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
@@ -23,8 +23,8 @@
   "automatedRC": "single current-build release gate; checkpoint smoke coverage; syntax/security/cache consistency; deployment deliberately deferred",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1240 Chicken Pot Pie free-Unsplash photo refresh + CP1239 atomic full-flight swipe exit",
+  "currentBaseline": "CP1241 overlap next-card input handoff + CP1240 Chicken Pot Pie free-Unsplash photo refresh + CP1239 atomic full-flight swipe exit",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; 11 requested meal photos refreshed with exact dish matches where verified",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
-  "swipeAudit": "CP1239-atomic-full-flight-from-exact-release-point"
+  "swipeAudit": "CP1241-overlap-next-card-input-handoff"
 }
