@@ -42,7 +42,8 @@ queueMicrotask(()=>$('appConfirmCancel')?.focus());
 }
 
 
-import { state as S } from '../state/store.js';
+import { store } from '../state/store.js';
+const S = store.get();
 import { itemNote, setItemNote, saveItemNotes } from '../state/storage.js';
 const modalDeps=Object.create(null);
 let mealTimesFor, restaurantFallbackImage, imageProxyUrl, mealImageUrl, mealPhotoList, foodPhoto, foodPhotoFallback, hydrateMealPhotoGallery, restaurantWebsitePresentation, hydrateRestaurantWebsite, restaurantPhoneSearchUrl, restaurantDirectionsUrl, bindImageFallback, swapImageWhenReady, phoneHref, show, foodHideItem, HUNGRY_IMAGE, FINAL_FOOD_IMAGE, FINAL_RESTAURANT_IMAGE;
