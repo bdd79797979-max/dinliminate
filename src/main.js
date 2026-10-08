@@ -1419,6 +1419,6 @@ export { HISTORY_KEY };
 export { RESTAURANT_PHOTO_PREFETCH_COUNT, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE };
 
 
-export { foodQuickImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal, readImageFile };
+export { foodQuickImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal };
 
 
