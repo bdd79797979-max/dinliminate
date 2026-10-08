@@ -1408,6 +1408,26 @@ function show(screen) {
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 S.screen = screen;
+if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&tutorialState.active){
+  const tourScreen=['home','food','restaurant','winner'].includes(screen);
+  if(tourScreen){
+    const steps=tutorialStepsForScreen(screen);
+    if(steps.length){
+      tutorialState.token++;
+      tutorialState.screen=screen;
+      tutorialState.steps=steps;
+      tutorialState.index=0;
+      tutorialState.awaitingAction=!!steps[0]?.action;
+      document.body.classList.add('tutorial-mode-on');
+      ensureTutorialUI();
+      window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{
+        if(tutorialState.active&&tutorialState.screen===screen&&S.screen===screen)renderTutorialStep();
+      }));
+    }
+  }else{
+    tutorialHideOverlay();
+  }
+}
 try{localStorage.setItem('dinliminate.start-screen',String(screen));}catch{}
 document.documentElement.classList.remove('dinliminate-start-food','dinliminate-start-restaurant','dinliminate-start-winner','dinliminate-start-family');
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
@@ -1735,7 +1755,6 @@ function bindTutorialUI(){
  }
  window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
  window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
- window.addEventListener('hashchange',()=>{}, {passive:true});
 }
 
 bindTutorialUI();
