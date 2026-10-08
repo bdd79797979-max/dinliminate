@@ -4,7 +4,8 @@ import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { recordHistory } from '../history/index.js';
 import { triggerSwipeHaptic } from '../swipe/index.js';
-import { imageProxyUrl, mealImageUrl, foodPhoto, foodPhotoFallback, hydrateRestaurantPhoto, show, familyHideWinnerMeta, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { imageProxyUrl, mealImageUrl, show, familyHideWinnerMeta, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { foodPhoto, foodPhotoFallback } from '../meals/index.js';
 import { bindRestaurantPhotoPinch } from '../swipe/index.js';
 import { restaurantFallbackImage, dedupeRestaurantPool, restaurantHidden, restaurantCategory, restaurantQuickMatches, restaurantMatchesQuery } from '../restaurants/index.js';
 

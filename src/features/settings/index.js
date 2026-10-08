@@ -6,7 +6,8 @@ import { appToast, appConfirm, openModal } from '../../ui/modal.js';
 import { save } from '../../state/storage.js';
 import { buildFood, foodQuick, mealTimeNames } from '../meals/index.js';
 import { readHistory } from '../history/index.js';
-import { imageProxyUrl, home, familySessionClear, stopFamilyLobbyPolling } from '../../main.js';
+import { imageProxyUrl, home } from '../../main.js';
+import { familySessionClear, stopFamilyLobbyPolling } from '../family/index.js';
 
 function settingsActionButton(id,icon,title,note,extraClass=''){
  return '<button class="settings-action '+extraClass+'" id="'+id+'" type="button"><span class="settings-action-icon" aria-hidden="true">'+icon+'</span><span class="settings-action-copy"><b>'+title+'</b><small>'+note+'</small></span><span class="settings-action-chevron" aria-hidden="true">›</span></button>';
