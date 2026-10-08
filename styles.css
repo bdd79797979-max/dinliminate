@@ -10305,17 +10305,17 @@ body:has(.app.home-active)::after{
   z-index:35;
 }
 .app.home-active #home #foodStart .home-choice-content{
-  transform:translate(-5px,-1px)!important;
+  transform:translate(-5px,0)!important;
 }
 .app.home-active #home #restStart .home-choice-content{
-  transform:translate(3px,-1px)!important;
+  transform:translate(3px,0)!important;
 }
 @media(max-width:390px){
   .app.home-active #home #foodStart .home-choice-content{
-    transform:translate(-3px,-1px)!important;
+    transform:translate(-3px,0)!important;
   }
   .app.home-active #home #restStart .home-choice-content{
-    transform:translate(2px,-1px)!important;
+    transform:translate(2px,0)!important;
   }
 }
 
