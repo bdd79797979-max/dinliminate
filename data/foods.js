@@ -3407,7 +3407,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/33650321/pexels-photo-33650321.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "image": "https://images.pexels.com/photos/8588846/pexels-photo-8588846.jpeg?auto=compress&cs=tinysrgb&w=1600",
     "ingredients": [
       "enriched wheat flour",
       "sugar",
