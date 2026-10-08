@@ -207,7 +207,7 @@ html:root .decision-tools{align-items:center;justify-content:flex-end;gap:6px;he
 }
 html:root .choose-card-action{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;border-radius:50%;display:inline-grid;place-items:center;background:#151515;color:#d7bd7b;border:1px solid #4a4133;box-shadow:0 6px 14px #0007;font-size:15px;font-weight:900;line-height:1}
 html:root .choose-card-action:active{transform:scale(.93)}
-html:root @media(max-width:600px){.decision-screen{
+@media(max-width:600px){.decision-screen{
     min-height:0;}
   .decision-screen .stage,
   .restaurant .rest-stage{
@@ -219,13 +219,15 @@ html:root @media(max-width:600px){.decision-screen{
   #restaurant .restaurant-card-stack>.card{
     max-height:min(60svh,calc(100svh - 285px));}
   .swipe-actions{
-    flex:0 0 auto;margin-bottom:max(4px,env(safe-area-inset-bottom));html,body{height:100%;background:#090909}
+    flex:0 0 auto;margin-bottom:max(4px,env(safe-area-inset-bottom));}
+html,body{height:100%;background:#090909}
   .app{
     height:100dvh;padding-bottom:0;}
   .decision-screen{
     height:100%;}
   .swipe-actions{
-    margin-bottom:max(4px,env(safe-area-inset-bottom));#food,
+    margin-bottom:max(4px,env(safe-area-inset-bottom));}
+#food,
   #restaurant{
     overflow-x:hidden;}
   #food .stage,
@@ -313,7 +315,8 @@ html:root .utility-modal{width:min(94vw,520px);border-radius:26px;background:rad
 @media(max-width:390px){
 html:root .utility-modal{width:min(95vw,520px);border-radius:24px;top:calc(env(safe-area-inset-top) + 62px);max-height:calc(100dvh - env(safe-area-inset-top) - 76px)}
 }
-html:root @media(max-width:430px){#restaurant .location-main #address,
+}
+@media(max-width:430px){#restaurant .location-main #address,
   #restaurant .restaurant-search-box input{
     font-size:16px;-webkit-text-size-adjust:100%;}
   #restaurant .location-main{
@@ -387,7 +390,8 @@ html:root #manageFoodsModal .row-state.is-deleted{color:#d09d95}
 .custom-qc-upload{width:32px;height:29px}
 .custom-qc-delete{width:27px;height:29px}
 }
-html:root @media(min-width:391px){.unified-swipe-actions .round-cut,
+}
+@media(min-width:391px){.unified-swipe-actions .round-cut,
   .unified-swipe-actions .round-maybe{
     width:68px;height:68px;min-width:68px;min-height:68px;}
   .unified-swipe-actions .round-cut span,
@@ -518,7 +522,8 @@ html:root .canonical-maybe-control>span{height:19px;padding:0 4px}
 html:root .canonical-maybe-control{min-width:80px;height:24px;min-height:24px;padding:2px;font-size:8.4px}
 html:root .canonical-maybe-control>span{height:18px;padding:0 3px}
 }
-html:root @media only screen and (max-width:1199px){html,
+}
+@media only screen and (max-width:1199px){html,
   body{
     width:100%;}
 
@@ -552,19 +557,22 @@ html:root @media only screen and (max-width:1199px){html,
   .location-permission-modal,
   .location-permission-bg,
   #tutorialLayer{
-    max-width:100vw;html,body{
+    max-width:100vw;}
+html,body{
     position:fixed;}
   .app{
     position:fixed;inset:0;width:100%;min-width:100%;height:100dvh;min-height:100dvh;max-height:100dvh;margin:0;padding:0;overflow:hidden;}
   .app-topbar,
   .screen{
-    width:100%;max-width:none;.app > .screen,
+    width:100%;max-width:none;}
+.app > .screen,
   .app > .screen > *{
     max-width:none}
-html:root \n\n \n.canonical-maybe-control{opacity:1}
-html:root \n.canonical-maybe-control:not(.has-maybes){opacity:1}
-html:root \n.canonical-maybe-control:disabled{opacity:1;color:inherit;cursor:pointer}
-html:root @media only screen and (max-width:600px){.app.home-active{
+html:root  .canonical-maybe-control{opacity:1}
+html:root .canonical-maybe-control:not(.has-maybes){opacity:1}
+html:root .canonical-maybe-control:disabled{opacity:1;color:inherit;cursor:pointer}
+}
+@media only screen and (max-width:600px){.app.home-active{
     inset:0;left:0;right:0;width:100vw;margin:0;transform:none;}
 
   .app.home-active #home{
@@ -584,4 +592,6 @@ html:root .unified-swipe-actions .round-maybe.is-pressed{box-shadow:0 8px 24px #
 0%{transform:scale(.88);opacity:.55}
 60%{transform:scale(1.12);opacity:1}
 100%{transform:scale(1);opacity:1}
+}
+
 }

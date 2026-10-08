@@ -43,6 +43,11 @@ const imageHosts=read('api/_lib/imageHosts.js');
 const e2e=read('tests/e2e/behavior.spec.mjs');
 const vercel=read('vercel.json');
 const build=Number(release.build);
+const styleFiles=['tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css'];
+for(const file of styleFiles){const css=read(file);let depth=0;for(const ch of css){if(ch==='{')depth++;else if(ch==='}')depth--;};assert.equal(depth,0,'CSS braces must balance: '+file);assert.equal(css.includes('!important'),false,'CSS must not contain !important: '+file);}
+for(const file of styleFiles)assert.ok(index.includes('./'+file+'?v='+build),'index.html missing stylesheet: '+file);
+for(const file of styleFiles)assert.ok(sw.includes('./'+file+'?v='+build),'sw.js missing stylesheet: '+file);
+assert.equal(fs.existsSync(path.join(root,'styles.css')),false,'legacy monolithic stylesheet must be removed');
 
 const targetModulePaths=[
   'src/main.js',
