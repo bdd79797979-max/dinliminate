@@ -10562,3 +10562,35 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 /* CP1236 — enlarge Restaurant card location + distance by 50%; do not change card geometry. */
 #restaurant .restaurant-card-location-distance{font-size:13.5px!important;line-height:1.35!important;}
 @media(max-width:390px){#restaurant .restaurant-card-location-distance{font-size:13.5px!important;line-height:1.35!important;}}
+
+
+/* CP1252 — unified A/B/C swipe deck: B is painted underneath A; C stays prepared behind B. */
+.swipe-card-stack>.deck-third-card,
+.restaurant-card-stack>.deck-third-card{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  border:0;
+  visibility:hidden;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
+.swipe-card-stack>.deck-third-card{z-index:0}
+.swipe-card-stack>#foodNextCard,
+.restaurant-card-stack>#restaurantNextCard{
+  z-index:1;
+  pointer-events:none;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
+.swipe-card-stack>#foodCard,
+.restaurant-card-stack>#restaurantCard{
+  z-index:2;
+}
+.deck-third-card .card-copy,
+#foodNextCard .card-copy,
+#restaurantNextCard .card-copy{
+  pointer-events:none;
+}
