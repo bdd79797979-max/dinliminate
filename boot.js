@@ -16,10 +16,10 @@ try {
   }, {capture:true});
 })();
 try {
-  const startRoute=String(localStorage.getItem('dinliminate.start-screen')||'').trim();
+  const startRoute=String(localStorage.getItem('dinliminate:v1')||'').trim();
   let savedRoute='';
   try{
-    const saved=JSON.parse(localStorage.getItem('dinliminate.clean.cp1')||'null');
+    const saved=JSON.parse(localStorage.getItem('dinliminate:v1')||'null');
     savedRoute=String(saved?.screen||'').trim();
   }catch(error){console.error('Dinliminate error',error)}
   const route=(['food','restaurant','winner','family'].includes(startRoute)

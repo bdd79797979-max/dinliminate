@@ -39,6 +39,7 @@ const manifest=JSON.parse(read('manifest.webmanifest'));
 const index=read('index.html');
 const sw=read('sw.js');
 const main=read('src/main.js');
+const boot=read('boot.js');
 const imageHosts=read('api/_lib/imageHosts.js');
 const e2e=read('tests/e2e/behavior.spec.mjs');
 const vercel=read('vercel.json');
@@ -113,6 +114,8 @@ assert.ok(main.includes("import RESTAURANT_TAXONOMY from '../data/restaurant-tax
 assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
 assert.equal(main.includes('function diagnosisMiles'),false,'production main must not contain diagnostics');
 assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production main must not contain empty catches');
+assert.equal(boot.includes('dinliminate.clean.cp1'),false,'boot must not read legacy CP1 storage');
+assert.equal(boot.includes('dinliminate.start-screen'),false,'boot must not read legacy start-screen storage');
 assert.equal(main.includes('localStorage.'),false,'production main must not persist localStorage directly');
 assert.equal(fs.existsSync(path.join(root,'styles.css')),false,'legacy monolithic stylesheet must be removed');
 assert.ok(fs.existsSync(path.join(root,'dev','diagnostics','index.html')),'development diagnostics must be outside production app');
