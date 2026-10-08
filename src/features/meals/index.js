@@ -3,7 +3,7 @@ import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { appToast, appConfirm } from '../../ui/modal.js';
 import { save, getStoredPhoto, putStoredPhoto, deleteStoredPhoto, storeMealPhotoSet } from '../../state/storage.js';
-import { foodQuickImage, bindImageFallbackAttrs, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, openModal, readImageFile } from '../../main.js';
+import { foodQuickImage, bindImageFallbackAttrs, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, readImageFile } from '../../main.js';
 import { drawFood } from '../swipe/index.js';
 
 function ensureMealTimeSettings(){
