@@ -9,9 +9,14 @@ import { imageProxyUrl, mealImageUrl } from '../../api/client.js';
 import { dismissSwipeHint, maybeShowInCardSwipeCoach, stageSwipePreview, waitForVisualImage, bindRestaurantPhotoPinch } from '../swipe/index.js';
 import { renderMaybeDeckToggle, bindMaybeDeckToggle, renderRestaurantHours, bindRestaurantHours, renderQuickCutsCollapse, bindQuickCutsCollapse, mealTimesFor, ensureMealTimeSettings, mealTimeCatalog, mealTimeOptions, mealTimeNames, syncMealTimeReferences, foodBasePool, buildFood, renderMealTimeCuts, foodQuick } from '../meals/index.js';
 import { bindSwipeCard, getSwipeMachine } from '../swipe/index.js';
-import { openModal } from '../../ui/modal.js';
+import { openModal, detailsSheet, appConfirm } from '../../ui/modal.js';
+import { winner } from '../winner/index.js';
+import { familyEnterMaybes, familyPickSingle } from '../family/index.js';
+import { tutorialModeEnabled, tutorialState, tutorialEnterDecisionScreen, tutorialMarkChoose } from '../tutorial/index.js';
+import { normKey, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
 
 let restaurantBackBusy=false;
+const REST_QUICK=[...RESTAURANT_TAXONOMY.tags];
 const REST_QUICK_IMAGES = {
 'Fast Food':'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=85',
 Southern:'https://images.pexels.com/photos/2397401/pexels-photo-2397401.jpeg?auto=compress&cs=tinysrgb&w=900',
@@ -140,7 +145,7 @@ function dedupeRestaurantPool(rows){
   const name=restaurantNameFamily(row.name),address=restaurantAddressFamily(row.address||'');
   const phone=String(row.phone||'').replace(/\D/g,'').slice(-10),website=String(row.website||'').toLowerCase().replace(/^https?:\/\/(?:www\.)?/,'').replace(/\/$/,'');
   const lat=Number(row.lat),lon=Number(row.lon);
-  let match=out.find(x=>{
+  const match=out.find(x=>{
    const xn=restaurantNameFamily(x.name),xa=restaurantAddressFamily(x.address||'');
    const xp=String(x.phone||'').replace(/\D/g,'').slice(-10),xw=String(x.website||'').toLowerCase().replace(/^https?:\/\/(?:www\.)?/,'').replace(/\/$/,'');
    const dist=milesBetween(x.lat,x.lon,lat,lon);
@@ -331,7 +336,7 @@ function restaurantHoursState(row){
   const parseTime=(value,hint='')=>{
     const m=String(value||'').trim().toUpperCase().replace(/\s+/g,'').match(/^(\d{1,2})(?::(\d{2}))?(AM|PM)?$/);
     if(!m)return NaN;
-    let hour=Number(m[1]),mins=Number(m[2]||0),ampm=m[3]||hint;
+    let hour=Number(m[1]);const mins=Number(m[2]||0),ampm=m[3]||hint;
     if(mins>59)return NaN;
     if(ampm){
       if(hour<1||hour>12)return NaN;
@@ -364,7 +369,6 @@ function restaurantHoursState(row){
   for(const clause of clauses)collect(clause,day);
   const todayCount=intervals.length;
 
-  for(let i=todayCount;i<todayCount+clauses.length;i++){}
   const previousDay=(day+6)%7;
   const previousIntervals=[];
   const originalIntervals=intervals.length;
@@ -850,6 +854,7 @@ const deadline=setTimeout(()=>{timedOut=true;restaurantSearchController.abort()}
 clearSuggestions(); setFindBusy(true); $('status').textContent = 'Searching restaurants…';
 $('restStage')?.setAttribute('aria-busy','true');
 $('restStage')?.classList.add('is-searching');
+let replacingSearchTarget=false,sameLocationQuery=false;
 try {
 let loc = S.location;
 if (!loc) {
@@ -869,12 +874,12 @@ const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+
  const previousOrigin=S.restaurantSearchOrigin&&Number.isFinite(Number(S.restaurantSearchOrigin.lat))&&Number.isFinite(Number(S.restaurantSearchOrigin.lon))
    ? {lat:Number(S.restaurantSearchOrigin.lat),lon:Number(S.restaurantSearchOrigin.lon)}
    : null;
- const sameLocationQuery=!!previousOrigin
+ sameLocationQuery=!!previousOrigin
    && Math.abs(previousOrigin.lat-Number(loc.lat))<=0.0002
    && Math.abs(previousOrigin.lon-Number(loc.lon))<=0.0002
    && normalizeRestaurantSearch(String(S.restaurantSearchQuery||''))===normalizeRestaurantSearch(searchTerm);
  // CP1186: radius changes must never inherit a prior-radius pool.
- let replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
+ replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
  if(replacingSearchTarget&&!sameLocationQuery){
    clearDecisionHistory('restaurant');
    // CP1078: never leave the previous location/radius/query cards on screen
@@ -1265,6 +1270,63 @@ function closeRestaurantSearch(){
  drawRestaurants();
  save();
 }
+function bindRestaurantAddressInputs(){
+$('address').addEventListener('input', () => {
+  if(locationRequestActive){
+    locationRequestSeq++;
+    locationRequestActive=false;
+    setLocationBusy(false);
+  }
+  S.location=null;
+  S.locationSource='typed';
+  S.restaurantSearchOrigin=null;
+  renderLocationSource();
+  suggestAddresses();
+});
+$('address').addEventListener('focus', () => {
+  const input=$('address');
+  if(!input)return;
+  if(locationRequestActive){
+    locationRequestSeq++;
+    locationRequestActive=false;
+    setLocationBusy(false);
+  }
+  const current=input.value.trim();
+  if(current){
+    invalidateAddressSuggestions();
+    S.location=null;
+    S.locationSource='typed';
+    S.restaurantSearchOrigin=null;
+    input.value='';
+    renderLocationSource();
+    $('status').textContent='Enter an address to search.';
+  }else if(input.value.trim().length>=2){
+    suggestAddresses();
+  }
+});
+$('address').addEventListener('keydown', e => {
+if(e.key==='ArrowDown'){ if(moveSuggestion(1)){e.preventDefault();return;} }
+if(e.key==='ArrowUp'){ if(moveSuggestion(-1)){e.preventDefault();return;} }
+if(e.key==='Enter'){
+  const opts=[...document.querySelectorAll('#suggestionsBox [data-suggestion]')];
+  if(suggestionIndex>=0&&opts[suggestionIndex]){
+    e.preventDefault();
+    chooseAddressSuggestion(suggestionIndex);
+    return;
+  }
+  if(opts.length&&!addressLooksComplete($('address').value)){
+    e.preventDefault();
+    chooseAddressSuggestion(0);
+    return;
+  }
+  e.preventDefault();
+  invalidateAddressSuggestions();
+  searchRestaurants();
+}
+if(e.key==='Escape'){ e.preventDefault(); invalidateAddressSuggestions(); }
+});
+}
+
 function bindRestaurantTools(){
  bindRestaurantHours();
  const searchButton=$('restaurantSearchToggle');
@@ -1303,6 +1365,4 @@ function bindRestaurantTools(){
  };
  renderRestaurantSearchControl();
 }
-let celebrationHideTimer=0;
-
-export { milesBetween, restaurantAddressFamily, restaurantNameTokensUI, restaurantNameFamily, restaurantNameCoreTokensUI, restaurantNameCoreMatchUI, restaurantNameSimilarityUI, restaurantAddressKeyUI, restaurantAddressSimilarityUI, restaurantStreetFamily, addressHasStreetNumber, restaurantNameVariantMatchUI, restaurantPhotoQualityScore, dedupeRestaurantPool, restaurantCanonicalId, restaurantHidden, restaurantSearchText, restaurantIsFastFood, restaurantCuisineTags, restaurantCuisineEvidence, restaurantCategory, restaurantQuickMatches, restaurantCategorySearchMatches, restaurantSearchTermMatches, restaurantMatchesQuery, restaurantClockParts, restaurantHoursState, restaurantHoursMatches, restaurantPoolHourFiltered, restaurantChoiceIndex, restaurantPoolBase, restaurantPoolFiltered, updateRestaurantStatus, restaurantQuick, renderLocationSource, displayRestaurantLocationLabel, setLocation, renderFindButton, setFindBusy, setLocationBusy, requestBrowserPosition, locationMovedMiles, invalidateAddressSuggestions, addressLooksComplete, renderSuggestions, clearSuggestions, moveSuggestion, openRestaurant, restaurantBack, bindCardButton, bindRestaurantSwipe, scheduleRestaurantProviderSearch, renderRestaurantSearchControl, collapseRestaurantSearch, setRestaurantRefinePanel, closeRestaurantSearch, bindRestaurantTools, reverseLocationLabel, useLocation, maybeAutoRefreshRestaurantLocation, chooseAddressSuggestion, suggestAddresses, enrichRestaurantHoursForOpenNow, responseJson, fetchRestaurantEndpoint, searchRestaurants, drawRestaurants, restaurantCut, restaurantMaybe, restaurantHide };
+export { milesBetween, restaurantAddressFamily, restaurantNameTokensUI, restaurantNameFamily, restaurantNameCoreTokensUI, restaurantNameCoreMatchUI, restaurantNameSimilarityUI, restaurantAddressKeyUI, restaurantAddressSimilarityUI, restaurantStreetFamily, addressHasStreetNumber, restaurantNameVariantMatchUI, restaurantPhotoQualityScore, dedupeRestaurantPool, restaurantCanonicalId, restaurantHidden, restaurantSearchText, restaurantIsFastFood, restaurantCuisineTags, restaurantCuisineEvidence, restaurantCategory, restaurantQuickMatches, restaurantCategorySearchMatches, restaurantSearchTermMatches, restaurantMatchesQuery, restaurantClockParts, restaurantHoursState, restaurantHoursMatches, restaurantPoolHourFiltered, restaurantChoiceIndex, restaurantPoolBase, restaurantPoolFiltered, updateRestaurantStatus, restaurantQuick, renderLocationSource, displayRestaurantLocationLabel, setLocation, renderFindButton, setFindBusy, setLocationBusy, requestBrowserPosition, locationMovedMiles, invalidateAddressSuggestions, addressLooksComplete, renderSuggestions, clearSuggestions, moveSuggestion, openRestaurant, restaurantBack, bindCardButton, bindRestaurantSwipe, scheduleRestaurantProviderSearch, renderRestaurantSearchControl, collapseRestaurantSearch, setRestaurantRefinePanel, closeRestaurantSearch, bindRestaurantTools, reverseLocationLabel, useLocation, maybeAutoRefreshRestaurantLocation, chooseAddressSuggestion, suggestAddresses, enrichRestaurantHoursForOpenNow, responseJson, fetchRestaurantEndpoint, searchRestaurants, drawRestaurants, restaurantCut, restaurantMaybe, restaurantHide, bindRestaurantAddressInputs, restaurantHoursEnrichmentKey, restaurantHoursEnrichedAt };

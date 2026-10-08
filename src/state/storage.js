@@ -118,6 +118,19 @@ async function hydrateCustomPhotos(){
  }
  if(changed)save();
 }
+async function deleteStoredMealPhotos(id){
+ const target=String(id||'').trim();if(!target)return;
+ try{
+  const db=await openPhotoDB();
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction(PHOTO_STORE,'readwrite'),objectStore=tx.objectStore(PHOTO_STORE),req=objectStore.getAllKeys();
+   req.onsuccess=()=>{for(const rawKey of req.result||[]){const key=String(rawKey);if(key===target||key.startsWith(target+':photo:')){objectStore.delete(rawKey);storedPhotoIds.delete(key);}}};
+   req.onerror=()=>reject(req.error||new Error('Could not inspect stored meal photos'));
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('Could not delete stored meal photos'));tx.onabort=()=>reject(tx.error||new Error('Meal photo deletion was interrupted'));
+  });
+ }catch(error){console.error('Dinliminate storage error',error);}
+}
+
 function updateStorageIndicator() {
 const el=$('storageIndicator'); if(!el)return;
 el.classList.toggle('hidden', !S.storageWarning);
@@ -170,4 +183,4 @@ return false;
 const STORAGE_KEY='dinliminate:v1';
 const LEGACY_STORAGE_KEYS=Object.freeze(['dinliminate.clean.cp1','dinliminate.item.notes.v1','dinliminate.clean.history','dinliminate.family.v1','dinliminate.restaurant.websites.v1','dinliminate.start-screen','dinliminate.swipeHint.v4','dinliminate.swipeHint.v5']);
 function clearPersistedStorage(){try{localStorage.removeItem(STORAGE_KEY);LEGACY_STORAGE_KEYS.forEach(key=>localStorage.removeItem(key));return true;}catch(error){console.error('Dinliminate storage error',error);return false;}}
-export {STORAGE_KEY,LEGACY_STORAGE_KEYS,clearPersistedStorage,loadItemNotes,saveItemNotes,itemNoteKey,itemNote,setItemNote,openPhotoDB,putStoredPhoto,getStoredPhoto,deleteStoredPhoto,mealPhotoStorageKey,pruneMealPhotoKeys,storeMealPhotoSet,hydrateStoredMealPhotoList,hydrateCustomPhotos,updateStorageIndicator,migrateCustomPhotos,save};
+export {STORAGE_KEY,LEGACY_STORAGE_KEYS,PHOTO_STORE,storedPhotoIds,clearPersistedStorage,loadItemNotes,saveItemNotes,itemNoteKey,itemNote,setItemNote,openPhotoDB,putStoredPhoto,getStoredPhoto,deleteStoredPhoto,mealPhotoStorageKey,pruneMealPhotoKeys,storeMealPhotoSet,deleteStoredMealPhotos,hydrateStoredMealPhotoList,hydrateCustomPhotos,updateStorageIndicator,migrateCustomPhotos,save};

@@ -16,8 +16,8 @@ import { clearLegacySwipeInstructions, dismissSwipeHint, maybeShowInCardSwipeCoa
 import { ensureMealTimeSettings, mealTimeCatalog, mealTimeOptions, mealTimeNames, mealTimeDefinition, currentMealTimeName, syncMealTimeReferences, mealTimesFor, mealTimeFor, foodBasePool, foodPool, buildFood, setMaybeDeck, allChoiceRows, choiceDeckRows, maybeDeckRows, maybeDeckCount, allDeckCount, renderMaybeDeckToggle, bindMaybeDeckToggle, renderRestaurantHours, bindRestaurantHours, renderQuickCutsCollapse, bindQuickCutsCollapse, mealTimeFilterNames, normalizeMealTimeFilter, renderMealTimeCuts, bindMealTimeCuts, foodQuick, mealNameSimilarMatches, selectedMealTimesFromEditor, renderFoodEditorMealTimes, renameMealTimeInFoodEditor, addMealTimeInFoodEditor, moveMealTimeInFoodEditor, toggleMealTimeInFoodEditor, foodEditor, deletedFoodRows, restoreDeletedMeal, manageFoodsView } from './features/meals/index.js';
 import { familySessionRead, familySessionWrite, familySessionClear, familySetStatus, familyShowEntry, familyShowCreate, familyShowJoin, familyDisplayMemberList, familyEnsureNormalBar, familyNormalBar, familyDefaultDinnerTime, familyDinnerTargetIso, familyChooseNormalType, familyBuildNormalSnapshot, familyBeginNormalDecision, familyNormalStagePool, familyIsBrowseStage, familyBrowseSource, familyBrowseSubmitted, familyBrowseRender, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, familyRoundCopy, familySetDecisionAction, familySwipeInstruction, familySetWinnerMeta, familyHideWinnerMeta, familyShowNoWinner, familyResetCompareState, familyRestartFromNoWinner, familyRestartAfterWinner, familyContinueCompareRestaurant, familyNormalBack, familyDecisionBack, familyShowWinner, handleWinnerRestart, familyDismissWinner, familyRenderState, startFamilyLobbyPolling, stopFamilyLobbyPolling, familyBackFromMode, familyApi, familyStartRoundFromNormal, familyEnterMaybes, familyPickSingle, familyCreateCompareFinal, familyCreate, familyJoin, familyCopyCode, familyShareCode, familyOpen, familyEndDinner, familyLeave, familyRotateCode } from './features/family/index.js';
 import { settingsActionButton, settingsView, privacyView, exportHistoryPrint, exportPdfView, shareWinner, resetRound, resetRestoreView, copyAppUrl, addToPhoneFlow, shareApp, clearMealPhotoStorage, clearAllDinliminateStorage, updateAppFlow, resetAppDataFlow, systemRestoreFlow } from './features/settings/index.js';
-import { milesBetween, restaurantAddressFamily, restaurantNameTokensUI, restaurantNameFamily, restaurantNameCoreTokensUI, restaurantNameCoreMatchUI, restaurantNameSimilarityUI, restaurantAddressKeyUI, restaurantAddressSimilarityUI, restaurantStreetFamily, addressHasStreetNumber, restaurantNameVariantMatchUI, restaurantPhotoQualityScore, dedupeRestaurantPool, restaurantCanonicalId, restaurantHidden, restaurantSearchText, restaurantIsFastFood, restaurantCuisineTags, restaurantCuisineEvidence, restaurantCategory, restaurantQuickMatches, restaurantCategorySearchMatches, restaurantSearchTermMatches, restaurantMatchesQuery, restaurantClockParts, restaurantHoursState, restaurantHoursMatches, restaurantPoolHourFiltered, restaurantChoiceIndex, restaurantPoolBase, restaurantPoolFiltered, updateRestaurantStatus, restaurantQuick, renderLocationSource, displayRestaurantLocationLabel, setLocation, renderFindButton, setFindBusy, setLocationBusy, requestBrowserPosition, locationMovedMiles, invalidateAddressSuggestions, addressLooksComplete, renderSuggestions, clearSuggestions, moveSuggestion, openRestaurant, restaurantBack, bindCardButton, bindRestaurantSwipe, scheduleRestaurantProviderSearch, renderRestaurantSearchControl, collapseRestaurantSearch, setRestaurantRefinePanel, closeRestaurantSearch, bindRestaurantTools, reverseLocationLabel, useLocation, maybeAutoRefreshRestaurantLocation, chooseAddressSuggestion, suggestAddresses, enrichRestaurantHoursForOpenNow, responseJson, fetchRestaurantEndpoint, searchRestaurants, drawRestaurants, restaurantCut, restaurantMaybe, restaurantHide } from './features/restaurants/index.js';
-import { tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI, tutorialState } from './features/tutorial/index.js';
+import { milesBetween, restaurantAddressFamily, restaurantNameTokensUI, restaurantNameFamily, restaurantNameCoreTokensUI, restaurantNameCoreMatchUI, restaurantNameSimilarityUI, restaurantAddressKeyUI, restaurantAddressSimilarityUI, restaurantStreetFamily, addressHasStreetNumber, restaurantNameVariantMatchUI, restaurantPhotoQualityScore, dedupeRestaurantPool, restaurantCanonicalId, restaurantHidden, restaurantSearchText, restaurantIsFastFood, restaurantCuisineTags, restaurantCuisineEvidence, restaurantCategory, restaurantQuickMatches, restaurantCategorySearchMatches, restaurantSearchTermMatches, restaurantMatchesQuery, restaurantClockParts, restaurantHoursState, restaurantHoursMatches, restaurantPoolHourFiltered, restaurantChoiceIndex, restaurantPoolBase, restaurantPoolFiltered, updateRestaurantStatus, restaurantQuick, renderLocationSource, displayRestaurantLocationLabel, setLocation, renderFindButton, setFindBusy, setLocationBusy, requestBrowserPosition, locationMovedMiles, invalidateAddressSuggestions, addressLooksComplete, renderSuggestions, clearSuggestions, moveSuggestion, openRestaurant, restaurantBack, bindCardButton, bindRestaurantSwipe, scheduleRestaurantProviderSearch, renderRestaurantSearchControl, collapseRestaurantSearch, setRestaurantRefinePanel, closeRestaurantSearch, bindRestaurantTools, reverseLocationLabel, useLocation, maybeAutoRefreshRestaurantLocation, chooseAddressSuggestion, suggestAddresses, enrichRestaurantHoursForOpenNow, responseJson, fetchRestaurantEndpoint, searchRestaurants, drawRestaurants, restaurantCut, restaurantMaybe, restaurantHide, bindRestaurantAddressInputs } from './features/restaurants/index.js';
+import { tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI, tutorialInvalidateTransition, tutorialState } from './features/tutorial/index.js';
 
 'use strict';
 // CP954 restaurant first-paint restoration: exact/direct venue photos win before generic fallback.
@@ -437,6 +437,18 @@ const restaurantPhotoInflight=new Map();
 const restaurantPhotoCache=new Map();
 const restaurantPhotoMissCache=new Map();
 const RESTAURANT_PHOTO_MEMORY_CACHE_MAX=18;
+function resetRestaurantPhotoCaches(){
+ for(const data of restaurantPhotoCache.values()){
+  if(String(data?.url||'').startsWith('blob:')){try{URL.revokeObjectURL(data.url);}catch(error){console.error('Dinliminate cache cleanup error',error);}}
+ }
+ restaurantWebsiteCache.clear();
+ restaurantWebsiteInflight.clear();
+ restaurantPhotoCache.clear();
+ restaurantPhotoMissCache.clear();
+ restaurantPhotoInflight.clear();
+ restaurantPhotoStoragePromise=null;
+}
+
 function trimRestaurantPhotoMemoryCache(){
  if(restaurantPhotoCache.size<=RESTAURANT_PHOTO_MEMORY_CACHE_MAX)return;
  const protectedKeys=new Set(
@@ -1229,60 +1241,7 @@ $('radius').addEventListener('change', event => {
  if(!hasLocation){$('status').textContent='Enter an address or use your location.';renderFindButton();return;}
  searchRestaurants({radius:selectedRadius});
 });
-$('address').addEventListener('input', () => {
-  if(locationRequestActive){
-    locationRequestSeq++;
-    locationRequestActive=false;
-    setLocationBusy(false);
-  }
-  S.location=null;
-  S.locationSource='typed';
-  S.restaurantSearchOrigin=null;
-  renderLocationSource();
-  suggestAddresses();
-});
-$('address').addEventListener('focus', () => {
-  const input=$('address');
-  if(!input)return;
-  if(locationRequestActive){
-    locationRequestSeq++;
-    locationRequestActive=false;
-    setLocationBusy(false);
-  }
-  const current=input.value.trim();
-  if(current){
-    invalidateAddressSuggestions();
-    S.location=null;
-    S.locationSource='typed';
-    S.restaurantSearchOrigin=null;
-    input.value='';
-    renderLocationSource();
-    $('status').textContent='Enter an address to search.';
-  }else if(input.value.trim().length>=2){
-    suggestAddresses();
-  }
-});
-$('address').addEventListener('keydown', e => {
-if(e.key==='ArrowDown'){ if(moveSuggestion(1)){e.preventDefault();return;} }
-if(e.key==='ArrowUp'){ if(moveSuggestion(-1)){e.preventDefault();return;} }
-if(e.key==='Enter'){
-  const opts=[...document.querySelectorAll('#suggestionsBox [data-suggestion]')];
-  if(suggestionIndex>=0&&opts[suggestionIndex]){
-    e.preventDefault();
-    chooseAddressSuggestion(suggestionIndex);
-    return;
-  }
-  if(opts.length&&!addressLooksComplete($('address').value)){
-    e.preventDefault();
-    chooseAddressSuggestion(0);
-    return;
-  }
-  e.preventDefault();
-  invalidateAddressSuggestions();
-  searchRestaurants();
-}
-if(e.key==='Escape'){ e.preventDefault(); invalidateAddressSuggestions(); }
-});
+bindRestaurantAddressInputs();
 bindRestaurantTools();
 $('winnerBackTop')?.addEventListener('click', () => S.familyNormalMode==='winner' ? familyDismissWinner() : home());
 $('hungryWheelSpin').onclick = (event) => {
@@ -1378,6 +1337,6 @@ export { HISTORY_KEY };
 export { RESTAURANT_PHOTO_PREFETCH_COUNT, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE };
 
 
-export { foodQuickImage, foodPhoto, foodPhotoFallback, restaurantFallbackImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal, home, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, markMealImageUnavailable, loadMealPhotoCandidates, ensureMealCardPhotoPager, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, previewDecisionCount, familyHideWinnerMeta };
+export { foodQuickImage, foodPhoto, foodPhotoFallback, restaurantFallbackImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal, home, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, markMealImageUnavailable, loadMealPhotoCandidates, ensureMealCardPhotoPager, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, previewDecisionCount, familyHideWinnerMeta, APP_VERSION, APP_BUILD, APP_BUILD_DATE, DEFAULT_FOOD_IMAGE, FINAL_FOOD_IMAGE, FOOD_QUICK, DEFAULT_MEAL_TIME_DEFS, normKey, allFoods, foodQuickLabels, getDefaultFoods, MEAL_AUTOFILL_ENABLED, removeFoodOverlays, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, restaurantWebsiteCache, restaurantWebsiteInflight, restaurantPhotoCache, restaurantPhotoMissCache, restaurantPhotoInflight, resetRestaurantPhotoCaches, bindMealPhotoCountControls, hydrateMealPhotoGallery, navigateFromDrawer };
 
 
