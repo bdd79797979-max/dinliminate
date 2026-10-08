@@ -1,3 +1,18 @@
+import { state as S } from './store.js';
+import { $ } from '../ui/dom.js';
+
+let deps={
+  restaurantCanonicalId:item=>String(item?.canonicalId||item?.id||'unknown'),
+  allFoods:()=>[],
+  normKey:value=>String(value||'').trim().toLowerCase(),
+  mealPhotoList:item=>Array.isArray(item?.images)?item.images.filter(Boolean):(item?.image?[item.image]:[]),
+  dedupeMealPhotos:photos=>Array.isArray(photos)?[...new Set(photos.filter(Boolean))]:[],
+  DEFAULT_FOOD_IMAGE:'',
+  STORAGE_VERSION:7,
+  KEY:'dinliminate.clean.cp1'
+};
+export function configureStorage(next={}){ deps={...deps,...next}; }
+
 const ITEM_NOTES_KEY = 'dinliminate.item.notes.v1';
 function loadItemNotes(){
  try{
@@ -166,3 +181,6 @@ S.saved=true;
 return false;
 }
 }
+
+
+export { loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos, save };

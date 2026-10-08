@@ -323,4 +323,4 @@ const body='<div class="detail-unified detail-meal">'+detailHero+photoCredit+'<d
 
 
 
-export { openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet };
+export { appToast, appConfirm, openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet };
