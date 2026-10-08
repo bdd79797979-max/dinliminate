@@ -1,12 +1,12 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1251,
-  "sourceBranch": "fix/cp1251-tutorial-home-choice",
-  "checkpoint": "CP1251",
+  "build": 1252,
+  "sourceBranch": "fix/cp1252-unified-abc-swipe",
+  "checkpoint": "CP1252",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP1241-overlap-next-card-input-handoff",
+  "swipeAudit": "CP1252-unified-painted-ABC-swipe-stack",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "official-first-meal-photo > exact meal backup > emergency Dinliminate food image",
   "photoPolicy": "existing verified quality photo > Google Places > official restaurant > exact venue > OSM > no card",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1251 tutorial Home/Restaurant target + tap handling + CP1250 waiting-card visibility guard + CP1249 commit-time promotion + CP1248 no-gap + CP1247 tutorial fix + CP1245 meal/catalog + CP1244 decision lock",
+  "currentBaseline": "CP1252 unified A/B/C swipe stack + CP1251 tutorial/home choice + CP1250 waiting-card guard + CP1249 commit-time promotion + CP1248 no-gap + CP1247 tutorial + CP1245 meal/catalog + CP1244 decision lock",
   "mealImageSystem": "CP1237 tested free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -40,6 +40,6 @@
   "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe",
   "photoRefresh": "CP1245-Unsplash-refresh-meatloaf-southern-vegetables-chicken-dumplings-beef-soup; retain stronger existing PBJ/Biscuits-Gravy/White-Chicken-Chili where no clearly better free Unsplash match",
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
-  "swipeHandoffFix": "CP1250-never-hide-real-waiting-card-when-overlap-clone-is-created",
+  "swipeHandoffFix": "CP1252-remove-overlap-clone-and-visual-bridge; active A exits while painted B is underneath; C stays prepared behind B",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture"
 }
