@@ -468,4 +468,4 @@ bindTutorialUI();
 
 
 
-export { tutorialState, tutorialModeEnabled, tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI };
+export { tutorialState, tutorialInvalidateTransition, tutorialModeEnabled, tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI };
