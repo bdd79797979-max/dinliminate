@@ -4,7 +4,8 @@ import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { appToast, appConfirm } from '../../ui/modal.js';
 import { save, getStoredPhoto, putStoredPhoto, deleteStoredPhoto, storeMealPhotoSet } from '../../state/storage.js';
-import { foodQuickImage, bindImageFallbackAttrs, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show } from '../../main.js';
+import { foodQuickImage, bindImageFallbackAttrs, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show } from '../../main.js';
+import { imageProxyUrl, mealImageUrl } from '../../api/client.js';
 import { readImageFile } from '../../ui/dom.js';
 import { drawFood } from '../swipe/index.js';
 

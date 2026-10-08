@@ -60,8 +60,6 @@ Potato:'https://images.pexels.com/photos/273825/pexels-photo-273825.jpeg?auto=co
 
 // State is owned by the application store; feature code accesses it through the imported state proxy.
 
-const IMAGE_PROXY_HOSTS=new Set(['images.pexels.com','images.unsplash.com','cdn.pixabay.com','commons.wikimedia.org','upload.wikimedia.org','thumb.wikimedia.org','static.wixstatic.com','static.spotapps.co','www.goodnes.com','hips.hearstapps.com','calliesbiscuits.com','vinovoss.com','www.southernliving.com','southernbite.com','snapcalorie-webflow-website.s3.us-east-2.amazonaws.com','butterhearth.com','slicelife.imgix.net','cdn.shopify.com','savouryflavor.com','resizer.otstatic.com','kookycrunch.com','cdn.apartmenttherapy.info','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.africanbites.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','www.sugardale.com','myhomemaderecipe.com','www.finedininglovers.com']);
-
 const BUILTIN_MEAL_IMAGE_HOSTS=new Set(['images.pexels.com','images.unsplash.com','cdn.pixabay.com']);
 function isBuiltInMeal(item){
  const id=String(item?.id||'');
