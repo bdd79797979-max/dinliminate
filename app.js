@@ -1501,9 +1501,9 @@ function tutorialStepsForScreen(screen){
  ];
  if(screen==='food')return[
   {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
-  {target:'#foodCut',title:'CUT',body:'Remove the current meal from this round.'},
-  {target:'#foodMaybe',title:'MAYBE',body:'Keep the meal in consideration for your final choice.'},
-  {target:'#foodBack',title:'BACK',body:'Undo your most recent meal decision and return to the previous card.'},
+  {target:'#foodCut',title:'CUT',body:'Remove the current meal from this round.',action:'perform'},
+  {target:'#foodMaybe',title:'MAYBE',body:'Keep the meal in consideration for your final choice.',action:'perform'},
+  {target:'#foodBack',title:'BACK',body:'Undo your most recent meal decision and return to the previous card.',action:'perform'},
   {target:'#foodChoose',title:'CHOOSE',body:'Choose the current meal immediately and see your winner.',action:'choose'},
   {target:'#foodDetails',title:'DETAILS',body:'Open the meal details, including nutrition, ingredients, notes, and photos.'},
   {target:'#foodMealTimeToggle',title:'MEAL TIMES',body:'Show the Meal Times filters to narrow the deck to Breakfast, Lunch / Dinner, Snacks / Desserts, or your custom meal times.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
@@ -1518,9 +1518,9 @@ function tutorialStepsForScreen(screen){
   {target:'#find',title:'FIND RESTAURANTS',body:'Run the restaurant search using your selected location, radius, and filters.'},
   {target:'#radius',title:'RADIUS',body:'Choose how far from the search location to look: 1, 3, 5, 10, 25, 50, or 100 miles.'},
   {target:'#restaurantCard',title:'RESTAURANT CARD',body:'This is the restaurant you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
-  {target:'#restCut',title:'CUT',body:'Remove the current restaurant from this round.'},
-  {target:'#restMaybe',title:'MAYBE',body:'Keep the restaurant in consideration for your final choice.'},
-  {target:'#restBack',title:'BACK',body:'Undo your most recent restaurant decision and return to the previous card.'},
+  {target:'#restCut',title:'CUT',body:'Remove the current restaurant from this round.',action:'perform'},
+  {target:'#restMaybe',title:'MAYBE',body:'Keep the restaurant in consideration for your final choice.',action:'perform'},
+  {target:'#restBack',title:'BACK',body:'Undo your most recent restaurant decision and return to the previous card.',action:'perform'},
   {target:'#restChoose',title:'CHOOSE',body:'Choose the current restaurant immediately and see your winner.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'SEARCH',body:'Open Search to look for a specific restaurant or cuisine.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'CUISINE',body:'Open Cuisine to narrow the restaurant deck by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
@@ -1733,6 +1733,14 @@ function tutorialAdvanceFromTarget(event,step){
   else startFood({tutorialResumeIndex:0});
   return true;
  }
+ if(step?.action==='perform'){
+  window.setTimeout(()=>{
+   if(tutorialModeEnabled()&&tutorialState.active&&tutorialState.index>=0){
+    advanceTutorial();
+   }
+  },180);
+  return true;
+ }
  if(step?.action==='choose'){
   advanceTutorial();
   return true;
@@ -1790,7 +1798,9 @@ function tutorialHandlePointerCancel(event){
  event.stopImmediatePropagation();
  return true;
 }
+let tutorialDispatchingAction=false;
 function tutorialHighlightedTargetClick(event){
+ if(tutorialDispatchingAction)return;
  if(tutorialSuppressClick){
   const suppressed=tutorialSuppressClick;
   if(Date.now()<=suppressed.expires&&suppressed.target?.isConnected&&
@@ -1806,6 +1816,15 @@ function tutorialHighlightedTargetClick(event){
  const step=tutorialState.steps[tutorialState.index];
  const target=tutorialCurrentTargetForEvent(event,step);
  if(!target)return;
+ if(step?.action==='perform'){
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  tutorialDispatchingAction=true;
+  try{ target.click(); }catch{}
+  tutorialDispatchingAction=false;
+  tutorialAdvanceFromTarget(event,step);
+  return;
+ }
  event.preventDefault();
  event.stopImmediatePropagation();
  tutorialAdvanceFromTarget(event,step);
