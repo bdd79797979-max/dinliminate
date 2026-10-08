@@ -7,6 +7,12 @@ import { openRestaurant, restaurantPoolFiltered, drawRestaurants } from '../rest
 import { drawFood } from '../swipe/index.js';
 import { winner } from '../winner/index.js';
 import { save } from '../../state/storage.js';
+import { foodQuick } from '../meals/index.js';
+import { restaurantQuick } from '../restaurants/index.js';
+import { tutorialWinnerRestart } from '../tutorial/index.js';
+import { resetRound } from '../settings/index.js';
+import { appConfirm } from '../../ui/modal.js';
+import { navigateFromDrawer } from '../../main.js';
 
 
 function familySessionRead(){const d=S.familySession;return d&&typeof d.token==='string'&&d.token?d:null;}
@@ -145,7 +151,7 @@ function familyShowWinner(round){
  const item=round?.winnerItem,id=String(round?.id||'');if(!item)return;if(S.familyNormalMode==='winner'&&S.familyNormalRoundId===id&&S.screen==='winner')return;
  const cmp=round?.snapshot?.compareBoth||null;S.familyActiveData={...(S.familyActiveData||{}),activeRound:round,lastCompletedRound:round};S.familyNormalMode='winner';S.familyNormalRoundId=id;S.familyDecisionType=round.decisionType==='restaurant'?'restaurant':'meal';S.familyNormalAutoResume=true;winner(item,S.familyDecisionType,{familyRoundId:id,familyMode:true});
  const b=$('restart'),host=familySessionRead()?.member?.role==='host';if(b){b.disabled=false;if(cmp?.mode==='compare_both'&&cmp.track==='meal')b.textContent=host?'CONTINUE TO RESTAURANT':'WAITING FOR HOST';else if(cmp?.mode==='compare_both'&&cmp.track==='restaurant')b.textContent=host?'COMPARE THE TWO':'WAITING FOR HOST';else b.textContent=host?'START OVER':'BACK TO FAMILY';}
- familySetWinnerMeta(round);if(round?.snapshot?.outcome==='wheel')familyAnimateWheel(round);
+ familySetWinnerMeta(round);
 }
 function handleWinnerRestart(){
   if(tutorialWinnerRestart())return;

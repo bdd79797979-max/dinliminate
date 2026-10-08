@@ -6,7 +6,9 @@ import { appToast, appConfirm, openModal } from '../../ui/modal.js';
 import { save, clearPersistedStorage } from '../../state/storage.js';
 import { buildFood, foodQuick, mealTimeNames } from '../meals/index.js';
 import { readHistory } from '../history/index.js';
-import { imageProxyUrl, home } from '../../main.js';
+import { imageProxyUrl, home, removeFoodOverlays, APP_VERSION, APP_BUILD, APP_BUILD_DATE, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE, DEFAULT_MEAL_TIME_DEFS, getDefaultFoods, closeDrawer, resetRestaurantPhotoCaches } from '../../main.js';
+import { openPhotoDB, PHOTO_STORE, storedPhotoIds } from '../../state/storage.js';
+import { tutorialModeEnabled, tutorialState, stopTutorialMode, tutorialHideOverlay, startTutorialFromHome } from '../tutorial/index.js';
 import { familySessionClear, stopFamilyLobbyPolling } from '../family/index.js';
 
 function settingsActionButton(id,icon,title,note,extraClass=''){
@@ -151,11 +153,7 @@ async function clearAllDinliminateStorage(){
      clearPersistedStorage();
 
   }catch(error){console.error('Dinliminate error',error)}
-  try{restaurantWebsiteCache.clear();restaurantWebsiteInflight.clear();}catch(error){console.error('Dinliminate error',error)}
-  try{
-    restaurantPhotoCache.forEach(data=>{if(String(data?.url||'').startsWith('blob:')){try{URL.revokeObjectURL(data.url)}catch(error){console.error('Dinliminate error',error)}}});
-    restaurantPhotoCache.clear();restaurantPhotoMissCache.clear();restaurantPhotoInflight.clear();restaurantPhotoStoragePromise=null;
-  }catch(error){console.error('Dinliminate error',error)}
+  try{resetRestaurantPhotoCaches();}catch(error){console.error('Dinliminate error',error)}
   try{storedPhotoIds.clear();}catch(error){console.error('Dinliminate error',error)}
   try{
     const db=await openPhotoDB();

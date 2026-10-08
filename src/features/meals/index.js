@@ -2,12 +2,13 @@ import { store } from '../../state/store.js';
 const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
-import { appToast, appConfirm } from '../../ui/modal.js';
-import { save, getStoredPhoto, putStoredPhoto, deleteStoredPhoto, storeMealPhotoSet } from '../../state/storage.js';
-import { foodQuickImage, bindImageFallbackAttrs, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show } from '../../main.js';
+import { appToast, appConfirm, openModal } from '../../ui/modal.js';
+import { save, getStoredPhoto, putStoredPhoto, deleteStoredPhoto, storeMealPhotoSet, hydrateStoredMealPhotoList, itemNote, saveItemNotes, setItemNote, deleteStoredMealPhotos } from '../../state/storage.js';
+import { foodQuickImage, bindImageFallbackAttrs, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, DEFAULT_MEAL_TIME_DEFS, normKey, allFoods, getDefaultFoods, foodQuickLabels, FOOD_QUICK, MEAL_AUTOFILL_ENABLED, FINAL_FOOD_IMAGE, DEFAULT_FOOD_IMAGE } from '../../main.js';
 import { imageProxyUrl, mealImageUrl } from '../../api/client.js';
 import { readImageFile } from '../../ui/dom.js';
 import { drawFood } from '../swipe/index.js';
+import { drawRestaurants, restaurantPoolHourFiltered, restaurantHoursEnrichmentKey, restaurantHoursEnrichedAt, updateRestaurantStatus, enrichRestaurantHoursForOpenNow, setRestaurantRefinePanel } from '../restaurants/index.js';
 
 function ensureMealTimeSettings(){
  const current=S.mealTimeSettings&&typeof S.mealTimeSettings==='object'&&!Array.isArray(S.mealTimeSettings)?S.mealTimeSettings:{};
@@ -726,7 +727,7 @@ const applyMealAutofill=(data,section)=>{
    editorPhotos=dedupeMealPhotos([photo,...editorPhotos],8);
    $('editFoodPhoto').value=photo;
    if(photoStatus)photoStatus.textContent=(data?.photo?.provider||'')?String(data.photo.provider).replace(/^./,c=>c.toUpperCase())+' photo selected · '+String(data.photo.query||''):'Photo selected';
-   if(typeof renderMealPhotos==='function')renderMealPhotos();
+   
   }else if(photoStatus)photoStatus.textContent='No strong exact-match Pexels or Unsplash photo found. Add one manually.';
  }
 };
@@ -1044,7 +1045,7 @@ if(!photo&&!isEdit){
 }
 if(!editorPhotos.length)editorPhotos=[photo||DEFAULT_FOOD_IMAGE];
 photo=editorPhotos[0];
-let recipe=$('editFoodRecipe').value.trim();
+const recipe=$('editFoodRecipe').value.trim();
 if(!name)return;
 if(isEdit&&isBuiltInEdit){
  const id=String(item.id),idx=S.custom.findIndex(x=>String(x.id)===id),previous=idx>=0?S.custom[idx]:null;let savedPhotos;
