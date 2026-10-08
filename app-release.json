@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1260,
-  "sourceBranch": "fix/cp1260-instant-detail-photo",
-  "checkpoint": "CP1260",
-  "deploymentTrigger": "fix/cp1260-instant-detail-photo",
+  "build": 1261,
+  "sourceBranch": "fix/cp1261-meal-refresh-no-home-flash",
+  "checkpoint": "CP1261",
+  "deploymentTrigger": "fix/cp1261-meal-refresh-no-home-flash",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -44,5 +44,6 @@
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
   "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better",
-  "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening; no loading UI added"
+  "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening; no loading UI added",
+  "refreshUX": "CP1261 prevents the static Home section from appearing on refresh when the persisted screen is Meals or Restaurants; destination is rendered before boot reveal"
 }
