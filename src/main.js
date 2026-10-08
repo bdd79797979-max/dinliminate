@@ -1,6 +1,6 @@
 
 import { FOODS } from '../data/foods.js';
-import RESTAURANT_TAXONOMY from '../data/restaurant-taxonomy.js';
+import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';
 import { store } from './state/store.js';
 const S = store.get();
 import { $, readImageFile } from './ui/dom.js';
