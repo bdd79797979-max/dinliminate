@@ -6914,12 +6914,11 @@ const homeActionHandler = (event) => {
  else if(action==='share') shareApp();
  else if(action==='tutorial'){
    if(tutorialModeEnabled()&&tutorialState.active){
-    const step=tutorialState.steps[tutorialState.index];
-    if(step?.target==='#tutorialModeToggle'){
-     event.preventDefault();
-     event.stopImmediatePropagation();
-     tutorialAdvanceFromTarget(event,step);
-    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    stopTutorialMode();
+    tutorialHideOverlay();
+    closeDrawer?.(true);
     return;
    }
    startTutorialFromHome();
