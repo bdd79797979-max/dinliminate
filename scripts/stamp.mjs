@@ -53,7 +53,16 @@ for (const [file, transform] of transforms) {
   const current = read(file);
   const expected = transform(current);
   if (process.argv.includes('--check')) {
-    if (current !== expected) stale.push(file);
+    if (current !== expected) {
+      let first=-1;
+      const limit=Math.min(current.length,expected.length);
+      for(let i=0;i<limit;i++){if(current[i]!==expected[i]){first=i;break;}}
+      if(first<0&&current.length!==expected.length)first=limit;
+      const actual=first>=0?JSON.stringify(current.slice(Math.max(0,first-80),first+180)):''; 
+      const expectedSnippet=first>=0?JSON.stringify(expected.slice(Math.max(0,first-80),first+180)):''; 
+      console.error('Stamp mismatch '+file+' at '+first+' actual='+actual+' expected='+expectedSnippet+' lengths='+current.length+'/'+expected.length);
+      stale.push(file);
+    }
   } else if (current !== expected) {
     write(file, expected);
   }
