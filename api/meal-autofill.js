@@ -54,15 +54,15 @@ function parseModelJson(value) {
   if (value && typeof value === 'object') return value;
   const raw = cleanString(value, 20000);
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch {}
+  try { return JSON.parse(raw); } catch(error){console.error('Dinliminate error',error)}
   const fenced = raw.match(/\`\`\`(?:json)?\s*([\s\S]*?)\s*\`\`\`/i);
   if (fenced) {
-    try { return JSON.parse(fenced[1]); } catch {}
+    try { return JSON.parse(fenced[1]); } catch(error){console.error('Dinliminate error',error)}
   }
   const start = raw.indexOf('{');
   const end = raw.lastIndexOf('}');
   if (start >= 0 && end > start) {
-    try { return JSON.parse(raw.slice(start, end + 1)); } catch {}
+    try { return JSON.parse(raw.slice(start, end + 1)); } catch(error){console.error('Dinliminate error',error)}
   }
   return null;
 }
@@ -187,7 +187,7 @@ function providerImageUrls(html, provider, query, excludedUrls=[]) {
   const out = [];
   for (const match of source.matchAll(regex)) {
     let url = match[0];
-    try { url = decodeURIComponent(url); } catch {}
+    try { url = decodeURIComponent(url); } catch(error){console.error('Dinliminate error',error)}
     const base = url.split('?')[0];
     if (seen.has(base)||excluded.has(base)||excluded.has((()=>{try{const u=new URL(base);return u.origin+u.pathname}catch{return base}})())) continue;
     seen.add(base);
