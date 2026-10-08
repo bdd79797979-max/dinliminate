@@ -1,5 +1,5 @@
 // CP1280: shell/cache version bump for quiet meal autofill.
-const CACHE='dinliminate-shell-v1295';
+const CACHE='dinliminate-shell-v1297';
 const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
