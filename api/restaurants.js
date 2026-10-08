@@ -2,7 +2,7 @@
 // CP1201 final wide-radius preview: 50/100-mile bounded discovery.
 // CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
 // CP1173: cumulative restaurant radius search — retained only as historical context.
-const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
+const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy.cjs');
 const {runRadiusEngine}=require('../lib/radius-engine');
 const MAX_RADIUS=100;
 const API_VERSION='r49';
