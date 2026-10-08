@@ -51,9 +51,17 @@ writeHistory(history);
 return true;
 }
 function readHistory(){return Array.isArray(S.history)?S.history.filter(row=>row&&typeof row==='object').slice(0,120):[];}
-function writeHistory(rows){S.history=(rows||[]).filter(row=>row&&typeof row==='object').slice(0,120);S.storageWarning=!save();updateStorageIndicator();return !S.storageWarning;} catch {
-S.storageWarning=true; updateStorageIndicator();
-return false;
+function writeHistory(rows){
+try{
+ S.history=(rows||[]).filter(row=>row&&typeof row==='object').slice(0,120);
+ S.storageWarning=!save();
+ updateStorageIndicator();
+ return !S.storageWarning;
+}catch(error){
+ console.error('Dinliminate history write error',error);
+ S.storageWarning=true;
+ updateStorageIndicator();
+ return false;
 }
 }
 function historyView() {
