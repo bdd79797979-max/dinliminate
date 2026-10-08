@@ -5,7 +5,7 @@ const {safeFetch,readResponseBody}=require('./_lib/ssrf');
 const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
 
 let sharp=null;
-try{sharp=require('sharp');}catch{}
+try{sharp=require('sharp');}catch(error){console.error('Dinliminate error',error)}
 
 const restaurantPhotoRateBuckets=new Map();
 function restaurantPhotoRateLimited(req,max=18){
@@ -137,7 +137,7 @@ function imageDimensions(bytes,type){
         i+=len;
       }
     }
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
   return {width:0,height:0};
 }
 function mediaQuality(media){
@@ -186,7 +186,7 @@ async function isLikelyPhotoCollage(bytes){
       const hline=lineContrast(Math.max(2,Math.min(h-3,Math.round(h*ratio))),false);
       if(v.mean>=24&&hline.mean>=24&&v.support>=.42&&hline.support>=.42)return true;
     }
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
   return false;
 }
 function chooseBetterPhoto(a,b){
@@ -341,7 +341,7 @@ function extractJsonLdImageCandidates(html,pageUrl){
     try{
       const data=JSON.parse(m[1]);
       walk(data,'jsonld');
-    }catch{}
+    }catch(error){console.error('Dinliminate error',error)}
   }
   return out;
 }
@@ -393,7 +393,7 @@ function structuredRestaurantMatches(html,name,address,phone=''){
     return false;
   };
   for(const raw of blocks){
-    try{if(inspect(JSON.parse(raw)))return true;}catch{}
+    try{if(inspect(JSON.parse(raw)))return true;}catch(error){console.error('Dinliminate error',error)}
   }
   return false;
 }
@@ -554,7 +554,7 @@ function extractBingImageCandidates(html){
         description:String(raw?.desc||'').trim(),
         host:hostOf(hostPageUrl||contentUrl)
       });
-    }catch{}
+    }catch(error){console.error('Dinliminate error',error)}
   }
   return candidates;
 }
@@ -738,7 +738,7 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
     return {media:hit.value.media,source:'official-fast-path',sourceUrl:official,sourceName:hostOf(official)};
    }
   }
- }catch{}
+ }catch(error){console.error('Dinliminate error',error)}
  return null;
 }
 const KNOWN_PUBLIC_PHOTO_PAGES=[
@@ -801,7 +801,7 @@ async function fastKnownRestaurantPhoto(name,address){
  try{
   const media=await fetchImage(hit.image,{'Referer':hit.sourceUrl},2200);
   return {media,source:'known-restaurant-photo',sourceUrl:hit.sourceUrl,sourceName:hostOf(hit.sourceUrl)};
- }catch{}
+ }catch(error){console.error('Dinliminate error',error)}
  return null;
 }
 async function fastKnownPublicPhoto(name,address,website,phone=''){
@@ -821,7 +821,7 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
     return {media:hit.value.media,source:'known-public-venue-page',sourceUrl:hint,sourceName:hostOf(hint)};
    }
   }
- }catch{}
+ }catch(error){console.error('Dinliminate error',error)}
  return null;
 }
 const DIRECTORY_STATE_NAMES=[
@@ -1149,7 +1149,7 @@ module.exports=async function handler(req,res){
       try{
         const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
         return sendMedia(res,{media,source:'osm-exact-poi'});
-      }catch{}
+      }catch(error){console.error('Dinliminate error',error)}
     }
 
     // Last discovery layer: Bing Images, but only after exact host-page
