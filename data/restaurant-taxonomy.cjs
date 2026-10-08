@@ -259,6 +259,3 @@ const taxonomy={
 if(typeof module!=='undefined'&&module.exports)module.exports=taxonomy;
 else window.DINLIMINATE_RESTAURANT_TAXONOMY=taxonomy;
 })();
-
-
-module.exports=taxonomy;
