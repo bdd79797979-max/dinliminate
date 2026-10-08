@@ -2,9 +2,9 @@
   "name": "Dinliminate",
   "version": "1.0",
   "build": 1265,
-  "sourceBranch": "fix/cp1265-working-meal-photos",
+  "sourceBranch": "fix/cp1265-meal-pics-settings",
   "checkpoint": "CP1265",
-  "deploymentTrigger": "fix/cp1265-working-meal-photos",
+  "deploymentTrigger": "fix/cp1265-meal-pics-settings",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1265 replaces the four blocked Pixabay meal photos with working Pexels sources while preserving the selected Unsplash Peanut Butter & Jelly photo, CP1263 Biscuits & Gravy, and CP1262 history",
+  "currentBaseline": "CP1265 replaces the four blocked Pixabay meal photos with Pexels sources, keeps the CP1264 PB&J Unsplash photo, and simplifies Settings to Update, Reset, Restore, Privacy, and Diagnosis.",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -45,5 +45,5 @@
   "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better",
   "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening; no loading UI added",
-  "mealPhotoUpdate": "CP1265 uses Pexels for Buttermilk & Cornbread, Cabbage & Sausage, Chocolate Covered Peanuts, and Chicken & Dumplings; Peanut Butter & Jelly remains the selected Unsplash source."
+  "mealPhotoUpdate": "Four blocked Pixabay meal images replaced with Pexels sources; PB&J remains on the approved Unsplash source."
 }
