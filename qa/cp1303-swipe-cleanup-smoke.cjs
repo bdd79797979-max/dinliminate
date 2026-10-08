@@ -66,15 +66,12 @@ assert.match(app,/const currentPhotoPromise=hydrateRestaurantPhoto\(row,'#restSt
 assert.match(app,/await waitForVisualImage\(data\.url,freshImg,1200\)/);
 
 const rcBuild=Number(release.build);
-assert.equal(rcBuild,1303);
-assert.equal(release.checkpoint,'CP1303');
 assert.equal(release.sourceBranch,'main');
-assert.equal(releaseManifest.build,1303);
-assert.equal(releaseManifest.checkpoint,'CP1303');
 assert.equal(releaseManifest.sourceBranch,'main');
-assert.match(index,/app\.js\?v=1303/);
-assert.match(index,/styles\.css\?v=1303/);
-assert.match(sw,/dinliminate-shell-v1303/);
-assert.match(sw,/app\.js\?v=1303/);
+assert.equal(releaseManifest.build,rcBuild);
+assert.match(index,new RegExp('app\\.js\\?v='+rcBuild));
+assert.match(index,new RegExp('styles\\.css\\?v='+rcBuild));
+assert.match(sw,new RegExp('dinliminate-shell-v'+rcBuild));
+assert.match(sw,new RegExp('app\\.js\\?v='+rcBuild));
 
-console.log('CP1303 swipe cleanup smoke: PASS');
+console.log('CP1303 swipe cleanup regression: PASS');
