@@ -10,29 +10,12 @@ let deps={
   dedupeMealPhotos:photos=>Array.isArray(photos)?[...new Set(photos.filter(Boolean))]:[],
   DEFAULT_FOOD_IMAGE:'',
   STORAGE_VERSION:7,
-  KEY:'dinliminate.clean.cp1'
+  KEY:'dinliminate:v1'
 };
 export function configureStorage(next={}){ deps={...deps,...next}; }
 
-const ITEM_NOTES_KEY = 'dinliminate.item.notes.v1';
-function loadItemNotes(){
- try{
-  const raw=JSON.parse(localStorage.getItem(ITEM_NOTES_KEY)||'{}');
-  S.notes=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};
- }catch{S.notes={};}
-}
-function saveItemNotes(){
- try{
-  const clean={};
-  Object.entries(S.notes||{}).forEach(([key,value])=>{
-   const note=String(value??'').trim();
-   if(note)clean[key]=note.slice(0,1200);
-  });
-  S.notes=clean;
-  localStorage.setItem(ITEM_NOTES_KEY,JSON.stringify(clean));
-  return true;
- }catch(error){console.error('Dinliminate storage error',error);return false;}
-}
+function loadItemNotes(){S.notes=(S.notes&&typeof S.notes==='object'&&!Array.isArray(S.notes))?S.notes:{};}
+function saveItemNotes(){const clean={};Object.entries(S.notes||{}).forEach(([key,value])=>{const note=String(value??'').trim();if(note)clean[key]=note.slice(0,1200);});S.notes=clean;return save();}
 function itemNoteKey(item,type){
  if(type==='restaurant'){
   return 'restaurant:'+String(item?.canonicalId||deps.restaurantCanonicalId(item)||item?.id||'unknown');
@@ -157,7 +140,7 @@ restaurantPool:(Array.isArray(S.restaurantPool)?S.restaurantPool:[]).map(row=>{c
 restaurantCuts:[...S.restaurantCuts], restaurantActions:S.restaurantActions,
 restaurantQuery:S.restaurantQuery, restaurantHours:String(S.restaurantHours||'all'), restaurantHoursCollapsed:!!S.restaurantHoursCollapsed, location:S.location, locationSource:S.locationSource,
 saved:S.saved, winnerItem:S.winnerItem, winnerType:S.winnerType, schemaVersion:deps.STORAGE_VERSION, deleted:[...(S.deleted||[])], deletedCustomMeals:S.deletedCustomMeals||[],
-restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
+history:Array.isArray(S.history)?S.history.slice(0,120):[],familySession:S.familySession||null,restaurantWebsiteCache:S.restaurantWebsiteCache&&typeof S.restaurantWebsiteCache==='object'?S.restaurantWebsiteCache:{},swipeHintDismissed:!!S.swipeHintDismissed,restaurantSearchOrigin:S.restaurantSearchOrigin, restaurantSearchKey:S.restaurantSearchKey||'', restaurantSearchDegraded:!!S.restaurantSearchDegraded, locationFreshAt:S.locationFreshAt||null, maybeDeck:!!S.maybeDeck, foodMaybeRound:!!S.foodMaybeRound, restaurantMaybeRound:!!S.restaurantMaybeRound, quickCutsCollapsed:{food:!!S.quickCutsCollapsed?.food,restaurant:!!S.quickCutsCollapsed?.restaurant}, mealTimeCutsCollapsed:!!S.mealTimeCutsCollapsed, mealTimeFilters:[...S.mealTimeFilters],
 mealTimeSettings:{custom:(S.mealTimeSettings?.custom||[]).map(x=>({id:String(x.id),name:String(x.name||'').trim()})).filter(x=>x.name),names:{...(S.mealTimeSettings?.names||{})},order:[...(S.mealTimeSettings?.order||[])],disabled:[...((S.mealTimeSettings?.disabled instanceof Set)?S.mealTimeSettings.disabled:new Set())]},
 custom:S.custom.map(x=>{
  const photos=deps.dedupeMealPhotos(deps.mealPhotoList(x),8);
@@ -184,4 +167,7 @@ return false;
 }
 
 
-export { loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos, save };
+const STORAGE_KEY='dinliminate:v1';
+const LEGACY_STORAGE_KEYS=Object.freeze(['dinliminate.clean.cp1','dinliminate.item.notes.v1','dinliminate.clean.history','dinliminate.family.v1','dinliminate.restaurant.websites.v1','dinliminate.start-screen','dinliminate.swipeHint.v4','dinliminate.swipeHint.v5']);
+function clearPersistedStorage(){try{localStorage.removeItem(STORAGE_KEY);LEGACY_STORAGE_KEYS.forEach(key=>localStorage.removeItem(key));return true;}catch(error){console.error('Dinliminate storage error',error);return false;}}
+export {STORAGE_KEY,LEGACY_STORAGE_KEYS,clearPersistedStorage,loadItemNotes,saveItemNotes,itemNoteKey,itemNote,setItemNote,openPhotoDB,putStoredPhoto,getStoredPhoto,deleteStoredPhoto,mealPhotoStorageKey,pruneMealPhotoKeys,storeMealPhotoSet,hydrateStoredMealPhotoList,hydrateCustomPhotos,updateStorageIndicator,migrateCustomPhotos,save};

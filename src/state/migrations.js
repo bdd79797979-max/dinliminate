@@ -10,7 +10,9 @@ let mealPhotoList;
 let normKey;
 let DEFAULT_FOOD_IMAGE='';
 let STORAGE_VERSION=7;
-let KEY='dinliminate.clean.cp1';
+let KEY='dinliminate:v1';
+const OLD_PRIMARY_KEY='dinliminate.clean.cp1';
+const LEGACY_KEYS=Object.freeze([OLD_PRIMARY_KEY,'dinliminate.item.notes.v1','dinliminate.clean.history','dinliminate.family.v1','dinliminate.restaurant.websites.v1','dinliminate.start-screen','dinliminate.swipeHint.v4','dinliminate.swipeHint.v5']);
 
 export function configureMigrations(next={}){
   loadItemNotes=next.loadItemNotes;ensureMealTimeSettings=next.ensureMealTimeSettings;mealTimeNames=next.mealTimeNames;
@@ -18,12 +20,24 @@ export function configureMigrations(next={}){
   DEFAULT_FOOD_IMAGE=next.DEFAULT_FOOD_IMAGE||'';STORAGE_VERSION=Number(next.STORAGE_VERSION||7);KEY=String(next.KEY||KEY);
 }
 
-function load() {
-loadItemNotes();
-try {
-const raw = localStorage.getItem(KEY);
-if (!raw) return false;
-const d = JSON.parse(raw);
+function parseLegacyJson(key,fallback){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback;}catch(error){console.error('Dinliminate migration parse error',key,error);return fallback;}}
+function legacySideData(){
+  const history=parseLegacyJson('dinliminate.clean.history',[]),notes=parseLegacyJson('dinliminate.item.notes.v1',{}),family=parseLegacyJson('dinliminate.family.v1',null),websites=parseLegacyJson('dinliminate.restaurant.websites.v1',{});
+  return {history:Array.isArray(history)?history.filter(row=>row&&typeof row==='object').slice(0,120):[],notes:notes&&typeof notes==='object'&&!Array.isArray(notes)?notes:{},familySession:family&&typeof family==='object'?family:null,restaurantWebsiteCache:websites&&typeof websites==='object'&&!Array.isArray(websites)?websites:{},startScreen:String(localStorage.getItem('dinliminate.start-screen')||'').trim(),swipeHintDismissed:!!(localStorage.getItem('dinliminate.swipeHint.v4')||localStorage.getItem('dinliminate.swipeHint.v5'))};
+}
+function removeLegacyKeys(){for(const key of LEGACY_KEYS)try{localStorage.removeItem(key);}catch(error){console.error('Dinliminate migration cleanup error',key,error);}}
+function load(){
+  try{
+    const primary=localStorage.getItem(KEY),legacyPrimary=primary?null:localStorage.getItem(OLD_PRIMARY_KEY),legacy=legacySideData();
+    const hasLegacy=!!legacyPrimary||legacy.history.length>0||Object.keys(legacy.notes).length>0||!!legacy.familySession||Object.keys(legacy.restaurantWebsiteCache).length>0||!!legacy.startScreen||legacy.swipeHintDismissed;
+    if(!primary&&!legacyPrimary&&!hasLegacy)return false;
+    const d=JSON.parse(primary||legacyPrimary||'{}');
+    if(!Array.isArray(d.history)||!d.history.length)d.history=legacy.history;
+    if(!d.notes||typeof d.notes!=='object'||Array.isArray(d.notes))d.notes=legacy.notes;
+    if(!d.familySession&&legacy.familySession)d.familySession=legacy.familySession;
+    if(!d.restaurantWebsiteCache||typeof d.restaurantWebsiteCache!=='object'||Array.isArray(d.restaurantWebsiteCache))d.restaurantWebsiteCache=legacy.restaurantWebsiteCache;
+    if(!d.swipeHintDismissed&&legacy.swipeHintDismissed)d.swipeHintDismissed=true;
+    if(!d.screen&&legacy.startScreen)d.screen=legacy.startScreen;
 
 if(!Array.isArray(d.foodCuts)) d.foodCuts=[];
 if(!d.foodCuts.length && Array.isArray(d.foodActions))
@@ -32,6 +46,10 @@ delete d.cutPrimary;
 const legacyKeys=['cutPrimary','allCut','foodAllCut','savedRound','savedRoundType','legacyRestaurantPool','restaurantResults','pass','passDraftCount','passDraftNames','passDraftMode','passStartVoter'];
 legacyKeys.forEach(key=>{try{delete d[key]}catch(error){console.error('Dinliminate error',error)}});
 Object.assign(S, d);
+S.history=Array.isArray(d.history)?d.history.filter(row=>row&&typeof row==='object').slice(0,120):[];
+S.familySession=d.familySession&&typeof d.familySession==='object'?d.familySession:null;
+S.restaurantWebsiteCache=d.restaurantWebsiteCache&&typeof d.restaurantWebsiteCache==='object'&&!Array.isArray(d.restaurantWebsiteCache)?d.restaurantWebsiteCache:{};
+S.swipeHintDismissed=!!d.swipeHintDismissed;
 legacyKeys.forEach(key=>{try{delete S[key]}catch(error){console.error('Dinliminate error',error)}});
 S.hidden = new Set(d.hidden || []);
 S.deleted = new Set(Array.isArray(d.deleted)?d.deleted:[]);
@@ -128,12 +146,10 @@ S.mealTimeSettings={custom:Array.isArray(d.mealTimeSettings?.custom)?d.mealTimeS
 ensureMealTimeSettings();
 const availableMealTimeNames=mealTimeNames();
 S.mealTimeFilters=new Set((Array.isArray(d.mealTimeFilters)?d.mealTimeFilters:(d.mealTimeFilter?[d.mealTimeFilter]:[])).map(currentMealTimeName).filter(x=>availableMealTimeNames.includes(x))); if(!S.mealTimeFilters.size) S.mealTimeFilters = new Set(availableMealTimeNames);
-if(needsButtermilkRepairSave||needsChickenFriedSteakNameRepairSave||needsRetiredMealCleanupSave)save();
 if(S.locationSource==='device' && S.location)S.locationSource='last';
 S.restaurantSearchDegraded = !!d.restaurantSearchDegraded;
-S.schemaVersion = STORAGE_VERSION;
-return true;
-} catch { return false; }
+S.schemaVersion=STORAGE_VERSION;const persisted=save();if(persisted)removeLegacyKeys();return persisted;
+}catch(error){console.error('Dinliminate migration error',error);return false;}
 }
 
 

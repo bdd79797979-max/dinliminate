@@ -26,7 +26,7 @@ const getDefaultFoods = () => Array.isArray(FOODS) ? FOODS : [];
 // CP1149 — meal photo policy: official source first, exact same-meal backup second, never a generic food fallback.
 const DEFAULT_FOOD_IMAGE = '';
 
-const KEY = 'dinliminate.clean.cp1';
+const KEY = 'dinliminate:v1';
 const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
@@ -173,31 +173,12 @@ function knownRestaurantWebsite(row){
 }
 const restaurantWebsiteInflight=new Map();
 const restaurantWebsiteCache=new Map();
-const RESTAURANT_WEBSITE_CACHE_KEY='dinliminate.restaurant.websites.v1';
 const RESTAURANT_WEBSITE_CACHE_TTL=14*24*60*60*1000;
 function restaurantWebsiteRowKey(row){
  return normKey([row?.name,row?.address,row?.brand].filter(Boolean).join('|'));
 }
-function loadRestaurantWebsiteStore(){
- try{
-  const raw=JSON.parse(localStorage.getItem(RESTAURANT_WEBSITE_CACHE_KEY)||'{}');
-  const now=Date.now();
-  for(const [key,value] of Object.entries(raw||{})){
-   if(value&&now-Number(value.t||0)<RESTAURANT_WEBSITE_CACHE_TTL&&(typeof value.url==='string'||typeof value.officialPage==='string')){
-    restaurantWebsiteCache.set(key,value);
-   }
-  }
- }catch(error){console.error('Dinliminate error',error)}
-}
-function saveRestaurantWebsiteStore(){
- try{
-  const out={},now=Date.now();
-  for(const [key,value] of restaurantWebsiteCache){
-   if(value&&now-Number(value.t||0)<RESTAURANT_WEBSITE_CACHE_TTL)out[key]=value;
-  }
-  localStorage.setItem(RESTAURANT_WEBSITE_CACHE_KEY,JSON.stringify(out));
- }catch(error){console.error('Dinliminate error',error)}
-}
+function loadRestaurantWebsiteStore(){const raw=S.restaurantWebsiteCache&&typeof S.restaurantWebsiteCache==='object'&&!Array.isArray(S.restaurantWebsiteCache)?S.restaurantWebsiteCache:{};const now=Date.now();for(const [key,value] of Object.entries(raw)){if(value&&now-Number(value.t||0)<RESTAURANT_WEBSITE_CACHE_TTL&&(typeof value.url==='string'||typeof value.officialPage==='string'))restaurantWebsiteCache.set(key,value);}}
+function saveRestaurantWebsiteStore(){const out={},now=Date.now();for(const [key,value] of restaurantWebsiteCache){if(value&&now-Number(value.t||0)<RESTAURANT_WEBSITE_CACHE_TTL)out[key]=value;}S.restaurantWebsiteCache=out;save();}
 loadRestaurantWebsiteStore();
 function cachedRestaurantWebsiteEntry(row){
  const key=restaurantWebsiteRowKey(row),value=restaurantWebsiteCache.get(key);
@@ -1025,8 +1006,7 @@ if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&
 }
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
-S.screen = screen;
-try{localStorage.setItem('dinliminate.start-screen',String(screen));}catch(error){console.error('Dinliminate error',error)}
+const screenChanged=S.screen!==screen;S.screen=screen;if(screenChanged)save();
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
 $('globalBack')?.classList.add('hidden');
 $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
@@ -1354,6 +1334,7 @@ configureModal({mealTimesFor,restaurantFallbackImage,imageProxyUrl,mealImageUrl,
 
 bindMealPhotoCountControls();
 load();
+loadRestaurantWebsiteStore();
 renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
