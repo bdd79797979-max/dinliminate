@@ -781,12 +781,9 @@ async function hydrateRestaurantPhoto(row,scope){
  if(!data?.url)return null;
  for(const img of imgs){
   if(!img.isConnected)continue;
-  const card=img.closest('.next-card,.deck-preview-card');
-  if(card?.dataset.swipePromoted==='1'&&card.dataset.restaurantPhotoCanonical!=='1')continue;
   const swapped=await swapImageWhenReady(img,data.url);
   if(swapped){
    img.dataset.restaurantPhotoLoaded='true';
-   if(card)card.dataset.restaurantPhotoCanonical='1';
    setRestaurantPhotoCredit(img.closest('.card,.restaurant-detail-hero')||img.parentElement,data.attributions,data.source,data.sourceUrl);
   }
  }
@@ -2573,7 +2570,7 @@ function stageSwipePreview(card,img,src,key){
   if(String(card.dataset.swipePreviewKey||'')!==previewKey)return;
   if(!card.isConnected||card.querySelector('img')!==img)return;
   card.dataset.swipePreviewReady=ok?'1':'0';
-  if(ok&&!card.dataset.swipePromoted){
+  if(ok){
    card.style.visibility='visible';
    card.style.transition='';
   }
@@ -2581,29 +2578,10 @@ function stageSwipePreview(card,img,src,key){
  return ready;
 }
 
-async function ensureSwipePreviewReady(card){
- if(!card)return false;
- const pending=card.__swipePreviewReadyPromise;
- if(pending){
-  const ok=await pending;
-  if(ok)return true;
- }
- const img=card.querySelector('img');
- const fallback=String(img?.dataset?.fallback||'').trim();
- if(!img||!fallback)return false;
- let current='';
- try{current=String(new URL(img.currentSrc||img.src||'',location.href).href);}catch{current=String(img.currentSrc||img.src||'');}
- let fallbackUrl='';
- try{fallbackUrl=String(new URL(fallback,location.href).href);}catch{fallbackUrl=fallback;}
- if(fallbackUrl&&current===fallbackUrl)return false;
- const retry=stageSwipePreview(card,img,fallback,card.dataset.swipePreviewKey||'');
- return await retry;
-}
 
 
 const preparedFoodSwipeCards=new Map();
 const FOOD_SWIPE_PRELOAD_DEPTH=3;
-const DECK_READY_TIMEOUT=1800;
 
 function nextFoodIndexList(count=FOOD_SWIPE_PRELOAD_DEPTH){
  const pool=Array.isArray(S.pool)?S.pool:[];
@@ -2722,9 +2700,7 @@ function setFoodNextCardImage(nextCard,view){
  // The current image becomes visible only after its own source is preloaded/decoded.
  img.style.visibility='hidden';
  nextCard.style.visibility='visible';
- if(primary)img.src=primary;
- else if(backup)img.src=backup;
- else markMealImageUnavailable(img);
+ if(!primary&&!backup)markMealImageUnavailable(img);
  nextCard.style.pointerEvents='none';
  const promise=loadMealPhotoCandidates(img,[primary,backup],nextCard).then(ok=>{
   if(!ok&&String(nextCard.dataset.mealLoadToken||'')===loadToken)markMealImageUnavailable(img);
@@ -2747,7 +2723,6 @@ function populateFoodNextCard(view){
  nextCard.style.opacity='1';
  nextCard.style.filter='none';
  nextCard.style.pointerEvents='none';
- nextCard.dataset.swipePromoted='';
  nextCard.dataset.mealId=view?.id||'';
  nextCard.dataset.foodReady='0';
  nextCard.dataset.foodImageReady='0';
@@ -2877,7 +2852,7 @@ function bindRestaurantPhotoPinch(target){
   surface.addEventListener('pointercancel',finishPointer,{passive:true});
 }
 
-function bindSwipeCard(cardId,nextId,onCut,onMaybe){
+function bindSwipeCard(cardId,onCut,onMaybe){
  const card=$(cardId);
  if(!card)return;
  const bindingToken=String(Number(card.dataset.swipeBindingToken||0)+1);
@@ -3171,7 +3146,7 @@ function previewDecisionCount(kind,type,wasMaybe=false){
   count.__decisionCountTimer=window.setTimeout(()=>count.classList.remove('decision-count-updated'),220);
  }
 }
-function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(undefined,{fromSwipe:true}),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(undefined,{fromSwipe:true}))}
+function bindFoodSwipe(){bindSwipeCard('foodCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(undefined,{fromSwipe:true}),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(undefined,{fromSwipe:true}))}
 function appToast(message){
 document.querySelector('#appToast')?.remove();
 const el=document.createElement('div'); el.id='appToast'; el.className='app-toast'; el.textContent=message;
@@ -4266,14 +4241,13 @@ const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   restaurantNextImageEl.decoding='async';
   stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
+  loadRestaurantPhoto(nextRow).then(async data=>{
    if(!data?.url)return null;
-   if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
+   if(!restaurantNextCard.isConnected)return data.url;
    if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
    const swapped=await swapImageWhenReady(restaurantNextImageEl,data.url);
    if(swapped){
     restaurantNextImageEl.dataset.restaurantPhotoLoaded='true';
-    restaurantNextCard.dataset.restaurantPhotoCanonical='1';
     setRestaurantPhotoCredit(restaurantNextCard,data.attributions);
    }
    return data.url;
@@ -4423,7 +4397,7 @@ function bindCardButton(id,handler){
 // CP1244 — One decision transaction per active card. A busy card consumes
 // subsequent Cut/Maybe commands instead of letting them mutate app state.
 
-function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard','restaurantNextCard',()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row,{fromSwipe:true}),()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row,{fromSwipe:true}))}
+function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard',()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row,{fromSwipe:true}),()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row,{fromSwipe:true}))}
 let restaurantQueryTimer = 0;
 function scheduleRestaurantProviderSearch(){
  clearTimeout(restaurantQueryTimer);
