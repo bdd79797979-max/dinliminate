@@ -608,5 +608,4 @@ function bindRestaurantPhotoPinch(target){
 }
 
 function bindFoodSwipe(){bindSwipeCard('foodCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(undefined,{fromSwipe:true}),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(undefined,{fromSwipe:true}),{kind:'food',getContext:()=>{const item=S.pool[S.index];return {id:String(item?.id||''),row:item,wasMaybe:!!item&&S.maybe.has(item.id);},onPreview:context=>previewDecisionCount('food',context.direction,context.wasMaybe)});}
-async 
 export { clearLegacySwipeInstructions, dismissSwipeHint, maybeShowInCardSwipeCoach, setChoiceCount, foodChoiceIndex, drawFood, foodCommit, foodCut, foodMaybe, resolveFoodAfterDecision, foodBack, waitForSwipeImage, stageSwipePreview, nextFoodIndexList, buildPreparedFoodCard, cachePreparedFoodCards, ensurePreparedFoodNextCardMarkup, setFoodNextCardImage, populateFoodNextCard, prepareFoodNextCard, preloadSwipeImage, waitForVisualImage, primeFoodSwipeMedia, bindRestaurantPhotoPinch, bindSwipeCard, bindFoodSwipe, startFood, waitForNextPaints };
