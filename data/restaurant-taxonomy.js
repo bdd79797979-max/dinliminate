@@ -1,3 +1,5 @@
+(() => {
+'use strict';
 
 const RESTAURANT_TAGS = ['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','Indian','Mediterranean','BBQ','Seafood','Breakfast','Southern'];
 
@@ -254,4 +256,6 @@ const taxonomy={
   fillerWords:[...SEARCH_FILLER_WORDS]
 };
 
-export default taxonomy;
+if(typeof module!=='undefined'&&module.exports)module.exports=taxonomy;
+else window.DINLIMINATE_RESTAURANT_TAXONOMY=taxonomy;
+})();
