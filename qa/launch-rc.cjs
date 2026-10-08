@@ -102,7 +102,7 @@ assert('four decision controls remain canonical',
 assert('Family uses normal decision screens',app.includes("show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data)")&&
  app.includes("show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data)"));
 assert('history integrity metadata present',release.historyIntegrity&&release.historyIntegrity.length>0);
-assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs');
+assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs');
 assert('launch candidate metadata present',String(release.launchCandidate||'').includes('one deployment reserved for candidate verification'));
 
 const checkpointSmoke=[
