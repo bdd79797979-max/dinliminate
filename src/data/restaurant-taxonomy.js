@@ -1,4 +1,3 @@
-
 const RESTAURANT_TAGS = ['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','Indian','Mediterranean','BBQ','Seafood','Breakfast','Southern'];
 
 const RESTAURANT_SEARCH_ALIASES = {
