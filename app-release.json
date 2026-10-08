@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1258,
-  "sourceBranch": "fix/cp1258-swipe-feel",
-  "checkpoint": "CP1258",
-  "deploymentTrigger": "fix/cp1258-swipe-feel",
+  "build": 1259,
+  "sourceBranch": "fix/cp1259-pexels-meal-photo-pass",
+  "checkpoint": "CP1259",
+  "deploymentTrigger": "fix/cp1259-pexels-meal-photo-pass",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -30,9 +30,9 @@
   "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
   "automatedRC": "single current-build release gate; CP1243 swipe smoke + syntax/cache consistency; production verification reserved for candidate",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
-  "launchCandidate": "CP1258 touch-feel refinement; one deployment reserved for candidate verification",
+  "launchCandidate": "CP1259 meal-photo refresh; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1258 CP1257 stable waiting-card swipe handoff + CP1253 Unsplash meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
+  "currentBaseline": "CP1259 CP1258 swipe feel + requested Pexels meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -42,5 +42,6 @@
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
   "swipeHandoffFix": "CP1257-remove-overlapping-clone-handoff; stable waiting preview; no clone/hide swap after 95ms",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
-  "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight"
+  "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
+  "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better"
 }
