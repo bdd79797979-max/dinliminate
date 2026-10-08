@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1261,
+  "build": 1262,
   "sourceBranch": "fix/cp1261-meal-refresh-no-home-flash",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1261",
+  "checkpoint": "CP1262",
   "deploymentTrigger": "fix/cp1261-meal-refresh-no-home-flash",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
@@ -23,13 +23,33 @@
   "automatedRC": "single current-build release gate; CP1243 swipe smoke + syntax/cache/security consistency; production verification reserved for candidate",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1260 CP1258 swipe feel + CP1259 meal-photo refresh + instant loaded-card Details imagery + current restaurant search/radius, Family Mode, UI and catalog improvements",
+  "currentBaseline": "CP1262 CP1261 refresh-no-home-flash + CP1260 instant detail photo + CP1258 swipe feel + CP1259 meal-photo improvements",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; CP1253 additional Unsplash photo refresh with exact-match-first selection and prior-image backups",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "tutorialAudit": "CP1251-CP1076-home-choice-target-and-click-gate",
   "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe",
-  "photoRefresh": "CP1245-Unsplash-refresh-and-meal-catalog",
+  "photoRefresh": {
+    "requested": [
+      "Chicken & Dumplings",
+      "Biscuits & Gravy",
+      "Buttermilk & Cornbread",
+      "White Chicken Chili",
+      "Peanut Butter & Jelly Sandwich",
+      "Chocolate Covered Peanuts"
+    ],
+    "changed": [
+      "Buttermilk & Cornbread"
+    ],
+    "retained": [
+      "Chicken & Dumplings",
+      "Biscuits & Gravy",
+      "White Chicken Chili",
+      "Peanut Butter & Jelly Sandwich & Chips",
+      "Chocolate Covered Peanuts"
+    ],
+    "note": "All six requested meals were checked for stronger approved-provider (Pexels/Unsplash) candidates. Only Buttermilk & Cornbread had a clearly stronger semantic match; the other five were retained rather than introducing a weaker or unrelated image."
+  },
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
   "swipeHandoffFix": "CP1257-remove-overlapping-clone-handoff; active card exits while stable waiting preview remains; no 95ms clone/hide swap",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
