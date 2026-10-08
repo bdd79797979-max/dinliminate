@@ -147,7 +147,7 @@ async function enforceImageCacheBudget(){
         }
       }
       if(deleted.length)await writeImageMetaBulk([],deleted);
-    }catch{}
+    }catch(error){console.error('Dinliminate error',error)}
   });
 }
 
@@ -159,14 +159,14 @@ async function recordCachedImage(cache,req,res){
     await cache.put(req,res.clone());
     await touchImageMeta(req.url,size);
     await enforceImageCacheBudget();
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
 }
 
 async function touchCachedImage(req){
   try{
     await touchImageMeta(req.url);
     await enforceImageCacheBudget();
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
 }
 
 const SHELL=['./api/_lib/imageHosts.js?v=1308','./','./index.html','./boot.js?v=1308','./viewport.js?v=1308','./styles.css?v=1308','./src/main.js?v=1308','./logo.svg?v=1308','./data/foods.js?v=1308','./src/data/restaurant-taxonomy.js?v=1308','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg?v=1308','./app-icon.svg?v=1308','./apple-touch-icon.png?v=1308','./fallback-food.svg','./fallback-restaurant.svg'];
