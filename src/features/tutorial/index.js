@@ -1,9 +1,10 @@
 import { state as S } from '../../state/store.js';
 import { $ } from '../../ui/dom.js';
-import { show, startFood, openRestaurant, winner, closeDrawer } from '../../main.js';
+const navigation={};
+export function configureTutorial(next={}){Object.assign(navigation,next);}
 
 const tutorialState=S.tutorialState;
- closeDrawer?.(true);
+ navigation.closeDrawer?.(true);
  window.requestAnimationFrame(begin);
 }
 function tutorialStepsForScreen(screen){
@@ -236,8 +237,8 @@ function tutorialWinnerRestart(){
  const context={...tutorialState.returnContext};
  tutorialState.returnContext=null;
  const resumeIndex=context.index+1;
- if(context.screen==='food')startFood({tutorialResumeIndex:resumeIndex});
- else if(context.screen==='restaurant')openRestaurant({tutorialResumeIndex:resumeIndex});
+ if(context.screen==='food')navigation.startFood({tutorialResumeIndex:resumeIndex});
+ else if(context.screen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:resumeIndex});
  else return false;
  return true;
 }
@@ -249,18 +250,18 @@ function advanceTutorial(){
   if(item){
    tutorialState.awaitingAction=false;
    tutorialState.returnContext={screen:sourceScreen,index:tutorialState.index};
-   winner(item,sourceScreen==='restaurant'?'restaurant':'food',{tutorial:true});
+   navigation.winner(item,sourceScreen==='restaurant'?'restaurant':'food',{tutorial:true});
   }
   return;
  }
  if(step?.action==='enter-restaurant'){
   tutorialState.awaitingAction=false;
-  openRestaurant({tutorialResumeIndex:0});
+  navigation.openRestaurant({tutorialResumeIndex:0});
   return;
  }
  if(step?.action==='enter-food'){
   tutorialState.awaitingAction=false;
-  startFood({tutorialResumeIndex:0});
+  navigation.startFood({tutorialResumeIndex:0});
   return;
  }
  if(step?.action==='finish-tour'){
@@ -291,8 +292,8 @@ function tutorialAdvanceFromTarget(event,step){
   if(!choice)return false;
   const nextScreen=choice.id==='restStart'?'restaurant':'food';
   tutorialMarkHomeChoice(nextScreen);
-  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
-  else startFood({tutorialResumeIndex:0});
+  if(nextScreen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:0});
+  else navigation.startFood({tutorialResumeIndex:0});
   return true;
  }
  if(step?.action==='enter-restaurant'||step?.action==='enter-food'){
@@ -325,8 +326,8 @@ function tutorialHighlightedTargetClick(event){
   event.stopImmediatePropagation();
   const nextScreen=target.id==='restStart'?'restaurant':'food';
   tutorialMarkHomeChoice(nextScreen);
-  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
-  else startFood({tutorialResumeIndex:0});
+  if(nextScreen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:0});
+  else navigation.startFood({tutorialResumeIndex:0});
   return;
  }
  if(step?.action==='choose'){
@@ -348,7 +349,7 @@ function bindTutorialUI(){
    if(tutorialModeEnabled()&&tutorialState.active){
     stopTutorialMode();
     tutorialHideOverlay();
-    closeDrawer?.(true);
+    navigation.closeDrawer?.(true);
    }else startTutorialFromHome();
   });
  }
@@ -370,8 +371,8 @@ function bindTutorialUI(){
    event.stopPropagation();
    const nextScreen=target.id==='restStart'?'restaurant':'food';
    tutorialMarkHomeChoice(nextScreen);
-   if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
-   else startFood({tutorialResumeIndex:0});
+   if(nextScreen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:0});
+   else navigation.startFood({tutorialResumeIndex:0});
   }
  },true);
  document.addEventListener('click',event=>{
@@ -398,7 +399,5 @@ function bindTutorialUI(){
   window.visualViewport.addEventListener('scroll',scheduleTutorialPosition,{passive:true});
  }
 }
-bindTutorialUI();
 
-
-export { tutorialState, tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI };
+export { configureTutorial, tutorialState, tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI };
