@@ -2398,7 +2398,6 @@ function drawFood(options={}){
   if(fb&&current!==fb){this.src=fb;return;}
   markMealImageUnavailable(this);
  };
- const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
  // Never expose the previous decoded bitmap while this DOM node is rebound.
  img.style.visibility='hidden';
  if(holdCardForMedia){
