@@ -47,3 +47,9 @@
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-store, max-age=0"
+
+[[redirects]]
+  from = "/api/meal-autofill"
+  to = "/.netlify/functions/meal-autofill"
+  status = 200
+  force = true

@@ -1,4 +1,7 @@
-# CURRENT RELEASE — BUILD 1237 / CP1237
+
+## CP1266 — quiet Meal Auto-Fill checkpoint
+Adds an understated Auto-Fill Meal action to the existing Add/Edit Meal flow. Autofill stays reviewable and editable before saving, with independent refresh for nutrition, ingredients, recipe, cuisine, meal time, description, and photo. Nutrition is labeled as a typical-serving estimate. Photo matching prefers exact Pexels/Unsplash results and reports when no strong match is found. Similar-meal hints help prevent accidental duplicates. No production deployment was performed for this checkpoint.
+# CURRENT RELEASE — BUILD 1266 / CP1266
 
 Date: 2026-10-07
 

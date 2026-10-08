@@ -5490,6 +5490,44 @@ img.src=reader.result;
 reader.readAsDataURL(file);
 });
 }
+
+function mealNameSimilarMatches(name,excludeId=''){
+ const target=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ if(!target)return [];
+ const targetTokens=new Set(target.split(/\s+/).filter(Boolean));
+ const score=(value)=>{
+  const other=String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  if(!other||other===target)return other===target?1:0;
+  if(other.includes(target)||target.includes(other))return .82;
+  const set=new Set(other.split(/\s+/).filter(Boolean));
+  let overlap=0;for(const token of targetTokens)if(set.has(token))overlap++;
+  const union=new Set([...targetTokens,...set]).size;
+  return union?overlap/union:0;
+ };
+ return allFoods().map(item=>({item,score:score(item?.name)}))
+  .filter(x=>x.score>=.6&&String(x.item?.id||'')!==String(excludeId||''))
+  .sort((a,b)=>b.score-a.score)
+  .slice(0,3).map(x=>x.item?.name).filter(Boolean);
+}
+async function requestMealAutofill(name,options={}){
+ const section=String(options.section||'all');
+ const response=await fetch('/api/meal-autofill',{
+  method:'POST',
+  headers:{'Content-Type':'application/json','Accept':'application/json'},
+  body:JSON.stringify({
+   name:String(name||'').trim(),
+   section,
+   cuisineOptions:foodQuickLabels(),
+   mealTimeOptions:mealTimeNames(),
+   current:options.current&&typeof options.current==='object'?options.current:{}
+  }),
+  cache:'no-store'
+ });
+ let data=null;try{data=await response.json();}catch{}
+ if(!response.ok||!data?.ok)throw new Error(data?.message||'Meal Auto-Fill could not complete that request.');
+ return data;
+}
+
 async function findOnlineMealPhoto(name) {
  try {
   const query=String(name||'').trim();
@@ -5717,21 +5755,106 @@ const descriptionText=String(item?.description||'').trim();
 let editorPhotos=dedupeMealPhotos(mealPhotoList(item),8);
 let editorPhotosReady=Promise.resolve();
 const body='<form class="add" id="foodEditorForm">'+
-'<input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'">'+
-'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts</legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><div class="meal-time-editor-head"><span class="meal-time-editor-title">Meal Times</span><button type="button" class="meal-time-edit-toggle" id="editMealTimesManage" aria-expanded="false">Edit Meal Times</button></div><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid"></div><div id="editFoodMealTimeManager" class="food-editor-meal-time-manager hidden" aria-label="Edit Meal Times"></div></fieldset>'+
-'<div class="meal-editor-section"><div class="meal-editor-section-title">Nutrition per serving</div><p class="meal-editor-helper">Fill in the five numbers that will appear in the meal Details screen.</p><div class="meal-nutrition-editor-grid">'+
+'<div class="meal-editor-name-row"><input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'"><button type="button" class="meal-autofill-action" id="editFoodAutoFill">Auto-Fill Meal</button></div><small id="editFoodDuplicateHint" class="meal-editor-duplicate-hint" aria-live="polite"></small><div id="editFoodAutoFillStatus" class="meal-autofill-status" aria-live="polite"></div>'+'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts <button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="cuisine">Refresh</button></legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><div class="meal-time-editor-head"><span class="meal-time-editor-title">Meal Times</span><span class="meal-time-editor-actions"><button type="button" class="meal-time-edit-toggle" id="editMealTimesManage" aria-expanded="false">Edit Meal Times</button><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="mealTimes">Refresh</button></span></div><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid"></div><div id="editFoodMealTimeManager" class="food-editor-meal-time-manager hidden" aria-label="Edit Meal Times"></div></fieldset>'+
+'<div class="meal-editor-section"><div class="meal-editor-section-head"><div class="meal-editor-section-title">Nutrition per serving</div><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="nutrition">Refresh</button></div><p class="meal-editor-helper">Nutrition is an estimate based on a typical serving.</p><small id="editFoodNutritionBasis" class="meal-autofill-basis" aria-live="polite"></small><div class="meal-nutrition-editor-grid">'+
 '<label>Calories<input id="editFoodCalories" type="number" required min="0" step="1" inputmode="numeric" placeholder="520" value="'+esc(nut.calories??'')+'"><span>kcal</span></label>'+
 '<label>Protein<input id="editFoodProtein" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="27" value="'+esc(nut.protein??'')+'"><span>g</span></label>'+
 '<label>Carbs<input id="editFoodCarbs" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="46" value="'+esc(nut.carbs??'')+'"><span>g</span></label>'+
 '<label>Fat<input id="editFoodFat" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="25" value="'+esc(nut.fat??'')+'"><span>g</span></label>'+
 '<label>Sodium<input id="editFoodSodium" type="number" required min="0" step="1" inputmode="numeric" placeholder="1050" value="'+esc(nut.sodium??'')+'"><span>mg</span></label>'+
 '</div></div>'+
-'<label class="meal-editor-text-label">About this meal<textarea id="editFoodDescription" placeholder="A short description of the meal (optional)" rows="3">'+esc(descriptionText)+'</textarea></label>'+
-'<label class="meal-editor-text-label">Ingredients<textarea id="editFoodIngredients" placeholder="One ingredient per line" rows="5">'+esc(ingredientsText)+'</textarea></label>'+
-'<label class="meal-editor-text-label">Recipe / preparation<textarea id="editFoodRecipe" placeholder="Preparation steps or recipe (optional)" rows="5">'+esc(item?.recipe||'')+'</textarea></label>'+(isEdit?'<section class="meal-editor-note-section"><div class="meal-editor-note-copy"><b>Add a note</b><small>Private to this device. Keep a reminder, favorite, or thought with this meal.</small></div><textarea id="editFoodNote" maxlength="1200" rows="3" placeholder="Write a note about this meal…">'+esc(itemNote(item,'food'))+'</textarea></section>':'')+
-'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small></div><label class="file-label"><span>Add Photos</span><input id="editFoodFile" type="file" accept="image/*" multiple></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
+'<div class="meal-editor-text-label"><div class="meal-editor-text-head"><span>About this meal</span><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="description">Refresh</button></div><textarea id="editFoodDescription" placeholder="A short description of the meal (optional)" rows="3">'+esc(descriptionText)+'</textarea></div>'+
+'<div class="meal-editor-text-label"><div class="meal-editor-text-head"><span>Ingredients</span><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="ingredients">Refresh</button></div><textarea id="editFoodIngredients" placeholder="One ingredient per line" rows="5">'+esc(ingredientsText)+'</textarea></div>'+
+'<div class="meal-editor-text-label"><div class="meal-editor-text-head"><span>Recipe / preparation</span><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="recipe">Refresh</button></div><textarea id="editFoodRecipe" placeholder="Preparation steps or recipe (optional)" rows="5">'+esc(item?.recipe||'')+'</textarea></div>'+(isEdit?'<section class="meal-editor-note-section"><div class="meal-editor-note-copy"><b>Add a note</b><small>Private to this device. Keep a reminder, favorite, or thought with this meal.</small></div><textarea id="editFoodNote" maxlength="1200" rows="3" placeholder="Write a note about this meal…">'+esc(itemNote(item,'food'))+'</textarea></section>':'')+
+'<div class="meal-editor-photo-section"><div class="meal-editor-photo-copy"><div class="meal-editor-photo-head"><b>'+(isEdit?'Replace meal photo':'Photo from iPhone/device')+'</b><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="photo">Find Another</button></div><small>'+(isEdit?'Add more photos, reorder them, or leave the existing order unchanged. The first photo is the Cover shown on the meal card and result.':'Upload a photo from your device, or paste a photo URL below.')+'</small><small id="editFoodPhotoStatus" class="meal-autofill-basis" aria-live="polite"></small></div><label class="file-label"><span>Add Photos</span><input id="editFoodFile" type="file" accept="image/*" multiple></label></div>'+'<input id="editFoodPhoto" placeholder="Photo URL (optional)" inputmode="url" value="'+esc(item?.image && !String(item.image).startsWith('idb:') && !String(item.image).startsWith('data:image/')?item.image:'')+'">'+
 '<button class="cut">'+(isEdit?'Save Meal':'Add Meal')+'</button></form>';
+
 const modal=openModal('foodEditorModal',isEdit?'Edit Meal':'Add Meal',body);
+const autoFillButton=$('editFoodAutoFill');
+const autoFillStatus=$('editFoodAutoFillStatus');
+const duplicateHint=$('editFoodDuplicateHint');
+const nutritionBasis=$('editFoodNutritionBasis');
+const photoStatus=$('editFoodPhotoStatus');
+const foodNameInput=$('editFoodName');
+const readAutofillCurrent=()=>{
+ const numeric=id=>{const value=String($(id)?.value||'').trim();return value===''?'':Number(value)};
+ return {
+  cuisine:[...document.querySelectorAll('input[name="editQuickCut"]:checked')].map(x=>String(x.value||'').trim()).filter(Boolean),
+  mealTimes:[...document.querySelectorAll('input[name="editMealTime"]:checked')].map(x=>String(x.value||'').trim()).filter(Boolean),
+  description:String($('editFoodDescription')?.value||'').trim(),
+  ingredients:String($('editFoodIngredients')?.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),
+  recipe:String($('editFoodRecipe')?.value||'').trim(),
+  nutrition:{calories:numeric('editFoodCalories'),protein:numeric('editFoodProtein'),carbs:numeric('editFoodCarbs'),fat:numeric('editFoodFat'),sodium:numeric('editFoodSodium')},
+  photo:String($('editFoodPhoto')?.value||'').trim(),
+  photos:[...editorPhotos]
+ };
+};
+const setChecked=(selector,values)=>{
+ const wanted=new Set((Array.isArray(values)?values:[]).map(x=>String(x||'').trim()));
+ if(!wanted.size)return;
+ document.querySelectorAll(selector).forEach(input=>{input.checked=wanted.has(String(input.value||'').trim());});
+};
+const setAutofillStatus=(message,state='')=>{
+ if(!autoFillStatus)return;
+ autoFillStatus.textContent=message||'';
+ autoFillStatus.dataset.state=state;
+};
+const refreshDuplicateHint=()=>{
+ if(!duplicateHint)return;
+ const matches=mealNameSimilarMatches(foodNameInput?.value||'',item?.id||'');
+ duplicateHint.textContent=matches.length?'Similar meal already in your library: '+matches.join(', '):'';
+};
+const applyMealAutofill=(data,section)=>{
+ const draft=data?.draft||{};
+ if((section==='all'||section==='cuisine')&&Array.isArray(draft.cuisine)&&draft.cuisine.length)setChecked('input[name="editQuickCut"]',draft.cuisine);
+ if((section==='all'||section==='mealTimes')&&Array.isArray(draft.mealTimes)&&draft.mealTimes.length)setChecked('input[name="editMealTime"]',draft.mealTimes);
+ if((section==='all'||section==='description')&&String(draft.description||'').trim())$('editFoodDescription').value=draft.description;
+ if((section==='all'||section==='ingredients')&&Array.isArray(draft.ingredients)&&draft.ingredients.length)$('editFoodIngredients').value=draft.ingredients.join('\n');
+ if((section==='all'||section==='recipe')&&String(draft.recipe||'').trim())$('editFoodRecipe').value=draft.recipe;
+ if((section==='all'||section==='nutrition')&&draft.nutrition){
+  const n=draft.nutrition;
+  if(n.calories!=='')$('editFoodCalories').value=n.calories;
+  if(n.protein!=='')$('editFoodProtein').value=n.protein;
+  if(n.carbs!=='')$('editFoodCarbs').value=n.carbs;
+  if(n.fat!=='')$('editFoodFat').value=n.fat;
+  if(n.sodium!=='')$('editFoodSodium').value=n.sodium;
+  if(nutritionBasis)nutritionBasis.textContent=draft.nutritionBasis?'Nutrition estimate · '+draft.nutritionBasis:'Nutrition estimate · Typical serving';
+ }
+ if(section==='all'||section==='photo'){
+  const photo=data?.photo?.url||'';
+  if(photo){
+   editorPhotos=dedupeMealPhotos([photo,...editorPhotos],8);
+   $('editFoodPhoto').value=photo;
+   if(photoStatus)photoStatus.textContent=(data?.photo?.provider||'')?String(data.photo.provider).replace(/^./,c=>c.toUpperCase())+' photo selected · '+String(data.photo.query||''):'Photo selected';
+   if(typeof renderMealPhotos==='function')renderMealPhotos();
+  }else if(photoStatus)photoStatus.textContent='No strong exact-match Pexels or Unsplash photo found. Add one manually.';
+ }
+};
+const runMealAutofill=async(section='all')=>{
+ const name=String(foodNameInput?.value||'').trim();
+ if(!name){foodNameInput?.focus();setAutofillStatus('Enter a meal name first.','error');return;}
+ const targetButton=section==='all'?autoFillButton:modal.querySelector('[data-meal-autofill-refresh="'+section+'"]');
+ if(targetButton){targetButton.disabled=true;targetButton.dataset.originalLabel=targetButton.textContent;targetButton.textContent=section==='photo'?'Finding…':section==='all'?'Filling…':'Refreshing…';}
+ if(section==='all')setAutofillStatus('Preparing a meal draft…');
+ try{
+  const data=await requestMealAutofill(name,{section,current:readAutofillCurrent()});
+  applyMealAutofill(data,section);
+  if(section==='all'){
+   const duplicate=mealNameSimilarMatches(name,item?.id||'');
+   setAutofillStatus((data?.photo?.url?'Meal draft ready to review.':'Meal draft ready to review; no strong exact-match photo was found.')+(duplicate.length?' · '+duplicate[0]+' is similar in your library.':''),data?.photo?.url?'success':'notice');
+  }
+ }catch(error){
+  const message=String(error?.message||'Meal Auto-Fill could not complete that request.');
+  if(section==='all')setAutofillStatus(message,'error');else appToast(message);
+ }finally{
+  if(targetButton){targetButton.disabled=false;targetButton.textContent=targetButton.dataset.originalLabel||'Refresh';}
+ }
+};
+autoFillButton?.addEventListener('click',()=>runMealAutofill('all'));
+foodNameInput?.addEventListener('input',refreshDuplicateHint);
+refreshDuplicateHint();
+modal.querySelectorAll('[data-meal-autofill-refresh]').forEach(btn=>btn.addEventListener('click',()=>runMealAutofill(String(btn.dataset.mealAutofillRefresh||''))));
+
 const mealTimeManageToggle=$('editMealTimesManage'),mealTimeManager=$('editFoodMealTimeManager');
 mealTimeManageToggle?.addEventListener('click',()=>{
  const open=mealTimeManager?.classList.toggle('hidden')===false;
