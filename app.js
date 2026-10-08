@@ -1405,9 +1405,6 @@ return true;
 } catch { return false; }
 }
 function show(screen) {
-if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&tutorialState.active&&tutorialState.screen&&tutorialState.screen!==screen){
- tutorialInvalidateTransition('screen-change');
-}
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 S.screen = screen;
@@ -1618,7 +1615,7 @@ function renderTutorialStep(){
  const title=document.querySelector('#tutorialBubbleTitle'),body=document.querySelector('#tutorialBubbleBody');
  if(title)title.textContent=step.title;if(body)body.textContent=step.body;
  if(!bubble){ensureTutorialUI();return renderTutorialStep();}
- bubble.classList.toggle('is-action-step',!!step.action);
+ bubble.classList.remove('is-action-step');
  bubble.disabled=false;
  bubble.setAttribute('aria-disabled','false');
  bubble.dataset.action=step.action||'';
@@ -1719,113 +1716,16 @@ let tutorialSuppressClick=null;
 function tutorialTargetHit(event,selector){
  try{return !!event.target?.closest?.(selector);}catch{return false;}
 }
-function tutorialAdvanceFromTarget(event,step){
- if(step?.action==='home-choice'){
-  const choice=event.target?.closest?.('#foodStart,#restStart');
-  if(!choice)return false;
-  const nextScreen=choice.id==='restStart'?'restaurant':'food';
-  tutorialMarkHomeChoice(nextScreen);
-  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
-  else startFood({tutorialResumeIndex:0});
-  return true;
- }
- if(step?.action==='perform'){
-  window.setTimeout(()=>{
-   if(tutorialModeEnabled()&&tutorialState.active&&tutorialState.index>=0){
-    advanceTutorial();
-   }
-  },180);
-  return true;
- }
- if(step?.action==='choose'){
-  // The real Choose button calls tutorialMarkChoose() and winner(), which
-  // transfers the Tour to the Winner screen at its first lesson.
-  return true;
- }
- if(step?.action==='enter-restaurant'||step?.action==='enter-food'){
-  advanceTutorial();
-  return true;
- }
- if(step?.action==='winner-restart'){
-  handleWinnerRestart();
-  return true;
- }
- advanceTutorial();
- return true;
-}
-function tutorialCurrentTargetForEvent(event,step){
- if(!step?.target)return null;
- if(step.action==='home-choice')return event.target?.closest?.('#foodStart,#restStart')||null;
- return tutorialTargetHit(event,String(step.target)) ? event.target?.closest?.(String(step.target)) : null;
-}
-function tutorialBlockPointer(event){
- if(!tutorialModeEnabled()||!tutorialState.active)return false;
- const step=tutorialState.steps[tutorialState.index];
- const target=tutorialCurrentTargetForEvent(event,step);
- if(!target)return false;
- tutorialPointerContext={
-  pointerId:event.pointerId,
-  target,
-  screen:tutorialState.screen,
-  index:tutorialState.index
- };
- event.preventDefault();
- event.stopImmediatePropagation();
- return true;
-}
-function tutorialHandlePointerUp(event){
- if(!tutorialPointerContext)return false;
- const ctx=tutorialPointerContext;
- tutorialPointerContext=null;
- if(ctx.pointerId!==event.pointerId)return false;
- event.preventDefault();
- event.stopImmediatePropagation();
- const stillSameScreen=tutorialState.active&&tutorialState.screen===ctx.screen&&tutorialState.index===ctx.index;
- if(stillSameScreen){
-  tutorialSuppressClick={target:ctx.target,expires:Date.now()+650};
-  const step=tutorialState.steps[ctx.index];
-  tutorialAdvanceFromTarget(event,step);
- }
- return true;
-}
-function tutorialHandlePointerCancel(event){
- if(!tutorialPointerContext||tutorialPointerContext.pointerId!==event.pointerId)return false;
- tutorialPointerContext=null;
- event.preventDefault();
- event.stopImmediatePropagation();
- return true;
-}
-let tutorialDispatchingAction=false;
-function tutorialHighlightedTargetClick(event){
- if(tutorialDispatchingAction)return;
- if(tutorialSuppressClick){
-  const suppressed=tutorialSuppressClick;
-  if(Date.now()<=suppressed.expires&&suppressed.target?.isConnected&&
-     (event.target===suppressed.target||suppressed.target.contains?.(event.target))){
-   tutorialSuppressClick=null;
-   event.preventDefault();
-   event.stopImmediatePropagation();
-   return;
-  }
-  tutorialSuppressClick=null;
- }
- if(!tutorialModeEnabled()||!tutorialState.active)return;
- const step=tutorialState.steps[tutorialState.index];
- const target=tutorialCurrentTargetForEvent(event,step);
- if(!target)return;
- if(step?.action==='perform'||step?.action==='choose'){
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  tutorialDispatchingAction=true;
-  try{ target.click(); }catch{}
-  tutorialDispatchingAction=false;
-  if(step?.action==='perform')tutorialAdvanceFromTarget(event,step);
-  return;
- }
- event.preventDefault();
- event.stopImmediatePropagation();
- tutorialAdvanceFromTarget(event,step);
-}
+
+// CP1283 — Tour is non-blocking. These helpers are retained for compatibility
+// with older Tour state, but they never prevent or replace app interactions.
+function tutorialAdvanceFromTarget(){ return false; }
+function tutorialCurrentTargetForEvent(){ return null; }
+function tutorialBlockPointer(){ return false; }
+function tutorialHandlePointerUp(){ return false; }
+function tutorialHandlePointerCancel(){ return false; }
+function tutorialHighlightedTargetClick(){ return false; }
+
 function bindTutorialUI(){
  ensureTutorialUI();
  const bubble=document.querySelector('#tutorialBubble');
@@ -1833,15 +1733,9 @@ function bindTutorialUI(){
   bubble.dataset.bound='1';
   bubble.addEventListener('click',advanceTutorial);
  }
- if(!document.documentElement.dataset.tutorialTargetBound){
-  document.documentElement.dataset.tutorialTargetBound='1';
-  // CP1251: use the CP1076-style click capture as the tutorial's single
-  // interaction gate. The previous pointerdown/up interception could lose
-  // the Home/Restaurant choice when the release landed a few pixels away.
-  document.addEventListener('click',tutorialHighlightedTargetClick,true);
- }
  window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
  window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
+ window.addEventListener('hashchange',()=>{}, {passive:true});
 }
 
 bindTutorialUI();
