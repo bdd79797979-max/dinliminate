@@ -145,7 +145,7 @@ assert.ok(imageHosts.includes('HOSTS=Object.freeze'),'shared image-host allowlis
 assert.ok(main.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read('api/meal-autofill.js').includes("scope:'meal-autofill',perMinute:8,dailyCap:100"),'meal-autofill rate limit/daily cap must be enabled');
 
 const versionedAssets=[
- './boot.js?v='+build,'./src/main.js?v='+build,'./styles.css?v='+build,'./viewport.js?v='+build,
+ './boot.js?v='+build,'./src/main.js?v='+build,'./viewport.js?v='+build,
  './logo.svg?v='+build,'./icon.svg?v='+build,'./apple-touch-icon.png?v='+build,
  './tokens.css?v='+build,'./base.css?v='+build,'./chrome.css?v='+build,'./modal.css?v='+build,'./swipe.css?v='+build,'./home.css?v='+build,'./meals.css?v='+build,'./restaurants.css?v='+build,'./winner.css?v='+build,'./history.css?v='+build,'./family.css?v='+build,'./settings.css?v='+build,'./tutorial.css?v='+build,
 ];
