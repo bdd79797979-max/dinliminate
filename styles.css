@@ -10707,3 +10707,30 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
   border-color:transparent!important;
   box-shadow:none!important;
 }
+
+
+/* CP1302 — Settings color hierarchy: keep ordinary actions unified; reserve color emphasis for destructive Reset. */
+.settings-actions .settings-action,
+.settings-actions .settings-action.diagnosis-action,
+.settings-actions .settings-action.restore-action{
+ background:transparent!important;
+ border-color:transparent!important;
+ box-shadow:none!important;
+}
+.settings-actions .settings-action .settings-action-icon,
+.settings-actions .settings-action.diagnosis-action .settings-action-icon,
+.settings-actions .settings-action.restore-action .settings-action-icon{
+ background:#141413!important;
+ border-color:#34322e!important;
+ color:#a8b4c5!important;
+}
+.settings-actions .settings-action.reset-action{
+ background:linear-gradient(145deg,#351c19,#1e1412)!important;
+ border-color:#704038!important;
+ box-shadow:0 8px 24px #170b0988!important;
+}
+.settings-actions .settings-action.reset-action .settings-action-icon{
+ background:#45231f!important;
+ border-color:#8a5147!important;
+ color:#efc5be!important;
+}
