@@ -2212,7 +2212,7 @@ function drawFood(){
  maybeShowInCardSwipeCoach();if(!foodSwipeHandoff)bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
-function foodCut(item=S.pool[S.index]){
+function foodCut(item=S.pool[S.index],options={}){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'&&familyRoundStage()!==1){familyBrowsePrevious('meal');return;}
  if(!item)return;
@@ -2220,24 +2220,35 @@ function foodCut(item=S.pool[S.index]){
  foodCommit('cut',item);
  const roundAfter=!!S.foodMaybeRound|| (S.maybe.size>0 && unkept<=1);
  S.foodActions[S.foodActions.length-1].roundAfter=roundAfter;
- S.foodCuts.add(item.id);buildFood();resolveFoodAfterDecision();
+ S.foodCuts.add(item.id);buildFood();
+ if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});save();return;}
+ if(!S.foodMaybeRound){
+  const ni=foodChoiceIndex(S.pool,S.index,false);
+  if(ni>=0)S.index=ni;else if(S.maybe.size){S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,0,true);}
+ }
+ S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
+ if(options?.preserveSwipe){save();return;}
+ drawFood();save();
 }
-function foodMaybe(item=S.pool[S.index]){
+function foodMaybe(item=S.pool[S.index],options={}){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'&&familyRoundStage()!==1){familyBrowseNext('meal');return;}
  if(!item)return;
- if(S.pool.length===1){foodCommit('maybe',item);winner(item);return;}
+ if(S.pool.length===1){foodCommit('maybe',item);winner(item);save();return;}
  foodCommit('maybe',item);S.maybe.add(item.id);
  if(!S.foodMaybeRound){
   const ni=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,false);
   if(ni>=0)S.index=ni;else{S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true);}
  }else S.index=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true);
+ if(options?.preserveSwipe){save();return;}
  drawFood();save();
 }
-function resolveFoodAfterDecision(){
+function resolveFoodAfterDecision(options={}){
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
  if(!S.foodMaybeRound){const ni=foodChoiceIndex(S.pool,S.index,false);if(ni>=0)S.index=ni;else if(S.maybe.size){S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,0,true);}}
- S.index=Math.max(0,Math.min(S.index,S.pool.length-1));drawFood();save();
+ S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
+ if(options?.preserveSwipe){save();return;}
+ drawFood();save();
 }
 function foodBack(){
  if(familyIsBrowseStage('meal')){familyBrowseBack('meal');return;}
@@ -2370,6 +2381,7 @@ async function ensureSwipePreviewReady(card){
 
 const preparedFoodSwipeCards=new Map();
 const FOOD_SWIPE_PRELOAD_DEPTH=3;
+const DECK_READY_TIMEOUT=1800;
 
 function nextFoodIndexList(count=FOOD_SWIPE_PRELOAD_DEPTH){
  const pool=Array.isArray(S.pool)?S.pool:[];
@@ -2428,161 +2440,152 @@ function cachePreparedFoodCards(){
  return indices.map(index=>pool[index]).filter(Boolean);
 }
 
-function ensurePreparedFoodNextCardMarkup(nextCard){
- if(!nextCard)return null;
- let img=nextCard.querySelector('img.next-food-img')||nextCard.querySelector('img#foodNextImg');
- if(!img){
-  img=document.createElement('img');
-  nextCard.insertBefore(img,nextCard.firstChild);
- }
- img.classList.add('next-food-img');
- img.removeAttribute('id');
-
- let copy=nextCard.querySelector('.next-food-copy');
- if(!copy){
-  copy=document.createElement('div');
-  copy.className='card-copy next-food-copy';
-  copy.innerHTML='<div class="card-info-row card-cuisine-row food-cuisine-row"><small class="next-food-cat card-cuisine-text"></small><span class="card-details-inline card-details-visual" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><h3 class="next-food-name"></h3>';
-  nextCard.appendChild(copy);
- }
- let nameEl=copy.querySelector('.next-food-name');
- let catEl=copy.querySelector('.next-food-cat');
- if(!nameEl){
-  nameEl=document.createElement('h3');
-  nameEl.className='next-food-name';
-  copy.appendChild(nameEl);
- }
- if(!catEl){
-  catEl=document.createElement('small');
-  catEl.className='next-food-cat';
-  const row=copy.querySelector('.card-cuisine-row')||copy;
-  row.insertBefore(catEl,row.firstChild);
- }
- return {img,nameEl,catEl};
+function ensureFoodDeckThirdCard(){
+ const stack=$('foodStack');if(!stack)return null;
+ let card=$('foodThirdCard');
+ if(card&&card.parentElement===stack)return card;
+ card=document.createElement('article');
+ card.id='foodThirdCard';
+ card.className='card deck-third-card';
+ card.setAttribute('aria-hidden','true');
+ card.innerHTML='<img class="deck-food-img" alt=""><div class="shade"></div><div class="card-copy deck-food-copy"><div class="card-info-row card-cuisine-row food-cuisine-row"><small class="deck-food-cat card-cuisine-text"></small><span class="card-details-inline card-details-visual" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><h3 class="deck-food-name"></h3></div>';
+ stack.appendChild(card);
+ return card;
 }
 
-function setFoodNextCardImage(nextCard,view){
- const parts=ensurePreparedFoodNextCardMarkup(nextCard);
- const img=parts?.img;
- if(!img)return Promise.resolve(false);
- const primary=String(view?.primary||'').trim();
- const backup=String(view?.backup||'').trim();
- const loadToken=String(Number(nextCard.dataset.mealLoadToken||0)+1);
- nextCard.dataset.mealLoadToken=loadToken;
- nextCard.dataset.foodImageReady='0';
- nextCard.dataset.foodImageSource='';
- img.alt=view.name||'';
- img.referrerPolicy='no-referrer';
- img.loading='eager';
- img.decoding='async';
- img.draggable=false;
- img.dataset.fallback=backup;
- img.dataset.finalFallback=FINAL_FOOD_IMAGE;
- img.dataset.imageFallback='true';
- img.onerror=function(){
-  const fb=this.dataset.fallback||'',current=this.currentSrc||this.src;
-  if(fb&&current!==fb){this.src=fb;this.dataset.imageFallback='false';return;}
-  markMealImageUnavailable(this);
- };
- // Do not make the waiting card itself invisible while the photo warms up.
- img.style.visibility='visible';
- nextCard.style.visibility='visible';
- if(primary)img.src=primary;
- else if(backup)img.src=backup;
- else markMealImageUnavailable(img);
- nextCard.style.pointerEvents='none';
- const promise=loadMealPhotoCandidates(img,[primary,backup],nextCard).then(ok=>{
-  if(!ok&&String(nextCard.dataset.mealLoadToken||'')===loadToken)markMealImageUnavailable(img);
-  if(String(nextCard.dataset.mealLoadToken||'')===loadToken)nextCard.dataset.foodImageReady=ok?'1':'-1';
-  return ok;
- });
- nextCard.__foodReadyPromise=promise;
- nextCard.__foodImageReadyPromise=promise;
- return promise;
-}
-
-function populateFoodNextCard(view){
- const nextCard=$('foodNextCard');
- if(!nextCard)return Promise.resolve(false);
- nextCard.classList.toggle('hidden',!view);
- nextCard.style.display=view?'block':'none';
- nextCard.style.visibility='hidden';
- nextCard.style.transition='none';
- nextCard.style.transform='none';
- nextCard.style.opacity='1';
- nextCard.style.filter='none';
- nextCard.style.pointerEvents='none';
- nextCard.dataset.swipePromoted='';
- nextCard.dataset.mealId=view?.id||'';
- nextCard.dataset.foodReady='0';
- nextCard.dataset.foodImageReady='0';
-
- const parts=ensurePreparedFoodNextCardMarkup(nextCard);
- const nameEl=parts?.nameEl;
- const catEl=parts?.catEl;
- if(nameEl)nameEl.textContent=view?.name||'';
- if(catEl)catEl.textContent=view?.category||'';
-
- nextCard.querySelector('.maybe-stamp')?.remove();
- if(view?.maybe){
-  const stamp=document.createElement('span');
-  stamp.className='maybe-stamp';
-  stamp.setAttribute('aria-label','Marked Maybe');
-  stamp.textContent='MAYBE';
-  nextCard.appendChild(stamp);
- }
-
- if(!view)return Promise.resolve(false);
-
- return setFoodNextCardImage(nextCard,view).then(ok=>{
-  if(nextCard.dataset.mealId!==view.id)return false;
-  nextCard.dataset.foodReady=ok?'1':'-1';
-  nextCard.style.visibility='visible';
-  return ok;
+function ensureDeckImageReady(img,sources,applyUrl){
+ const list=[...new Set((Array.isArray(sources)?sources:[]).map(x=>String(x||'').trim()).filter(Boolean))];
+ if(!img||!list.length)return Promise.resolve(false);
+ return new Promise(resolve=>{
+  let finished=false,index=0,timer=0;
+  const cleanup=()=>{
+   img.removeEventListener('load',onLoad);
+   img.removeEventListener('error',onError);
+   clearTimeout(timer);
+  };
+  const done=(ok)=>{
+   if(finished)return;
+   finished=true;cleanup();resolve(!!ok);
+  };
+  const verify=()=>{
+   if(!img.isConnected)return done(false);
+   if(!img.complete||img.naturalWidth<1)return;
+   const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
+   Promise.resolve(decoded).catch(()=>{}).then(()=>{
+    if(!img.isConnected||img.naturalWidth<1)return done(false);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>done(true)));
+   });
+  };
+  const useCurrent=()=>{
+   if(index>=list.length)return done(false);
+   const src=list[index++];
+   img.src=src;
+   verify();
+   timer=window.setTimeout(()=>{
+    if(img.complete&&img.naturalWidth>0){verify();return;}
+    useCurrent();
+   },DECK_READY_TIMEOUT);
+  };
+  const onLoad=()=>verify();
+  const onError=()=>useCurrent();
+  img.addEventListener('load',onLoad);
+  img.addEventListener('error',onError);
+  img.decoding='async';
+  img.loading='eager';
+  img.referrerPolicy='no-referrer';
+  useCurrent();
  });
 }
 
-function prepareFoodNextCard(){
+async function populateFoodDeckCard(card,view,depth=1){
+ if(!card)return false;
+ const visible=view&&view.id;
+ card.classList.toggle('hidden',!visible);
+ card.style.display=visible?'block':'none';
+ card.style.transition='none';
+ card.style.opacity=depth===1?'1':'.86';
+ card.style.filter='none';
+ card.style.visibility=visible?'hidden':'hidden';
+ card.style.pointerEvents='none';
+ card.style.zIndex=depth===1?'1':'0';
+ card.style.transform=depth===1?'scale(.965)':'scale(.925)';
+ card.dataset.mealId=view?.id||'';
+ card.dataset.deckReady='0';
+ card.dataset.foodImageReady='0';
+ card.dataset.swipePromoted='';
+ if(!visible)return false;
+ const parts=ensurePreparedFoodCard(view);
+ if(parts===null)return false;
+ const primary=String(view.primary||'').trim(),backup=String(view.backup||'').trim();
+ card.innerHTML='<img class="deck-food-img" alt=""><div class="shade"></div><div class="card-copy deck-food-copy"><div class="card-info-row card-cuisine-row food-cuisine-row"><small class="deck-food-cat card-cuisine-text"></small><span class="card-details-inline card-details-visual" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><h3 class="deck-food-name"></h3></div>';
+ const img=card.querySelector('.deck-food-img'),cat=card.querySelector('.deck-food-cat'),name=card.querySelector('.deck-food-name');
+ if(cat)cat.textContent=view.category||'';
+ if(name)name.textContent=view.name||'';
+ if(view.maybe){
+  const stamp=document.createElement('span');stamp.className='maybe-stamp';stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';card.appendChild(stamp);
+ }
+ if(img)img.alt=view.name||'';
+ const ok=await ensureDeckImageReady(img,[primary,backup],src=>{if(img)img.src=src;});
+ if(String(card.dataset.mealId||'')!==String(view.id||''))return false;
+ card.dataset.deckReady=ok?'1':'-1';
+ card.dataset.foodImageReady=ok?'1':'-1';
+ if(ok){card.style.visibility='visible';}
+ return ok;
+}
+
+function promoteFoodPreviewToActive(preview,item){
+ const active=$('foodCard');if(!active||!preview||preview.dataset.deckReady!=='1'||!item)return false;
+ active.innerHTML=preview.innerHTML;
+ active.dataset.mealId=String(item.id||'');
+ active.dataset.deckPromoted='1';
+ active.classList.remove('swipe-active');
+ active.style.transition='none';
+ active.style.transform='none';
+ active.style.opacity='1';
+ active.style.visibility='visible';
+ active.style.pointerEvents='auto';
+ active.style.zIndex='2';
+ active.style.filter='none';
+ active.dataset.swipe='';
+ active.dataset.swipePhase='idle';
+ active.dataset.swipeTransaction='';
+ const img=active.querySelector('.deck-food-img');if(img){img.id='foodImg';img.classList.remove('deck-food-img');}
+ const cat=active.querySelector('.deck-food-cat');if(cat){cat.id='foodCat';cat.classList.remove('deck-food-cat');}
+ const name=active.querySelector('.deck-food-name');if(name){name.id='foodName';name.classList.remove('deck-food-name');}
+ const visual=active.querySelector('.card-details-inline');
+ if(visual){
+  const button=document.createElement('button');
+  button.type='button';button.id='foodDetails';button.className='card-details-inline card-details-visual';
+  button.setAttribute('aria-label','Details');button.title='Details';button.innerHTML=visual.innerHTML;visual.replaceWith(button);
+ }
+ const count=mealPhotoList(item).length||1;
+ ensureMealCardPhotoPager(active,count,0);
+ return true;
+}
+
+async function primeFoodSwipeMedia(){
+ cachePreparedFoodCards();
  const pool=Array.isArray(S.pool)?S.pool:[];
- const indices=nextFoodIndexList(1);
+ const indices=nextFoodIndexList(2);
  const next=indices.length?pool[indices[0]]:null;
- const view=next?preparedFoodSwipeCards.get(String(next.id||next.name||''))||buildPreparedFoodCard(next):null;
- if(view)preparedFoodSwipeCards.set(view.id,view);
- return populateFoodNextCard(view);
-}
-
-function ensureFoodNextCardReady(nextCard){
- if(!nextCard)return Promise.resolve(false);
- if(nextCard.dataset.foodReady==='1')return Promise.resolve(true);
- if(nextCard.__foodReadyPromise)return nextCard.__foodReadyPromise;
- return Promise.resolve(false);
-}
-
-const swipeImagePreloads=new Map();
-function preloadSwipeImage(src){
- const url=String(src||'').trim();if(!url)return;
- if(swipeImagePreloads.has(url))return;
- const img=new Image();
- img.decoding='async';
- img.loading='eager';
- img.referrerPolicy='no-referrer';
- img.src=url;
- swipeImagePreloads.set(url,img);
- while(swipeImagePreloads.size>12){
-  const first=swipeImagePreloads.keys().next().value;
-  swipeImagePreloads.delete(first);
- }
- try{img.decode?.().catch(()=>{});}catch{}
-}
-
-function primeFoodSwipeMedia(){
- const nextItems=cachePreparedFoodCards();
- const next=nextItems[0];
+ const third=indices.length>1?pool[indices[1]]:null;
  const nextView=next?preparedFoodSwipeCards.get(String(next.id||next.name||''))||buildPreparedFoodCard(next):null;
- if(nextView)preparedFoodSwipeCards.set(nextView.id,nextView);
- return populateFoodNextCard(nextView);
+ const thirdView=third?preparedFoodSwipeCards.get(String(third.id||third.name||''))||buildPreparedFoodCard(third):null;
+ const nextCard=$('foodNextCard'),thirdCard=ensureFoodDeckThirdCard();
+ if(nextCard){
+  nextCard.classList.remove('hidden');
+  nextCard.dataset.swipePromoted='';
+  nextCard.style.zIndex='1';
+ }
+ const firstPromise=populateFoodDeckCard(nextCard,nextView,1);
+ if(thirdCard)populateFoodDeckCard(thirdCard,thirdView,2).catch(()=>{});
+ return firstPromise;
 }
 
+function ensureFoodSwipeDeckReady(){
+ const next=$('foodNextCard');
+ return next?.dataset.deckReady==='1';
+}
 function bindRestaurantPhotoPinch(target){
   const img=target?.tagName==='IMG'?target:target?.querySelector?.('img');
   if(!img)return;
@@ -2610,586 +2613,264 @@ function bindRestaurantPhotoPinch(target){
   surface.addEventListener('pointerup',finishPointer,{passive:true});
   surface.addEventListener('pointercancel',finishPointer,{passive:true});
 }
-function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
- const card=$(cardId);if(!card)return;
- const isOverlapCard=options?.overlap===true;
+function setDeckPreviewDepth(next,third){
+ if(next){
+  next.style.zIndex='1';next.style.transform='scale(.965)';next.style.opacity='1';next.style.filter='none';
+ }
+ if(third){
+  third.style.zIndex='0';third.style.transform='scale(.925)';third.style.opacity='.86';third.style.filter='none';
+ }
+}
+
+async function refreshFoodSwipeDeckAfterDecision(promotedPreview){
+ const rows=Array.isArray(S.pool)?S.pool:[];
+ if(!rows.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return false;}
+ const current=rows[Math.max(0,Math.min(Number(S.index)||0,rows.length-1))];
+ const next=$('foodNextCard'),third=ensureFoodDeckThirdCard();
+ let promoted=false;
+ if(promotedPreview&&String(promotedPreview.dataset.mealId||'')===String(current?.id||'')&&promotedPreview.dataset.deckReady==='1'){
+  promoted=promoteFoodPreviewToActive(promotedPreview,current);
+ }else if(next&&String(next.dataset.mealId||'')===String(current?.id||'')&&next.dataset.deckReady==='1'){
+  promoted=promoteFoodPreviewToActive(next,current);
+ }
+ if(!promoted){
+  if(next){const view=buildPreparedFoodCard(current);await populateFoodDeckCard(next,view,1);promoted=next.dataset.deckReady==='1'&&promoteFoodPreviewToActive(next,current);}
+  if(!promoted)return false;
+ }
+ const indices=nextFoodIndexList(2);
+ const nextItem=indices.length?rows[indices[0]]:null;
+ const thirdItem=indices.length>1?rows[indices[1]]:null;
+ const nextView=nextItem?buildPreparedFoodCard(nextItem):null;
+ const thirdView=thirdItem?buildPreparedFoodCard(thirdItem):null;
+ if(third)populateFoodDeckCard(third,thirdView,2).catch(()=>{});
+ const first=populateFoodDeckCard(next,nextView,1);
+ setDeckPreviewDepth(next,third);
+ await first;
+ setDeckPreviewDepth(next,third);
+ bindFoodSwipe();
+ bindCardButton('foodDetails',()=>detailsSheet(current,'food'));
+ bindCardButton('foodCut',()=>foodCut());
+ bindCardButton('foodMaybe',()=>foodMaybe());
+ bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(current)});
+ return true;
+}
+
+async function refreshRestaurantSwipeDeckAfterDecision(promotedPreview){
+ const rows=restaurantPoolFiltered();
+ if(!rows.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return false;}
+ const current=rows[Math.max(0,Math.min(Number(S.restaurantIndex)||0,rows.length-1))];
+ const next=$('restaurantNextCard'),third=$('restaurantThirdCard');
+ let promoted=false;
+ if(promotedPreview&&String(promotedPreview.dataset.deckRowId||'')===String(current?.id||'')&&promotedPreview.dataset.deckReady==='1'){
+  promoted=promoteRestaurantPreviewToActive(promotedPreview,current);
+ }else if(next&&String(next.dataset.deckRowId||'')===String(current?.id||'')&&next.dataset.deckReady==='1'){
+  promoted=promoteRestaurantPreviewToActive(next,current);
+ }
+ if(!promoted){
+  if(next){await populateRestaurantDeckCard(next,current,1);promoted=next.dataset.deckReady==='1'&&promoteRestaurantPreviewToActive(next,current);}
+  if(!promoted)return false;
+ }
+ const ordered=[];
+ for(let i=S.restaurantIndex+1;i<rows.length&&ordered.length<2;i++)ordered.push(rows[i]);
+ const nextRow=ordered[0]||null,thirdRow=ordered[1]||null;
+ if(third)populateRestaurantDeckCard(third,thirdRow,2).catch(()=>{});
+ const first=populateRestaurantDeckCard(next,nextRow,1);
+ setDeckPreviewDepth(next,third);
+ await first;
+ setDeckPreviewDepth(next,third);
+ bindRestaurantSwipe(current);
+ bindCardButton('restDetails',()=>detailsSheet(current,'restaurant'));
+ bindCardButton('restCut',()=>restaurantCut(current));
+ bindCardButton('restMaybe',()=>restaurantMaybe(current));
+ bindCardButton('restChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');}else winner(current)});
+ bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
+ return true;
+}
+
+function promoteRestaurantPreviewToActive(preview,row){
+ const active=$('restaurantCard');if(!active||!preview||preview.dataset.deckReady!=='1'||!row)return false;
+ active.innerHTML=preview.innerHTML;
+ active.dataset.deckRowId=String(row.id||'');
+ active.dataset.deckPromoted='1';
+ active.classList.remove('swipe-active');
+ active.style.transition='none';active.style.transform='none';active.style.opacity='1';active.style.visibility='visible';active.style.pointerEvents='auto';active.style.zIndex='2';active.style.filter='none';
+ active.dataset.swipe='';active.dataset.swipePhase='idle';active.dataset.swipeTransaction='';
+ const img=active.querySelector('.deck-rest-img');if(img){img.classList.remove('deck-rest-img');img.dataset.restaurantPhotoKey=String(row.id||'');}
+ const visual=active.querySelector('.restaurant-card-details-visual');
+ if(visual&&visual.tagName!=='BUTTON'){
+  const button=document.createElement('button');button.type='button';button.id='restDetails';button.className='restaurant-card-utility restaurant-card-details-utility card-details-inline';button.setAttribute('aria-label','Details');button.title='Details';button.innerHTML=visual.innerHTML;visual.replaceWith(button);
+ }
+ return true;
+}
+
+async function populateRestaurantDeckCard(card,row,depth=1){
+ if(!card)return false;
+ card.classList.toggle('hidden',!row);card.style.display=row?'block':'none';card.style.transition='none';card.style.zIndex=depth===1?'1':'0';card.style.transform=depth===1?'scale(.965)':'scale(.925)';card.style.opacity=depth===1?'1':'.86';card.style.filter='none';card.style.pointerEvents='none';card.style.visibility='hidden';card.dataset.deckReady='0';card.dataset.swipePromoted='';
+ card.dataset.deckRowId=row?.id||'';
+ if(!row){card.innerHTML='';return false;}
+ const category=restaurantCategory(row);
+ const shortAddress=row.address?esc(String(row.address).split(',').slice(0,2).join(', ')):'';
+ const distanceLabel=Number.isFinite(Number(row.distance))?Number(row.distance).toFixed(1)+' mi away':'';
+ const loc=(shortAddress||distanceLabel)?'<div class="restaurant-card-location-distance" title="'+esc(row.address||'')+'">'+[shortAddress,distanceLabel?esc(distanceLabel):''].filter(Boolean).join(' <span aria-hidden="true">•</span> ')+'</div>':'';
+ card.innerHTML='<img class="deck-rest-img" alt=""><div class="shade"></div><div class="restaurant-card-photo-ui">'+(row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'')+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy"><div class="card-info-row card-cuisine-row restaurant-card-meta-row"><span class="restaurant-card-meta card-cuisine-text">'+esc(category)+'</span><span class="restaurant-card-details-visual restaurant-card-utility restaurant-card-details-utility card-details-inline" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><h3>'+esc(row.name||'')+'</h3>'+loc+'</div>';
+ const img=card.querySelector('.deck-rest-img');
+ let data=await loadRestaurantPhoto(row).catch(()=>null);
+ let src=data?.url||restaurantImmediatePhoto(row);
+ if(!src){
+  const fallback=restaurantFallbackImage(row);
+  src=fallback||'';
+ }
+ if(!src){card.dataset.deckReady='-1';return false;}
+ const ok=await ensureDeckImageReady(img,[src]);
+ if(!ok)return false;
+ if(data?.source||data?.sourceUrl)setRestaurantPhotoCredit(card,data.attributions,data.source,data.sourceUrl);
+ card.dataset.deckReady='1';card.style.visibility='visible';return true;
+}
+
+async function primeRestaurantSwipeDeck(rows,startIndex=0){
+ const source=Array.isArray(rows)?rows:[];
+ const ordered=[];
+ for(let i=Math.max(0,startIndex)+1;i<source.length&&ordered.length<2;i++)ordered.push(source[i]);
+ const next=ordered[0]||null,third=ordered[1]||null;
+ const stack=$('restStage')?.querySelector('.restaurant-card-stack');
+ if(!stack)return false;
+ let thirdCard=$('restaurantThirdCard');
+ if(!thirdCard){
+  thirdCard=document.createElement('article');thirdCard.id='restaurantThirdCard';thirdCard.className='card deck-third-card';thirdCard.setAttribute('aria-hidden','true');stack.appendChild(thirdCard);
+ }
+ const nextCard=$('restaurantNextCard');
+ if(thirdCard)populateRestaurantDeckCard(thirdCard,third,2).catch(()=>{});
+ const ready=populateRestaurantDeckCard(nextCard,next,1);
+ setDeckPreviewDepth(nextCard,thirdCard);
+ await ready;
+ setDeckPreviewDepth(nextCard,thirdCard);
+ return !!ready;
+}
+
+function unifiedDeckDecisionReady(cardId,nextId){
  const next=$(nextId);
- const staticWaitingCard=cardId==='foodCard';
- const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
+ return !!next&&next.dataset.deckReady==='1';
+}
+
+function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
+ const card=$(cardId);if(!card)return;
+ const next=$(nextId);
+ const third=$(options.thirdId||'');
+ const swipeBindingToken=String(Number(card.dataset.swipeBindingToken||0)+1);
  card.dataset.swipeBindingToken=swipeBindingToken;
- const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
-
- // CP988: one physical gesture = one transaction. A committed card is
- // immediately removed from pointer input until its handoff is complete.
- let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0;
- // CP1171: preserve the transaction lock across draw/rebind cycles.
- let phase=inheritedSwipeLock?'locked':'idle',hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
- // CP1218 — tighter, quicker swipe feel without changing the card-stack architecture.
- let swipeThreshold=88,completionTimer=0,exitAnimation=null;
-
- card.style.touchAction='none';
- card.style.userSelect='none';
- card.style.webkitUserSelect='none';
- card.style.webkitTouchCallout='none';
- card.style.pointerEvents='auto';
- card.dataset.swipePhase=phase;
-
- card.querySelectorAll('img').forEach(img=>{
-  img.draggable=false;
-  if(img.dataset.swipeDragBound==='1')return;
-  img.dataset.swipeDragBound='1';
-  img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
- });
-
- const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
- const cancelMoveFrame=()=>{
-  if(moveFrame!=null){
-   try{cancelAnimationFrame(moveFrame);}catch{}
-   moveFrame=null;
-  }
+ let downX=0,lastX=0,lastMoveTime=0,lastMoveX=0,velocityX=0,pointerId=null,moveFrame=null;
+ let phase='idle',hapticTriggered=false,suppressClickUntil=0,exitAnimation=null,completionTimer=0;
+ const threshold=()=>clamp(Math.round(Math.max(280,Number(card.clientWidth)||430)*.21),72,108);
+ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+ const cancelFrame=()=>{if(moveFrame!=null){cancelAnimationFrame(moveFrame);moveFrame=null;}};
+ const releasePointer=()=>{try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}pointerId=null;};
+ const clearTimer=()=>{if(completionTimer){clearTimeout(completionTimer);completionTimer=0;}};
+ const paintPreview=(dx)=>{
+  if(!next||!next.isConnected)return;
+  const w=Math.max(280,Number(card.clientWidth)||430),p=clamp(Math.abs(dx)/w,0,1);
+  next.style.transform='scale('+(0.965+(0.035*p)).toFixed(4)+')';
+  next.style.opacity=String(.92+.08*p);
+  if(third){third.style.transform='scale('+(0.925+(0.025*p)).toFixed(4)+')';third.style.opacity=String(.80+.06*p);}
  };
- const clearCompletionTimer=()=>{
-  if(completionTimer){clearTimeout(completionTimer);completionTimer=0;}
- };
- const cardWidth=()=>Math.max(280,Number(card.clientWidth)||430);
-
- const resetCard=()=>{
-  cancelMoveFrame();
-  clearCompletionTimer();
-  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
-  card.classList.remove('swipe-active');
-  card.style.transition='';
-  card.style.transform='';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.pointerEvents='auto';
-  card.style.removeProperty('--swipe-tint-alpha');
-  card.dataset.swipe='';
-  card.dataset.swipePhase='idle';
-  card.dataset.swipeTransaction='';
-  phase='idle';
-  if(next){
-   if(staticWaitingCard)next.style.transform='none';else next.style.transform='scale(1)';
-   next.style.opacity='1';
-   next.style.filter='none';
-   next.style.visibility='visible';
-   next.dataset.swipePromoted='';
-   const nextImg=next.querySelector('img');
-   if(nextImg)nextImg.style.transform=staticWaitingCard?'none':'scale(1)';
-  }
- };
-
  const settleBack=()=>{
-  cancelMoveFrame();
   if(phase!=='dragging'&&phase!=='idle')return;
-  phase='idle';
-  card.classList.remove('swipe-active');
-  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease';
-  card.style.transform='translate3d(0,0,0) rotate(0deg)';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.pointerEvents='auto';
-  card.style.setProperty('--swipe-tint-alpha','0');
-  card.dataset.swipe='';
-  card.dataset.swipePhase='idle';
-  window.setTimeout(()=>{
-   if(phase==='idle'){
-    card.style.transition='';
-    card.style.transform='';
-    if(isOverlapCard){
-     const ctx=swipeOverlapContext;
-     if(ctx?.clone===card){
-      ctx.nextSettled=true;
-      try{card.remove();}catch{}
-      if(ctx.previewCard?.isConnected){
-       ctx.previewCard.style.visibility='visible';
-       ctx.previewCard.style.pointerEvents='none';
-       ctx.previewCard.dataset.swipePromoted='';
-      }
-      if(ctx.sourceFlightDone&&ctx.sourceComplete&&!ctx.flushing){
-       ctx.flushing=true;
-       const sourceComplete=ctx.sourceComplete;
-       swipeOverlapContext=null;
-       Promise.resolve(sourceComplete()).catch(()=>{});
-      }
-     }
-    }
-   }
-  },185);
+  phase='idle';hapticTriggered=false;velocityX=0;releasePointer();cancelFrame();
+  card.classList.remove('swipe-active');card.style.transition='transform 180ms cubic-bezier(.22,1,.36,1),opacity 180ms ease';card.style.transform='translate3d(0,0,0) rotate(0deg)';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';card.style.removeProperty('--swipe-tint-alpha');card.dataset.swipe='';card.dataset.swipePhase='idle';
+  setDeckPreviewDepth(next,third);
+  window.setTimeout(()=>{if(phase==='idle')card.style.transition='';},190);
  };
-
- const releasePointer=()=>{
-  try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}
-  pointerId=null;
- };
-
- const cancel=()=>{
-  if(phase!=='dragging')return;
-  phase='idle';
-  hapticTriggered=false;
-  velocityX=0;
-  releasePointer();
-  settleBack();
- };
-
- // CP1181: repaired completeAfterExit from known-good CP1179 flow.
-const completeAfterExit=async ()=>{
+ const finishAfterFlight=async ()=>{
   if(phase!=='committing')return;
-  clearCompletionTimer();
-  card.removeEventListener('transitionend',handleTransitionEnd);
+  clearTimer();
+  phase='completing';card.dataset.swipePhase='completing';card.style.pointerEvents='none';
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
-  const foodHandoff=staticWaitingCard&&cardId==='foodCard';
-  const restaurantHandoff=cardId==='restaurantCard';
-  // CP1181: snapshot the waiting card before action() can redraw/rebind it.
-  const promotedMealId=foodHandoff?String(next?.dataset.mealId||''):'';
-  const promotedImg=foodHandoff?next?.querySelector('img'):null;
-  const promotedSrc=foodHandoff?String(promotedImg?.currentSrc||promotedImg?.src||promotedImg?.getAttribute('src')||''):'';
-  const promotedAlt=foodHandoff?String(promotedImg?.alt||''):'';
-  phase='completing';
-  card.dataset.swipePhase='completing';
-  if(foodHandoff)foodSwipeHandoff=true;
-  if(restaurantHandoff)restaurantSwipeHandoff=true;
-
-  // CP1188: once a swipe has committed, the swiped card is never allowed to
-  // become visible again while the next state is being calculated. The next
-  // card has already been promoted underneath it, so hiding the old card at
-  // transition completion removes the one-frame Safari reappearance.
-  card.style.transition='none';
-  card.style.transform='none';
-  card.style.opacity='0';
-  card.style.visibility='hidden';
-  card.style.pointerEvents='none';
-  card.classList.remove('swipe-active');
-  card.style.removeProperty('--swipe-tint-alpha');
-  card.dataset.swipe='';
-
-  if(foodHandoff){
-   // CP1197: the waiting card remains underneath as a separate, inert preview.
-   // The live card is still updated in place; the waiting card is never promoted.
-  }
-
+  const promotedPreview=next;
+  // Keep the outgoing card off the input layer; the B card is already painted underneath it.
+  card.style.transition='none';card.style.pointerEvents='none';card.style.opacity='0';card.style.visibility='hidden';card.style.transform='none';card.classList.remove('swipe-active');
   try{
-   await Promise.resolve(action?.());
+   await Promise.resolve(action?.({preserveSwipe:true}));
   }catch(err){
    setTimeout(()=>{throw err;},0);
-  }finally{
-   if(foodHandoff){
-    if(card.isConnected){
-     // The action redraws the SAME live card while it is hidden. Wait for
-     // that card's new meal image to settle before returning it to paint.
-     try{
-      const ready=card.__mealReadyPromise;
-      if(ready)await Promise.race([ready,new Promise(resolve=>setTimeout(resolve,900))]);
-     }catch{}
-     const reveal=()=>{
-      if(!card.isConnected)return;
-      card.classList.remove('swipe-active');
-      card.style.transition='none';
-      card.style.transform='none';
-      card.style.opacity='1';
-      card.style.visibility='visible';
-      card.style.pointerEvents='auto';
-      card.style.removeProperty('--swipe-tint-alpha');
-      card.dataset.swipe='';
-      card.dataset.swipePhase='idle';
-      card.dataset.swipeTransaction='';
-      foodSwipeHandoff=false;
-      // CP1246: the old overlap clone carried the visual continuity while the
-      // recycled live card was preparing. Remove it only after the live card
-      // is visible, never before.
-      const bridge=card.__swipeVisualBridge;
-      if(bridge?.isConnected){try{bridge.remove();}catch{}}
-      card.__swipeVisualBridge=null;
-      // CP1197b: refresh the waiting preview AFTER the live card is settled.
-      // This keeps the preview one meal ahead without letting it participate
-      // in the swipe handoff/promotion lifecycle.
-      primeFoodSwipeMedia();
-      bindFoodSwipe();
-     };
-     requestAnimationFrame(()=>requestAnimationFrame(reveal));
-    }
-   }else{
-    
-    // Restaurant redraws replace the card node. Never call resetCard() here:
-    // that can briefly resurrect the just-swiped node while drawRestaurants()
-    // is finishing its photo preparation.
-    if(restaurantHandoff){
-     restaurantSwipeHandoff=false;
-     const freshRestaurantCard=$('restaurantCard');
-     if(freshRestaurantCard){
-      freshRestaurantCard.style.transition='none';
-      freshRestaurantCard.style.transform='none';
-      freshRestaurantCard.style.opacity='1';
-      freshRestaurantCard.style.visibility='visible';
-      freshRestaurantCard.style.pointerEvents='auto';
-     }
-    }else if(card.isConnected){
-     if(isOverlapCard)card.remove();
-     else resetCard();
-    }else if(isOverlapCard){
-     try{card.remove();}catch{}
-    }
-   }
   }
+  if(cardId==='foodCard'){
+   foodSwipeHandoff=false;
+   await refreshFoodSwipeDeckAfterDecision(promotedPreview);
+  }else if(cardId==='restaurantCard'){
+   restaurantSwipeHandoff=false;
+   await refreshRestaurantSwipeDeckAfterDecision(promotedPreview);
+  }
+  if(card.isConnected){
+   card.style.transition='none';card.style.transform='none';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';card.dataset.swipe='';card.dataset.swipePhase='idle';card.dataset.swipeTransaction='';card.classList.remove('swipe-active');
+  }
+  phase='idle';
+  setDeckPreviewDepth($(nextId),third);
  };
-
- function handleTransitionEnd(e){
-  if(phase!=='committing'||e.target!==card||e.propertyName!=='transform')return;
-  completeAfterExit();
- }
-
- const commit=(dx,speed=0)=>{ 
+ const commit=(dx,speed=0)=>{
   if(phase!=='dragging')return;
-  cancelMoveFrame();
-  phase='committing';
-  card.dataset.swipePhase='committing';
-  card.dataset.swipeTransaction='active';
-  card.style.pointerEvents='none';
-  hapticTriggered=false;
-  suppressClickUntil=Date.now()+700;
-
-  // CP1249: force the prepared waiting card into the painted stack before the
-  // outgoing animation begins. The waiting card is pointer-inert; its optional
-  // overlap clone is still used only for early next-card input.
-  if(next?.isConnected){
-   next.style.visibility='visible';
-   next.style.opacity='1';
-   next.style.filter='none';
-   next.style.pointerEvents='none';
-   next.style.willChange='transform,opacity';
-  }
-  releasePointer();
-
-  const width=cardWidth();
-  const direction=dx<0?-1:1;
-  const decisionKind=cardId==='foodCard'?'food':'restaurant';
-  const decisionId=decisionKind==='food'
-    ?String(card.dataset.mealId||'')
-    :String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
-  const decisionRow=decisionKind==='food'
-    ?S.pool.find(item=>String(item?.id||'')===decisionId)
-    :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
-  // CP1218/CP1239 — count feedback lands at the commit point; data mutation
-  // waits until the visual flight has completely cleared the viewport.
-  previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe:false);
-
-  card.dataset.swipeDirection=direction<0?'cut':'maybe';
-  card.dataset.swipeTransaction='active';
-
-  // CP1239 — make the committed exit one atomic browser animation.
-  // CP1241 — the outgoing flight remains unchanged; only the input handoff overlaps.
-  // Start at the exact finger-release position, keep the card fully opaque,
-  // and do not let transitionend/rebind lifecycle events control completion.
-  const releaseAbs=Math.abs(dx);
-  const releaseRotation=direction*clamp((releaseAbs/width)*11,0,11);
-  const fromTransform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+releaseRotation.toFixed(2)+'deg)';
-  card.style.transition='none';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.transform=fromTransform;
-  card.style.setProperty('--swipe-tint-alpha',String(clamp(releaseAbs/(Math.max(72,swipeThreshold)*2.7),0,.26)));
-  void card.offsetWidth;
-
-  const rect=card.getBoundingClientRect();
-  const edgePadding=48;
-  const remaining=direction<0 ? (rect.right+edgePadding) : (window.innerWidth-rect.left+edgePadding);
-  const targetX=direction<0 ? (dx-remaining) : (dx+remaining);
-  const targetTransform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
-  const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(285-(magnitude*28),225,285));
-
-  if(next&&!staticWaitingCard&&!isOverlapCard){
-   const revealPromotedNext=()=>{
-    if(!next.isConnected)return;
-    const nextMealId=String(next.dataset.mealId||'');
-    const activeMealId=String(card.dataset.mealId||'');
-    if(staticWaitingCard&&(!nextMealId||nextMealId===activeMealId))return;
-    next.dataset.swipePromoted='1';
-    next.style.transition='none';
-    next.style.transform=staticWaitingCard?'none':'scale(1)';
-    next.style.visibility='visible';
-    next.style.opacity='1';
-    next.style.filter='none';
-    const promotedImg=next.querySelector('img');
-    if(promotedImg)promotedImg.style.transform=staticWaitingCard?'none':'scale(1)';
-   };
-   revealPromotedNext();
-  }
-
-  // CP1241: after a short overlap window, clone the already-prepared next card
-  // into the active stack so a user can begin the next swipe before this card's
-  // full flight has finished. The original preview stays intact underneath.
-  if(!isOverlapCard&&next?.isConnected){
-   const overlapToken=String(++swipeOverlapSerial);
-   const kind=cardId==='foodCard'?'food':'restaurant';
-   const nextIdValue=kind==='food'
-     ?String(next.dataset.mealId||'')
-     :String(next.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
-   const nextItem=kind==='food'
-     ?S.pool.find(item=>String(item?.id||'')===nextIdValue)
-     :S.restaurantPool.find(row=>String(row?.id||'')===nextIdValue);
-   const ctx={
-    sourceCard:card,previewCard:next,token:overlapToken,clone:null,nextItem,
-    nextGestureStarted:false,nextCommitted:false,nextSettled:false,
-    sourceFlightDone:false,nextFlightDone:false,sourceComplete:null,nextComplete:null,flushing:false
-   };
-   swipeOverlapContext=ctx;
-   window.setTimeout(()=>{
-    if(swipeOverlapContext!==ctx||phase!=='committing'||ctx.nextGestureStarted||ctx.sourceFlightDone)return;
-    if(!next.isConnected||!nextItem)return;
-    const clone=next.cloneNode(true);
-    clone.id='swipeOverlapCard-'+overlapToken;
-    clone.classList.remove('next-card','hidden');
-    clone.setAttribute('aria-hidden','false');
-    clone.dataset.swipeOverlapToken=overlapToken;
-    clone.dataset.swipePhase='idle';
-    clone.dataset.swipeTransaction='';
-    clone.style.visibility='visible';
-    clone.style.opacity='1';
-    clone.style.filter='none';
-    clone.style.transform='none';
-    clone.style.transition='none';
-    clone.style.pointerEvents='auto';
-    clone.style.zIndex='4';
-    // CP1250: keep the real waiting card visible underneath the overlap
-    // clone. The clone can become the interactive top card, but it must never
-    // be the sole painted fallback; otherwise an unpainted clone can expose
-    // the black stage for a frame.
-    next.style.visibility='visible';
-    next.style.opacity='1';
-    next.style.pointerEvents='none';
-    next.parentElement?.appendChild(clone);
-    ctx.clone=clone;
-    const cut=kind==='food'
-      ?()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(nextItem)
-      :()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(nextItem);
-    const maybe=kind==='food'
-      ?()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(nextItem)
-      :()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(nextItem);
-    bindSwipeCard(clone.id,'',cut,maybe,{overlap:true});
-   },SWIPE_OVERLAP_DELAY);
-  }
-
-  dismissSwipeHint();
-  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
-
-  const finishFlight=()=>{
+  const abs=Math.abs(dx),w=Math.max(280,Number(card.clientWidth)||430),dir=dx<0?-1:1;
+  phase='committing';card.dataset.swipePhase='committing';card.dataset.swipeTransaction='active';card.style.pointerEvents='none';suppressClickUntil=Date.now()+700;releasePointer();
+  const currentId=cardId==='foodCard'?String(card.dataset.mealId||''):String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
+  const row=cardId==='foodCard'?S.pool.find(x=>String(x?.id||'')===currentId):S.restaurantPool.find(x=>String(x?.id||'')===currentId);
+  previewDecisionCount(cardId==='foodCard'?'food':'restaurant',dir<0?'cut':'maybe',!!row&&(cardId==='foodCard'?S.maybe.has(row.id):!!row._maybe));
+  card.dataset.swipeDirection=dir<0?'cut':'maybe';
+  const startRot=dir*clamp(abs/w*11,0,11);
+  const start='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+startRot.toFixed(2)+'deg)';
+  const rect=card.getBoundingClientRect(),edge=48,remaining=dir<0?rect.right+edge:window.innerWidth-rect.left+edge,targetX=dir<0?dx-remaining:dx+remaining,target='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+(dir*11).toFixed(2)+'deg)';
+  const magnitude=clamp(Math.abs(speed),0,2.4),duration=Math.round(clamp(285-magnitude*28,225,285));
+  card.style.transition='none';card.style.opacity='1';card.style.visibility='visible';card.style.transform=start;card.style.setProperty('--swipe-tint-alpha',String(clamp(abs/(Math.max(72,threshold())*2.7),0,.26)));void card.offsetWidth;
+  if(next){next.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1),opacity '+duration+'ms ease';next.style.transform='scale(1)';next.style.opacity='1';next.style.visibility='visible';}
+  if(third){third.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1),opacity '+duration+'ms ease';third.style.transform='scale(.95)';third.style.opacity='.86';}
+  const finish=()=>{
    if(phase!=='committing')return;
    if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
-   clearCompletionTimer();
-
-   const ctx=swipeOverlapContext;
-   if(!isOverlapCard&&ctx?.sourceCard===card){
-    if(ctx.clone?.isConnected&&cardId==='foodCard')card.__swipeVisualBridge=ctx.clone;
-    ctx.sourceFlightDone=true;
-    ctx.sourceComplete=completeAfterExit;
-    if(ctx.nextGestureStarted&&!ctx.nextSettled){
-     // The first flight is visually finished, but hold its state redraw so it
-     // cannot interrupt the user's in-progress next-card gesture.
-     if(ctx.nextCommitted&&ctx.nextFlightDone&&!ctx.flushing){
-      ctx.flushing=true;
-      const sourceComplete=ctx.sourceComplete;
-      const nextComplete=ctx.nextComplete;
-      swipeOverlapContext=null;
-      (async()=>{
-       try{await sourceComplete();if(nextComplete)await nextComplete();}catch{}
-      })();
-     }
-     return;
-    }
-    // CP1246: keep the already-visible overlap card on screen while the
-    // recycled live card is redrawn and its new meal image is prepared. The
-    // overlap card is the visual bridge, so there is no black/empty frame.
-    if(ctx.clone?.isConnected){
-     ctx.clone.style.visibility='visible';
-     ctx.clone.style.opacity='1';
-     ctx.clone.style.filter='none';
-     ctx.clone.style.pointerEvents='none';
-    }
-    // CP1248: never hide the real prepared waiting card at handoff.
-    // It remains the guaranteed visual fallback underneath the optional
-    // interactive overlap clone, so the stack never becomes empty for a frame.
-    if(ctx.previewCard?.isConnected){
-     ctx.previewCard.style.visibility='visible';
-     ctx.previewCard.style.opacity='1';
-     ctx.previewCard.style.filter='none';
-     ctx.previewCard.style.pointerEvents='none';
-    }
-    swipeOverlapContext=null;
-    completeAfterExit();
-    return;
-   }
-
-   if(isOverlapCard){
-    const overlapCtx=swipeOverlapContext;
-    if(overlapCtx?.clone===card){
-     overlapCtx.nextFlightDone=true;
-     overlapCtx.nextComplete=completeAfterExit;
-     if(overlapCtx.sourceFlightDone&&!overlapCtx.flushing){
-      overlapCtx.flushing=true;
-      const sourceComplete=overlapCtx.sourceComplete;
-      const nextComplete=overlapCtx.nextComplete;
-      try{card.remove();}catch{}
-      swipeOverlapContext=null;
-      (async()=>{
-       try{if(sourceComplete)await sourceComplete();if(nextComplete)await nextComplete();}catch{}
-      })();
-     }
-     return;
-    }
-   }
-
-   completeAfterExit();
+   finishAfterFlight().catch(()=>{});
   };
-
   if(typeof card.animate==='function'){
-   exitAnimation=card.animate(
-    [{transform:fromTransform},{transform:targetTransform}],
-    {duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'}
-   );
-   exitAnimation.finished.then(()=>{
-    if(phase==='committing')finishFlight();
-   }).catch(()=>{});
-   completionTimer=window.setTimeout(()=>{
-    if(phase==='committing')finishFlight();
-   },duration+500);
+   exitAnimation=card.animate([{transform:start},{transform:target}],{duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'});
+   exitAnimation.finished.then(()=>{if(phase==='committing')finish();}).catch(()=>{});
+   completionTimer=setTimeout(()=>{if(phase==='committing')finish();},duration+500);
   }else{
-   // Fallback for engines without Web Animations.
-   requestAnimationFrame(()=>{
-    if(phase!=='committing'||!card.isConnected)return;
-    requestAnimationFrame(()=>{
-     if(phase!=='committing'||!card.isConnected)return;
-     card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
-     card.style.transform=targetTransform;
-     completionTimer=window.setTimeout(()=>{
-      if(phase==='committing')finishFlight();
-     },duration+650);
-    });
-   });
+   requestAnimationFrame(()=>{if(phase!=='committing')return;card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';card.style.transform=target;completionTimer=setTimeout(()=>{if(phase==='committing')finish();},duration+650);});
   }
  };
- // CP1222: button decisions use the exact same off-screen commit path as a drag.
- // This preserves the existing handoff lifecycle while making Cut/Maybe feel
- // like a real swipe instead of instantly removing the card.
  card.__triggerSwipeDecision=(direction)=>{
   if(phase!=='idle'||card.dataset.swipeTransaction==='active')return 'busy';
-  const dir=Number(direction)<0?-1:1;
-  const distance=Math.max(48,swipeThreshold);
-  // Treat a button press as a synthetic committed swipe so the existing
-  // commit() path can perform the full off-screen exit and handoff.
-  phase='dragging';
-  card.dataset.swipePhase='dragging';
-  commit(dir*distance,0);
-  return 'accepted';
+  if(!unifiedDeckDecisionReady(cardId,nextId))return 'busy';
+  const dir=Number(direction)<0?-1:1;phase='dragging';card.dataset.swipePhase='dragging';commit(dir*Math.max(48,threshold()),0);return 'accepted';
  };
-
  const paintMove=()=>{
-  moveFrame=null;
-  if(phase!=='dragging')return;
-  const dx=lastX-downX;
-  if(Math.abs(dx)<=3)return;
-  const absX=Math.abs(dx),width=cardWidth();
-  swipeThreshold=clamp(Math.round(width*.21),72,108);
-  const progress=clamp(absX/swipeThreshold,0,1.5);
-  const rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
-  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
-  card.style.opacity='1';
-  card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*2.7),0,.26)));
-  card.dataset.swipe=dx<0?'cut':'maybe';
-  if(progress>=1&&!hapticTriggered){
-   hapticTriggered=true;
-   triggerSwipeHaptic();
-  }
+  moveFrame=null;if(phase!=='dragging')return;
+  const dx=lastX-downX;if(Math.abs(dx)<=2)return;
+  const w=Math.max(280,Number(card.clientWidth)||430),t=threshold(),abs=Math.abs(dx),rot=(dx<0?-1:1)*clamp(abs/w*11,0,11);
+  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rot.toFixed(2)+'deg)';card.style.opacity='1';card.style.setProperty('--swipe-tint-alpha',String(clamp(abs/(t*2.7),0,.26)));card.dataset.swipe=dx<0?'cut':'maybe';
+  paintPreview(dx);
+  if(abs>=t&&!hapticTriggered){hapticTriggered=true;triggerSwipeHaptic();}
  };
-
- const scheduleMove=()=>{
-  if(moveFrame!=null)return;
-  moveFrame=requestAnimationFrame(paintMove);
- };
-
+ const scheduleMove=()=>{if(moveFrame==null)moveFrame=requestAnimationFrame(paintMove);};
  const finish=(e)=>{
   if(phase!=='dragging')return;
-  if(e?.clientX!=null)lastX=e.clientX;
-  cancelMoveFrame();
-  const dx=lastX-downX;
-  const speed=Number.isFinite(velocityX)?velocityX/1000:0;
-  swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
-  const distanceCommit=Math.abs(dx)>=swipeThreshold;
-  const flickCommit=Math.abs(dx)>=48&&Math.abs(speed)>=.50;
-  if(distanceCommit||flickCommit)commit(dx,speed);
-  else{
-   phase='idle';
-   velocityX=0;
-   releasePointer();
-   settleBack();
-  }
+  if(e?.clientX!=null)lastX=e.clientX;cancelFrame();
+  const dx=lastX-downX,w=Math.max(280,Number(card.clientWidth)||430),t=threshold(),speed=(Number.isFinite(velocityX)?velocityX:0)/1000;
+  if(Math.abs(dx)>=t||(Math.abs(dx)>=48&&Math.abs(speed)>=.50))commit(dx,speed);else settleBack();
  };
-
+ card.style.touchAction='none';card.style.userSelect='none';card.style.webkitUserSelect='none';card.style.webkitTouchCallout='none';card.style.pointerEvents='auto';card.dataset.swipePhase='idle';
+ card.querySelectorAll('img').forEach(img=>{img.draggable=false;if(img.dataset.deckDragBound==='1')return;img.dataset.deckDragBound='1';img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});});
  card.onpointerdown=e=>{
-  if(e.isPrimary===false){
-   if(phase==='dragging')cancel();
-   return;
-  }
+  if(e.isPrimary===false)return;
   if(e.button!=null&&e.button!==0)return;
-  if(phase==='locked'){
-   if(card.dataset.swipeTransaction==='active')return;
-   phase='idle';
-   card.dataset.swipePhase='idle';
-  }
-  if(card.dataset.swipeTransaction==='active')return;
-  if(phase!=='idle'||card.dataset.swipePhase!=='idle')return;
   if(e.target.closest?.('button,a,input,select'))return;
-  if(isOverlapCard){
-   const ctx=swipeOverlapContext;
-   if(ctx?.clone===card)ctx.nextGestureStarted=true;
-  }
-  downX=e.clientX;
-  lastX=e.clientX;
-  lastMoveX=e.clientX;
-  lastMoveTime=performance.now();
-  velocityX=0;
-  swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
-  phase='dragging';
-  card.dataset.swipePhase='dragging';
-  card.dataset.swipeDirection='';
-  card.dataset.swipe='';
-  card.classList.add('swipe-active');
-  card.style.transition='none';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.pointerEvents='auto';
-  try{card.setPointerCapture?.(e.pointerId);}catch{}
-  pointerId=e.pointerId;
+  if(phase!=='idle'||card.dataset.swipeTransaction==='active')return;
+  if(!unifiedDeckDecisionReady(cardId,nextId))return;
+  downX=lastX=lastMoveX=e.clientX;lastMoveTime=performance.now();velocityX=0;hapticTriggered=false;phase='dragging';card.dataset.swipePhase='dragging';card.dataset.swipe='';card.classList.add('swipe-active');card.style.transition='none';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';try{card.setPointerCapture?.(e.pointerId);}catch{}pointerId=e.pointerId;
  };
-
  card.onpointermove=e=>{
-  if(phase!=='dragging'||e.isPrimary===false||e.pointerId!==pointerId)return;
-  const now=performance.now();
-  const x=e.clientX;
-  const dt=Math.max(1,now-lastMoveTime);
-  velocityX=((x-lastMoveX)/dt)*1000;
-  lastMoveX=x;
-  lastMoveTime=now;
-  lastX=x;
-  if(Math.abs(lastX-downX)>3){
-   if(e.cancelable)e.preventDefault();
-   scheduleMove();
-  }
+  if(phase!=='dragging'||e.pointerId!==pointerId)return;
+  const now=performance.now(),dt=Math.max(1,now-lastMoveTime),x=e.clientX;velocityX=((x-lastMoveX)/dt)*1000;lastMoveX=x;lastMoveTime=now;lastX=x;if(Math.abs(x-downX)>2&&e.cancelable)e.preventDefault();scheduleMove();
  };
-
- card.onpointerup=e=>finish(e);
- card.onpointercancel=cancel;
- card.onlostpointercapture=()=>{
-  if(phase==='dragging')cancel();
- };
- card.onclick=e=>{
-  if(Date.now()<suppressClickUntil){
-   e.preventDefault();
-   e.stopPropagation();
-  }
- };
+ card.onpointerup=e=>finish(e);card.onpointercancel=()=>settleBack();card.onlostpointercapture=()=>{if(phase==='dragging')settleBack();};card.onclick=e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();}};
 }
+
 function bindMealPhotoCountControls(){
  if(document.documentElement.dataset.mealPhotoCountBound==='1')return;
  document.documentElement.dataset.mealPhotoCountBound='1';
@@ -3243,7 +2924,7 @@ function previewDecisionCount(kind,type,wasMaybe=false){
   count.__decisionCountTimer=window.setTimeout(()=>count.classList.remove('decision-count-updated'),220);
  }
 }
-function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe())}
+function bindFoodSwipe(){bindSwipeCard('foodCard','foodNextCard',(...args)=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(undefined,args[0]||{}),(...args)=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(undefined,args[0]||{}),{thirdId:'foodThirdCard'})}
 function appToast(message){
 document.querySelector('#appToast')?.remove();
 const el=document.createElement('div'); el.id='appToast'; el.className='app-toast'; el.textContent=message;
@@ -4316,38 +3997,13 @@ bindCardButton('restMaybe', () => restaurantMaybe(current));
 bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'){familyRoundStage()===1?familyEnterMaybes('restaurant'):familyPickSingle('restaurant');}else winner(current)});
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
-const handoffRestaurantCard=$('restaurantCard');
-if(restaurantSwipeHandoff&&handoffRestaurantCard){
-  handoffRestaurantCard.style.opacity='0';
-  handoffRestaurantCard.style.visibility='hidden';
-  handoffRestaurantCard.style.pointerEvents='none';
-}
 bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
-const restaurantNextCard=$('restaurantNextCard');
-const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
-if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
-  restaurantNextImageEl.decoding='async';
-  stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  restaurantNextCard.__restaurantCanonicalPhotoPromise=loadRestaurantPhoto(nextRow).then(async data=>{
-   if(!data?.url)return null;
-   if(!restaurantNextCard.isConnected||restaurantNextCard.dataset.swipePromoted==='1')return data.url;
-   if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
-   const swapped=await swapImageWhenReady(restaurantNextImageEl,data.url);
-   if(swapped){
-    restaurantNextImageEl.dataset.restaurantPhotoLoaded='true';
-    restaurantNextCard.dataset.restaurantPhotoCanonical='1';
-    setRestaurantPhotoCredit(restaurantNextCard,data.attributions);
-   }
-   return data.url;
-  }).catch(()=>null);
-}
-hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
-if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
+primeRestaurantSwipeDeck(rows,S.restaurantIndex).catch(()=>{});
 prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
 maybeShowInCardSwipeCoach();
 if(S.familyNormalMode==='setup'&&S.familyDecisionType==='restaurant')familyNormalBar('restaurant','setup',S.familyActiveData);
 }
-async function restaurantCut(row){
+async function restaurantCut(row,options={}){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowsePrevious('restaurant');return;}
  if(!row)return;
@@ -4355,20 +4011,22 @@ async function restaurantCut(row){
  S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
  row._cut=true;
  const remaining=restaurantPoolFiltered();
- if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);await drawRestaurants();}
- save();
+ if(!remaining.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});save();return;}
+ S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);
+ if(options?.preserveSwipe){save();return;}
+ await drawRestaurants();save();
 }
-
-async function restaurantMaybe(row){
+async function restaurantMaybe(row,options={}){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowseNext('restaurant');return;}
- if(!row)return;const rows=restaurantPoolFiltered();if(rows.length===1){winner(row);return;}
+ if(!row)return;
+ const rows=restaurantPoolFiltered();if(rows.length===1){winner(row);save();return;}
  const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
  if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
+ if(options?.preserveSwipe){save();return;}
  await drawRestaurants();save();
 }
-
 function restaurantBack(){
  if(familyIsBrowseStage('restaurant')){familyBrowseBack('restaurant');return;}
  const action=S.restaurantActions.pop();if(!action)return;
@@ -4455,7 +4113,7 @@ function bindCardButton(id,handler){
 // CP1244 — One decision transaction per active card. A busy card consumes
 // subsequent Cut/Maybe commands instead of letting them mutate app state.
 
-function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard','restaurantNextCard',()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row),()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row))}
+function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard','restaurantNextCard',(...args)=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row,args[0]||{}),(...args)=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row,args[0]||{}),{thirdId:'restaurantThirdCard'})}
 let restaurantQueryTimer = 0;
 function scheduleRestaurantProviderSearch(){
  clearTimeout(restaurantQueryTimer);
