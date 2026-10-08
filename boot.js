@@ -2,17 +2,17 @@
 try {
   const standalone = !!window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (standalone) document.documentElement.classList.add('dinliminate-standalone');
-} catch {}
+} catch(error){console.error('Dinliminate error',error)}
 (() => {
   const root = document.documentElement;
   const hideForNavigation = () => {
-    try { root.classList.add('dinliminate-page-unloading'); } catch {}
+    try { root.classList.add('dinliminate-page-unloading'); } catch(error){console.error('Dinliminate error',error)}
   };
-  try { root.classList.add('dinliminate-booting'); } catch {}
+  try { root.classList.add('dinliminate-booting'); } catch(error){console.error('Dinliminate error',error)}
   window.addEventListener('beforeunload', hideForNavigation, {capture:true});
   window.addEventListener('pagehide', hideForNavigation, {capture:true});
   window.addEventListener('pageshow', () => {
-    try { root.classList.remove('dinliminate-page-unloading'); } catch {}
+    try { root.classList.remove('dinliminate-page-unloading'); } catch(error){console.error('Dinliminate error',error)}
   }, {capture:true});
 })();
 try {
@@ -21,9 +21,9 @@ try {
   try{
     const saved=JSON.parse(localStorage.getItem('dinliminate.clean.cp1')||'null');
     savedRoute=String(saved?.screen||'').trim();
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
   const route=(['food','restaurant','winner','family'].includes(startRoute)
     ? startRoute
     : (['food','restaurant','winner','family'].includes(savedRoute)?savedRoute:'home'));
   if(route!=='home')document.documentElement.classList.add('dinliminate-start-'+route);
-} catch {}
+} catch(error){console.error('Dinliminate error',error)}
