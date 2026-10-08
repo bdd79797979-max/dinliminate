@@ -2839,8 +2839,6 @@ async function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  const bindingStillCurrent=()=>String(card.dataset.swipeBindingToken||'')===swipeBindingToken;
- const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
- card.dataset.swipeBindingToken=swipeBindingToken;
  const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
 
  // CP988: one physical gesture = one transaction. A committed card is
