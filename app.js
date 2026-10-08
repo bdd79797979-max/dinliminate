@@ -3193,7 +3193,7 @@ const completeAfterExit=async ()=>{
   phase='dragging';
   card.dataset.swipePhase='dragging';
   commit(dir*distance,0);
-  return true;
+  return 'accepted';
  };
 
  const paintMove=()=>{
