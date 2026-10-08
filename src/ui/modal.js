@@ -48,8 +48,28 @@ const modalDeps=Object.create(null);
 let mealTimesFor, restaurantFallbackImage, imageProxyUrl, mealImageUrl, mealPhotoList, foodPhoto, foodPhotoFallback, hydrateMealPhotoGallery, restaurantWebsitePresentation, hydrateRestaurantWebsite, restaurantPhoneSearchUrl, restaurantDirectionsUrl, bindImageFallback, swapImageWhenReady, phoneHref, show, foodHideItem, HUNGRY_IMAGE, FINAL_FOOD_IMAGE, FINAL_RESTAURANT_IMAGE;
 export function configureModal(next={}){
   Object.assign(modalDeps,next);
-  (mealTimesFor, restaurantFallbackImage, imageProxyUrl, mealImageUrl, mealPhotoList, foodPhoto, foodPhotoFallback, hydrateMealPhotoGallery, restaurantWebsitePresentation, hydrateRestaurantWebsite, restaurantPhoneSearchUrl, restaurantDirectionsUrl, bindImageFallback, swapImageWhenReady, phoneHref, show, foodHideItem, HUNGRY_IMAGE, FINAL_FOOD_IMAGE, FINAL_RESTAURANT_IMAGE)=modalDeps.mealTimesFor, modalDeps.restaurantFallbackImage, modalDeps.imageProxyUrl, modalDeps.mealImageUrl, modalDeps.mealPhotoList, modalDeps.foodPhoto, modalDeps.foodPhotoFallback, modalDeps.hydrateMealPhotoGallery, modalDeps.restaurantWebsitePresentation, modalDeps.hydrateRestaurantWebsite, modalDeps.restaurantPhoneSearchUrl, modalDeps.restaurantDirectionsUrl, modalDeps.bindImageFallback, modalDeps.swapImageWhenReady, modalDeps.phoneHref, modalDeps.show, modalDeps.foodHideItem, modalDeps.HUNGRY_IMAGE, modalDeps.FINAL_FOOD_IMAGE, modalDeps.FINAL_RESTAURANT_IMAGE;
+  mealTimesFor=modalDeps.mealTimesFor;
+  restaurantFallbackImage=modalDeps.restaurantFallbackImage;
+  imageProxyUrl=modalDeps.imageProxyUrl;
+  mealImageUrl=modalDeps.mealImageUrl;
+  mealPhotoList=modalDeps.mealPhotoList;
+  foodPhoto=modalDeps.foodPhoto;
+  foodPhotoFallback=modalDeps.foodPhotoFallback;
+  hydrateMealPhotoGallery=modalDeps.hydrateMealPhotoGallery;
+  restaurantWebsitePresentation=modalDeps.restaurantWebsitePresentation;
+  hydrateRestaurantWebsite=modalDeps.hydrateRestaurantWebsite;
+  restaurantPhoneSearchUrl=modalDeps.restaurantPhoneSearchUrl;
+  restaurantDirectionsUrl=modalDeps.restaurantDirectionsUrl;
+  bindImageFallback=modalDeps.bindImageFallback;
+  swapImageWhenReady=modalDeps.swapImageWhenReady;
+  phoneHref=modalDeps.phoneHref;
+  show=modalDeps.show;
+  foodHideItem=modalDeps.foodHideItem;
+  HUNGRY_IMAGE=modalDeps.HUNGRY_IMAGE;
+  FINAL_FOOD_IMAGE=modalDeps.FINAL_FOOD_IMAGE;
+  FINAL_RESTAURANT_IMAGE=modalDeps.FINAL_RESTAURANT_IMAGE;
 }
+
 
 function openModal(id, title, body) {
 const opener=document.activeElement;
