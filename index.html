@@ -34,13 +34,13 @@
 html,body{margin:0;background:#090909;color:#f5f5f5;min-height:100%;overscroll-behavior:none}
 *{box-sizing:border-box}
 button{font:inherit;border:0}
-.hidden{display:none!important}
+html:root .hidden{display:none}
 html.dinliminate-booting .app,
-html.dinliminate-page-unloading .app{visibility:hidden!important}
+html.dinliminate-page-unloading .app{visibility:hidden}
 html.dinliminate-booting,
 html.dinliminate-page-unloading,
 html.dinliminate-booting body,
-html.dinliminate-page-unloading body{background:#090909!important}
+html.dinliminate-page-unloading body{background:#090909}
 #bootShield{
   position:fixed;inset:0;z-index:2147483647;background:#090909;
   opacity:1;visibility:visible;pointer-events:none;
@@ -57,11 +57,11 @@ html.dinliminate-page-unloading #bootShield{
 html.dinliminate-start-food #home,
 html.dinliminate-start-restaurant #home,
 html.dinliminate-start-winner #home,
-html.dinliminate-start-family #home{display:none!important}
+html.dinliminate-start-family #home{display:none}
 html.dinliminate-start-food #food,
 html.dinliminate-start-restaurant #restaurant,
 html.dinliminate-start-winner #winner,
-html.dinliminate-start-family #family{display:flex!important}
+html.dinliminate-start-family #family{display:flex}
 .app{
   position:fixed;inset:0;width:min(100vw,430px);max-width:430px;height:100dvh;min-height:100dvh;
   margin:0 auto;padding:0;overflow:hidden;background:#080706;
