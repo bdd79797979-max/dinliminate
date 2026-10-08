@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false before production promotion',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='main'&&expectedCheckpoint==='CP1303');
+assert('launch candidate branch is explicit',expectedBranch==='main'&&expectedCheckpoint==='CP1304');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -102,7 +102,7 @@ assert('four decision controls remain canonical',
 assert('Family uses normal decision screens',app.includes("show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data)")&&
  app.includes("show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data)"));
 assert('history integrity metadata present',release.historyIntegrity&&release.historyIntegrity.length>0);
-assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs');
+assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs && node qa/cp1304-transition-visual-smoke.cjs');
 assert('launch candidate metadata present',String(release.launchCandidate||'').includes('one deployment reserved for candidate verification'));
 
 const checkpointSmoke=[
@@ -119,7 +119,8 @@ const checkpointSmoke=[
  ['CP1163 Meal photo refresh','qa/cp1163-meal-photo-refresh.cjs'],
  ['CP1165 Meal photo reliable paint','qa/cp1165-remaining-meal-photo-refresh.cjs'],
  ['CP1157 Restaurant radius','qa/cp1157-restaurant-radius-smoke.cjs'],
- ['CP1303 Swipe cleanup','qa/cp1303-swipe-cleanup-smoke.cjs']
+ ['CP1303 Swipe cleanup regression','qa/cp1303-swipe-cleanup-smoke.cjs'],
+ ['CP1304 Transition/refresh/details','qa/cp1304-transition-visual-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));
 

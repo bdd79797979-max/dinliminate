@@ -10,7 +10,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test:rc": "node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs",
+    "test:rc": "node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs && node qa/cp1304-transition-visual-smoke.cjs",
     "audit:meal-images": "node qa/verify-meal-images.mjs",
     "audit:meal-images:two": "node qa/verify-meal-images.mjs --require-two",
     "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs",
