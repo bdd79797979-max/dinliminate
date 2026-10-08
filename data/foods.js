@@ -1695,7 +1695,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/6659689/pexels-photo-6659689.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1664350454685-a3298c47fb58?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
     "backupImage": "https://images.unsplash.com/photo-1632848129232-f816b590e5e3?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "bread",
