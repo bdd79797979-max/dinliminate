@@ -1337,7 +1337,7 @@ function tutorialStepsForScreen(screen){
  if(screen==='home')return[
   {target:'#tutorialModeToggle',title:'TOUR',body:'Tap this highlighted Tour button—or this guide—to move to the next step.',avoid:['#home .home-foot']},
   {target:'#home-slogan',title:'HOW IT WORKS',body:'Eliminate meals or restaurants until your choice is revealed.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
-  {targets:['#foodStart','#restStart'],title:'GET STARTED',body:'Tap Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#foodStart','#restStart','#menu']}
+  {targets:['#foodStart .home-choice-content','#restStart .home-choice-content'],title:'GET STARTED',body:'Tap Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#foodStart','#restStart','#menu']}
  ];
  if(screen==='food')return[
   {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
