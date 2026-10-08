@@ -1,5 +1,35 @@
 'use strict';
 
+const fs=require('node:fs');
+const path=require('node:path');
+function staticAudit(){
+ const root=path.resolve(__dirname,'..');
+ const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
+ const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+ const vercel=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));
+ const required=[
+  'function requestMealAutofill',
+  'id="editFoodAutoFill"',
+  'data-meal-autofill-refresh="nutrition"',
+  'data-meal-autofill-refresh="ingredients"',
+  'data-meal-autofill-refresh="recipe"',
+  'data-meal-autofill-refresh="cuisine"',
+  'data-meal-autofill-refresh="mealTimes"',
+  'data-meal-autofill-refresh="photo"',
+  'Similar meal already in your library'
+ ];
+ for(const value of required)assert(app.includes(value),'missing frontend contract: '+value);
+ for(const value of ['.meal-editor-name-row','.meal-autofill-action','.meal-autofill-refresh','.meal-autofill-status','.meal-editor-duplicate-hint'])assert(css.includes(value),'missing quiet autofill style: '+value);
+ assert(!/min-height:\s*6[4-9]px/.test(css.slice(css.lastIndexOf('/* CP1266'))),'autofill controls are too large');
+ assert(index.includes('?v=1266'),'index cache version');
+ assert(sw.includes("dinliminate-shell-v1266"),'service worker cache version');
+ assert(sw.includes('./app.js?v=1266'),'service worker app asset');
+ assert(vercel.functions&&vercel.functions['api/meal-autofill.js'],'Vercel function config');
+}
+
+
 const assert=require('node:assert/strict');
 const handler=require('../api/meal-autofill.js');
 
@@ -25,6 +55,8 @@ function fakeResponse(payload,status=200,contentType='application/json'){
 }
 
 async function main(){
+  staticAudit();
+
   const originalFetch=global.fetch;
   const originalToken=process.env.VERCEL_OIDC_TOKEN;
   const originalModel=process.env.AI_GATEWAY_MODEL;
