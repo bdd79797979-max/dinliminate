@@ -5784,7 +5784,9 @@ const readAutofillCurrent=()=>{
   description:String($('editFoodDescription')?.value||'').trim(),
   ingredients:String($('editFoodIngredients')?.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),
   recipe:String($('editFoodRecipe')?.value||'').trim(),
-  nutrition:{calories:numeric('editFoodCalories'),protein:numeric('editFoodProtein'),carbs:numeric('editFoodCarbs'),fat:numeric('editFoodFat'),sodium:numeric('editFoodSodium')}
+  nutrition:{calories:numeric('editFoodCalories'),protein:numeric('editFoodProtein'),carbs:numeric('editFoodCarbs'),fat:numeric('editFoodFat'),sodium:numeric('editFoodSodium')},
+  photo:String($('editFoodPhoto')?.value||'').trim(),
+  photos:[...editorPhotos]
  };
 };
 const setChecked=(selector,values)=>{
