@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1266,
-  "sourceBranch": "fix/cp1266-meal-autofill",
-  "checkpoint": "CP1266",
+  "build": 1269,
+  "sourceBranch": "fix/cp1269-optional-nutrition",
+  "checkpoint": "CP1269",
   "deploymentTrigger": "fix/cp1266-meal-autofill",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",

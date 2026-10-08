@@ -5757,11 +5757,11 @@ let editorPhotosReady=Promise.resolve();
 const body='<form class="add" id="foodEditorForm">'+
 '<div class="meal-editor-name-row"><input id="editFoodName" placeholder="Meal name" required value="'+esc(item?.name||'')+'"><button type="button" class="meal-autofill-action" id="editFoodAutoFill">Auto-Fill Meal</button></div><small id="editFoodDuplicateHint" class="meal-editor-duplicate-hint" aria-live="polite"></small><div id="editFoodAutoFillStatus" class="meal-autofill-status" aria-live="polite"></div>'+'<fieldset class="quick-cut-editor meal-category-editor"><legend>Cuisine Cuts <button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="cuisine">Refresh</button></legend><p class="meal-category-helper">Choose every cuisine category or food type you want this meal associated with. Custom adds a reusable Cuisine Cut with its own name and photo.</p><div id="editFoodQuickCuts" class="quick-cut-editor-grid custom-taxonomy-grid"></div></fieldset><fieldset class="quick-cut-editor meal-time-editor"><div class="meal-time-editor-head"><span class="meal-time-editor-title">Meal Times</span><span class="meal-time-editor-actions"><button type="button" class="meal-time-edit-toggle" id="editMealTimesManage" aria-expanded="false">Edit Meal Times</button><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="mealTimes">Refresh</button></span></div><p class="meal-category-helper">Choose one or more Meal Times for this meal.</p><div id="editFoodMealTime" class="quick-cut-editor-grid meal-time-editor-grid"></div><div id="editFoodMealTimeManager" class="food-editor-meal-time-manager hidden" aria-label="Edit Meal Times"></div></fieldset>'+
 '<div class="meal-editor-section"><div class="meal-editor-section-head"><div class="meal-editor-section-title">Nutrition per serving</div><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="nutrition">Refresh</button></div><p class="meal-editor-helper">Nutrition is an estimate based on a typical serving.</p><small id="editFoodNutritionBasis" class="meal-autofill-basis" aria-live="polite"></small><div class="meal-nutrition-editor-grid">'+
-'<label>Calories<input id="editFoodCalories" type="number" required min="0" step="1" inputmode="numeric" placeholder="520" value="'+esc(nut.calories??'')+'"><span>kcal</span></label>'+
-'<label>Protein<input id="editFoodProtein" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="27" value="'+esc(nut.protein??'')+'"><span>g</span></label>'+
-'<label>Carbs<input id="editFoodCarbs" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="46" value="'+esc(nut.carbs??'')+'"><span>g</span></label>'+
-'<label>Fat<input id="editFoodFat" type="number" required min="0" step="0.1" inputmode="decimal" placeholder="25" value="'+esc(nut.fat??'')+'"><span>g</span></label>'+
-'<label>Sodium<input id="editFoodSodium" type="number" required min="0" step="1" inputmode="numeric" placeholder="1050" value="'+esc(nut.sodium??'')+'"><span>mg</span></label>'+
+'<label>Calories<input id="editFoodCalories" type="number" min="0" step="1" inputmode="numeric" placeholder="520" value="'+esc(nut.calories??'')+'"><span>kcal</span></label>'+
+'<label>Protein<input id="editFoodProtein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="27" value="'+esc(nut.protein??'')+'"><span>g</span></label>'+
+'<label>Carbs<input id="editFoodCarbs" type="number" min="0" step="0.1" inputmode="decimal" placeholder="46" value="'+esc(nut.carbs??'')+'"><span>g</span></label>'+
+'<label>Fat<input id="editFoodFat" type="number" min="0" step="0.1" inputmode="decimal" placeholder="25" value="'+esc(nut.fat??'')+'"><span>g</span></label>'+
+'<label>Sodium<input id="editFoodSodium" type="number" min="0" step="1" inputmode="numeric" placeholder="1050" value="'+esc(nut.sodium??'')+'"><span>mg</span></label>'+
 '</div></div>'+
 '<div class="meal-editor-text-label"><div class="meal-editor-text-head"><span>About this meal</span><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="description">Refresh</button></div><textarea id="editFoodDescription" placeholder="A short description of the meal (optional)" rows="3">'+esc(descriptionText)+'</textarea></div>'+
 '<div class="meal-editor-text-label"><div class="meal-editor-text-head"><span>Ingredients</span><button type="button" class="meal-autofill-refresh" data-meal-autofill-refresh="ingredients">Refresh</button></div><textarea id="editFoodIngredients" placeholder="One ingredient per line" rows="5">'+esc(ingredientsText)+'</textarea></div>'+
@@ -6118,11 +6118,13 @@ carbs:readNumeric('editFoodCarbs'),
 fat:readNumeric('editFoodFat'),
 sodium:readNumeric('editFoodSodium')
 };
-if(Object.values(nutritionValues).some(value=>value==='')){
- appToast('Fill in Calories, Protein, Carbs, Fat, and Sodium.');
- return;
-}
-const nutrition=nutritionValues;
+const nutrition={
+ calories:nutritionValues.calories===''?0:nutritionValues.calories,
+ protein:nutritionValues.protein===''?0:nutritionValues.protein,
+ carbs:nutritionValues.carbs===''?0:nutritionValues.carbs,
+ fat:nutritionValues.fat===''?0:nutritionValues.fat,
+ sodium:nutritionValues.sodium===''?0:nutritionValues.sodium
+};
 const description=String($('editFoodDescription').value||'').trim();
 const ingredients=String($('editFoodIngredients').value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 const editorNote=isEdit?String($('editFoodNote')?.value||'').trim():'';

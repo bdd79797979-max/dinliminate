@@ -23,9 +23,9 @@ function staticAudit(){
  for(const value of required)assert(app.includes(value),'missing frontend contract: '+value);
  for(const value of ['.meal-editor-name-row','.meal-autofill-action','.meal-autofill-refresh','.meal-autofill-status','.meal-editor-duplicate-hint'])assert(css.includes(value),'missing quiet autofill style: '+value);
  assert(!/min-height:\s*6[4-9]px/.test(css.slice(css.lastIndexOf('/* CP1266'))),'autofill controls are too large');
- assert(index.includes('?v=1266'),'index cache version');
- assert(sw.includes("dinliminate-shell-v1266"),'service worker cache version');
- assert(sw.includes('./app.js?v=1266'),'service worker app asset');
+ assert(index.includes('?v=1269'),'index cache version');
+ assert(sw.includes("dinliminate-shell-v1269"),'service worker cache version');
+ assert(sw.includes('./app.js?v=1269'),'service worker app asset');
  assert(vercel.functions&&vercel.functions['api/meal-autofill.js'],'Vercel function config');
 }
 
