@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1258,
-  "sourceBranch": "fix/cp1258-swipe-feel",
+  "build": 1259,
+  "sourceBranch": "fix/cp1259-pexels-meal-photo-pass",
   "releaseMode": "production",
   "production": true,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1258",
-  "deploymentTrigger": "fix/cp1258-swipe-feel",
+  "checkpoint": "CP1259",
+  "deploymentTrigger": "fix/cp1259-pexels-meal-photo-pass",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,7 +23,7 @@
   "automatedRC": "single current-build release gate; CP1243 swipe smoke + syntax/cache/security consistency; production verification reserved for candidate",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1258 CP1257 stable waiting-card handoff + CP1253 Unsplash meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
+  "currentBaseline": "CP1259 CP1258 swipe feel + requested Pexels meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; CP1253 additional Unsplash photo refresh with exact-match-first selection and prior-image backups",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
@@ -33,5 +33,6 @@
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
   "swipeHandoffFix": "CP1257-remove-overlapping-clone-handoff; active card exits while stable waiting preview remains; no 95ms clone/hide swap",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
-  "swipeFeel": "CP1258 softer release-back and adaptive 240-300ms flight; no new swipe features"
+  "swipeFeel": "CP1258 softer release-back and adaptive 240-300ms flight; no new swipe features",
+  "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained where Pexels was not a better exact match"
 }
