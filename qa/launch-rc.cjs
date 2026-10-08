@@ -87,12 +87,12 @@ assert('image proxy validates redirects',image.includes("redirect:'manual'")&&im
 assert('photo endpoints are throttled',gphoto.includes('photoRateLimited(req')&&rphoto.includes('restaurantPhotoRateLimited(req'));
 assert('swipe card does not resize',app.includes("translate3d('+dx.toFixed(1)+'px,0,0) rotate(")&&!app.slice(app.indexOf('function bindSwipeCard'),app.indexOf('function bindRestaurantSwipe')).includes("card.style.transform='scale("));
 const swipeStart=app.indexOf('function bindSwipeCard(cardId,onCut,onMaybe){');
-const swipeEnd=app.indexOf('\\nfunction bindMealPhotoCountControls',swipeStart);
+const swipeEnd=app.indexOf('\nfunction bindMealPhotoCountControls',swipeStart);
 assert('CP1303 swipe cleanup',swipeStart>=0&&swipeEnd>swipeStart&&!app.includes('SWIPE_OVERLAP_DELAY')&&!app.includes('swipeOverlapContext')&&!app.includes('foodSwipeHandoff')&&!app.includes('restaurantSwipeHandoff')&&!app.includes('setDeckPreviewDepth('),'Retired overlap/handoff machinery remains in app.js.');
 const swipeSource=app.slice(swipeStart,swipeEnd);
 assert('single swipe transaction lifecycle',swipeSource.includes("phase='committing'")&&swipeSource.includes("card.style.visibility='hidden'")&&swipeSource.includes("action?.({fromSwipe:true,decisionId})"),'CP1303 swipe lifecycle is incomplete.');
 const mealLoaderStart=app.indexOf('function loadMealPhotoCandidates');
-const mealLoaderEnd=app.indexOf('\\nconst restaurantPhotoInflight',mealLoaderStart);
+const mealLoaderEnd=app.indexOf('\nconst restaurantPhotoInflight',mealLoaderStart);
 const mealLoader=app.slice(mealLoaderStart,mealLoaderEnd);
 assert('Meal photo readiness precedes source assignment',mealLoader.includes('await preloadSwipeImage(url)')&&mealLoader.includes('img.src=url')&&mealLoader.indexOf('await preloadSwipeImage(url)')<mealLoader.indexOf('img.src=url'),'Meal photo loader can expose an unready source.');
 assert('Restaurant Details keeps card media authoritative',!app.includes("hydrateRestaurantPhoto(item,'#detailsModal')"),'Restaurant Details still contains a second asynchronous photo replacement path.');
