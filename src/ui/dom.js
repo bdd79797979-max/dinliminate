@@ -23,3 +23,5 @@ img.src=reader.result;
 reader.readAsDataURL(file);
 });
 }
+
+export { readImageFile };
