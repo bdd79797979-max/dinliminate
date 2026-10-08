@@ -19,7 +19,7 @@ function ipv4In(ip,start,end){
 }
 function ipv6Int(value){
   let raw=String(value||'').toLowerCase().split('%')[0];
-  if(net.isIPv6(raw)!==6)return null;
+  if(!net.isIPv6(raw))return null;
   if(raw.includes('.')){
     const idx=raw.lastIndexOf(':');
     const tail=raw.slice(idx+1),n=ipv4Int(tail);
@@ -38,10 +38,10 @@ function ipv6Int(value){
 }
 function isForbiddenIp(ip){
   const raw=String(ip||'').trim().toLowerCase();
-  if(net.isIPv4(raw)===4){
+  if(net.isIPv4(raw)){
     return ipv4In(raw,'0.0.0.0','0.255.255.255')||ipv4In(raw,'10.0.0.0','10.255.255.255')||ipv4In(raw,'100.64.0.0','100.127.255.255')||ipv4In(raw,'127.0.0.0','127.255.255.255')||ipv4In(raw,'169.254.0.0','169.254.255.255')||ipv4In(raw,'172.16.0.0','172.31.255.255')||ipv4In(raw,'192.0.0.0','192.0.0.255')||ipv4In(raw,'192.168.0.0','192.168.255.255')||ipv4In(raw,'198.18.0.0','198.19.255.255');
   }
-  if(net.isIPv6(raw)!==6)return true;
+  if(!net.isIPv6(raw))return true;
   const n=ipv6Int(raw);if(n==null)return true;
   const top8=Number(n>>120n),top7=Number(n>>121n),top10=Number(n>>118n);
   const mapped=Number((n>>32n)&0xffffn)===0xffff;
