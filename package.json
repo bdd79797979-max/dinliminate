@@ -14,7 +14,7 @@
     "audit:meal-images": "node qa/verify-meal-images.mjs",
     "audit:meal-images:two": "node qa/verify-meal-images.mjs --require-two",
     "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs",
-    "test:tutorial": "node qa/cp1247-tutorial-home-target-smoke.cjs",
+    "test:tutorial": "node qa/cp1251-tutorial-home-choice-smoke.cjs",
     "test:decision": "node qa/cp1244-decision-transaction-smoke.cjs",
     "test:meal-catalog": "node qa/cp1245-meal-catalog-smoke.cjs",
     "test:swipe-handoff": "node qa/cp1249-commit-time-card-handoff-smoke.cjs",
