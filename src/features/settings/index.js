@@ -255,4 +255,4 @@ const homeActionHandler = (event) => {
 };
 document.addEventListener('click', homeActionHandler, true);
 
-export { settingsActionButton, settingsView, privacyView, exportHistoryPrint, exportPdfView, shareWinner, resetRound, resetRestoreView };
+export { settingsActionButton, settingsView, privacyView, exportHistoryPrint, exportPdfView, shareWinner, resetRound, resetRestoreView, copyAppUrl, addToPhoneFlow, shareApp, clearMealPhotoStorage, clearAllDinliminateStorage, updateAppFlow, resetAppDataFlow, systemRestoreFlow };
