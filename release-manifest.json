@@ -20,7 +20,7 @@
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
   "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
-  "automatedRC": "single current-build release gate; CP1243 swipe smoke + syntax/cache/security consistency; production verification reserved for candidate"
+  "automatedRC": "single current-build release gate; CP1243 swipe smoke + syntax/cache/security consistency; production verification reserved for candidate",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "currentBaseline": "CP1256 CP1243 swipe engine restored + CP1253 Unsplash meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
