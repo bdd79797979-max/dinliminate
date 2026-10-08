@@ -1,10 +1,13 @@
 
+## CP1268 — hide Meal Auto-Fill until AI is connected
+Keeps the optional Meal Auto-Fill code installed but removes its UI controls and guards execution until AI Gateway authentication is intentionally configured.
+
 ## CP1267 — iPhone refresh route flash fix
 Eliminates the brief Home-screen flash when refreshing from Meals or Restaurant by restoring the last active app screen before first paint and delaying the boot reveal until that screen is laid out.
 
 ## CP1266 — quiet Meal Auto-Fill checkpoint
 Adds an understated Auto-Fill Meal action to the existing Add/Edit Meal flow. Autofill stays reviewable and editable before saving, with independent refresh for nutrition, ingredients, recipe, cuisine, meal time, description, and photo. Nutrition is labeled as a typical-serving estimate. Photo matching prefers exact Pexels/Unsplash results and reports when no strong match is found. Similar-meal hints help prevent accidental duplicates. No production deployment was performed for this checkpoint.
-# CURRENT RELEASE — BUILD 1267 / CP1267
+# CURRENT RELEASE — BUILD 1268 / CP1268
 
 Date: 2026-10-08
 
