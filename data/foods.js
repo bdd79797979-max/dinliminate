@@ -484,7 +484,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.unsplash.com/photo-1540432797114-187727adf19b?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=3000",
+    "image": "https://images.pexels.com/photos/6050723/pexels-photo-6050723.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "backupImage": "https://images.unsplash.com/photo-1566740933449-11e38b77e6e5?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "corn",
@@ -825,7 +825,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.unsplash.com/photo-1519699788450-ad34386a3bfc?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=3000",
+    "image": "https://images.pexels.com/photos/13788766/pexels-photo-13788766.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "backupImage": "https://images.unsplash.com/photo-1600441397207-1913d3c09b2a?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "beef",
@@ -949,7 +949,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.unsplash.com/photo-1600041974426-c62f5a7eddb3?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.pexels.com/photos/27397340/pexels-photo-27397340.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "chicken",
       "broth",
@@ -1695,7 +1695,8 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.unsplash.com/photo-1632848129232-f816b590e5e3?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.pexels.com/photos/6659689/pexels-photo-6659689.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.unsplash.com/photo-1632848129232-f816b590e5e3?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "bread",
       "peanut butter",
@@ -3440,7 +3441,8 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.unsplash.com/photo-1772985810405-b63c1fb3afa6?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.pexels.com/photos/5604808/pexels-photo-5604808.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.unsplash.com/photo-1772985810405-b63c1fb3afa6?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "peanuts",
       "chocolate",
