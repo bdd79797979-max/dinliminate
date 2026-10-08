@@ -1,4 +1,5 @@
-import { state as S } from '../../state/store.js';
+import { store } from '../../state/store.js';
+const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { imageProxyUrl, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';

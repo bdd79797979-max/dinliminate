@@ -1,4 +1,5 @@
-import { state as S } from '../../state/store.js';
+import { store } from '../../state/store.js';
+const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { show, home } from '../../main.js';
 import { startFood } from '../swipe/index.js';
