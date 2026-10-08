@@ -129,3 +129,7 @@ CP1245 refreshes the strongest affected meal photos with verified free Unsplash 
 ## CP1246 — no-black swipe handoff
 
 CP1246 keeps the already-prepared overlap next-card visible as a visual bridge while the recycled live card is redrawn and its new image is prepared. The bridge is removed only after the live card is painted visible, eliminating the brief empty/black frame between Cut/Maybe and the next card.
+
+## CP1247 — Tutorial Home target repair
+
+CP1247 fixes the first Home Tour transition by giving the Home slogan the stable `#home-slogan` target referenced by the tutorial. The tutorial target-positioning fallback now retries for 24 animation frames and shows an explicit failure message before stopping instead of silently disappearing.
