@@ -7,6 +7,7 @@ import { imageProxyUrl, bindImageFallbackAttrs, swapImageWhenReady, setRestauran
 import { dismissSwipeHint, maybeShowInCardSwipeCoach, stageSwipePreview, waitForVisualImage, bindRestaurantPhotoPinch } from '../swipe/index.js';
 import { renderMaybeDeckToggle, bindMaybeDeckToggle, renderRestaurantHours, bindRestaurantHours, renderQuickCutsCollapse, bindQuickCutsCollapse, mealTimesFor, ensureMealTimeSettings, mealTimeCatalog, mealTimeOptions, mealTimeNames, syncMealTimeReferences, foodBasePool, buildFood, renderMealTimeCuts, foodQuick } from '../meals/index.js';
 import { triggerSwipeHaptic, bindSwipeCard } from '../swipe/index.js';
+import { openModal } from '../../ui/modal.js';
 
 let restaurantBackBusy=false;
 const REST_QUICK_IMAGES = {
