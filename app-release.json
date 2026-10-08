@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1275,
-  "sourceBranch": "fix/cp1275-home-refresh-and-detail-flash",
-  "checkpoint": "CP1275",
+  "build": 1276,
+  "sourceBranch": "fix/cp1276-hide-meal-autofill",
+  "checkpoint": "CP1276",
   "deploymentTrigger": "fix/cp1266-meal-autofill",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
