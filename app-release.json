@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1261,
+  "build": 1262,
   "sourceBranch": "fix/cp1261-meal-refresh-no-home-flash",
-  "checkpoint": "CP1261",
+  "checkpoint": "CP1262",
   "deploymentTrigger": "fix/cp1261-meal-refresh-no-home-flash",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
@@ -32,13 +32,33 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1259 meal-photo refresh; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1260 CP1258 swipe feel + CP1259 meal-photo refresh + instant loaded-card Details imagery + current restaurant search/radius, Family Mode, UI and catalog improvements",
+  "currentBaseline": "CP1262 CP1261 refresh-no-home-flash + CP1260 instant detail photo + CP1258 swipe feel + CP1259 meal-photo improvements",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
   "tutorialAudit": "CP1251-CP1076-home-choice-target-and-click-gate",
   "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe",
-  "photoRefresh": "CP1245-Unsplash-refresh-meatloaf-southern-vegetables-chicken-dumplings-beef-soup; retain stronger existing PBJ/Biscuits-Gravy/White-Chicken-Chili where no clearly better free Unsplash match",
+  "photoRefresh": {
+    "requested": [
+      "Chicken & Dumplings",
+      "Biscuits & Gravy",
+      "Buttermilk & Cornbread",
+      "White Chicken Chili",
+      "Peanut Butter & Jelly Sandwich",
+      "Chocolate Covered Peanuts"
+    ],
+    "changed": [
+      "Buttermilk & Cornbread"
+    ],
+    "retained": [
+      "Chicken & Dumplings",
+      "Biscuits & Gravy",
+      "White Chicken Chili",
+      "Peanut Butter & Jelly Sandwich & Chips",
+      "Chocolate Covered Peanuts"
+    ],
+    "note": "All six requested meals were checked for stronger approved-provider (Pexels/Unsplash) candidates. Only Buttermilk & Cornbread had a clearly stronger semantic match; the other five were retained rather than introducing a weaker or unrelated image."
+  },
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
   "swipeHandoffFix": "CP1257-remove-overlapping-clone-handoff; stable waiting preview; no clone/hide swap after 95ms",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
