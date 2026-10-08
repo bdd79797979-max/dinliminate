@@ -26,7 +26,7 @@ const SWIPE_OVERLAP_DELAY=95;
 let swipeOverlapContext=null;
 let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1250';
+let APP_BUILD = '1251';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1336,8 +1336,8 @@ function startTutorialFromHome(){
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
   {target:'#tutorialModeToggle',title:'TOUR',body:'Tap this highlighted Tour button—or this guide—to move to the next step.',avoid:['#home .home-foot']},
-  {target:'#home-slogan',title:'HOW IT WORKS',body:'eliminate meals or restaurants until your choice is revealed.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
-  {target:'#home .home-choice-rail',title:'GET STARTED',body:'tap home or restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#menu']}
+  {target:'#home-slogan',title:'HOW IT WORKS',body:'Eliminate meals or restaurants until your choice is revealed.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
+  {targets:['#foodStart','#restStart'],title:'GET STARTED',body:'Tap Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#foodStart','#restStart','#menu']}
  ];
  if(screen==='food')return[
   {target:'#foodCard',title:'MEAL CARD',body:'This is the meal you are deciding on. Swipe left for Cut or right for Maybe, or use the buttons below. A committed card slides completely off-screen before the next choice takes over.'},
@@ -1390,6 +1390,9 @@ function tutorialUnionRect(selectors){
  };
 }
 function tutorialTargetRect(step){
+ if(Array.isArray(step?.targets)){
+  return tutorialUnionRect(step.targets);
+ }
  const target=step?.target?document.querySelector(step.target):null;
  if(!target)return null;
  const main=target.getBoundingClientRect();
@@ -1656,9 +1659,10 @@ function bindTutorialUI(){
  }
  if(!document.documentElement.dataset.tutorialTargetBound){
   document.documentElement.dataset.tutorialTargetBound='1';
-  document.addEventListener('pointerdown',tutorialBlockPointer,true);
-  document.addEventListener('pointerup',tutorialHandlePointerUp,true);
-  document.addEventListener('pointercancel',tutorialHandlePointerCancel,true);
+  // CP1251: use the CP1076-style click capture as the tutorial's single
+  // interaction gate. The previous pointerdown/up interception could lose
+  // the Home/Restaurant choice when the release landed a few pixels away.
+  document.documentElement.dataset.tutorialTargetBound='1';
   document.addEventListener('click',tutorialHighlightedTargetClick,true);
  }
  window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
