@@ -8,7 +8,12 @@ import { imageProxyUrl, mealImageUrl, show, familyHideWinnerMeta, HUNGRY_IMAGE, 
 import { foodPhoto, foodPhotoFallback } from '../../main.js';
 import { bindRestaurantPhotoPinch } from '../swipe/index.js';
 import { dedupeRestaurantPool, restaurantHidden, restaurantCategory, restaurantQuickMatches, restaurantMatchesQuery } from '../restaurants/index.js';
-import { restaurantFallbackImage } from '../../main.js';
+import { restaurantFallbackImage, allFoods, hydrateRestaurantPhoto } from '../../main.js';
+import { appToast } from '../../ui/modal.js';
+import { save } from '../../state/storage.js';
+import { tutorialModeEnabled, tutorialState, startTutorialForScreen } from '../tutorial/index.js';
+
+let celebrationHideTimer=0;
 
 function hideCelebration(){
  const el=$('celebration');
@@ -131,7 +136,7 @@ function hungryRestaurantPick(excludeId=null){
  if(!pool.length)return null;
  const candidates=excludeId==null?pool:pool.filter(row=>String(row.id)!==String(excludeId));
  const source=candidates.length?candidates:pool;
- const index=Number.isInteger(forced)&&forced>=0&&forced<source.length?forced:Math.floor(Math.random()*source.length);
+ const index=Math.floor(Math.random()*source.length);
  return source[index]||null;
 }
 function renderHungryRestaurantMystery(item,covered=true){
@@ -280,9 +285,7 @@ function slowAndStopHungryWheel(){
  if(!svg||!S.hungryWheelSpinning||S.hungryWheelSpinPhase!=='spinning')return;
  const pool=Array.isArray(S.hungryWheelDisplayItems)&&S.hungryWheelDisplayItems.length?S.hungryWheelDisplayItems:hungryWheelPool();
  if(!pool.length){S.hungryWheelSpinning=false;return;}
- const idx=Number.isInteger(forced)&&forced>=0&&forced<pool.length
-   ? forced
-   : Math.floor(Math.random()*pool.length);
+ const idx=Math.floor(Math.random()*pool.length);
  const item=pool[idx];
  const step=360/pool.length;
  const targetBase=-(idx*step+step/2);

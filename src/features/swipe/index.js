@@ -3,6 +3,12 @@ const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { save } from '../../state/storage.js';
+import { mealTimeNames, buildFood, foodQuick, renderMaybeDeckToggle, bindMaybeDeckToggle } from '../meals/index.js';
+import { FINAL_FOOD_IMAGE, HUNGRY_IMAGE, hydrateMealPhotoGallery } from '../../main.js';
+import { tutorialModeEnabled, tutorialState, tutorialEnterDecisionScreen } from '../tutorial/index.js';
+import { familyEnterMaybes, familyPickSingle } from '../family/index.js';
+import { bindCardButton } from '../restaurants/index.js';
+import { detailsSheet } from '../../ui/modal.js';
 import { mealPhotoList, foodPhoto, foodPhotoFallback } from '../../main.js';
 import { winner } from '../winner/index.js';
 import { markMealImageUnavailable, swapImageWhenReady, loadMealPhotoCandidates, ensureMealCardPhotoPager } from '../../main.js';
@@ -258,7 +264,7 @@ function waitForSwipeImage(img,card,key,timeoutMs=1400){
    && String(card.dataset.swipePreviewToken||'')===token
    && String(card.dataset.swipePreviewKey||'')===expectedKey
    && card.querySelector('img')===img;
- let previousCleanup=img.__swipePreviewCleanup;
+ const previousCleanup=img.__swipePreviewCleanup;
  if(typeof previousCleanup==='function'){try{previousCleanup();}catch(error){console.error('Dinliminate error',error)}}
  return new Promise(resolve=>{
   let done=false,timer=0;

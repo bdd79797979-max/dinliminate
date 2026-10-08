@@ -2,6 +2,8 @@ import { store } from '../../state/store.js';
 const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { show, startFood, openRestaurant, winner, closeDrawer, home } from '../../main.js';
+import { restaurantPoolFiltered } from '../restaurants/index.js';
+import { handleWinnerRestart } from '../family/index.js';
 
 const tutorialState=store.get('tutorialState');
 function ensureTutorialUI(){
@@ -343,8 +345,8 @@ function advanceTutorial(){
  if(tutorialState.index>=tutorialState.steps.length){stopTutorialMode();return;}
  renderTutorialStep();
 }
-let tutorialPointerContext=null;
-let tutorialSuppressClick=null;
+const tutorialPointerContext=null;
+const tutorialSuppressClick=null;
 
 function tutorialTargetHit(event,selector){
  try{return !!event.target?.closest?.(selector);}catch{return false;}
@@ -378,7 +380,7 @@ function tutorialCurrentTargetForEvent(event,step){
 function tutorialBlockPointer(){ return false; }
 function tutorialHandlePointerUp(){ return false; }
 function tutorialHandlePointerCancel(){ return false; }
-let tutorialDispatchingAction=false;
+const tutorialDispatchingAction=false;
 function tutorialHighlightedTargetClick(event){
  if(!tutorialModeEnabled()||!tutorialState.active)return;
  const step=tutorialState.steps[tutorialState.index];

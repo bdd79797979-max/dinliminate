@@ -1,3 +1,7 @@
+import { bindRestaurantPhotoPinch } from '../features/swipe/index.js';
+import { restaurantCategory, restaurantHide } from '../features/restaurants/index.js';
+import { itemNoteKey } from '../state/storage.js';
+import { removeFoodOverlays } from '../main.js';
 import { $ } from './dom.js';
 import { esc } from './esc.js';
 
@@ -281,6 +285,8 @@ async function detailsSheet(item,type){
 const body='<div class="detail-unified detail-meal">'+detailHero+photoCredit+'<div class="detail-title-block detail-unified-title"><span class="detail-kicker">MEAL</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+' · Meal</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+detailRows+'</section>'+nutrition+notesSection+hide+'</div>';
    const modal=openModal('detailsModal','Details',body);
    const detailImg=modal.querySelector('.history-detail-photo');
+   const gcount=modal.querySelector('[data-detail-photo-count]');
+   const gimg=detailImg;
    if(detailImg){
     detailImg.loading='eager';
     detailImg.fetchPriority='high';
