@@ -3175,7 +3175,7 @@ const completeAfterExit=async ()=>{
  // This preserves the existing handoff lifecycle while making Cut/Maybe feel
  // like a real swipe instead of instantly removing the card.
  card.__triggerSwipeDecision=(direction)=>{
-  if(phase!=='idle')return false;
+  if(phase!=='idle')return 'busy';
   const dir=Number(direction)<0?-1:1;
   const distance=Math.max(48,swipeThreshold);
   // Treat a button press as a synthetic committed swipe so the existing
