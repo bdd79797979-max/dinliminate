@@ -2738,123 +2738,431 @@ function unifiedDeckDecisionReady(cardId,nextId){
  return false;
 }
 
+async function waitForDisplayedImage(img,timeoutMs=1200){
+ if(!img)return false;
+ if(img.complete&&img.naturalWidth>0){
+  try{await img.decode?.();}catch{}
+  return true;
+ }
+ return await new Promise(resolve=>{
+  let done=false,timer=0;
+  const finish=ok=>{if(done)return;done=true;clearTimeout(timer);img.onload=null;img.onerror=null;resolve(!!ok);};
+  img.onload=()=>{Promise.resolve(img.decode?.()).catch(()=>{}).then(()=>finish(img.naturalWidth>0));};
+  img.onerror=()=>finish(false);
+  timer=setTimeout(()=>finish(img.complete&&img.naturalWidth>0),timeoutMs);
+ });
+}
+
 function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
- const third=$(options.thirdId||'');
- const swipeBindingToken=String(Number(card.dataset.swipeBindingToken||0)+1);
+ const staticWaitingCard=cardId==='foodCard';
+ const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
- let downX=0,lastX=0,lastMoveTime=0,lastMoveX=0,velocityX=0,pointerId=null,moveFrame=null;
- let phase='idle',hapticTriggered=false,suppressClickUntil=0,exitAnimation=null,completionTimer=0;
- const threshold=()=>clamp(Math.round(Math.max(280,Number(card.clientWidth)||430)*.21),72,108);
- const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
- const cancelFrame=()=>{if(moveFrame!=null){cancelAnimationFrame(moveFrame);moveFrame=null;}};
- const releasePointer=()=>{try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}pointerId=null;};
- const clearTimer=()=>{if(completionTimer){clearTimeout(completionTimer);completionTimer=0;}};
- const paintPreview=(dx)=>{
-  if(!next||!next.isConnected)return;
-  const w=Math.max(280,Number(card.clientWidth)||430),p=clamp(Math.abs(dx)/w,0,1);
-  next.style.setProperty('--deck-scale',(0.965+(0.035*p)).toFixed(4));
-  next.style.setProperty('--deck-opacity',String(.92+.08*p));
-  if(third){third.style.transform='scale('+(0.925+(0.025*p)).toFixed(4)+')';third.style.opacity=String(.80+.06*p);}
+ const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
+
+ let downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0;
+ let phase=inheritedSwipeLock?'locked':'idle',hapticTriggered=false,pointerId=null,suppressClickUntil=0,moveFrame=null;
+ let swipeThreshold=88,completionTimer=0,exitAnimation=null;
+
+ card.style.touchAction='none';
+ card.style.userSelect='none';
+ card.style.webkitUserSelect='none';
+ card.style.webkitTouchCallout='none';
+ card.style.pointerEvents='auto';
+ card.dataset.swipePhase=phase;
+ card.dataset.swipeTransaction=inheritedSwipeLock?'active':'';
+
+ card.querySelectorAll('img').forEach(img=>{
+  img.draggable=false;
+  if(img.dataset.swipeDragBound==='1')return;
+  img.dataset.swipeDragBound='1';
+  img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
+ });
+
+ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+ const cancelMoveFrame=()=>{
+  if(moveFrame!=null){
+   try{cancelAnimationFrame(moveFrame);}catch{}
+   moveFrame=null;
+  }
  };
+ const clearCompletionTimer=()=>{
+  if(completionTimer){clearTimeout(completionTimer);completionTimer=0;}
+ };
+ const cardWidth=()=>Math.max(280,Number(card.clientWidth)||430);
+
  const settleBack=()=>{
+  cancelMoveFrame();
   if(phase!=='dragging'&&phase!=='idle')return;
-  phase='idle';hapticTriggered=false;velocityX=0;releasePointer();cancelFrame();
-  card.classList.remove('swipe-active');card.style.transition='transform 180ms cubic-bezier(.22,1,.36,1),opacity 180ms ease';card.style.transform='translate3d(0,0,0) rotate(0deg)';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';card.style.removeProperty('--swipe-tint-alpha');card.dataset.swipe='';card.dataset.swipePhase='idle';if(cardId==='restaurantCard'){const rid=String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');if(rid)card.dataset.deckRowId=rid;}
-  setDeckPreviewDepth(next,third);
-  window.setTimeout(()=>{if(phase==='idle')card.style.transition='';},190);
+  phase='idle';
+  velocityX=0;
+  hapticTriggered=false;
+  card.classList.remove('swipe-active');
+  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease';
+  card.style.transform='translate3d(0,0,0) rotate(0deg)';
+  card.style.opacity='1';
+  card.style.visibility='visible';
+  card.style.pointerEvents='auto';
+  card.style.setProperty('--swipe-tint-alpha','0');
+  card.dataset.swipe='';
+  card.dataset.swipePhase='idle';
+  card.dataset.swipeTransaction='';
+  window.setTimeout(()=>{
+   if(phase==='idle'){
+    card.style.transition='';
+    card.style.transform='';
+   }
+  },185);
  };
- const finishAfterFlight=async ()=>{
+
+ const releasePointer=()=>{
+  try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}
+  pointerId=null;
+ };
+
+ const cancel=()=>{
+  if(phase!=='dragging')return;
+  phase='idle';
+  hapticTriggered=false;
+  velocityX=0;
+  releasePointer();
+  settleBack();
+ };
+
+ const waitForPaint=()=>new Promise(resolve=>{
+  requestAnimationFrame(()=>requestAnimationFrame(resolve));
+ });
+
+ const waitForNextReady=async()=>{
+  if(!next?.isConnected)return false;
+  if(staticWaitingCard){
+   if(next.dataset.foodReady==='1')return true;
+   try{return await ensureFoodNextCardReady(next);}catch{return false;}
+  }
+  if(next.dataset.swipePreviewReady==='1')return true;
+  try{
+   const ready=await ensureSwipePreviewReady(next);
+   if(ready)return true;
+  }catch{}
+  const img=next.querySelector('img');
+  return !!img&&img.complete&&img.naturalWidth>0;
+ };
+
+ const finishAfterFlight=()=>{
   if(phase!=='committing')return;
-  clearTimer();
-  phase='completing';card.dataset.swipePhase='completing';card.style.pointerEvents='none';
+  clearCompletionTimer();
+  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
-  const promotedPreview=next;
-  // Keep the outgoing card off the input layer; the B card is already painted underneath it.
-  card.style.transition='none';card.style.pointerEvents='none';card.style.opacity='0';card.style.visibility='hidden';card.style.transform='none';card.classList.remove('swipe-active');
-  try{
-   await Promise.resolve(action?.({preserveSwipe:true}));
-  }catch(err){
-   setTimeout(()=>{throw err;},0);
+  const handoffMeal=staticWaitingCard&&cardId==='foodCard';
+  const handoffRestaurant=cardId==='restaurantCard';
+
+  // The active card has fully left. The already-painted next card becomes the
+  // visible surface immediately; the old active node remains in the DOM only
+  // long enough to let the state/render pipeline prepare its replacement.
+  if(next?.isConnected){
+   next.style.visibility='visible';
+   next.style.opacity='1';
+   next.style.pointerEvents='none';
+   next.style.filter='none';
+   next.style.zIndex='3';
+   next.dataset.swipePromoted='1';
   }
-  if(cardId==='foodCard'){
-   await refreshFoodSwipeDeckAfterDecision(promotedPreview);
-  }else if(cardId==='restaurantCard'){
-   await refreshRestaurantSwipeDeckAfterDecision(promotedPreview);
-  }
-  if(card.isConnected){
-   card.style.transition='none';card.style.transform='none';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';card.dataset.swipe='';card.dataset.swipePhase='idle';card.dataset.swipeTransaction='';card.classList.remove('swipe-active');
-  }
-  phase='idle';
-  setDeckPreviewDepth($(nextId),third);
- };
- const commit=(dx,speed=0)=>{
-  if(phase!=='dragging')return;
-  const abs=Math.abs(dx),w=Math.max(280,Number(card.clientWidth)||430),dir=dx<0?-1:1;
-  phase='committing';card.dataset.swipePhase='committing';card.dataset.swipeTransaction='active';card.style.pointerEvents='none';suppressClickUntil=Date.now()+700;releasePointer();
-  const currentId=cardId==='foodCard'?String(card.dataset.mealId||''):String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
-  const row=cardId==='foodCard'?S.pool.find(x=>String(x?.id||'')===currentId):S.restaurantPool.find(x=>String(x?.id||'')===currentId);
-  previewDecisionCount(cardId==='foodCard'?'food':'restaurant',dir<0?'cut':'maybe',!!row&&(cardId==='foodCard'?S.maybe.has(row.id):!!row._maybe));
-  card.dataset.swipeDirection=dir<0?'cut':'maybe';
-  const startRot=dir*clamp(abs/w*11,0,11);
-  const start='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+startRot.toFixed(2)+'deg)';
-  const rect=card.getBoundingClientRect(),edge=48,remaining=dir<0?rect.right+edge:window.innerWidth-rect.left+edge,targetX=dir<0?dx-remaining:dx+remaining,target='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+(dir*11).toFixed(2)+'deg)';
-  const magnitude=clamp(Math.abs(speed),0,2.4),duration=Math.round(clamp(285-magnitude*28,225,285));
-  card.style.transition='none';card.style.opacity='1';card.style.visibility='visible';card.style.transform=start;card.style.setProperty('--swipe-tint-alpha',String(clamp(abs/(Math.max(72,threshold())*2.7),0,.26)));void card.offsetWidth;
-  if(next){next.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1),opacity '+duration+'ms ease';next.style.setProperty('--deck-scale','1');next.style.setProperty('--deck-opacity','1');next.style.visibility='visible';}
-  if(third){third.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1),opacity '+duration+'ms ease';third.style.transform='scale(.95)';third.style.opacity='.86';}
-  const finish=()=>{
-   if(phase!=='committing')return;
-   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
-   finishAfterFlight().catch(()=>{});
+
+  phase='completing';
+  card.dataset.swipePhase='completing';
+  card.dataset.swipeTransaction='active';
+  card.style.transition='none';
+  card.style.transform='translate3d(-120vw,0,0)';
+  card.style.opacity='0';
+  card.style.visibility='hidden';
+  card.style.pointerEvents='none';
+  card.classList.remove('swipe-active');
+  card.style.removeProperty('--swipe-tint-alpha');
+  card.dataset.swipe='';
+
+  const run=async()=>{
+   try{
+    if(handoffMeal)foodSwipeHandoff=true;
+    if(handoffRestaurant)restaurantSwipeHandoff=true;
+
+    // Keep the visual next card untouched while the decision mutates state.
+    // Meals redraw the hidden active node; Restaurants rebuild only after their
+    // async photo preparation finishes, leaving the promoted visual in place.
+    await Promise.resolve(action?.());
+
+    if(handoffMeal){
+     if(card.isConnected){
+      try{
+       const ready=card.__mealReadyPromise;
+       if(ready)await Promise.race([ready,new Promise(resolve=>setTimeout(resolve,1200))]);
+      }catch{}
+      await waitForPaint();
+      card.style.transition='none';
+      card.style.transform='none';
+      card.style.opacity='1';
+      card.style.visibility='visible';
+      card.style.pointerEvents='auto';
+      card.style.zIndex='2';
+      card.dataset.swipe='';
+      card.dataset.swipePhase='idle';
+      card.dataset.swipeTransaction='';
+      next?.style.removeProperty('z-index');
+      next?.style.pointerEvents='none';
+      next?.style.visibility='visible';
+      card.style.removeProperty('--swipe-tint-alpha');
+      foodSwipeHandoff=false;
+      await Promise.resolve(primeFoodSwipeMedia()).catch(()=>{});
+      bindFoodSwipe();
+     }
+     phase='idle';
+     return;
+    }
+
+    if(handoffRestaurant){
+     const fresh=$('restaurantCard');
+     if(fresh){
+      const freshImg=fresh.querySelector('img');
+      if(freshImg){
+       const canonical=String(freshImg.currentSrc||freshImg.src||'');
+       if(!freshImg.complete||freshImg.naturalWidth===0){
+        await waitForDisplayedImage(freshImg,1200);
+       }
+       if(canonical&&freshImg.currentSrc!==canonical){
+        // Photo hydration may have replaced the image while we waited; the
+        // card is still the authoritative current restaurant.
+       }
+      }
+      await waitForPaint();
+      fresh.style.transition='none';
+      fresh.style.transform='none';
+      fresh.style.opacity='1';
+      fresh.style.visibility='visible';
+      fresh.style.pointerEvents='auto';
+      fresh.style.zIndex='2';
+      fresh.dataset.swipePhase='idle';
+      fresh.dataset.swipeTransaction='';
+      fresh.dataset.swipe='';
+     }
+     restaurantSwipeHandoff=false;
+     bindRestaurantSwipe(restaurantPoolFiltered()?.[S.restaurantIndex]);
+     phase='idle';
+     return;
+    }
+
+    card.style.transition='';
+    card.style.transform='';
+    card.style.opacity='1';
+    card.style.visibility='visible';
+    card.style.pointerEvents='auto';
+    card.style.zIndex='2';
+    card.dataset.swipePhase='idle';
+    card.dataset.swipeTransaction='';
+    card.dataset.swipe='';
+    phase='idle';
+   }catch{
+    phase='idle';
+    card.dataset.swipePhase='idle';
+    card.dataset.swipeTransaction='';
+    try{card.style.visibility='visible';card.style.opacity='1';card.style.transform='';card.style.pointerEvents='auto';}catch{}
+   }
   };
+  void run();
+ };
+
+ const commit=async(dx,speed=0)=>{
+  if(phase!=='dragging')return;
+  cancelMoveFrame();
+  phase='committing';
+  card.dataset.swipePhase='committing';
+  card.dataset.swipeTransaction='active';
+  card.style.pointerEvents='none';
+  hapticTriggered=false;
+  suppressClickUntil=Date.now()+900;
+
+  // A committed swipe only leaves the viewport once the next card is ready.
+  // This removes the black-gap race caused by an unpainted waiting image.
+  const hasNext=!!next?.isConnected;
+  if(hasNext){
+   const ready=await Promise.race([
+    waitForNextReady(),
+    new Promise(resolve=>setTimeout(()=>resolve(false),1400))
+   ]);
+   if(phase!=='committing')return;
+   if(!ready){
+    settleBack();
+    return;
+   }
+   await waitForPaint();
+  }
+
+  const width=cardWidth();
+  const direction=dx<0?-1:1;
+  const decisionKind=cardId==='foodCard'?'food':'restaurant';
+  const decisionId=decisionKind==='food'
+    ?String(card.dataset.mealId||'')
+    :String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
+  const decisionRow=decisionKind==='food'
+    ?S.pool.find(item=>String(item?.id||'')===decisionId)
+    :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
+  previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe:false);
+
+  card.dataset.swipeDirection=direction<0?'cut':'maybe';
+  const releaseAbs=Math.abs(dx);
+  const releaseRotation=direction*clamp((releaseAbs/width)*11,0,11);
+  const fromTransform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+releaseRotation.toFixed(2)+'deg)';
+  card.style.transition='none';
+  card.style.opacity='1';
+  card.style.visibility='visible';
+  card.style.transform=fromTransform;
+  card.style.setProperty('--swipe-tint-alpha',String(clamp(releaseAbs/(Math.max(72,swipeThreshold)*2.7),0,.26)));
+  void card.offsetWidth;
+
+  const rect=card.getBoundingClientRect();
+  const edgePadding=64;
+  const remaining=direction<0 ? (rect.right+edgePadding) : (window.innerWidth-rect.left+edgePadding);
+  const targetX=direction<0 ? (dx-remaining) : (dx+remaining);
+  const targetTransform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
+  const magnitude=clamp(Math.abs(speed),0,2.4);
+  const duration=Math.round(clamp(285-(magnitude*30),210,285));
+
+  dismissSwipeHint();
+  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
+
+  const done=()=>{
+   if(phase==='committing')finishAfterFlight();
+  };
+
   if(typeof card.animate==='function'){
-   exitAnimation=card.animate([{transform:start},{transform:target}],{duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'});
-   exitAnimation.finished.then(()=>{if(phase==='committing')finish();}).catch(()=>{});
-   completionTimer=setTimeout(()=>{if(phase==='committing')finish();},duration+500);
+   exitAnimation=card.animate(
+    [{transform:fromTransform},{transform:targetTransform}],
+    {duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'}
+   );
+   exitAnimation.finished.then(done).catch(()=>{});
+   completionTimer=window.setTimeout(done,duration+500);
   }else{
-   requestAnimationFrame(()=>{if(phase!=='committing')return;card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';card.style.transform=target;completionTimer=setTimeout(()=>{if(phase==='committing')finish();},duration+650);});
+   requestAnimationFrame(()=>{
+    if(phase!=='committing')return;
+    card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
+    card.style.transform=targetTransform;
+    completionTimer=window.setTimeout(done,duration+650);
+   });
   }
  };
+
  card.__triggerSwipeDecision=(direction)=>{
   if(phase!=='idle'||card.dataset.swipeTransaction==='active')return 'busy';
-  if(!unifiedDeckDecisionReady(cardId,nextId))return 'busy';
-  const dir=Number(direction)<0?-1:1;phase='dragging';card.dataset.swipePhase='dragging';commit(dir*Math.max(48,threshold()),0);return 'accepted';
+  const dir=Number(direction)<0?-1:1;
+  const distance=Math.max(48,swipeThreshold);
+  phase='dragging';
+  card.dataset.swipePhase='dragging';
+  void commit(dir*distance,0);
+  return 'accepted';
  };
+
  const paintMove=()=>{
-  moveFrame=null;if(phase!=='dragging')return;
-  const dx=lastX-downX;if(Math.abs(dx)<=2)return;
-  const w=Math.max(280,Number(card.clientWidth)||430),t=threshold(),abs=Math.abs(dx),rot=(dx<0?-1:1)*clamp(abs/w*11,0,11);
-  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rot.toFixed(2)+'deg)';card.style.opacity='1';card.style.setProperty('--swipe-tint-alpha',String(clamp(abs/(t*2.7),0,.26)));card.dataset.swipe=dx<0?'cut':'maybe';
-  paintPreview(dx);
-  if(abs>=t&&!hapticTriggered){hapticTriggered=true;triggerSwipeHaptic();}
+  moveFrame=null;
+  if(phase!=='dragging')return;
+  const dx=lastX-downX;
+  if(Math.abs(dx)<=3)return;
+  const absX=Math.abs(dx),width=cardWidth();
+  swipeThreshold=clamp(Math.round(width*.21),72,108);
+  const progress=clamp(absX/swipeThreshold,0,1.5);
+  const rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
+  card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
+  card.style.opacity='1';
+  card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*2.7),0,.26)));
+  card.dataset.swipe=dx<0?'cut':'maybe';
+  if(progress>=1&&!hapticTriggered){
+   hapticTriggered=true;
+   triggerSwipeHaptic();
+  }
  };
- const scheduleMove=()=>{if(moveFrame==null)moveFrame=requestAnimationFrame(paintMove);};
+
+ const scheduleMove=()=>{
+  if(moveFrame!=null)return;
+  moveFrame=requestAnimationFrame(paintMove);
+ };
+
  const finish=(e)=>{
   if(phase!=='dragging')return;
-  if(e?.clientX!=null)lastX=e.clientX;cancelFrame();
-  const dx=lastX-downX,w=Math.max(280,Number(card.clientWidth)||430),t=threshold(),speed=(Number.isFinite(velocityX)?velocityX:0)/1000;
-  if(Math.abs(dx)>=t||(Math.abs(dx)>=48&&Math.abs(speed)>=.50))commit(dx,speed);else settleBack();
+  if(e?.clientX!=null)lastX=e.clientX;
+  cancelMoveFrame();
+  const dx=lastX-downX;
+  const speed=Number.isFinite(velocityX)?velocityX/1000:0;
+  swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
+  const distanceCommit=Math.abs(dx)>=swipeThreshold;
+  const flickCommit=Math.abs(dx)>=48&&Math.abs(speed)>=.50;
+  if(distanceCommit||flickCommit)void commit(dx,speed);
+  else{
+   phase='idle';
+   velocityX=0;
+   releasePointer();
+   settleBack();
+  }
  };
- card.style.touchAction='none';card.style.userSelect='none';card.style.webkitUserSelect='none';card.style.webkitTouchCallout='none';card.style.pointerEvents='auto';card.dataset.swipePhase='idle';
- card.querySelectorAll('img').forEach(img=>{img.draggable=false;if(img.dataset.deckDragBound==='1')return;img.dataset.deckDragBound='1';img.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});});
- card.onpointerdown=e=>{
-  if(e.isPrimary===false)return;
-  if(e.button!=null&&e.button!==0)return;
-  if(e.target.closest?.('button,a,input,select'))return;
-  if(phase!=='idle'||card.dataset.swipeTransaction==='active')return;
-  if(!unifiedDeckDecisionReady(cardId,nextId))return;
-  downX=lastX=lastMoveX=e.clientX;lastMoveTime=performance.now();velocityX=0;hapticTriggered=false;phase='dragging';card.dataset.swipePhase='dragging';card.dataset.swipe='';card.classList.add('swipe-active');card.style.transition='none';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';try{card.setPointerCapture?.(e.pointerId);}catch{}pointerId=e.pointerId;
- };
- card.onpointermove=e=>{
-  if(phase!=='dragging'||e.pointerId!==pointerId)return;
-  const now=performance.now(),dt=Math.max(1,now-lastMoveTime),x=e.clientX;velocityX=((x-lastMoveX)/dt)*1000;lastMoveX=x;lastMoveTime=now;lastX=x;if(Math.abs(x-downX)>2&&e.cancelable)e.preventDefault();scheduleMove();
- };
- card.onpointerup=e=>finish(e);card.onpointercancel=()=>settleBack();card.onlostpointercapture=()=>{if(phase==='dragging')settleBack();};card.onclick=e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();}};
-}
 
+ card.onpointerdown=e=>{
+  if(e.isPrimary===false){
+   if(phase==='dragging')cancel();
+   return;
+  }
+  if(e.button!=null&&e.button!==0)return;
+  if(phase==='locked'){
+   if(card.dataset.swipeTransaction==='active')return;
+   phase='idle';
+   card.dataset.swipePhase='idle';
+  }
+  if(card.dataset.swipeTransaction==='active')return;
+  if(phase!=='idle'||card.dataset.swipePhase!=='idle')return;
+  if(e.target.closest?.('button,a,input,select'))return;
+  downX=e.clientX;
+  lastX=e.clientX;
+  lastMoveX=e.clientX;
+  lastMoveTime=performance.now();
+  velocityX=0;
+  swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
+  phase='dragging';
+  card.dataset.swipePhase='dragging';
+  card.dataset.swipeDirection='';
+  card.dataset.swipe='';
+  card.classList.add('swipe-active');
+  card.style.transition='none';
+  card.style.opacity='1';
+  card.style.visibility='visible';
+  card.style.pointerEvents='auto';
+  try{card.setPointerCapture?.(e.pointerId);}catch{}
+  pointerId=e.pointerId;
+ };
+
+ card.onpointermove=e=>{
+  if(phase!=='dragging'||e.isPrimary===false||e.pointerId!==pointerId)return;
+  const now=performance.now();
+  const x=e.clientX;
+  const dt=Math.max(1,now-lastMoveTime);
+  velocityX=((x-lastMoveX)/dt)*1000;
+  lastMoveX=x;
+  lastMoveTime=now;
+  lastX=x;
+  if(Math.abs(lastX-downX)>3){
+   if(e.cancelable)e.preventDefault();
+   scheduleMove();
+  }
+ };
+
+ card.onpointerup=e=>finish(e);
+ card.onpointercancel=cancel;
+ card.onlostpointercapture=()=>{
+  if(phase==='dragging')cancel();
+ };
+ card.onclick=e=>{
+  if(Date.now()<suppressClickUntil){
+   e.preventDefault();
+   e.stopPropagation();
+  }
+ };
+}
 function bindMealPhotoCountControls(){
  if(document.documentElement.dataset.mealPhotoCountBound==='1')return;
  document.documentElement.dataset.mealPhotoCountBound='1';
