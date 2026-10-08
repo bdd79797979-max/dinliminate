@@ -16,6 +16,7 @@ const requiredFiles = [
 
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const exists = file => fs.existsSync(path.join(root, file));
+const css = file => read(file);
 
 for (const file of requiredFiles) {
   assert.equal(exists(file), true, 'required file is missing: ' + file);
@@ -88,9 +89,22 @@ assert.equal(releaseManifest.sourceBranch,'main','release-manifest source branch
 assert.equal((index.match(/<script(?![^>]*src)[^>]*>/g)||[]).length,0,'index.html must not contain inline executable scripts');
 assert.ok(index.includes('./boot.js?v='+build),'index.html must load boot.js');
 assert.equal(exists('styles.css'),false,'legacy monolithic styles.css must be removed');
+  assert.equal(css('tokens.css').includes('!important'),false,'tokens.css must not contain !important');
+  assert.equal(css('base.css').includes('!important'),false,'base.css must not contain !important');
+  assert.equal(css('chrome.css').includes('!important'),false,'chrome.css must not contain !important');
+  assert.equal(css('modal.css').includes('!important'),false,'modal.css must not contain !important');
+  assert.equal(css('swipe.css').includes('!important'),false,'swipe.css must not contain !important');
+  assert.equal(css('home.css').includes('!important'),false,'home.css must not contain !important');
+  assert.equal(css('meals.css').includes('!important'),false,'meals.css must not contain !important');
+  assert.equal(css('restaurants.css').includes('!important'),false,'restaurants.css must not contain !important');
+  assert.equal(css('winner.css').includes('!important'),false,'winner.css must not contain !important');
+  assert.equal(css('history.css').includes('!important'),false,'history.css must not contain !important');
+  assert.equal(css('family.css').includes('!important'),false,'family.css must not contain !important');
+  assert.equal(css('settings.css').includes('!important'),false,'settings.css must not contain !important');
+  assert.equal(css('tutorial.css').includes('!important'),false,'tutorial.css must not contain !important');
 assert.match(index, /<script type="module" src="\.\/src\/main\.js\?v=\d+"><\/script>/, 'index.html must load native ESM entry');
 assert.ok(main.includes("import { FOODS } from '../data/foods.js';"),'main must import foods as ESM');
-assert.ok(main.includes("import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';"),'main must import taxonomy as ESM');
+assert.ok(main.includes("import RESTAURANT_TAXONOMY from '../data/restaurant-taxonomy.js';"),'main must import taxonomy as ESM');
 assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
 assert.equal(main.includes('function diagnosisMiles'),false,'production main must not contain diagnostics');
 assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production main must not contain empty catches');
