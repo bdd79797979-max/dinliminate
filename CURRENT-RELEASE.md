@@ -95,3 +95,11 @@ CP1239 replaces the committed Meal and Restaurant swipe exit with one browser-ow
 ## Meal photo refresh — CP1240
 
 CP1240 replaces the Chicken Pot Pie card photo with a clearly better free Unsplash match. The Meatloaf card was already using a strong free Unsplash image; the remaining requested Southern dishes were retained because no clearly better faithful free Unsplash replacement was found.
+
+## CP1241 — overlap the next swipe input
+
+CP1241 keeps the outgoing card's full off-screen flight exactly intact, but creates a temporary active copy of the prepared next card after a 95ms handoff window. This lets the user begin dragging the next card while the previous card is still completing its visual flight.
+
+The original preview remains intact underneath the temporary swipe card. If the user actually starts the next gesture, state redraw is held until the overlapping flights can finish in order, so the previous card cannot disappear early or interrupt the next swipe. Cancelling the second gesture restores the normal preview and completes the first decision normally.
+
+The exit duration and full-card clearance from CP1239 are unchanged; CP1241 changes only the input handoff timing.
