@@ -71,21 +71,6 @@ function isApprovedBuiltInMealImage(value){
  if(!/^https:\/\//i.test(src))return false;
  try{return BUILTIN_MEAL_IMAGE_HOSTS.has(new URL(src).hostname.toLowerCase());}catch{return false;}
 }
-function imageProxyUrl(raw){
- const src=String(raw||'');
- if(!/^https:\/\//i.test(src)||src.startsWith('/api/image?')||src.startsWith('data:')||src.startsWith('blob:'))return src;
- try{const u=new URL(src);if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;return '/api/image?url='+encodeURIComponent(u.href);}catch{return src;}
-}
-function mealImageUrl(raw){
- const src=normalizeMealPhotoRef(raw);
- if(!/^https:\/\//i.test(src))return src;
- if(src.startsWith('/api/image?'))return src.includes('meal=1')?src:src.replace('/api/image?','/api/image?meal=1&');
- try{
-  const u=new URL(src);
-  if(!IMAGE_PROXY_HOSTS.has(u.hostname))return src;
-  return '/api/image?meal=1&url='+encodeURIComponent(u.href);
- }catch{return src;}
-}
 function normalizeMealPhotoRef(value){return String(value??'').trim();}
 function dedupeMealPhotos(photos,max=8){
  const out=[],seen=new Set();
