@@ -1125,7 +1125,7 @@ function previewDecisionCount(kind,type,wasMaybe=false){
   count.__decisionCountTimer=window.setTimeout(()=>count.classList.remove('decision-count-updated'),220);
  }
 }
-function foodHideItem(item) {
+async function foodHideItem(item) {
 if (!item) return false;
 if (!await appConfirm('Hide this meal?', 'Hide '+item.name+' until you restore it in Settings.', 'Hide')) return false;
 S.hidden.add(item.id);
