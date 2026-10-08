@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1247,
-  "sourceBranch": "fix/cp1247-tutorial-home-target",
-  "checkpoint": "CP1247",
+  "build": 1248,
+  "sourceBranch": "fix/cp1248-no-swipe-gap",
+  "checkpoint": "CP1248",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1241-overlap-next-card-input-handoff",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1247 tutorial Home target fix + CP1246 no-black swipe handoff + CP1245 meal photo/catalog + CP1244 decision transaction + CP1243 pointer guard + CP1241 overlap",
+  "currentBaseline": "CP1248 no-swipe-gap handoff + CP1247 tutorial target + CP1246 no-black handoff + CP1245 meal photo/catalog + CP1244 decision transaction",
   "mealImageSystem": "CP1237 tested free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -40,6 +40,6 @@
   "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe",
   "photoRefresh": "CP1245-Unsplash-refresh-meatloaf-southern-vegetables-chicken-dumplings-beef-soup; retain stronger existing PBJ/Biscuits-Gravy/White-Chicken-Chili where no clearly better free Unsplash match",
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
-  "swipeHandoffFix": "CP1246-keep-prepared-overlap-card-visible-until-recycled-live-card-is-painted",
+  "swipeHandoffFix": "CP1248-never-hide-prepared-waiting-card-during-source-handoff",
   "tutorialFix": "CP1247-stable-home-slogan-target-plus-24-frame-target-retry-and-explicit-failure"
 }
