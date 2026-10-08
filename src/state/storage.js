@@ -1,4 +1,5 @@
-import { state as S } from './store.js';
+import { store } from './store.js';
+const S = store.get();
 import { $ } from '../ui/dom.js';
 
 let deps={
