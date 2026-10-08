@@ -13,7 +13,7 @@ const S = store.get();
 import { $, readImageFile } from './ui/dom.js';
 import { imageProxyUrl, mealImageUrl } from './api/client.js';
 import { esc } from './ui/esc.js';
-import { appToast, appConfirm, openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet } from './ui/modal.js';
+import { configureModal, appToast, appConfirm, openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet } from './ui/modal.js';
 import { configureStorage, save, loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos } from './state/storage.js';
 import { configureMigrations, load } from './state/migrations.js';
 import { historyImageSource, recordHistory, readHistory, writeHistory, historyView, HISTORY_KEY } from './features/history/index.js';
@@ -1357,6 +1357,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', async () => {
 });
 configureStorage({$,restaurantCanonicalId,allFoods,normKey,mealPhotoList,dedupeMealPhotos,DEFAULT_FOOD_IMAGE,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,STORAGE_VERSION,KEY});
 configureMigrations({loadItemNotes,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,mealPhotoList,normKey,DEFAULT_FOOD_IMAGE,STORAGE_VERSION,KEY});
+configureModal({mealTimesFor,restaurantFallbackImage,imageProxyUrl,mealImageUrl,mealPhotoList,foodPhoto,foodPhotoFallback,hydrateMealPhotoGallery,restaurantWebsitePresentation,hydrateRestaurantWebsite,restaurantPhoneSearchUrl,restaurantDirectionsUrl,bindImageFallback,swapImageWhenReady,phoneHref,show,foodHideItem,HUNGRY_IMAGE,FINAL_FOOD_IMAGE,FINAL_RESTAURANT_IMAGE});
 
 bindMealPhotoCountControls();
 load();
