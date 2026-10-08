@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 
 const root = path.resolve(__dirname, '..', '..');
 const requiredFiles = [
-  'index.html','boot.js','styles.css','app.js','viewport.js','sw.js',
+  'index.html','boot.js','styles.css','src/main.js','viewport.js','sw.js',
   'manifest.webmanifest','logo.svg','icon.svg','app-release.json','api/_lib/http.js','api/_lib/rateLimit.js','api/_lib/ssrf.js','api/_lib/imageHosts.js',
   'release-manifest.json','package.json','scripts/stamp.mjs','api/restaurants.js',
   'api/restaurant-photo.js','api/google-restaurant-photo.js',
@@ -22,7 +22,7 @@ for (const file of requiredFiles) {
 }
 
 const syntaxFiles = [
-  'boot.js','scripts/stamp.mjs','app.js','viewport.js','sw.js','api/restaurants.js',
+  'boot.js','scripts/stamp.mjs','src/main.js','viewport.js','sw.js','api/restaurants.js',
   'api/restaurant-photo.js','api/google-restaurant-photo.js',
   'api/google-usage.js','api/family.js','api/family-store.js','api/image.js'
 ];
@@ -37,7 +37,7 @@ const releaseManifest=JSON.parse(read('release-manifest.json'));
 const manifest=JSON.parse(read('manifest.webmanifest'));
 const index=read('index.html');
 const sw=read('sw.js');
-const app=read('app.js');
+const main=read('src/main.js');
 const e2e=read('tests/e2e/behavior.spec.mjs');
 const vercel=read('vercel.json');
 const build=Number(release.build);
@@ -49,6 +49,13 @@ assert.equal(release.sourceBranch,'main','release source branch must be main');
 assert.equal(releaseManifest.sourceBranch,'main','release-manifest source branch must be main');
 assert.equal((index.match(/<script(?![^>]*src)[^>]*>/g)||[]).length,0,'index.html must not contain inline executable scripts');
 assert.ok(index.includes('./boot.js?v='+build),'index.html must load boot.js');
+assert.match(index, /<script type="module" src="\.\/src\/main\.js\?v=\d+"><\/script>/, 'index.html must load native ESM entry');
+assert.ok(main.includes("import { FOODS } from '../data/foods.js';"),'main must import foods as ESM');
+assert.ok(main.includes("import RESTAURANT_TAXONOMY from '../data/restaurant-taxonomy.js';"),'main must import taxonomy as ESM');
+assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
+assert.equal(main.includes('function diagnosisMiles'),false,'production main must not contain diagnostics');
+assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production main must not contain empty catches');
+assert.ok(fs.existsSync(path.join(root,'dev','diagnostics','index.html')),'development diagnostics must be outside production app');
 assert.ok(index.indexOf('./boot.js?v='+build)<index.indexOf('./viewport.js?v='+build),'boot.js must load before viewport.js');
 assert.ok(sw.includes('./boot.js?v='+build),'sw.js must precache boot.js');
 assert.ok(index.includes('./data/restaurant-taxonomy.js?v='+build),'index.html must version restaurant taxonomy data');
@@ -59,9 +66,9 @@ const staleSw=[...sw.matchAll(/(\.\/[^"'()\s]+)\?v=(\d+)/g)].filter(m=>Number(m[
 assert.equal(staleIndex.length,0,'index.html contains stale ?v= assets');
 assert.equal(staleSw.length,0,'sw.js contains stale ?v= assets');
 
-assert.ok(!app.includes("fetch('./app-release.json',{cache:'no-store'})"),'app.js must not overwrite APP_BUILD at runtime');
-assert.ok(app.includes("const APP_BUILD = '"+build+"';"),'app.js build must be stamped from app-release');
-assert.ok(app.includes("const APP_BUILD_DATE = '"+release.buildDate+"';"),'app.js build date must be stamped from app-release');
+assert.ok(!main.includes("fetch('./app-release.json',{cache:'no-store'})"),'src/main.js must not overwrite APP_BUILD at runtime');
+assert.ok(main.includes("const APP_BUILD = '"+build+"';"),'src/main.js build must be stamped from app-release');
+assert.ok(main.includes("const APP_BUILD_DATE = '"+release.buildDate+"';"),'src/main.js build date must be stamped from app-release');
 assert.ok(!app.includes('/api/restaurant-search'),'frontend must use /api/restaurants only');
 assert.ok(!e2e.includes('/api/restaurant-search'),'browser tests must use /api/restaurants only');
 assert.equal(fs.existsSync(path.join(root,'api/restaurant-search.js')),false,'legacy restaurant-search alias must be removed');
@@ -79,7 +86,7 @@ assert.ok(imageHosts.includes('HOSTS=Object.freeze'),'shared image-host allowlis
 assert.ok(app.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read('api/meal-autofill.js').includes("scope:'meal-autofill',perMinute:8,dailyCap:100"),'meal-autofill rate limit/daily cap must be enabled');
 
 const versionedAssets=[
- './boot.js?v='+build,'./app.js?v='+build,'./styles.css?v='+build,'./viewport.js?v='+build,
+ './boot.js?v='+build,'./src/main.js?v='+build,'./styles.css?v='+build,'./viewport.js?v='+build,
  './logo.svg?v='+build,'./icon.svg?v='+build,'./apple-touch-icon.png?v='+build,
  './data/foods.js?v='+build,'./data/restaurant-taxonomy.js?v='+build
 ];
