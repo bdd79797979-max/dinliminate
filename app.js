@@ -27,7 +27,7 @@ let swipeOverlapSerial=0;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1277';
+let APP_BUILD = '1279';
 const MEAL_AUTOFILL_ENABLED = false;
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -514,7 +514,7 @@ function swapImageWhenReady(img,url){
   probe.decoding='async';
   let settled=false;
   const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
-  probe.onload=()=>{if(img.isConnected)img.src=nextUrl;finish(true);};
+  probe.onload=async()=>{try{await probe.decode?.();}catch{}if(img.isConnected)img.src=nextUrl;finish(true);};
   probe.onerror=()=>finish(false);
   probe.src=nextUrl;
  });
@@ -536,23 +536,13 @@ function loadMealPhotoCandidates(img,candidates,target){
  const attempt=()=>{
   if(index>=list.length||!stillCurrent())return Promise.resolve(false);
   const url=list[index++];
-  return new Promise(resolve=>{
-   const probe=new Image();
-   probe.decoding='async';
-   probe.referrerPolicy='no-referrer';
-   let settled=false;
-   const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
-   probe.onload=async()=>{
-    try{await probe.decode?.();}catch{}
-    if(!stillCurrent()){finish(false);return;}
-    img.src=url;
-    img.style.visibility='visible';
-    img.dataset.imageFallback='false';
-    target.dataset.foodImageSource=url;
-    finish(true);
-   };
-   probe.onerror=()=>{attempt().then(finish);};
-   try{probe.src=url;}catch{attempt().then(finish);}
+  return preloadSwipeImage(url).then(ok=>{
+   if(!ok||!stillCurrent())return false;
+   img.src=url;
+   img.style.visibility='visible';
+   img.dataset.imageFallback='false';
+   target.dataset.foodImageSource=url;
+   return true;
   });
  };
  return attempt();
@@ -2263,7 +2253,7 @@ function maybeShowInCardSwipeCoach(){
  card.appendChild(coach);
 }
 
-function startFood(options={}) {
+async function startFood(options={}) {
 S.foodActions = [];
 S.foodHistory = [];
 S.maybe.clear();
@@ -2276,14 +2266,12 @@ S.index = 0;
 S.winnerItem = null;
 buildFood();
 
-/* CP1275: render the complete first card before revealing Meals.
-   The first image is also kicked into the browser cache before the screen
-   transition so the card can appear without a one-frame image flash. */
 const firstItem=S.pool[S.index];
 const firstSrc=firstItem ? (foodPhoto(firstItem)||foodPhotoFallback(firstItem)||FINAL_FOOD_IMAGE) : FINAL_FOOD_IMAGE;
 if(firstSrc)preloadSwipeImage(firstSrc);
 foodQuick();
 drawFood({deferPrime:true});
+await waitForMealCardReady($('foodCard'),1200);
 show('food');
 save();
 maybeShowInCardSwipeCoach();
@@ -2749,19 +2737,63 @@ function ensureFoodNextCardReady(nextCard){
 
 const swipeImagePreloads=new Map();
 function preloadSwipeImage(src){
- const url=String(src||'').trim();if(!url)return;
- if(swipeImagePreloads.has(url))return;
+ const url=String(src||'').trim();if(!url)return Promise.resolve(false);
+ const cached=swipeImagePreloads.get(url);
+ if(cached){
+  if(cached.__readyPromise)return cached.__readyPromise;
+  if(cached.complete&&cached.naturalWidth>0)return Promise.resolve(true);
+ }
  const img=new Image();
- img.decoding='async';
+ img.decoding='sync';
  img.loading='eager';
  img.referrerPolicy='no-referrer';
- img.src=url;
+ let settled=false;
+ const readyPromise=new Promise(resolve=>{
+  const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
+  img.onload=()=>{
+   const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
+   Promise.resolve(decoded).catch(()=>{}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
+  };
+  img.onerror=()=>finish(false);
+  try{img.src=url;}catch{finish(false);}
+ });
+ img.__readyPromise=readyPromise;
  swipeImagePreloads.set(url,img);
+ readyPromise.then(ok=>{if(!ok&&swipeImagePreloads.get(url)===img)swipeImagePreloads.delete(url);});
  while(swipeImagePreloads.size>12){
   const first=swipeImagePreloads.keys().next().value;
+  if(first===url)break;
   swipeImagePreloads.delete(first);
  }
- try{img.decode?.().catch(()=>{});}catch{}
+ return readyPromise;
+}
+function waitForVisualImage(src,existingImage=null,timeoutMs=1200){
+ const url=String(src||'').trim();
+ if(!url)return Promise.resolve(false);
+ if(existingImage){
+  const current=String(existingImage.currentSrc||existingImage.src||'').trim();
+  if(current===url&&existingImage.complete&&existingImage.naturalWidth>0){
+   return Promise.resolve(typeof existingImage.decode==='function'
+    ? existingImage.decode().catch(()=>true).then(()=>true)
+    : true);
+  }
+ }
+ const ready=preloadSwipeImage(url);
+ return Promise.race([
+  ready,
+  new Promise(resolve=>window.setTimeout(()=>resolve(false),Math.max(0,Number(timeoutMs)||0)))
+ ]).then(Boolean);
+}
+function waitForMealCardReady(card,timeoutMs=1200){
+ const ready=card?.__mealReadyPromise;
+ if(!ready)return Promise.resolve(true);
+ return Promise.race([
+  ready,
+  new Promise(resolve=>window.setTimeout(()=>resolve(false),Math.max(0,Number(timeoutMs)||0)))
+ ]).then(Boolean);
+}
+async function waitForNextPaints(count=2){
+ for(let i=0;i<count;i++)await new Promise(resolve=>requestAnimationFrame(resolve));
 }
 
 function primeFoodSwipeMedia(){
@@ -4394,7 +4426,7 @@ if(tutorialModeEnabled()&&tutorialState.active){
 }
 }
 let restaurantDrawSeq=0;
-async function drawRestaurants() {
+async function drawRestaurants(options={}) {
 const drawSeq=++restaurantDrawSeq;
 renderRestaurantHours();
 let rows = restaurantPoolFiltered();
@@ -4414,7 +4446,7 @@ const restoreExact=!!S.restaurantRestoreExact;
 S.restaurantRestoreExact=false;
 S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
-const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
+const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,options.startup?1:2);
 if(drawSeq!==restaurantDrawSeq)return;
 rows=restaurantPoolFiltered();
 if(prepared.firstId&&!restoreExact){
@@ -5236,13 +5268,16 @@ function warmDetailImage(src){
   if(typeof img.decode==='function')img.decode().catch(()=>{});
  }catch{}
 }
-function detailsSheet(item,type){
+async function detailsSheet(item,type){
  if(item?.category==='Hungry')return;
  const isRestaurant=type==='restaurant';
+ const sourceCard=type==='restaurant'?$('restaurantCard'):$('foodCard');
+ const sourceImage=sourceCard?.querySelector?.('img')||null;
  const cardImage=visibleCardDetailImage(item,type);
  const image=isRestaurant
   ? (cardImage||imageProxyUrl(item.image||item.photo||item.photoFallback||restaurantFallbackImage(item)))
   : (cardImage||foodPhoto(item)||mealImageUrl(item.image||item.photo||item.photoFallback||HUNGRY_IMAGE));
+ await waitForVisualImage(image,sourceImage,900);
  warmDetailImage(image);
  const note=itemNote(item,type);
  const notePreview=note.replace(/\s+/g,' ').trim();
@@ -7039,17 +7074,36 @@ renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
 hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
-// CP1275 — restore and render the persisted screen while the boot mask is still
-// covering the page, then reveal it on the next paint. This prevents Safari from
-// exposing the stale Home/previous-screen snapshot during refresh.
-if (S.saved && S.screen === 'food' && S.pool.length) {
-show('food'); foodQuick(); drawFood();
-} else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
-show('restaurant'); restaurantQuick(); drawRestaurants();
-} else {
-home();
-}
-requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
+
+/* CP1279 — deep transition audit:
+   Prime the first persisted/default media while Home is still covering the app.
+   Decision screens are rendered behind the boot mask and are not revealed until
+   their first visible media path has settled. No fixed delay is added. */
+try{
+ const firstMeal=foodBasePool()?.[0];
+ const firstMealSrc=firstMeal?(foodPhoto(firstMeal)||foodPhotoFallback(firstMeal)||FINAL_FOOD_IMAGE):'';
+ if(firstMealSrc)preloadSwipeImage(firstMealSrc);
+ const firstRestaurant=restaurantPoolFiltered()?.[S.restaurantIndex||0];
+ if(firstRestaurant)loadRestaurantPhoto(firstRestaurant).then(data=>{if(data?.url)waitForRestaurantPhotoDecoded(data.url).catch(()=>{});}).catch(()=>{});
+}catch{}
+
+(async()=>{
+ if (S.saved && S.screen === 'food' && S.pool.length) {
+  show('food');
+  foodQuick();
+  drawFood({deferPrime:true});
+  await waitForMealCardReady($('foodCard'),1200);
+  primeFoodSwipeMedia();
+ } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
+  show('restaurant');
+  restaurantQuick();
+  await drawRestaurants({startup:true});
+ } else {
+  home();
+ }
+ await waitForNextPaints(2);
+ document.documentElement.classList.remove('dinliminate-booting');
+})();
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({
