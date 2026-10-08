@@ -10603,3 +10603,13 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
   transform:scale(var(--deck-scale)) !important;
   opacity:var(--deck-opacity) !important;
 }
+
+
+/* CP1254 — the CP1252 A/B/C deck needs the waiting card painted in iOS/PWA too.
+   It remains pointer-inert; the active card is still the only swipe target. */
+html.dinliminate-standalone #food .swipe-card-stack>.next-card:not([data-swipe-promoted="1"]),
+html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([data-swipe-promoted="1"]){
+  opacity:var(--deck-opacity,1)!important;
+  visibility:visible!important;
+  pointer-events:none!important;
+}
