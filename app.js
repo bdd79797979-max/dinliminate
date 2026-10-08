@@ -2827,7 +2827,6 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
  const finishAfterFlight=async()=>{
   if(phase!=='committing')return;
   clearCompletionTimer();
-  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
   const promotedPreview=next?.isConnected?next:null;
@@ -2844,10 +2843,13 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
   }
   if(third?.isConnected){third.style.pointerEvents='none';third.style.zIndex='1';}
 
+  // CP1255: keep the outgoing card composited until the replacement card has
+  // been promoted into the active slot. Hiding/repositioning it before that
+  // promotion can expose a black frame on iOS/PWA during the right-swipe path.
   card.style.transition='none';
-  card.style.transform='translate3d(-120vw,0,0)';
-  card.style.opacity='0';card.style.visibility='hidden';card.style.pointerEvents='none';
-  card.classList.remove('swipe-active');card.style.removeProperty('--swipe-tint-alpha');
+  card.classList.remove('swipe-active');
+  card.style.pointerEvents='none';
+  card.style.removeProperty('--swipe-tint-alpha');
   card.dataset.swipe='';card.dataset.swipePhase='completing';card.dataset.swipeTransaction='active';
   phase='completing';
 
@@ -2857,6 +2859,21 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
    if(cardId==='foodCard')refreshed=await refreshFoodSwipeDeckAfterDecision(promotedPreview);
    else if(cardId==='restaurantCard')refreshed=await refreshRestaurantSwipeDeckAfterDecision(promotedPreview);
 
+   // CP1255: once the replacement content is ready, release the finished
+   // exit animation before normalizing the active card. This keeps Safari from
+   // retaining a stale composited layer over the newly promoted content.
+   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
+   if(refreshed){
+    card.style.transition='none';
+    card.style.transform='none';
+    card.style.opacity='1';
+    card.style.visibility='visible';
+    card.style.pointerEvents='auto';
+    card.style.zIndex='2';
+    card.dataset.swipe='';
+    card.dataset.swipePhase='idle';
+    card.dataset.swipeTransaction='';
+   }
    if(!refreshed){
     // CP1254: never restore the card that just committed. Re-render the new
     // current item through the normal draw path so a late next-card photo
