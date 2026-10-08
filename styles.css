@@ -10632,3 +10632,15 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
  #foodEditorForm .meal-editor-name-row{grid-template-columns:1fr}
  #foodEditorForm .meal-autofill-action{justify-self:start}
 }
+
+
+/* CP1271 — Home slogan update and lower-door placement.
+   Keep the tagline on the door beneath the handles and above the utility footer. */
+.app.home-active #home .home-slogan{
+  bottom:calc(env(safe-area-inset-bottom) + 132px)!important;
+}
+@media(max-width:390px){
+  .app.home-active #home .home-slogan{
+    bottom:calc(env(safe-area-inset-bottom) + 118px)!important;
+  }
+}
