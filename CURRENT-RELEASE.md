@@ -1,7 +1,10 @@
+## CP1269 — optional meal nutrition
+Nutrition is now optional when adding or editing a meal. Blank Calories, Protein, Carbs, Fat, and Sodium fields save as 0 rather than blocking Save.
+
 
 ## CP1266 — quiet Meal Auto-Fill checkpoint
 Adds an understated Auto-Fill Meal action to the existing Add/Edit Meal flow. Autofill stays reviewable and editable before saving, with independent refresh for nutrition, ingredients, recipe, cuisine, meal time, description, and photo. Nutrition is labeled as a typical-serving estimate. Photo matching prefers exact Pexels/Unsplash results and reports when no strong match is found. Similar-meal hints help prevent accidental duplicates. No production deployment was performed for this checkpoint.
-# CURRENT RELEASE — BUILD 1266 / CP1266
+# CURRENT RELEASE — BUILD 1269 / CP1269
 
 Date: 2026-10-07
 
