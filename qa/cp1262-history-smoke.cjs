@@ -52,10 +52,11 @@ const S={
  restaurantSearchDegraded:false
 };
 
+const catalog=new Map(S.pool.map(x=>[x.id,{...x}]));
 const mealCapture=new Function('S',captureFoodSrc+'; return captureFoodDecisionState;')(S);
 const mealRestore=new Function('S','mealItemLookup','mealTimeNames',restoreFoodSrc+'; return restoreFoodDecisionState;')(
  S,
- ()=>new Map(S.pool.map(x=>[x.id,x])),
+ ()=>new Map(catalog),
  ()=>['Breakfast','Lunch / Dinner','Snacks / Desserts']
 );
 const restCapture=new Function('S',captureRestSrc+'; return captureRestaurantDecisionState;')(S);
