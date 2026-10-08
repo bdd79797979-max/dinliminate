@@ -5,9 +5,10 @@ import { esc } from '../../ui/esc.js';
 import { recordHistory } from '../history/index.js';
 import { triggerSwipeHaptic } from '../swipe/index.js';
 import { imageProxyUrl, mealImageUrl, show, familyHideWinnerMeta, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
-import { foodPhoto, foodPhotoFallback } from '../meals/index.js';
+import { foodPhoto, foodPhotoFallback } from '../../main.js';
 import { bindRestaurantPhotoPinch } from '../swipe/index.js';
-import { restaurantFallbackImage, dedupeRestaurantPool, restaurantHidden, restaurantCategory, restaurantQuickMatches, restaurantMatchesQuery } from '../restaurants/index.js';
+import { dedupeRestaurantPool, restaurantHidden, restaurantCategory, restaurantQuickMatches, restaurantMatchesQuery } from '../restaurants/index.js';
+import { restaurantFallbackImage } from '../../main.js';
 
 function hideCelebration(){
  const el=$('celebration');

@@ -4,7 +4,7 @@ import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import RESTAURANT_TAXONOMY from '../../data/restaurant-taxonomy.js';
 import { save } from '../../state/storage.js';
-import { bindImageFallbackAttrs, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, show, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage } from '../../main.js';
+import { bindImageFallbackAttrs, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, show, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, restaurantFallbackImage } from '../../main.js';
 import { imageProxyUrl, mealImageUrl } from '../../api/client.js';
 import { dismissSwipeHint, maybeShowInCardSwipeCoach, stageSwipePreview, waitForVisualImage, bindRestaurantPhotoPinch } from '../swipe/index.js';
 import { renderMaybeDeckToggle, bindMaybeDeckToggle, renderRestaurantHours, bindRestaurantHours, renderQuickCutsCollapse, bindQuickCutsCollapse, mealTimesFor, ensureMealTimeSettings, mealTimeCatalog, mealTimeOptions, mealTimeNames, syncMealTimeReferences, foodBasePool, buildFood, renderMealTimeCuts, foodQuick } from '../meals/index.js';

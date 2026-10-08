@@ -3,7 +3,7 @@ const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { save } from '../../state/storage.js';
-import { mealPhotoList, foodPhoto, foodPhotoFallback } from '../meals/index.js';
+import { mealPhotoList, foodPhoto, foodPhotoFallback } from '../../main.js';
 import { winner } from '../winner/index.js';
 import { markMealImageUnavailable, swapImageWhenReady, loadMealPhotoCandidates, ensureMealCardPhotoPager } from '../../main.js';
 import { updateDecisionBackButtons, pushDecisionHistory, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, show, previewDecisionCount, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage } from '../../main.js';

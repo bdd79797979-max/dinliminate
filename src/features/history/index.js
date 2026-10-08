@@ -4,7 +4,8 @@ import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import { imageProxyUrl, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
 import { mealTimesFor } from '../meals/index.js';
-import { restaurantFallbackImage, restaurantCategory } from '../restaurants/index.js';
+import { restaurantCategory } from '../restaurants/index.js';
+import { restaurantFallbackImage } from '../../main.js';
 
 
 const HISTORY_KEY = 'dinliminate.clean.history';
