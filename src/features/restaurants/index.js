@@ -8,7 +8,7 @@ import { bindImageFallbackAttrs, swapImageWhenReady, setRestaurantPhotoCredit, p
 import { imageProxyUrl, mealImageUrl } from '../../api/client.js';
 import { dismissSwipeHint, maybeShowInCardSwipeCoach, stageSwipePreview, waitForVisualImage, bindRestaurantPhotoPinch } from '../swipe/index.js';
 import { renderMaybeDeckToggle, bindMaybeDeckToggle, renderRestaurantHours, bindRestaurantHours, renderQuickCutsCollapse, bindQuickCutsCollapse, mealTimesFor, ensureMealTimeSettings, mealTimeCatalog, mealTimeOptions, mealTimeNames, syncMealTimeReferences, foodBasePool, buildFood, renderMealTimeCuts, foodQuick } from '../meals/index.js';
-import { triggerSwipeHaptic, bindSwipeCard } from '../swipe/index.js';
+import { bindSwipeCard, getSwipeMachine } from '../swipe/index.js';
 import { openModal } from '../../ui/modal.js';
 
 let restaurantBackBusy=false;
@@ -1161,65 +1161,41 @@ function bindCardButton(id,handler){
  el.style.touchAction='manipulation';
  el.style.webkitUserSelect='none';
  el.style.userSelect='none';
-
  const clearPress=()=>{
   if(!premiumDecision)return;
   clearTimeout(pressTimer);
   pressTimer=window.setTimeout(()=>el.classList.remove('is-pressed'),150);
  };
-
  el.onpointerdown=e=>{
   if(el.disabled)return;
-  if(premiumDecision){
-   clearTimeout(pressTimer);
-   el.classList.add('is-pressed');
-  }
+  if(premiumDecision){clearTimeout(pressTimer);el.classList.add('is-pressed');}
  };
-
- // CP1244: buttons have one authoritative activation path. Pointerup is
- // visual-only; click is the command. This avoids pointerup + click double
- // activation and lets the swipe transaction be the single source of truth.
  el.onclick=e=>{
   if(el.disabled)return;
-  const now=performance.now();
-  if(premiumDecision){
-   el.__dinliminateLastActivation=now;
-   el.classList.add('is-pressed');
-   if(id==='foodCut'||id==='restCut'||id==='foodMaybe'||id==='restMaybe')triggerSwipeHaptic();
-  }
-
+  if(premiumDecision){el.classList.add('is-pressed');}
   clearPress();
   e?.preventDefault?.();
   e?.stopPropagation?.();
-
   if((id==='foodChoose'||id==='restChoose')&&typeof tutorialMarkChoose==='function'){
-   tutorialMarkChoose(id==='restChoose'?'restaurant':'food');
+    tutorialMarkChoose(id==='restChoose'?'restaurant':'food');
   }
-
   try{
-   const swipeCardId=(id==='foodCut'||id==='foodMaybe')?'foodCard':(id==='restCut'||id==='restMaybe')?'restaurantCard':'';
-   const swipeDecision=(id==='foodCut'||id==='restCut')?-1:(id==='foodMaybe'||id==='restMaybe')?1:0;
-   const swipeCard=swipeCardId?$(swipeCardId):null;
-
-   if(swipeDecision&&swipeCard?.__triggerSwipeDecision){
-    const transaction=swipeCard.__triggerSwipeDecision(swipeDecision);
-    // CP1244: an active transaction consumes the command. Never fall through
-    // to foodCut/foodMaybe/restaurantCut/restaurantMaybe while that card is
-    // still leaving, even when the visual flight is still in progress.
-    if(transaction==='accepted'||transaction==='busy')return;
-   }
-
-   const result=handler?.(e);
-   if(result&&typeof result.catch==='function')result.catch(()=>{});
-  }catch(error){console.error('Dinliminate error',error)}
+    const swipeCard=(id==='foodCut'||id==='foodMaybe')?$('#foodCard'):(id==='restCut'||id==='restMaybe')?$('#restaurantCard'):null;
+    const swipeDecision=(id==='foodCut'||id==='restCut')?-1:(id==='foodMaybe'||id==='restMaybe')?1:0;
+    if(swipeCard&&swipeDecision){
+      const machine=getSwipeMachine(swipeCard);
+      if(machine){
+        const transaction=machine.commit(swipeDecision,{source:'button'});
+        if(transaction==='accepted'||transaction==='busy')return;
+      }
+    }
+    const result=handler?.(e);
+    if(result&&typeof result.catch==='function')result.catch(error=>console.error('Dinliminate button handler error',error));
+  }catch(error){console.error('Dinliminate button error',error)}
  };
  el.onpointercancel=clearPress;
 }
-
-// CP1244 — One decision transaction per active card. A busy card consumes
-// subsequent Cut/Maybe commands instead of letting them mutate app state.
-
-function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard',()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row,{fromSwipe:true}),()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row,{fromSwipe:true}))}
+function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard',()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row,{fromSwipe:true}),()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row,{fromSwipe:true}),{kind:'restaurant',getContext:()=>({id:String(row?.id||''),row,wasMaybe:!!row?._maybe}),onPreview:context=>previewDecisionCount('restaurant',context.direction,context.wasMaybe)});}
 let restaurantQueryTimer = 0;
 function scheduleRestaurantProviderSearch(){
  clearTimeout(restaurantQueryTimer);

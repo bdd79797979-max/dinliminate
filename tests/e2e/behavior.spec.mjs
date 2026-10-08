@@ -198,6 +198,69 @@ async function swipeMeal(page, direction) {
   return before;
 }
 
+test('swipe machine rejects rapid double-swipes as one transaction', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+  const card = page.locator('#foodCard');
+  const box = await card.boundingBox();
+  expect(box).toBeTruthy();
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.evaluate(({ x, y }) => {
+    const card = document.querySelector('#foodCard');
+    const fire = (type,id,cx) => card.dispatchEvent(new PointerEvent(type,{bubbles:true,isPrimary:true,button:0,pointerId:id,clientX:cx,clientY:y}));
+    fire('pointerdown',1,x);
+    fire('pointermove',1,x-180);
+    fire('pointerup',1,x-180);
+    fire('pointerdown',2,x);
+    fire('pointermove',2,x-180);
+    fire('pointerup',2,x-180);
+  }, { x, y });
+  await expect.poll(() => page.locator('#foodMaybeDeck').getAttribute('data-all-count'), { timeout: 7000 }).toBe('2');
+  await waitForDecisionIdle(page, '#foodCard');
+  await expectNoPageErrors(errors);
+});
+
+test('Cut button during a drag uses the same commit transaction path', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+  const before = await foodCounts(page);
+  const card = page.locator('#foodCard');
+  const box = await card.boundingBox();
+  expect(box).toBeTruthy();
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.evaluate(({ x, y }) => {
+    const card = document.querySelector('#foodCard');
+    card.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,isPrimary:true,button:0,pointerId:7,clientX:x,clientY:y}));
+    card.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,isPrimary:true,button:0,pointerId:7,clientX:x-30,clientY:y}));
+    document.querySelector('#foodCut')?.click();
+    card.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,isPrimary:true,button:0,pointerId:7,clientX:x-30,clientY:y}));
+  }, { x, y });
+  await expect.poll(() => page.locator('#foodMaybeDeck').getAttribute('data-all-count'), { timeout: 7000 }).toBe(String(Number(before.all)-1));
+  await waitForDecisionIdle(page, '#foodCard');
+  await expectNoPageErrors(errors);
+});
+
+test('interrupted drag settles without committing a meal', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+  const beforeName = await page.locator('#foodName').innerText();
+  const before = await foodCounts(page);
+  const card = page.locator('#foodCard');
+  const box = await card.boundingBox();
+  expect(box).toBeTruthy();
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.evaluate(({ x, y }) => {
+    const card = document.querySelector('#foodCard');
+    card.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,isPrimary:true,button:0,pointerId:9,clientX:x,clientY:y}));
+    card.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,isPrimary:true,button:0,pointerId:9,clientX:x-35,clientY:y}));
+    card.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,isPrimary:true,pointerId:9,clientX:x-35,clientY:y}));
+  }, { x, y });
+  await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 3000 }).toBe('idle');
+  expect(await page.locator('#foodName').innerText()).toBe(beforeName);
+  expect(await foodCounts(page)).toEqual(before);
+  await expectNoPageErrors(errors);
+});
+
 async function openRestaurants(page) {
   await page.goto('/');
   await page.locator('#restStart').click();

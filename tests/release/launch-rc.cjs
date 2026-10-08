@@ -46,7 +46,7 @@ const build=Number(release.build);
 const targetModulePaths=[
   'src/main.js',
   'src/state/store.js','src/state/storage.js','src/state/migrations.js',
-  'src/features/swipe/index.js','src/features/meals/index.js','src/features/restaurants/index.js',
+  'src/features/swipe/index.js','src/features/swipe/swipeMachine.js','src/features/meals/index.js','src/features/restaurants/index.js',
   'src/features/winner/index.js','src/features/history/index.js','src/features/family/index.js',
   'src/features/settings/index.js','src/features/tutorial/index.js',
   'src/api/client.js','src/ui/dom.js','src/ui/esc.js','src/ui/modal.js'
@@ -68,6 +68,17 @@ assert.match(storeSource,/get\(key\)/,'central store must expose get');
 assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
 assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
 assert.ok(read('index.html').includes('<script type="module" src="./src/main.js?v='+build+'"></script>'),'production entry must be native ESM');
+const swipeMachineSource=read('src/features/swipe/swipeMachine.js');
+assert.match(swipeMachineSource,/thresholdRatio:\s*0\.21/,'swipe threshold must be 21%');
+assert.match(swipeMachineSource,/thresholdMinPx:\s*72/,'swipe minimum clamp must be 72px');
+assert.match(swipeMachineSource,/thresholdMaxPx:\s*108/,'swipe maximum clamp must be 108px');
+assert.match(swipeMachineSource,/flickVelocityPxPerMs:\s*0\.5/,'swipe flick velocity threshold must be configured');
+assert.ok(swipeMachineSource.includes('card.animate'),'swipe exit must use the Web Animations API');
+assert.equal(swipeMachineSource.includes("card.onpointerdown="),false,'swipe machine must use pointer event listeners');
+assert.equal(swipeMachineSource.includes('transitionend'),false,'swipe machine must not use transitionend');
+assert.equal(swipeMachineSource.includes("phase='settling'"),false,'legacy settling state must be removed');
+assert.equal(swipeMachineSource.includes("phase='completing'"),false,'legacy completing state must be removed');
+
 
 assert.ok(Number.isInteger(build)&&build>0,'release build must be a positive integer');
 assert.match(String(release.buildDate||''),/^\d{4}-\d{2}-\d{2}$/,'release build date must be YYYY-MM-DD');
