@@ -26,7 +26,7 @@ const SWIPE_OVERLAP_DELAY=95;
 let swipeOverlapContext=null;
 let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1245';
+let APP_BUILD = '1246';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -2788,6 +2788,12 @@ const completeAfterExit=async ()=>{
       card.dataset.swipePhase='idle';
       card.dataset.swipeTransaction='';
       foodSwipeHandoff=false;
+      // CP1246: the old overlap clone carried the visual continuity while the
+      // recycled live card was preparing. Remove it only after the live card
+      // is visible, never before.
+      const bridge=card.__swipeVisualBridge;
+      if(bridge?.isConnected){try{bridge.remove();}catch{}}
+      card.__swipeVisualBridge=null;
       // CP1197b: refresh the waiting preview AFTER the live card is settled.
       // This keeps the preview one meal ahead without letting it participate
       // in the swipe handoff/promotion lifecycle.
@@ -2951,6 +2957,7 @@ const completeAfterExit=async ()=>{
 
    const ctx=swipeOverlapContext;
    if(!isOverlapCard&&ctx?.sourceCard===card){
+    if(ctx.clone?.isConnected&&cardId==='foodCard')card.__swipeVisualBridge=ctx.clone;
     ctx.sourceFlightDone=true;
     ctx.sourceComplete=completeAfterExit;
     if(ctx.nextGestureStarted&&!ctx.nextSettled){
@@ -2967,9 +2974,17 @@ const completeAfterExit=async ()=>{
      }
      return;
     }
-    if(ctx.clone){try{ctx.clone.remove();}catch{}}
+    // CP1246: keep the already-visible overlap card on screen while the
+    // recycled live card is redrawn and its new meal image is prepared. The
+    // overlap card is the visual bridge, so there is no black/empty frame.
+    if(ctx.clone?.isConnected){
+     ctx.clone.style.visibility='visible';
+     ctx.clone.style.opacity='1';
+     ctx.clone.style.filter='none';
+     ctx.clone.style.pointerEvents='none';
+    }
     if(ctx.previewCard?.isConnected){
-     ctx.previewCard.style.visibility='visible';
+     ctx.previewCard.style.visibility='hidden';
      ctx.previewCard.style.pointerEvents='none';
     }
     swipeOverlapContext=null;
