@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1262,
-  "sourceBranch": "fix/cp1261-meal-refresh-no-home-flash",
-  "checkpoint": "CP1262",
-  "deploymentTrigger": "fix/cp1261-meal-refresh-no-home-flash",
+  "build": 1263,
+  "sourceBranch": "fix/cp1263-back-unlimited",
+  "checkpoint": "CP1263",
+  "deploymentTrigger": "fix/cp1263-back-unlimited",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -65,5 +65,6 @@
   "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better",
   "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening; no loading UI added",
-  "refreshUX": "CP1261 prevents the static Home section from appearing on refresh when the persisted screen is Meals or Restaurants; destination is rendered before boot reveal"
+  "refreshUX": "CP1261 prevents the static Home section from appearing on refresh when the persisted screen is Meals or Restaurants; destination is rendered before boot reveal",
+  "backButtonUX": "CP1263 Back is an unlimited decision-history undo: each press restores the exact prior card and whether that decision was Cut or Maybe, continuing to the beginning of the current round"
 }
