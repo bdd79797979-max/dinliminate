@@ -1,5 +1,9 @@
 'use strict';
 
+const {json:sendJson}=require('./_lib/http');
+const {rateLimit}=require('./_lib/rateLimit');
+const {safeFetchText}=require('./_lib/ssrf');
+
 /*
  * Dinliminate Meal Auto-Fill — CP1266
  * Server-side only: the browser sends a meal name and receives a reviewable draft.
@@ -12,14 +16,6 @@ const MAX_NAME_LENGTH = 120;
 const MAX_ARRAY = 24;
 const PHOTO_TIMEOUT_MS = 5000;
 
-function sendJson(res, status, payload) {
-  if (typeof res.status === 'function' && typeof res.json === 'function') {
-    return res.status(status).json(payload);
-  }
-  res.statusCode = status;
-  if (typeof res.setHeader === 'function') res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  if (typeof res.end === 'function') res.end(JSON.stringify(payload));
-}
 
 function cleanString(value, max = 4000) {
   return String(value == null ? '' : value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, max);
@@ -58,15 +54,15 @@ function parseModelJson(value) {
   if (value && typeof value === 'object') return value;
   const raw = cleanString(value, 20000);
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch {}
+  try { return JSON.parse(raw); } catch(error){console.error('Dinliminate error',error)}
   const fenced = raw.match(/\`\`\`(?:json)?\s*([\s\S]*?)\s*\`\`\`/i);
   if (fenced) {
-    try { return JSON.parse(fenced[1]); } catch {}
+    try { return JSON.parse(fenced[1]); } catch(error){console.error('Dinliminate error',error)}
   }
   const start = raw.indexOf('{');
   const end = raw.lastIndexOf('}');
   if (start >= 0 && end > start) {
-    try { return JSON.parse(raw.slice(start, end + 1)); } catch {}
+    try { return JSON.parse(raw.slice(start, end + 1)); } catch(error){console.error('Dinliminate error',error)}
   }
   return null;
 }
@@ -191,7 +187,7 @@ function providerImageUrls(html, provider, query, excludedUrls=[]) {
   const out = [];
   for (const match of source.matchAll(regex)) {
     let url = match[0];
-    try { url = decodeURIComponent(url); } catch {}
+    try { url = decodeURIComponent(url); } catch(error){console.error('Dinliminate error',error)}
     const base = url.split('?')[0];
     if (seen.has(base)||excluded.has(base)||excluded.has((()=>{try{const u=new URL(base);return u.origin+u.pathname}catch{return base}})())) continue;
     seen.add(base);
@@ -229,27 +225,15 @@ function withImageParams(url, provider) {
   }
 }
 
-async function fetchText(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), PHOTO_TIMEOUT_MS);
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'Dinliminate/1266 meal-photo-search'
-      },
-      signal: controller.signal,
-      cache: 'no-store'
-    });
-    if (!response.ok) return '';
-    return await response.text();
-  } catch {
-    return '';
-  } finally {
-    clearTimeout(timer);
-  }
+async function fetchText(url){
+  try{
+    const result=await safeFetchText(url,{
+      headers:{Accept:'text/html,application/xhtml+xml','User-Agent':'Dinliminate/1308 meal-photo-search'},
+      cache:'no-store'
+    },{timeoutMs:PHOTO_TIMEOUT_MS,maxBytes:2200000,maxRedirects:3});
+    return result.response.ok?result.text:'';
+  }catch{return ''}
 }
-
 async function findMealPhoto(mealName, photoQueries, excludedUrls=[]) {
   const queries = [];
   const add = value => {
@@ -298,6 +282,10 @@ async function handleMealAutofill(req, res) {
     res.setHeader && res.setHeader('Allow', 'POST');
     return sendJson(res, 405, { ok: false, code: 'METHOD_NOT_ALLOWED', message: 'Meal Auto-Fill uses POST.' });
   }
+
+  const limit=await rateLimit(req,{scope:'meal-autofill',perMinute:8,dailyCap:100});
+  if(!limit.configured)return sendJson(res,503,{ok:false,code:'RATE_LIMIT_UNAVAILABLE',message:'Meal Auto-Fill is temporarily unavailable.'});
+  if(!limit.allowed){res.setHeader?.('Retry-After',String(limit.retryAfterSeconds||60));return sendJson(res,429,{ok:false,code:limit.reason==='daily-cap'?'DAILY_CAP_REACHED':'RATE_LIMITED',message:limit.reason==='daily-cap'?'Meal Auto-Fill has reached today’s limit. Please try again tomorrow.':'Meal Auto-Fill is temporarily busy. Please try again shortly.'});}
 
   let body = req.body;
   if (typeof body === 'string') {

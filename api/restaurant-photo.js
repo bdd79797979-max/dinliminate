@@ -1,9 +1,11 @@
 'use strict';
 
+const {safeFetch,readResponseBody}=require('./_lib/ssrf');
+
 const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
 
 let sharp=null;
-try{sharp=require('sharp');}catch{}
+try{sharp=require('sharp');}catch(error){console.error('Dinliminate error',error)}
 
 const restaurantPhotoRateBuckets=new Map();
 function restaurantPhotoRateLimited(req,max=18){
@@ -34,12 +36,6 @@ const PHOTO_SOURCE_TIER={
   'exact-public-venue-page':84
 };
 
-function json(res,status,payload){
-  res.statusCode=status;
-  res.setHeader?.('Content-Type','application/json; charset=utf-8');
-  res.end?.(JSON.stringify(payload));
-  return res;
-}
 
 function absoluteHttpsUrl(raw,base=''){
   try{
@@ -77,39 +73,26 @@ function publicRedirectUrl(location,current){
     return next.href;
   }catch{return ''}
 }
-async function fetchWithValidatedRedirects(start,options={},maxRedirects=4){
-  let current=absoluteHttpsUrl(start);
+async function fetchWithValidatedRedirects(start,options={},maxRedirects=4,maxBytes=10*1024*1024,timeoutMs=7000){
+  const current=absoluteHttpsUrl(start);
   if(!current||isBlockedHost(current))return null;
-  for(let hop=0;hop<=maxRedirects;hop++){
-    const response=await fetch(current,{...options,redirect:'manual'});
-    if(!(response.status>=300&&response.status<400))return {response,url:current};
-    const location=response.headers.get('location');
-    if(!location)return null;
-    const next=publicRedirectUrl(location,current);
-    if(!next||isBlockedHost(next))return null;
-    current=next;
-  }
-  return null;
-}
-
-async function fetchText(url,headers={},timeout=7000,maxBytes=2200000){
-  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
   try{
-    const result=await fetchWithValidatedRedirects(url,{headers:{
-      'Accept':'text/html,application/xhtml+xml',
-      'Accept-Language':'en-US,en;q=0.8',
-      'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; restaurant-photo)',
-      ...headers
-    },signal:ctl.signal});
-    if(!result)return '';
-    const r=result.response;
-    if(!r.ok)throw new Error('Page request failed ('+r.status+').');
-    const data=Buffer.from(await r.arrayBuffer());
-    if(data.length>maxBytes)throw new Error('Page too large.');
-    return data.toString('utf8');
-  }finally{clearTimeout(timer)}
+    return await safeFetch(current,options,{
+      maxRedirects,maxBytes,timeoutMs,
+      validateUrl:url=>{const safe=absoluteHttpsUrl(url);return !!safe&&!isBlockedHost(safe);}
+    });
+  }catch{return null}
 }
-
+async function fetchText(url,headers={},timeout=7000,maxBytes=2200000){
+  const result=await fetchWithValidatedRedirects(url,{headers:{
+    'Accept':'text/html,application/xhtml+xml',
+    'Accept-Language':'en-US,en;q=0.8',
+    'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; restaurant-photo)',
+    ...headers
+  }},4,maxBytes,timeout);
+  if(!result||!result.response.ok)return '';
+  try{return (await readResponseBody(result.response,maxBytes)).toString('utf8');}catch{return ''}
+}
 function imageDimensions(bytes,type){
   try{
     if(type==='image/webp'&&bytes.length>=30&&bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP'){
@@ -154,7 +137,7 @@ function imageDimensions(bytes,type){
         i+=len;
       }
     }
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
   return {width:0,height:0};
 }
 function mediaQuality(media){
@@ -203,7 +186,7 @@ async function isLikelyPhotoCollage(bytes){
       const hline=lineContrast(Math.max(2,Math.min(h-3,Math.round(h*ratio))),false);
       if(v.mean>=24&&hline.mean>=24&&v.support>=.42&&hline.support>=.42)return true;
     }
-  }catch{}
+  }catch(error){console.error('Dinliminate error',error)}
   return false;
 }
 function chooseBetterPhoto(a,b){
@@ -223,32 +206,26 @@ async function normalizeRestaurantImage(bytes){
   return {type:'image/webp',bytes:Buffer.from(result.data),width:result.info.width,height:result.info.height};
 }
 async function fetchImage(url,headers={},timeout=7000){
-  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
-  try{
-    const result=await fetchWithValidatedRedirects(url,{headers:{
-      'Accept':'image/avif,image/webp,image/apng,image/jpeg,image/png,image/gif,image/*;q=0.8',
-      'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; restaurant-photo)',
-      ...headers
-    },signal:ctl.signal});
-    if(!result)throw new Error('Redirect validation failed.');
-    const r=result.response;
-    if(!r.ok)throw new Error('Image request failed ('+r.status+').');
-    const type=(r.headers.get('content-type')||'image/jpeg').split(';')[0].toLowerCase();
-    if(!type.startsWith('image/'))throw new Error('Image response was not an image.');
-    if(type==='image/svg+xml'||type==='image/svg')throw new Error('SVG assets are not restaurant photos.');
-    const bytes=Buffer.from(await r.arrayBuffer());
-    if(bytes.length<4000)throw new Error('Image response was too small.');
-    if(bytes.length>10*1024*1024)throw new Error('Image is too large.');
-    const dimensions=imageDimensions(bytes,type);
-    const width=Number(dimensions.width)||0,height=Number(dimensions.height)||0;
-    if(width>MAX_RESTAURANT_IMAGE_DIMENSION||height>MAX_RESTAURANT_IMAGE_DIMENSION)throw new Error('Image dimensions are too large.');
-    if(width&&height&&(width*height)>MAX_RESTAURANT_IMAGE_PIXELS)throw new Error('Image pixel count is too large.');
-    if(width&&height&&mediaQuality(dimensions)<0)throw new Error('Image dimensions are not suitable for a restaurant card.');
-    if(await isLikelyPhotoCollage(bytes))throw new Error('Image appears to be a multi-panel or composite graphic.');
-    return await normalizeRestaurantImage(bytes);
-  }finally{clearTimeout(timer)}
+  const result=await fetchWithValidatedRedirects(url,{headers:{
+    'Accept':'image/avif,image/webp,image/apng,image/jpeg,image/png,image/gif,image/*;q=0.8',
+    'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; restaurant-photo)',
+    ...headers
+  }},4,10*1024*1024,timeout);
+  if(!result||!result.response.ok)throw new Error('Image request failed.');
+  const r=result.response;
+  const type=(r.headers.get('content-type')||'image/jpeg').split(';')[0].toLowerCase();
+  if(!type.startsWith('image/'))throw new Error('Image response was not an image.');
+  if(type==='image/svg+xml'||type==='image/svg')throw new Error('SVG assets are not restaurant photos.');
+  const bytes=await readResponseBody(r,10*1024*1024);
+  if(bytes.length<4000)throw new Error('Image response was too small.');
+  if(bytes.length>10*1024*1024)throw new Error('Image is too large.');
+  const dimensions=imageDimensions(bytes,type),width=Number(dimensions.width)||0,height=Number(dimensions.height)||0;
+  if(width>MAX_RESTAURANT_IMAGE_DIMENSION||height>MAX_RESTAURANT_IMAGE_DIMENSION)throw new Error('Image dimensions are too large.');
+  if(width&&height&&(width*height)>MAX_RESTAURANT_IMAGE_PIXELS)throw new Error('Image pixel count is too large.');
+  if(width&&height&&mediaQuality(dimensions)<0)throw new Error('Image dimensions are not suitable for a restaurant card.');
+  if(await isLikelyPhotoCollage(bytes))throw new Error('Image appears to be a multi-panel or composite graphic.');
+  return await normalizeRestaurantImage(bytes);
 }
-
 function htmlAttrs(tag){
   const out={};
   const re=/([:\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
@@ -364,7 +341,7 @@ function extractJsonLdImageCandidates(html,pageUrl){
     try{
       const data=JSON.parse(m[1]);
       walk(data,'jsonld');
-    }catch{}
+    }catch(error){console.error('Dinliminate error',error)}
   }
   return out;
 }
@@ -416,7 +393,7 @@ function structuredRestaurantMatches(html,name,address,phone=''){
     return false;
   };
   for(const raw of blocks){
-    try{if(inspect(JSON.parse(raw)))return true;}catch{}
+    try{if(inspect(JSON.parse(raw)))return true;}catch(error){console.error('Dinliminate error',error)}
   }
   return false;
 }
@@ -577,7 +554,7 @@ function extractBingImageCandidates(html){
         description:String(raw?.desc||'').trim(),
         host:hostOf(hostPageUrl||contentUrl)
       });
-    }catch{}
+    }catch(error){console.error('Dinliminate error',error)}
   }
   return candidates;
 }
@@ -761,7 +738,7 @@ async function fastOfficialVenuePhoto(name,address,website,phone=''){
     return {media:hit.value.media,source:'official-fast-path',sourceUrl:official,sourceName:hostOf(official)};
    }
   }
- }catch{}
+ }catch(error){console.error('Dinliminate error',error)}
  return null;
 }
 const KNOWN_PUBLIC_PHOTO_PAGES=[
@@ -824,7 +801,7 @@ async function fastKnownRestaurantPhoto(name,address){
  try{
   const media=await fetchImage(hit.image,{'Referer':hit.sourceUrl},2200);
   return {media,source:'known-restaurant-photo',sourceUrl:hit.sourceUrl,sourceName:hostOf(hit.sourceUrl)};
- }catch{}
+ }catch(error){console.error('Dinliminate error',error)}
  return null;
 }
 async function fastKnownPublicPhoto(name,address,website,phone=''){
@@ -844,7 +821,7 @@ async function fastKnownPublicPhoto(name,address,website,phone=''){
     return {media:hit.value.media,source:'known-public-venue-page',sourceUrl:hint,sourceName:hostOf(hint)};
    }
   }
- }catch{}
+ }catch(error){console.error('Dinliminate error',error)}
  return null;
 }
 const DIRECTORY_STATE_NAMES=[
@@ -1081,7 +1058,7 @@ module.exports=async function handler(req,res){
   res.setHeader?.('X-Content-Type-Options','nosniff');
   res.setHeader?.('Referrer-Policy','no-referrer');
   if(String(req?.method||'GET').toUpperCase()!=='GET')return json(res,405,{ok:false,error:'GET required'});
-  if(restaurantPhotoRateLimited(req))return json(res,429,{ok:false,error:'Too many restaurant photo requests. Please try again shortly.'});
+  
   const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
   const name=String(q.name||'').trim().slice(0,160);
   const address=String(q.address||'').trim().slice(0,240);
@@ -1172,7 +1149,7 @@ module.exports=async function handler(req,res){
       try{
         const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
         return sendMedia(res,{media,source:'osm-exact-poi'});
-      }catch{}
+      }catch(error){console.error('Dinliminate error',error)}
     }
 
     // Last discovery layer: Bing Images, but only after exact host-page

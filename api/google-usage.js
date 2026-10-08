@@ -71,7 +71,7 @@ async function migrateLegacyPhotoUsage(sql, month) {
       [month, 'place-photo', count, disabledUntil]
     );
     legacyPhotoMigratedMonth = month;
-  } catch {}
+  } catch(error){console.error('Dinliminate error',error)}
 }
 
 function pacificMonthKey(date = new Date()) {
@@ -238,7 +238,7 @@ async function googleUsageHealth() {
         disabledUntil: row.disabled_until || null
       };
     }
-  } catch {}
+  } catch(error){console.error('Dinliminate error',error)}
 
   return result;
 }

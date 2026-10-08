@@ -40,9 +40,6 @@
     "api/restaurants.js": {
       "maxDuration": 30
     },
-    "api/restaurant-search.js": {
-      "maxDuration": 30
-    },
     "api/release.js": {
       "maxDuration": 10
     },

@@ -1,72 +1,180 @@
 # Dinliminate
 
-Dinliminate is a phone-first meal and restaurant decision app built around fast, simple elimination.
+Dinliminate is a phone-first meal and restaurant decision app. The core loop is simple: swipe, cut what you do not want, keep what you might want, and stop when the choice is clear.
 
-## Current release
+## Run locally
 
-- **Version:** 1.0
-- **Build:** 1000
-- **Checkpoint:** CP1000
-- **Source:** `main`
-- **Release state:** candidate source; production verification is still pending because the connected Vercel account has exhausted its Hobby daily deployment allowance.
-- **Photo policy:** restaurant photography uses the no-Google resolver/source ladder.
-- **Hosting:** Vercel is the official runtime target; Netlify remains legacy/backup configuration.
+Use Node 24 or newer.
 
-## What is active
+```bash
+npm install
+npx vercel dev
+```
 
-The deployable app lives at the repository root.
+Open the local Vercel URL it prints. Vercel Dev is the preferred local path because it runs the `api/` serverless routes alongside the browser app.
 
-- `index.html` — app shell and screen markup
-- `styles.css` — visual/UI system and responsive phone styling
-- `app.js` — application runtime
-- `sw.js` — PWA service worker and cache management
-- `api/` — Vercel serverless routes, including restaurant photography
-- `data/` — meal and restaurant taxonomy data
-- `qa/` — current release verification and regression checks
+For UI-only work, a static server is enough:
 
-The large single-file runtime is intentional for now. Do not split or broadly refactor `app.js` or `styles.css` as part of routine cleanup.
+```bash
+python -m http.server 4173
+```
 
-## CP995 highlights
+Static mode does not provide the serverless API routes.
 
-CP996 restores Settings → Tutorial Mode, fixes the Home Tutorial launch wiring, and makes Add to phone, Share, and Tutorial visually consistent while preserving CP995 Tutorial Mode state/navigation.
+Run the automated checks with:
 
-## Restaurant photo rule
+```bash
+npm test
+```
 
-Restaurant cards must not use Google photo/API credentials.
+Useful focused checks are `npm run lint`, `npm run format:check`, `npm run test:release`, and `npm run test:api`.
 
-The resolver prefers:
-1. official restaurant website/gallery/location page
-2. exact public venue page
-3. exact OSM/Photon venue imagery
-4. tightly validated exact-restaurant search imagery
-5. safe restaurant/category fallback
+## Deploy
 
-Exact identity validation and cached results protect against wrong-venue photos.
+Vercel is the production host.
 
-## Recovery strategy
+The normal release path is to push the intended commit to `main`. Vercel builds from that branch.
 
-Keep `main` as the current source of truth and preserve these rollback anchors until the current release has been physically verified:
+For a manual production deployment:
 
-- **CP994** — immediate pre-CP995 tutorial baseline: `435a0312af4f137f58af6d0b4dece1e474907d71`
-- **CP957** — protected restaurant-photo baseline: `d03a75ab63f1708524f1406e33d5a09c74f689f4`
-- `recovery/cp957-before-restaurant-photo-repair`
+```bash
+npx vercel --prod
+```
 
-Historical checkpoint detail remains available in Git history and preserved branches rather than being repeated in the active README.
+Do not hand-edit generated release versions. `app-release.json` is the release source of truth and `scripts/stamp.mjs` keeps versioned browser/service-worker assets aligned.
 
-## Verification
+## Environment variables
 
-Repository-level checks should cover JavaScript syntax, release/cache-version consistency, tutorial state hooks, restaurant-photo source policy, and regression-sensitive swipe/navigation invariants.
+Secrets are server-side only. Do not put Google, Neon, or AI credentials in browser code.
 
-Real iPhone Safari/PWA checks are still required for touch, GPS, installation, keyboard behavior, image loading, memory, and deployment verification.
+### Google Places
 
+`GOOGLE_PLACES_API_KEY` — primary Places API credential for restaurant search, details, and photos.
 
-## CP1002 Home background cleanup
-The Home page uses the original uploaded double-door JPEG as its only Home photo. At Home and Restaurant cards are photo-free, and the obsolete bundled Home door asset was removed.
+`GOOGLE_MAPS_API_KEY` — accepted compatibility/fallback credential for Places search.
 
+`GOOGLE_MASTER_ENABLED` — global Google kill switch.
 
-## CP1003 Home polish
-The Home screen now uses the supplied double-door image as the full-screen visual canvas. HUNGRY? was removed from the primary hierarchy; At Home and Restaurant are transparent window-style choices; their photo layers are removed; the arrows are simple chevrons; the Home menu is lines-only; and Add to phone, Share, and Tutorial are equal, borderless utility controls.
+`GOOGLE_BUDGET_DATABASE_URL` — preferred durable Neon database connection for Google SKU accounting.
 
+`GOOGLE_PHOTO_BUDGET_DATABASE_URL` — optional dedicated connection for photo budgeting; the Google usage layer can fall back to the shared database variables.
 
-## CP1003 — Full iPhone viewport adaptation
-The shared mobile shell now uses the complete iPhone viewport and safe-area-aware top/bottom spacing without changing the Meals, Restaurants, Winner, or Menu designs.
+`GOOGLE_TEXT_SEARCH_PRO_HARD_LIMIT`, `GOOGLE_NEARBY_SEARCH_PRO_HARD_LIMIT`, `GOOGLE_TEXT_SEARCH_ENTERPRISE_HARD_LIMIT`, `GOOGLE_NEARBY_SEARCH_ENTERPRISE_HARD_LIMIT`, `GOOGLE_PLACE_DETAILS_ENTERPRISE_HARD_LIMIT`, `GOOGLE_PLACE_DETAILS_ESSENTIALS_HARD_LIMIT`, `GOOGLE_PHOTO_MONTHLY_HARD_LIMIT`, and `GOOGLE_PLACE_PHOTO_HARD_LIMIT` — durable SKU hard-stop controls.
+
+`GOOGLE_UNTRACKED_SKU_LIMIT` — fallback allowance when durable usage tracking is unavailable. Keep this at zero for strict fail-closed budgeting.
+
+### Neon and Family Mode
+
+`FAMILY_DATABASE_URL` — database used by Family Mode. The same database can also serve as the fallback for shared Google/rate-limit storage.
+
+`RATE_LIMIT_DATABASE_URL` — preferred durable database for API rate-limit state.
+
+`RATE_LIMIT_KEY_SALT` — optional server-side salt for rate-limit key hashing.
+
+When the dedicated database URLs are absent, the server code can fall back through `DATABASE_URL` and `POSTGRES_URL` where supported.
+
+### AI meal autofill
+
+`AI_GATEWAY_API_KEY` — credential for the meal autofill AI path.
+
+`AI_GATEWAY_MODEL` — optional model selection for meal autofill.
+
+Vercel-provided runtime variables such as `VERCEL_GIT_COMMIT_SHA`, `VERCEL_GIT_COMMIT_REF`, `VERCEL_ENV`, and `VERCEL_OIDC_TOKEN` are read by server/runtime code where available and normally should not be manually copied from source into client code.
+
+## Architecture
+
+The migration uses a strangler pattern: old runtime behavior is moved into native ES modules in small slices, with tests between slices.
+
+```text
+┌────────────────────────────── Browser / PWA ──────────────────────────────┐
+│                                                                          │
+│  index.html → boot.js → src/main.js                                     │
+│                         │                                                │
+│                         ├── features/{swipe, meals, restaurants, ...}    │
+│                         ├── ui/{dom, esc, modal}                         │
+│                         ├── api/client.js → /api/*                       │
+│                         └── state/store.js                               │
+│                               ├── storage.js                              │
+│                               └── migrations.js                           │
+│                                                                          │
+│  sw.js → shell + image caching                                           │
+└──────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌──────────── Server / Vercel ────────────┐
+                 │  /api/restaurants → Google Places       │
+                 │  /api/restaurant-photo → photo resolver │
+                 │  /api/family* → Neon Family Mode        │
+                 │  /api/google-usage → durable SKU budget │
+                 │  /api/meal-autofill → AI Gateway        │
+                 └─────────────────────────────────────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │ Neon PostgreSQL  │
+                         │ state/budgets    │
+                         └──────────────────┘
+```
+
+Production does not include the diagnostics screen. Development diagnostics live separately at `/dev/diagnostics/`.
+
+The application state is intended to have one owner: `src/state/store.js`. Feature modules read/write through the store and subscribe to state changes rather than creating new application-wide globals.
+
+## Restaurant photos
+
+Google Places photos are intentionally supported. The restaurant photo pipeline prefers a verified/cached image first, then uses exact Google Places identity matching, followed by validated official/public/OSM/search fallbacks.
+
+Google web-result HTML scraping is not used. Website discovery uses deterministic candidates plus Bing and DuckDuckGo, with identity validation.
+
+## How to add a meal
+
+1. Open **Menu → Manage Meals → Add Nutrition**.
+2. Enter the meal name, cuisine, and one or more meal times.
+3. Add Calories, Protein, Carbs, Fat, and Sodium. These nutrition fields may be left blank when the current editor allows optional nutrition.
+4. Add ingredients plus recipe/notes, then choose the meal photo.
+5. Save. The meal is added to the editable catalog and can later be edited, hidden, restored, or deleted from **Manage Meals**.
+
+The meal catalog is data-driven; meal content belongs in the data/state layer, not in global browser variables.
+
+## Project layout
+
+```text
+src/
+  main.js
+  state/
+    store.js
+    storage.js
+    migrations.js
+  features/
+    swipe/
+    meals/
+    restaurants/
+    winner/
+    history/
+    family/
+    settings/
+    tutorial/
+  api/
+    client.js
+  ui/
+    dom.js
+    esc.js
+    modal.js
+
+api/              Serverless routes and shared server helpers
+data/             Meal catalog and restaurant taxonomy
+tests/            Release, API, and browser behavior tests
+dev/diagnostics/  Development-only diagnostics
+sw.js             PWA shell and image cache
+styles.css        Visual system
+index.html        Browser shell
+boot.js           CSP-safe boot/runtime setup
+```
+
+## Development rules
+
+Keep behavior stable while the strangler migration is in progress. Move code unchanged first; improve implementation only in a later, explicitly scoped change.
+
+Use native ES modules in browser code. Do not add `window`-backed application state, test globals, or string-based function inspection.
+
+Every feature extraction should leave the repository testable. Run the checks before and after the move, and keep the working branch recoverable in Git history rather than maintaining hand-written recovery checkpoint files.

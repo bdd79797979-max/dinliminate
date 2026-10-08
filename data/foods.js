@@ -1,4 +1,4 @@
-window.DINLIMINATE_FOODS = [
+const FOODS = [
   {
     "id": "spaghetti",
     "name": "Spaghetti",
@@ -3491,4 +3491,6 @@ window.DINLIMINATE_FOODS = [
       "Lunch / Dinner"
     ]
   }
-];
+ ];
+
+export { FOODS };

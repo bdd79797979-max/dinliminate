@@ -6,17 +6,28 @@
     "@neondatabase/serverless": "^1.0.0",
     "sharp": "^0.35.5"
   },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "1.64.0",
+    "eslint": "^9.0.0",
+    "globals": "^16.0.0",
+    "husky": "^9.0.0",
+    "prettier": "^3.0.0"
+  },
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test:rc": "node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs && node qa/cp1304-transition-visual-smoke.cjs && node qa/cp1305-swipe-stability-smoke.cjs && node qa/cp1306-meal-deck-selection-smoke.cjs",
-    "audit:meal-images": "node qa/verify-meal-images.mjs",
-    "audit:meal-images:two": "node qa/verify-meal-images.mjs --require-two",
-    "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs",
-    "test:tutorial": "node qa/cp1251-tutorial-home-choice-smoke.cjs",
-    "test:meal-catalog": "node qa/cp1245-meal-catalog-smoke.cjs",
-    "test:meal-autofill": "node qa/cp1266-meal-autofill-smoke.cjs",
-    "test:swipe-cleanup": "node qa/cp1303-swipe-cleanup-smoke.cjs"
+    "test": "node scripts/stamp.mjs --check && npm run lint && node tests/release/launch-rc.cjs && node tests/api/restaurants.cjs && node tests/api/security.cjs && playwright test",
+    "test:e2e": "playwright test",
+    "test:api": "node tests/api/restaurants.cjs",
+    "test:release": "node tests/release/launch-rc.cjs",
+    "lint": "eslint \"src/main.js\" \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
+    "lint:fix": "eslint --fix \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
+    "format:check": "prettier --check \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\" \"eslint.config.mjs\" \"prettier.config.mjs\" \"package.json\" \"README.md\" \"CHANGELOG.md\"",
+    "format": "prettier --write \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\" \"eslint.config.mjs\" \"prettier.config.mjs\" \"package.json\" \"README.md\" \"CHANGELOG.md\"",
+    "stamp": "node scripts/stamp.mjs",
+    "stamp:check": "node scripts/stamp.mjs --check",
+    "prepare": "husky"
   }
 }

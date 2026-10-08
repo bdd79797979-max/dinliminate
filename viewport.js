@@ -18,5 +18,5 @@
     update();
     window.addEventListener('resize', update, {passive:true});
     window.visualViewport?.addEventListener('resize', update, {passive:true});
-  } catch {}
+  } catch(error){console.error('Dinliminate error',error)}
 })();

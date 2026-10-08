@@ -1,0 +1,64 @@
+.settings-stack h4{margin:16px 0 7px;color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.settings-stack{padding-bottom:18px;padding:6px 1px 4px}
+#aboutModal .about-test{margin:10px 0 12px;color:#bfa16b;font-size:10px;font-weight:900;letter-spacing:.18em}
+#aboutModal .about-meta{display:grid;gap:7px;margin-top:10px}
+#aboutModal .about-meta p{display:flex;justify-content:space-between;gap:18px;margin:0;padding:9px 11px;border-radius:11px;background:#1a1917;border:1px solid #302a23}
+#aboutModal .about-meta span{color:#777168;font-size:9px;text-transform:uppercase;letter-spacing:.12em}
+#aboutModal .about-meta b{color:#ead9b8;font-size:10px}
+.settings-food-choices{padding:2px 0}
+.settings-state{display:block;margin-top:2px;font-size:9px;color:#777168;text-transform:uppercase;letter-spacing:.1em}
+.settings-reset-app{display:block;text-align:center;background:#4b201d;color:#ffd8d0;border:1px solid #7a342c;box-shadow:none;width:100%;min-height:46px;border-radius:13px;margin-top:10px}
+.settings-system-action{display:flex;width:100%;min-height:46px;align-items:center;justify-content:center;border-radius:13px;background:#1a1a1a;color:#eee;border:1px solid #343434;font-weight:850;font-size:12px}
+html:root .settings-system-action.restore-action{background:linear-gradient(180deg,#b87727,#704715);color:#fff;border-color:#d69b50;box-shadow:0 10px 24px #70471544}
+html:root .settings-system-action.restore-action:hover{background:linear-gradient(180deg,#cc8a31,#87541b);border-color:#e5b66f}
+html:root .settings-system-action, html:root .settings-reset-app{width:100%;height:46px;min-height:46px;padding:0 14px;display:flex;align-items:center;justify-content:center;border-radius:13px;font-size:12px;font-weight:850;line-height:1;letter-spacing:0;font-family:inherit;box-sizing:border-box}
+html:root .settings-system-action.reset-action{background:linear-gradient(180deg,#8a3b32,#5f2923);color:#fff;border-color:#b65f53;box-shadow:0 8px 20px #5f292344}
+html:root .settings-system-action.reset-action:hover{background:linear-gradient(180deg,#a3483d,#71332c);border-color:#d0796d}
+html:root .settings-stack>p.status{margin:8px 4px 10px;padding:0;text-align:left;line-height:1.35}
+html:root .settings-stack>#systemRestore, html:root .settings-stack>#resetAppData{margin-top:0}
+#aboutModal .about-credit{margin:18px 0 2px;text-align:center;color:#72b7dc;font-size:10px;font-weight:750;letter-spacing:.03em}
+.settings-actions{display:grid;gap:0;border-top:1px solid #272622}
+.settings-action{width:100%;box-shadow:0 8px 24px #0006;transition:transform .12s ease,border-color .12s ease,background .12s ease;min-height:61px;padding:10px 0;border:0;border-bottom:1px solid #272622;border-radius:0;background:transparent;color:#eee;display:grid;grid-template-columns:34px 1fr 18px;gap:10px;align-items:center;text-align:left}
+.settings-action:active{transform:scale(.992);background:#ffffff08}
+.settings-action-icon{font-weight:800;width:30px;height:30px;border:1px solid #34322e;border-radius:50%;display:grid;place-items:center;background:#141413;color:#a8b4c5;font-size:13px}
+.settings-action-copy{display:grid;gap:3px;min-width:0}
+.settings-action-copy b{font-weight:850;letter-spacing:-.01em;font-size:13px}
+.settings-action-copy small{font-weight:550;font-size:9px;line-height:1.35;color:#6f6f6b}
+.settings-action-chevron{line-height:1;text-align:right;font-size:22px;color:#60605b}
+html:root .settings-action.restore-action{background:linear-gradient(145deg,#251d33,#17131f);border-color:#4d3d64;box-shadow:0 8px 24px #160f1f88}
+.settings-action.restore-action .settings-action-icon{background:#30233e;border-color:#725891;color:#d9c8ef}
+html:root .settings-action.reset-action{background:linear-gradient(145deg,#351c19,#1e1412);border-color:#704038;box-shadow:0 8px 24px #170b0988}
+.settings-action.reset-action .settings-action-icon{background:#45231f;border-color:#8a5147;color:#efc5be}
+html:root .settings-utility-heading{margin-top:22px}
+html:root .settings-action.export-action{background:linear-gradient(145deg,#1d1e1d,#151614);border-color:#3a3c38}
+.settings-action.export-action .settings-action-icon{background:#22241f;border-color:#5a5e54;color:#b9d0bf}
+.settings-action.export-choice{box-shadow:none;background:linear-gradient(145deg,#191817,#141412)}
+.settings-section{padding:16px 0 18px;border-bottom:1px solid #2a2926}
+.settings-section:first-child{padding-top:10px}
+.settings-section:last-child{border-bottom:0;padding-bottom:4px}
+.settings-section h4{font-size:17px;letter-spacing:-.025em;color:#ece8e0;margin:6px 0 4px}
+.settings-section-note{font-size:10px;color:#777;line-height:1.45;margin:0 0 9px;max-width:38em}
+.settings-inline-list{border-top:1px solid #272622}
+.settings-hidden-row{min-height:54px;padding:8px 0;margin:0;border-top:0}
+.settings-hidden-row>span{display:grid;gap:3px}
+.settings-hidden-row>span>b{font-size:12px;font-weight:720}
+.settings-hidden-row>span>small{font-size:9px;color:#666}
+html:root .settings-inline-action{font-size:10px;padding:6px 0}
+.settings-empty{font-size:10px;color:#666;margin:10px 0 0}
+.settings-actions .export-action .settings-action-icon{color:#c6a46a}
+.settings-actions .privacy-action .settings-action-icon{color:#9fb0c4}
+.settings-about-section{padding-top:18px}
+.settings-about-copy h3{font-size:30px;letter-spacing:-.055em;margin:5px 0 2px;color:#f5f1e8}
+.settings-about-copy p{font-size:11px;color:#777;margin:0 0 12px}
+.about-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.about-meta p{margin:0;padding:10px 8px;border:1px solid #272622;border-radius:13px;background:#121211;display:grid;gap:4px}
+.about-meta span{font-size:8px;text-transform:uppercase;letter-spacing:.13em;color:#666}
+.about-meta b{font-size:11px;color:#ddd}
+.about-credit{font-size:9px;color:#72b7dc;text-align:center;margin:14px 0 0;letter-spacing:.02em}
+@media(max-width:390px){
+.settings-section{padding:14px 0 16px}
+.about-meta{gap:5px}
+.about-meta p{padding:9px 7px}
+}
+html:root .settings-actions .settings-action.reset-action{background:linear-gradient(145deg,#351c19,#1e1412);border-color:#704038;box-shadow:0 8px 24px #170b0988}
+html:root .settings-actions .settings-action.reset-action .settings-action-icon{background:#45231f;border-color:#8a5147;color:#efc5be}

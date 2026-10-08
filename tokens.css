@@ -1,0 +1,6 @@
+:root{
+  --color-bg:#090909;--color-surface:#151515;--color-surface-2:#171717;--color-border:#2a2a2a;--color-text:#fff;--color-muted:#888;--color-gold:#d8bf8d;--color-cream:#f5f1e8;--color-orange:#d98932;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;
+  --safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)
+}
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#090909;color:#f5f5f5;--panel:#151515;--line:#292929;--muted:#919191;--orange:#c6a46a;--cream:#f2ebe3}
