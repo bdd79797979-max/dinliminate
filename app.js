@@ -2910,53 +2910,11 @@ const completeAfterExit=async ()=>{
    revealPromotedNext();
   }
 
-  // CP1241: after a short overlap window, clone the already-prepared next card
-  // into the active stack so a user can begin the next swipe before this card's
-  // full flight has finished. The original preview stays intact underneath.
-  if(!isOverlapCard&&next?.isConnected){
-   const overlapToken=String(++swipeOverlapSerial);
-   const kind=cardId==='foodCard'?'food':'restaurant';
-   const nextIdValue=kind==='food'
-     ?String(next.dataset.mealId||'')
-     :String(next.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
-   const nextItem=kind==='food'
-     ?S.pool.find(item=>String(item?.id||'')===nextIdValue)
-     :S.restaurantPool.find(row=>String(row?.id||'')===nextIdValue);
-   const ctx={
-    sourceCard:card,previewCard:next,token:overlapToken,clone:null,nextItem,
-    nextGestureStarted:false,nextCommitted:false,nextSettled:false,
-    sourceFlightDone:false,nextFlightDone:false,sourceComplete:null,nextComplete:null,flushing:false
-   };
-   swipeOverlapContext=ctx;
-   window.setTimeout(()=>{
-    if(swipeOverlapContext!==ctx||phase!=='committing'||ctx.nextGestureStarted||ctx.sourceFlightDone)return;
-    if(!next.isConnected||!nextItem)return;
-    const clone=next.cloneNode(true);
-    clone.id='swipeOverlapCard-'+overlapToken;
-    clone.classList.remove('next-card','hidden');
-    clone.setAttribute('aria-hidden','false');
-    clone.dataset.swipeOverlapToken=overlapToken;
-    clone.dataset.swipePhase='idle';
-    clone.dataset.swipeTransaction='';
-    clone.style.visibility='visible';
-    clone.style.opacity='1';
-    clone.style.filter='none';
-    clone.style.transform='none';
-    clone.style.transition='none';
-    clone.style.pointerEvents='auto';
-    clone.style.zIndex='4';
-    next.style.visibility='hidden';
-    next.parentElement?.appendChild(clone);
-    ctx.clone=clone;
-    const cut=kind==='food'
-      ?()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(nextItem)
-      :()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(nextItem);
-    const maybe=kind==='food'
-      ?()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(nextItem)
-      :()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(nextItem);
-    bindSwipeCard(clone.id,'',cut,maybe,{overlap:true});
-   },SWIPE_OVERLAP_DELAY);
-  }
+  // CP1257: keep the waiting card as a stable preview during the outgoing flight.
+  // Do not clone/hide/swap it into an overlapping active card; that 95ms
+  // compositor handoff could make the next card visibly blink on iPhone/Safari.
+  // The proven single-live-card handoff below owns the state transition.
+
 
   dismissSwipeHint();
   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
