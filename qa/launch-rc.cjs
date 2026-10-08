@@ -52,7 +52,7 @@ assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
 assert('deployment verification stays false before production promotion',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='fix/cp1252-unified-abc-swipe'&&expectedCheckpoint==='CP1252');
+assert('launch candidate branch is explicit',expectedBranch==='main'&&expectedCheckpoint==='CP1303');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
@@ -86,13 +86,23 @@ assert('Family snapshot URLs are safe',familyStore.includes('function safeHttpUr
 assert('image proxy validates redirects',image.includes("redirect:'manual'")&&image.includes('Redirected image host not allowed')&&image.includes('redirectCount<=3'));
 assert('photo endpoints are throttled',gphoto.includes('photoRateLimited(req')&&rphoto.includes('restaurantPhotoRateLimited(req'));
 assert('swipe card does not resize',app.includes("translate3d('+dx.toFixed(1)+'px,0,0) rotate(")&&!app.slice(app.indexOf('function bindSwipeCard'),app.indexOf('function bindRestaurantSwipe')).includes("card.style.transform='scale("));
+const swipeStart=app.indexOf('function bindSwipeCard(cardId,onCut,onMaybe){');
+const swipeEnd=app.indexOf('\nfunction bindMealPhotoCountControls',swipeStart);
+assert('CP1303 swipe cleanup',swipeStart>=0&&swipeEnd>swipeStart&&!app.includes('SWIPE_OVERLAP_DELAY')&&!app.includes('swipeOverlapContext')&&!app.includes('foodSwipeHandoff')&&!app.includes('restaurantSwipeHandoff')&&!app.includes('setDeckPreviewDepth('),'Retired overlap/handoff machinery remains in app.js.');
+const swipeSource=app.slice(swipeStart,swipeEnd);
+assert('single swipe transaction lifecycle',swipeSource.includes("phase='committing'")&&swipeSource.includes("card.style.visibility='hidden'")&&swipeSource.includes("action?.({fromSwipe:true,decisionId})"),'CP1303 swipe lifecycle is incomplete.');
+const mealLoaderStart=app.indexOf('function loadMealPhotoCandidates');
+const mealLoaderEnd=app.indexOf('\nconst restaurantPhotoInflight',mealLoaderStart);
+const mealLoader=app.slice(mealLoaderStart,mealLoaderEnd);
+assert('Meal photo readiness precedes source assignment',mealLoader.includes('await preloadSwipeImage(url)')&&mealLoader.includes('img.src=url')&&mealLoader.indexOf('await preloadSwipeImage(url)')<mealLoader.indexOf('img.src=url'),'Meal photo loader can expose an unready source.');
+assert('Restaurant Details keeps card media authoritative',!app.includes("hydrateRestaurantPhoto(item,'#detailsModal')"),'Restaurant Details still contains a second asynchronous photo replacement path.');
 assert('four decision controls remain canonical',
  /id="foodBack"/.test(index)&&/id="foodCut"/.test(index)&&/id="foodMaybe"/.test(index)&&/id="foodChoose"/.test(index)
 );
 assert('Family uses normal decision screens',app.includes("show('food');foodQuick();drawFood();familyNormalBar('meal','decision',data)")&&
  app.includes("show('restaurant');restaurantQuick();drawRestaurants();familyNormalBar('restaurant','decision',data)"));
 assert('history integrity metadata present',release.historyIntegrity&&release.historyIntegrity.length>0);
-assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs');
+assert('test:rc command exists',pkg.scripts?.['test:rc']==='node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs');
 assert('launch candidate metadata present',String(release.launchCandidate||'').includes('one deployment reserved for candidate verification'));
 
 const checkpointSmoke=[
@@ -108,7 +118,8 @@ const checkpointSmoke=[
  ['CP1162 Tutorial current UI','qa/cp1162-tutorial-current-ui-smoke.cjs'],
  ['CP1163 Meal photo refresh','qa/cp1163-meal-photo-refresh.cjs'],
  ['CP1165 Meal photo reliable paint','qa/cp1165-remaining-meal-photo-refresh.cjs'],
- ['CP1157 Restaurant radius','qa/cp1157-restaurant-radius-smoke.cjs']
+ ['CP1157 Restaurant radius','qa/cp1157-restaurant-radius-smoke.cjs'],
+ ['CP1303 Swipe cleanup','qa/cp1303-swipe-cleanup-smoke.cjs']
 ];
 for(const [,file] of checkpointSmoke)assert('checkpoint smoke exists '+file,exists(file));
 
