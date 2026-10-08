@@ -7,7 +7,12 @@
     "sharp": "^0.35.5"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.0"
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "1.64.0",
+    "eslint": "^9.0.0",
+    "globals": "^16.0.0",
+    "husky": "^9.0.0",
+    "prettier": "^3.0.0"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -17,7 +22,12 @@
     "test:e2e": "playwright test",
     "test:api": "node tests/api/restaurants.cjs",
     "test:release": "node tests/release/launch-rc.cjs",
+    "lint": "eslint \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
+    "lint:fix": "eslint --fix \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
+    "format:check": "prettier --check \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\" \"eslint.config.mjs\" \"prettier.config.mjs\" \"package.json\" \"README.md\" \"CHANGELOG.md\"",
+    "format": "prettier --write \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\" \"eslint.config.mjs\" \"prettier.config.mjs\" \"package.json\" \"README.md\" \"CHANGELOG.md\"",
     "stamp": "node scripts/stamp.mjs",
-    "stamp:check": "node scripts/stamp.mjs --check"
+    "stamp:check": "node scripts/stamp.mjs --check",
+    "prepare": "husky"
   }
 }

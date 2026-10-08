@@ -1,0 +1,12 @@
+# Legacy compatibility/runtime files are being moved unchanged by the strangler migration.
+src/main.js
+app.js
+data/foods.js
+
+# The first extracted feature is intentionally source-preserving until its migration checkpoint is complete.
+src/features/tutorial/index.js
+
+# Generated/test output.
+node_modules/
+playwright-report/
+test-results/
