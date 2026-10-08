@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1259,
-  "sourceBranch": "fix/cp1259-pexels-meal-photo-pass",
-  "checkpoint": "CP1259",
-  "deploymentTrigger": "fix/cp1259-pexels-meal-photo-pass",
+  "build": 1260,
+  "sourceBranch": "fix/cp1260-instant-detail-photo",
+  "checkpoint": "CP1260",
+  "deploymentTrigger": "fix/cp1260-instant-detail-photo",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1259 meal-photo refresh; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1259 CP1258 swipe feel + requested Pexels meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
+  "currentBaseline": "CP1260 CP1258 swipe feel + CP1259 meal-photo refresh + instant loaded-card Details imagery + current restaurant search/radius, Family Mode, UI and catalog improvements",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -43,5 +43,6 @@
   "swipeHandoffFix": "CP1257-remove-overlapping-clone-handoff; stable waiting preview; no clone/hide swap after 95ms",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
   "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
-  "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better"
+  "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better",
+  "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening; no loading UI added"
 }
