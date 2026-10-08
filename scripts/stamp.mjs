@@ -35,7 +35,6 @@ const transforms = new Map([
   ['sw.js', value => {
     let out = stampLocalVersions(value).replace(/const CACHE='dinliminate-shell-v\d+';/, "const CACHE='dinliminate-shell-v" + build + "';");
     out = out.replace(/'\.\/boot\.js\?v=\d+',?\s*/g, '');
-    out = out.replace("const SHELL=['./','./index.html',", "const SHELL=['./','./index.html','./boot.js?v=" + build + "',");
     return out;
   }],
   ['manifest.webmanifest', stampLocalVersions],

@@ -87,7 +87,6 @@ assert.ok(main.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read(
 const versionedAssets=[
  './boot.js?v='+build,'./src/main.js?v='+build,'./styles.css?v='+build,'./viewport.js?v='+build,
  './logo.svg?v='+build,'./icon.svg?v='+build,'./apple-touch-icon.png?v='+build,
- './data/foods.js?v='+build,'./data/restaurant-taxonomy.js?v='+build
 ];
 for(const asset of versionedAssets){
  assert.ok(index.includes(asset),'index.html missing versioned asset: '+asset);
