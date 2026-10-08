@@ -14,7 +14,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['src/features/**/*.js', 'src/state/**/*.js', 'src/api/**/*.js', 'src/ui/**/*.js'],
+    files: ['src/main.js', 'src/features/**/*.js', 'src/state/**/*.js', 'src/api/**/*.js', 'src/ui/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
