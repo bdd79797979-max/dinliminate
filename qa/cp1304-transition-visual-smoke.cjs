@@ -38,16 +38,16 @@ assert(index.includes('dinliminate-page-unloading #bootShield'),'Navigation unlo
 assert(index.includes('dinliminate-ready #bootShield'),'Shield is removed only after the ready class');
 assert(app.includes("document.documentElement.classList.add('dinliminate-ready');"),'Ready class is set after route/paint startup');
 
-assert(Number(release.build)===1304,'Release build is CP1304');
-assert(release.checkpoint==='CP1304','Release checkpoint is CP1304');
+assert(Number(release.build)>=1304,'Release build includes CP1304+');
+assert(/^CP13(0[45])$/.test(release.checkpoint),'Release checkpoint is CP1304+');
 assert(release.sourceBranch==='main','Release source branch is main');
-assert(Number(releaseManifest.build)===1304,'Release manifest build is CP1304');
-assert(releaseManifest.checkpoint==='CP1304','Release manifest checkpoint is CP1304');
+assert(Number(releaseManifest.build)===Number(release.build),'Release manifest build follows release build');
+assert(releaseManifest.checkpoint===release.checkpoint,'Release manifest checkpoint follows release checkpoint');
 assert(releaseManifest.sourceBranch==='main','Release manifest source branch is main');
-assert(index.includes('app.js?v=1304'),'Index app version is 1304');
-assert(index.includes('styles.css?v=1304'),'Index style version is 1304');
-assert(sw.includes('dinliminate-shell-v1304'),'Service worker shell is 1304');
-assert(sw.includes('./app.js?v=1304'),'Service worker app asset is 1304');
-assert(sw.includes('./styles.css?v=1304'),'Service worker styles asset is 1304');
+assert(index.includes('app.js?v='+release.build),'Index app version follows release build');
+assert(index.includes('styles.css?v='+release.build),'Index style version follows release build');
+assert(sw.includes('dinliminate-shell-v'+release.build),'Service worker shell follows release build');
+assert(sw.includes('./app.js?v='+release.build),'Service worker app asset follows release build');
+assert(sw.includes('./styles.css?v='+release.build),'Service worker styles asset follows release build');
 
 console.log('CP1304 transition/refresh/details smoke: PASS');

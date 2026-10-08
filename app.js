@@ -22,7 +22,7 @@ let restaurantBackBusy=false;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1304';
+let APP_BUILD = '1305';
 const MEAL_AUTOFILL_ENABLED = false;
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -2869,8 +2869,10 @@ function bindSwipeCard(cardId,onCut,onMaybe){
  const bindingToken=String(Number(card.dataset.swipeBindingToken||0)+1);
  card.dataset.swipeBindingToken=bindingToken;
  const bindingStillCurrent=()=>String(card.dataset.swipeBindingToken||'')===bindingToken;
- let phase='idle',pointerId=null,downX=0,lastX=0,lastMoveX=0,lastMoveTime=0,velocityX=0;
- let moveFrame=0,exitAnimation=null,suppressClickUntil=0,hapticTriggered=false,swipeThreshold=88;
+
+ let phase='idle',pointerId=null,downX=0,lastX=0,downY=0,lastMoveX=0,lastMoveTime=0,velocityX=0;
+ let moveFrame=0,flightTimer=0,settleTimer=0,suppressClickUntil=0,hapticTriggered=false,moved=false;
+ let swipeThreshold=88;
 
  card.style.touchAction='none';
  card.style.userSelect='none';
@@ -2889,8 +2891,15 @@ function bindSwipeCard(cardId,onCut,onMaybe){
 
  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
  const widthForSwipe=()=>Math.max(280,Number(card.clientWidth)||430);
+
  const cancelMoveFrame=()=>{
   if(moveFrame){cancelAnimationFrame(moveFrame);moveFrame=0;}
+ };
+ const clearFlightTimer=()=>{
+  if(flightTimer){clearTimeout(flightTimer);flightTimer=0;}
+ };
+ const clearSettleTimer=()=>{
+  if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}
  };
  const releasePointer=()=>{
   try{
@@ -2898,10 +2907,10 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   }catch{}
   pointerId=null;
  };
- const clearExitAnimation=()=>{
-  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
- };
  const setIdleVisuals=()=>{
+  cancelMoveFrame();
+  clearFlightTimer();
+  clearSettleTimer();
   card.classList.remove('swipe-active');
   card.style.willChange='';
   card.style.transition='';
@@ -2913,31 +2922,44 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   card.dataset.swipe='';
   card.dataset.swipePhase='idle';
   card.dataset.swipeTransaction='';
+  card.dataset.swipeFinalTransform='';
   phase='idle';
  };
  const settleBack=()=>{
   cancelMoveFrame();
+  clearSettleTimer();
   if(phase!=='dragging')return;
   phase='settling';
   card.dataset.swipePhase='settling';
-  card.style.transition='transform .22s cubic-bezier(.22,1,.36,1),opacity .22s ease';
-  card.style.transform='translate3d(0,0,0) rotate(0deg)';
-  card.style.opacity='1';
-  card.style.visibility='visible';
   card.style.pointerEvents='auto';
+  card.style.visibility='visible';
+  card.style.opacity='1';
   card.style.setProperty('--swipe-tint-alpha','0');
+  card.style.willChange='transform';
+  card.style.transition='transform 220ms cubic-bezier(.22,1,.36,1),opacity 180ms ease';
+  void card.offsetWidth;
+  card.style.transform='translate3d(0,0,0) rotate(0deg)';
   const finish=()=>{
-   card.removeEventListener('transitionend',finish);
    if(!bindingStillCurrent()||phase!=='settling')return;
+   clearSettleTimer();
    setIdleVisuals();
   };
-  card.addEventListener('transitionend',finish,{once:true});
+  const onEnd=e=>{
+   if(e.propertyName==='transform')finish();
+  };
+  card.addEventListener('transitionend',onEnd,{once:true});
+  settleTimer=window.setTimeout(()=>{
+   card.removeEventListener('transitionend',onEnd);
+   finish();
+  },280);
  };
  const completeAfterExit=async(decisionId)=>{
   if(phase!=='committing'||!bindingStillCurrent())return;
   phase='completing';
   card.dataset.swipePhase='completing';
+  card.style.transition='none';
   card.style.pointerEvents='none';
+  card.style.willChange='transform,opacity';
   card.style.opacity='0';
   card.style.visibility='hidden';
   card.style.transform='none';
@@ -2956,20 +2978,22 @@ function bindSwipeCard(cardId,onCut,onMaybe){
  };
  const finishFlight=decisionId=>{
   if(phase!=='committing'||!bindingStillCurrent())return;
-  // The Web Animation is already finished here. Cancelling it would roll the
-  // card back to its pre-flight transform for a frame before the next card
-  // binds, which is the exact outgoing-card reappearance glitch.
-  exitAnimation=null;
+  clearFlightTimer();
+  card.style.transition='none';
+  card.style.transform=card.dataset.swipeFinalTransform||card.style.transform;
+  void card.offsetWidth;
   void completeAfterExit(decisionId);
  };
  const commit=(dx,speed=0)=>{
   if(phase!=='dragging')return;
   cancelMoveFrame();
+  clearFlightTimer();
+  clearSettleTimer();
   phase='committing';
   card.dataset.swipePhase='committing';
   card.dataset.swipeTransaction='active';
   card.style.pointerEvents='none';
-  card.style.willChange='transform';
+  card.style.willChange='transform,opacity';
   hapticTriggered=false;
   suppressClickUntil=Date.now()+700;
   releasePointer();
@@ -2983,6 +3007,7 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   const decisionRow=decisionKind==='food'
    ?S.pool.find(item=>String(item?.id||'')===decisionId)
    :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
+
   previewDecisionCount(
    decisionKind,
    direction<0?'cut':'maybe',
@@ -3006,23 +3031,26 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   card.style.visibility='visible';
   card.style.transform=fromTransform;
   card.style.setProperty('--swipe-tint-alpha',String(clamp(releaseAbs/(Math.max(72,swipeThreshold)*2.7),0,.26)));
+  card.dataset.swipeFinalTransform=targetTransform;
   void card.offsetWidth;
 
-  if(typeof card.animate==='function'){
-   exitAnimation=card.animate(
-    [{transform:fromTransform},{transform:targetTransform}],
-    {duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'}
-   );
-   exitAnimation.finished.then(()=>finishFlight(decisionId)).catch(()=>{});
-  }else{
-   requestAnimationFrame(()=>{
-    if(phase!=='committing'||!bindingStillCurrent())return;
-    card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
-    card.style.transform=targetTransform;
-    const done=()=>{card.removeEventListener('transitionend',done);finishFlight(decisionId);};
-    card.addEventListener('transitionend',done,{once:true});
+  const finish=()=>{
+   if(!bindingStillCurrent()||phase!=='committing')return;
+   finishFlight(decisionId);
+  };
+  const onEnd=e=>{
+   if(e.propertyName==='transform')finish();
+  };
+  card.addEventListener('transitionend',onEnd);
+  requestAnimationFrame(()=>{
+   if(!bindingStillCurrent()||phase!=='committing')return;
+   card.style.transition='transform '+duration+'ms cubic-bezier(.20,.84,.24,1)';
+   card.style.transform=targetTransform;
   });
-  }
+  flightTimer=window.setTimeout(()=>{
+   card.removeEventListener('transitionend',onEnd);
+   finish();
+  },duration+70);
  };
  card.__triggerSwipeDecision=direction=>{
   if(phase!=='idle')return 'busy';
@@ -3031,6 +3059,7 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   commit(Number(direction)<0?-swipeThreshold:swipeThreshold,0);
   return 'accepted';
  };
+
  const paintMove=()=>{
   moveFrame=0;
   if(phase!=='dragging')return;
@@ -3044,6 +3073,7 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   card.style.opacity='1';
   card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*2.7),0,.26)));
   card.dataset.swipe=dx<0?'cut':'maybe';
+  moved=true;
   if(absX>=swipeThreshold&&!hapticTriggered){
    hapticTriggered=true;
    triggerSwipeHaptic();
@@ -3060,7 +3090,7 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   const dx=lastX-downX;
   const speed=Number.isFinite(velocityX)?velocityX/1000:0;
   swipeThreshold=clamp(Math.round(widthForSwipe()*.21),72,108);
-  if(Math.abs(dx)>=swipeThreshold||Math.abs(dx)>=48&&Math.abs(speed)>=.50)commit(dx,speed);
+  if(Math.abs(dx)>=swipeThreshold||(Math.abs(dx)>=48&&Math.abs(speed)>=.50))commit(dx,speed);
   else{
    velocityX=0;
    releasePointer();
@@ -3072,7 +3102,8 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   if(e.button!=null&&e.button!==0)return;
   if(phase!=='idle'||card.dataset.swipeTransaction==='active')return;
   if(e.target.closest?.('button,a,input,select'))return;
-  downX=e.clientX;lastX=e.clientX;lastMoveX=e.clientX;lastMoveTime=performance.now();velocityX=0;
+  downX=e.clientX;lastX=e.clientX;downY=e.clientY;
+  lastMoveX=e.clientX;lastMoveTime=performance.now();velocityX=0;moved=false;
   swipeThreshold=clamp(Math.round(widthForSwipe()*.21),72,108);
   phase='dragging';
   card.dataset.swipePhase='dragging';
@@ -3083,6 +3114,7 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   card.style.opacity='1';
   card.style.visibility='visible';
   card.style.pointerEvents='auto';
+  card.style.willChange='transform';
   try{card.setPointerCapture?.(e.pointerId);}catch{}
   pointerId=e.pointerId;
  };
@@ -3107,6 +3139,7 @@ function bindSwipeCard(cardId,onCut,onMaybe){
   if(Date.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();}
  };
 }
+
 function bindMealPhotoCountControls(){
  if(document.documentElement.dataset.mealPhotoCountBound==='1')return;
  document.documentElement.dataset.mealPhotoCountBound='1';
