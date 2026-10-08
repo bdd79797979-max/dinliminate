@@ -1253,7 +1253,8 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.pexels.com/photos/9569397/pexels-photo-9569397.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.pexels.com/photos/34638000/pexels-photo-34638000.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.pexels.com/photos/9569397/pexels-photo-9569397.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "buttermilk",
       "cornmeal",
