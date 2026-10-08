@@ -26,7 +26,7 @@ const SWIPE_OVERLAP_DELAY=95;
 let swipeOverlapContext=null;
 let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1243';
+let APP_BUILD = '1244';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -3029,7 +3029,7 @@ const completeAfterExit=async ()=>{
  // This preserves the existing handoff lifecycle while making Cut/Maybe feel
  // like a real swipe instead of instantly removing the card.
  card.__triggerSwipeDecision=(direction)=>{
-  if(phase!=='idle')return false;
+  if(phase!=='idle'||card.dataset.swipeTransaction==='active')return 'busy';
   const dir=Number(direction)<0?-1:1;
   const distance=Math.max(48,swipeThreshold);
   // Treat a button press as a synthetic committed swipe so the existing
@@ -3037,7 +3037,7 @@ const completeAfterExit=async ()=>{
   phase='dragging';
   card.dataset.swipePhase='dragging';
   commit(dir*distance,0);
-  return true;
+  return 'accepted';
  };
 
  const paintMove=()=>{
@@ -4353,46 +4353,64 @@ function bindCardButton(id,handler){
  el.style.touchAction='manipulation';
  el.style.webkitUserSelect='none';
  el.style.userSelect='none';
+
  const clearPress=()=>{
   if(!premiumDecision)return;
   clearTimeout(pressTimer);
   pressTimer=window.setTimeout(()=>el.classList.remove('is-pressed'),150);
  };
- if(!Number.isFinite(Number(el.__dinliminateLastActivation)))el.__dinliminateLastActivation=0;
- el.onpointerdown=()=>{
-  if(premiumDecision){clearTimeout(pressTimer);el.classList.add('is-pressed');}
- };
- const activate=e=>{
-  const now=performance.now();
-  const last=Number(el.__dinliminateLastActivation)||0;
-  if(now-last<180)return;
-  el.__dinliminateLastActivation=now;
+
+ el.onpointerdown=e=>{
+  if(el.disabled)return;
   if(premiumDecision){
+   clearTimeout(pressTimer);
+   el.classList.add('is-pressed');
+  }
+ };
+
+ // CP1244: buttons have one authoritative activation path. Pointerup is
+ // visual-only; click is the command. This avoids pointerup + click double
+ // activation and lets the swipe transaction be the single source of truth.
+ el.onclick=e=>{
+  if(el.disabled)return;
+  const now=performance.now();
+  if(premiumDecision){
+   el.__dinliminateLastActivation=now;
    el.classList.add('is-pressed');
    if(id==='foodCut'||id==='restCut'||id==='foodMaybe'||id==='restMaybe')triggerSwipeHaptic();
   }
+
   clearPress();
   e?.preventDefault?.();
   e?.stopPropagation?.();
+
   if((id==='foodChoose'||id==='restChoose')&&typeof tutorialMarkChoose==='function'){
    tutorialMarkChoose(id==='restChoose'?'restaurant':'food');
   }
+
   try{
    const swipeCardId=(id==='foodCut'||id==='foodMaybe')?'foodCard':(id==='restCut'||id==='restMaybe')?'restaurantCard':'';
    const swipeDecision=(id==='foodCut'||id==='restCut')?-1:(id==='foodMaybe'||id==='restMaybe')?1:0;
    const swipeCard=swipeCardId?$(swipeCardId):null;
-   if(swipeDecision&&swipeCard?.__triggerSwipeDecision?.(swipeDecision))return;
+
+   if(swipeDecision&&swipeCard?.__triggerSwipeDecision){
+    const transaction=swipeCard.__triggerSwipeDecision(swipeDecision);
+    // CP1244: an active transaction consumes the command. Never fall through
+    // to foodCut/foodMaybe/restaurantCut/restaurantMaybe while that card is
+    // still leaving, even when the visual flight is still in progress.
+    if(transaction==='accepted'||transaction==='busy')return;
+   }
+
    const result=handler?.(e);
    if(result&&typeof result.catch==='function')result.catch(()=>{});
   }catch{}
  };
- el.onpointerup=e=>{
-  if(e.pointerType&&e.button!=null&&e.button!==0)return;
-  activate(e);
- };
  el.onpointercancel=clearPress;
- el.onclick=e=>activate(e);
 }
+
+// CP1244 — One decision transaction per active card. A busy card consumes
+// subsequent Cut/Maybe commands instead of letting them mutate app state.
+
 function bindRestaurantSwipe(row){bindSwipeCard('restaurantCard','restaurantNextCard',()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(row),()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(row))}
 let restaurantQueryTimer = 0;
 function scheduleRestaurantProviderSearch(){
