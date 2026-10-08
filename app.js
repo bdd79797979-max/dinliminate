@@ -1335,7 +1335,7 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#tutorialModeToggle',title:'TOUR',body:'tap this button to move on to the next step.',avoid:['#home .home-foot']},
+  {target:'#tutorialModeToggle',title:'TOUR',body:'Tap this highlighted Tour button—or this guide—to move to the next step.',avoid:['#home .home-foot']},
   {target:'#home-slogan',title:'HOW IT WORKS',body:'eliminate meals or restaurants until your choice is revealed.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
   {target:'#home .home-choice-rail',title:'GET STARTED',body:'tap home or restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#menu']}
  ];
@@ -1517,7 +1517,6 @@ function tutorialWinnerRestart(){
  else return false;
  return true;
 }
-function tutorialOpenMenuTarget(){return;}
 function advanceTutorial(){
  const step=tutorialState.steps[tutorialState.index];
  if(step?.action==='choose'){
@@ -1551,46 +1550,63 @@ function advanceTutorial(){
  if(tutorialState.index>=tutorialState.steps.length){stopTutorialMode();return;}
  renderTutorialStep();
 }
-function scheduleTutorialForScreen(){return;}
+function tutorialTargetHit(event,selector){
+ try{return !!event.target?.closest?.(selector);}catch{return false;}
+}
+function tutorialAdvanceFromTarget(event,step){
+ if(step?.action==='home-choice'){
+  const choice=event.target?.closest?.('#foodStart,#restStart');
+  if(!choice)return false;
+  const nextScreen=choice.id==='restStart'?'restaurant':'food';
+  tutorialMarkHomeChoice(nextScreen);
+  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+  else startFood({tutorialResumeIndex:0});
+  return true;
+ }
+ if(step?.action==='choose'){
+  advanceTutorial();
+  return true;
+ }
+ if(step?.action==='enter-restaurant'||step?.action==='enter-food'){
+  advanceTutorial();
+  return true;
+ }
+ if(step?.action==='winner-restart'){
+  handleWinnerRestart();
+  return true;
+ }
+ advanceTutorial();
+ return true;
+}
+function tutorialHighlightedTargetClick(event){
+ if(!tutorialModeEnabled()||!tutorialState.active)return;
+ const step=tutorialState.steps[tutorialState.index];
+ if(!step?.target)return;
+ const selector=String(step.target||'');
+ if(step.action==='home-choice'){
+  if(!tutorialTargetHit(event,'#foodStart,#restStart'))return;
+ }else if(!tutorialTargetHit(event,selector)){
+  return;
+ }
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ tutorialAdvanceFromTarget(event,step);
+}
 function bindTutorialUI(){
  ensureTutorialUI();
  const bubble=document.querySelector('#tutorialBubble');
- if(bubble&&!bubble.dataset.bound){bubble.dataset.bound='1';bubble.addEventListener('click',advanceTutorial);}
- // CP1229: Home Tour is routed by the single global data-home-action handler.
- // Do not add a second click handler here; it would start the Tour and then
- // immediately toggle it back off during the same click event.
- const toggleSettings=document.querySelector('#tutorialModeSettings');
- if(toggleSettings&&!toggleSettings.dataset.bound){
-  toggleSettings.dataset.bound='1';
-  toggleSettings.addEventListener('click',event=>{
-   event.preventDefault();
-   event.stopPropagation();
-   startTutorialFromHome();
-  });
+ if(bubble&&!bubble.dataset.bound){
+  bubble.dataset.bound='1';
+  bubble.addEventListener('click',advanceTutorial);
  }
- document.addEventListener('click',event=>{
-  if(!tutorialModeEnabled()||!tutorialState.active)return;
-  const target=event.target?.closest?.('#foodStart,#restStart');
-  const step=tutorialState.steps[tutorialState.index];
-  if(target&&step?.action==='home-choice'){
-   event.preventDefault();
-   event.stopPropagation();
-   const nextScreen=target.id==='restStart'?'restaurant':'food';
-   tutorialMarkHomeChoice(nextScreen);
-   if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
-   else startFood({tutorialResumeIndex:0});
-  }
- },true);
- document.addEventListener('click',event=>{
-  if(!tutorialModeEnabled()||!tutorialState.active)return;
-  const target=event.target?.closest?.('#foodChoose,#restChoose');
-  if(target){
-   tutorialMarkChoose(target.id==='restChoose'?'restaurant':'food');
-  }
- },true);
- window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
- window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
+ if(!document.documentElement.dataset.tutorialTargetBound){
+  document.documentElement.dataset.tutorialTargetBound='1';
+  document.addEventListener('click',tutorialHighlightedTargetClick,true);
+ }
+ window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
+ window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
 }
+
 bindTutorialUI();
 
 function closeOverlays() {
@@ -6346,8 +6362,16 @@ const homeActionHandler = (event) => {
  if(action==='add') addToPhoneFlow();
  else if(action==='share') shareApp();
  else if(action==='tutorial'){
-   if(tutorialModeEnabled()&&tutorialState.active) stopTutorialMode();
-   else startTutorialFromHome();
+   if(tutorialModeEnabled()&&tutorialState.active){
+    const step=tutorialState.steps[tutorialState.index];
+    if(step?.target==='#tutorialModeToggle'){
+     event.preventDefault();
+     event.stopImmediatePropagation();
+     tutorialAdvanceFromTarget(event,step);
+    }
+    return;
+   }
+   startTutorialFromHome();
  }
 };
 document.addEventListener('click', homeActionHandler, true);
