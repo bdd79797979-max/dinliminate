@@ -56,7 +56,7 @@ async function main(){
     assert.match(href,/pexels\.com\/search\//);
     assert.equal(options.method,'GET');
     return fakeResponse(
-      '<html><img src="https://images.pexels.com/photos/1234567/pexels-photo-1234567.jpeg?auto=compress&cs=tinysrgb&w=1200"></html>',
+      '<html><img src="https://images.pexels.com/photos/1234567/pexels-photo-1234567.jpeg?auto=compress&cs=tinysrgb&w=1200"><img src="https://images.pexels.com/photos/7654321/pexels-photo-7654321.jpeg?auto=compress&cs=tinysrgb&w=1200"></html>',
       200,
       'text/html'
     );
@@ -92,13 +92,15 @@ async function main(){
       name:'Chicken Alfredo',
       section:'photo',
       cuisineOptions:['American'],
-      mealTimeOptions:['Lunch / Dinner']
+      mealTimeOptions:['Lunch / Dinner'],
+      current:{photo:'https://images.pexels.com/photos/1234567/pexels-photo-1234567.jpeg?auto=compress&cs=tinysrgb&w=1200'}
     }
   },res);
   assert.equal(res.statusCode,200);
   data=parse(res);
   assert.equal(data.ok,true);
   assert.equal(data.photo.provider,'pexels');
+  assert.match(data.photo.url,/images\.pexels\.com\/photos\/7654321/);
   assert.equal(gatewayCalls,gatewayBefore);
   assert.equal(photoCalls,2);
 
