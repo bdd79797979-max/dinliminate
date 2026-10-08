@@ -9,7 +9,7 @@
 import { FOODS } from '../data/foods.js';
 import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';
 import { state as S } from './state/store.js';
-import { $ } from './ui/dom.js';
+import { $, readImageFile } from './ui/dom.js';
 import { esc } from './ui/esc.js';
 import { appToast, appConfirm, openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet } from './ui/modal.js';
 import { configureStorage, save, loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos } from './state/storage.js';
