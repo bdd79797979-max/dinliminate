@@ -1,7 +1,7 @@
 import { state as S } from '../../state/store.js';
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
-import { imageProxyUrl, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, openModal, detailsSheet, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
+import { imageProxyUrl, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
 import { mealTimesFor } from '../meals/index.js';
 import { restaurantFallbackImage, restaurantCategory } from '../restaurants/index.js';
 
@@ -189,3 +189,5 @@ reader.readAsDataURL(file);
 
 
 export { historyImageSource, recordHistory, readHistory, writeHistory, historyView, HISTORY_KEY };
+
+import { openModal, detailsSheet } from '../../ui/modal.js';
