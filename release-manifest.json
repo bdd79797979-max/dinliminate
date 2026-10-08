@@ -20,10 +20,10 @@
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
   "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
-  "automatedRC": "single current-build release gate; CP1252 swipe smoke + syntax/cache/security consistency",
+  "automatedRC": "single current-build release gate; CP1243 swipe smoke + syntax/cache/security consistency; production verification reserved for candidate"
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1253 Unsplash meal-photo refresh + CP1252 unified A/B/C swipe stack + CP1251 tutorial/home choice + CP1250 waiting-card guard + CP1249 commit-time promotion + CP1248 no-gap + CP1247 tutorial + CP1245 meal/catalog + CP1244 decision lock",
+  "currentBaseline": "CP1256 CP1243 swipe engine restored + CP1253 Unsplash meal-photo refresh + current restaurant search/radius, Family Mode, UI and catalog improvements",
   "mealImageSystem": "real meal photo > exact backup > fallback-food.svg; CP1253 additional Unsplash photo refresh with exact-match-first selection and prior-image backups",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored",
@@ -31,6 +31,6 @@
   "decisionAudit": "CP1244-one-transaction-per-active-card-cut-maybe",
   "photoRefresh": "CP1245-Unsplash-refresh-and-meal-catalog",
   "mealCatalog": "117 meals; Chocolate Covered Peanuts added; Fish Sticks final",
-  "swipeHandoffFix": "CP1243-single-live-card-update; active card exits then the same live card is refreshed; no A/B/C promotion; no overlap clone; no third-card promotion" stays prepared behind B",
+  "swipeHandoffFix": "CP1243-single-live-card-update; active card exits then the same live card is refreshed; no A/B/C promotion; no third-card promotion",
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture"
 }
