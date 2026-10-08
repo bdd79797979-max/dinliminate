@@ -7,7 +7,6 @@ export default [
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',
-      'src/main.js',
       'app.js',
       'data/foods.js',
       'dev/diagnostics/**'

@@ -18,11 +18,11 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test": "node scripts/stamp.mjs --check && node tests/release/launch-rc.cjs && node tests/api/restaurants.cjs && node tests/api/security.cjs && playwright test",
+    "test": "node scripts/stamp.mjs --check && npm run lint && node tests/release/launch-rc.cjs && node tests/api/restaurants.cjs && node tests/api/security.cjs && playwright test",
     "test:e2e": "playwright test",
     "test:api": "node tests/api/restaurants.cjs",
     "test:release": "node tests/release/launch-rc.cjs",
-    "lint": "eslint \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
+    "lint": "eslint \"src/main.js\" \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
     "lint:fix": "eslint --fix \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
     "format:check": "prettier --check \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\" \"eslint.config.mjs\" \"prettier.config.mjs\" \"package.json\" \"README.md\" \"CHANGELOG.md\"",
     "format": "prettier --write \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\" \"eslint.config.mjs\" \"prettier.config.mjs\" \"package.json\" \"README.md\" \"CHANGELOG.md\"",
