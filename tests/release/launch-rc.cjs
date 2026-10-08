@@ -59,7 +59,7 @@ assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production ma
 assert.ok(fs.existsSync(path.join(root,'dev','diagnostics','index.html')),'development diagnostics must be outside production app');
 assert.ok(index.indexOf('./boot.js?v='+build)<index.indexOf('./viewport.js?v='+build),'boot.js must load before viewport.js');
 assert.ok(sw.includes('./boot.js?v='+build),'sw.js must precache boot.js');
-assert.ok(sw.includes('./data/restaurant-taxonomy.js?v='+build),'sw.js must version restaurant taxonomy data');
+assert.ok(sw.includes('./src/data/restaurant-taxonomy.js?v='+build),'sw.js must version src restaurant taxonomy data');
 
 const staleIndex=[...index.matchAll(/(\.\/[^"'()\s]+)\?v=(\d+)/g)].filter(m=>Number(m[2])!==build);
 const staleSw=[...sw.matchAll(/(\.\/[^"'()\s]+)\?v=(\d+)/g)].filter(m=>Number(m[2])!==build);

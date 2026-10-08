@@ -16,7 +16,7 @@ const write = (file, value) => fs.writeFileSync(path.join(root, file), value);
 
 function stampLocalVersions(value) {
   let out = value.replace(/(\.\/[A-Za-z0-9_./-]+)\?v=\d+/g, '$1?v=' + build);
-  out = out.replace(/\.\/data\/restaurant-taxonomy\.js(?!\?v=\d+)/g, './data/restaurant-taxonomy.js?v=' + build);
+  out = out.replace(/\.\/src\/data\/restaurant-taxonomy\.js(?!\?v=\d+)/g, './src/data/restaurant-taxonomy.js?v=' + build);
   return out;
 }
 
