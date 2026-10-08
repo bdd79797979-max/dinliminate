@@ -2393,6 +2393,7 @@ function drawFood(options={}){
  }
  img.dataset.imageFallback='false';
  img.dataset.mealPhotoLoaded='false';
+ img.dataset.foodImageSource='';
  if(primaryPhoto)img.src=primaryPhoto;
  else if(backupPhoto)img.src=backupPhoto;
  else markMealImageUnavailable(img);
@@ -2704,8 +2705,9 @@ function setFoodNextCardImage(nextCard,view){
   if(fb&&current!==fb){this.src=fb;this.dataset.imageFallback='false';return;}
   markMealImageUnavailable(this);
  };
- // Do not make the waiting card itself invisible while the photo warms up.
- img.style.visibility='visible';
+ // Reused Meal cards must never expose the previous meal's decoded bitmap.
+ // The current image becomes visible only after its own source is preloaded/decoded.
+ img.style.visibility='hidden';
  nextCard.style.visibility='visible';
  if(primary)img.src=primary;
  else if(backup)img.src=backup;
@@ -3062,12 +3064,9 @@ const completeAfterExit=async ()=>{
   }finally{
    if(foodHandoff){
     if(card.isConnected){
-     // The action redraws the SAME live card while it is hidden. Wait for
-     // that card's new meal image to settle before returning it to paint.
-     try{
-      const ready=card.__mealReadyPromise;
-      if(ready)await Promise.race([ready,new Promise(resolve=>setTimeout(resolve,900))]);
-     }catch{}
+     // The action redraws the SAME live card while it is hidden.
+     // Reveal it promptly; the new image remains hidden until its own
+     // decoded source is ready, so a stale bitmap can never flash back.
      const reveal=()=>{
       if(!card.isConnected||!bindingStillCurrent())return;
       card.classList.remove('swipe-active');
@@ -4501,7 +4500,9 @@ S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
 let prepared={firstId:String(rows[S.restaurantIndex]?.id||''),readyIds:[]};
 if(!options.startup){
- prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
+ prepared=options.swipeHandoff
+   ? {firstId:String(rows[S.restaurantIndex]?.id||''),readyIds:[]}
+   : await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
  if(drawSeq!==restaurantDrawSeq)return;
  rows=restaurantPoolFiltered();
  if(prepared.firstId&&!restoreExact){
@@ -4573,7 +4574,7 @@ async function restaurantCut(row){
  S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
  row._cut=true;
  const remaining=restaurantPoolFiltered();
- if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);await drawRestaurants();}
+ if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);await drawRestaurants({swipeHandoff:true});}
  save();
 }
 
@@ -4585,7 +4586,7 @@ async function restaurantMaybe(row){
  const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
  if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
- await drawRestaurants();save();
+ await drawRestaurants({swipeHandoff:true});save();
 }
 
 function restaurantBack(){
