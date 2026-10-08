@@ -103,3 +103,9 @@ CP1241 keeps the outgoing card's full off-screen flight exactly intact, but crea
 The original preview remains intact underneath the temporary swipe card. If the user actually starts the next gesture, state redraw is held until the overlapping flights can finish in order, so the previous card cannot disappear early or interrupt the next swipe. Cancelling the second gesture restores the normal preview and completes the first decision normally.
 
 The exit duration and full-card clearance from CP1239 are unchanged; CP1241 changes only the input handoff timing.
+
+## CP1242 — tutorial target ownership and tour cleanup
+
+CP1242 fixes the Home Tour first-step failure and hardens the full Tutorial/Tour interaction model. While the Tour is active, the currently highlighted control is owned by the Tour: its normal application handler is prevented from firing and the tutorial action runs instead. This prevents the first highlighted Tour button from toggling Tutorial Mode off, prevents instructional steps from accidentally cutting/keeping/choosing/opening controls, and keeps the action steps (Home choice, Choose, cross-screen continuation, and Winner Start Over) intentional.
+
+The obsolete tutorial target/menu and scheduling stubs were removed. Target rendering now retries longer and ends cleanly with an explanatory message rather than silently hiding the overlay when a control is late to render. A dedicated CP1242 tutorial smoke test was added.
