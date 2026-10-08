@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1300,
+  "build": 1302,
   "sourceBranch": "main",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1300",
-  "deploymentTrigger": "CP1300-menu-order-simplification",
+  "checkpoint": "CP1302",
+  "deploymentTrigger": "CP1302-settings-color-hierarchy",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,7 +23,7 @@
   "automatedRC": "node --check app.js PASS; qa/cp1262-history-smoke PASS; selector browser smoke Meal Maybe→Back PASS; Restaurant mock browser smoke identified and was patched before final source-level pass",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1300 reordered main menu for simpler navigation; CP1299 Tour flow retained.",
+  "currentBaseline": "CP1302 reordered Settings actions with unified normal styling and restrained destructive Reset emphasis; CP1300 menu order retained.",
   "mealImageSystem": "CP1261 Honey Buns uses the user-selected Pexels 8588846 image; all other meal-image behavior remains unchanged",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
   "swipeAudit": "CP1297 single-live-card swipe lifecycle; no stale recycled Meal bitmap; Restaurant handoff does not block on photo prep",
@@ -38,7 +38,8 @@
   "detailPhotoUX": "CP1297 current-card Details media identity guard; non-blocking photo hydration",
   "mealPhotoUpdate": "Four blocked Pixabay sources replaced with Pexels; PB&J remains Unsplash.",
   "bootRouting": "CP1297 persisted decision-screen route restored before first paint",
-  "cacheSync": "CP1300 core menu asset versions synchronized",
+  "cacheSync": "CP1302 core Settings asset versions synchronized",
   "tourAudit": "CP1299 starting-side aware Tour; second decision screen returns Home and ends; Tour button cancels at capture phase",
-  "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer"
+  "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer",
+  "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; only Reset receives color emphasis"
 }
