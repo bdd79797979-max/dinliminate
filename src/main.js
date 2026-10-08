@@ -7,7 +7,7 @@
 // CP950 final tree sync: Meal swipe gate removed; keep this commit as the deploy source of truth.
 
 import { FOODS } from '../data/foods.js';
-import RESTAURANT_TAXONOMY from '../data/restaurant-taxonomy.js';
+import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';
 import { state as S } from './state/store.js';
 import { $ } from './ui/dom.js';
 import { esc } from './ui/esc.js';
