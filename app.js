@@ -26,7 +26,7 @@ const SWIPE_OVERLAP_DELAY=95;
 let swipeOverlapContext=null;
 let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1247';
+let APP_BUILD = '1248';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -2987,8 +2987,13 @@ const completeAfterExit=async ()=>{
      ctx.clone.style.filter='none';
      ctx.clone.style.pointerEvents='none';
     }
+    // CP1248: never hide the real prepared waiting card at handoff.
+    // It remains the guaranteed visual fallback underneath the optional
+    // interactive overlap clone, so the stack never becomes empty for a frame.
     if(ctx.previewCard?.isConnected){
-     ctx.previewCard.style.visibility='hidden';
+     ctx.previewCard.style.visibility='visible';
+     ctx.previewCard.style.opacity='1';
+     ctx.previewCard.style.filter='none';
      ctx.previewCard.style.pointerEvents='none';
     }
     swipeOverlapContext=null;
