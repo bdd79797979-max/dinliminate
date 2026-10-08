@@ -53,7 +53,7 @@ assert.match(drawFood,/const handoffRendering=!!options\.swipeHandoff/);
 assert.match(drawFood,/img\.style\.visibility='hidden'/);
 assert.doesNotMatch(drawFood,/if\(primaryPhoto\)img\.src=primaryPhoto/);
 assert.doesNotMatch(drawFood,/else if\(backupPhoto\)img\.src=backupPhoto/);
-assert.match(drawFood,/if\(handoffRendering\)/);
+assert.match(drawFood,/if\((?:handoffRendering|holdCardForMedia)\)\{/);
 
 const restaurantHydrationStart=app.indexOf('async function hydrateRestaurantPhoto(row,scope){');
 const restaurantHydrationEnd=app.indexOf('\nasync function waitForRestaurantPhotoDecoded',restaurantHydrationStart);
