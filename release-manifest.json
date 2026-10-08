@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1262,
-  "sourceBranch": "fix/cp1262-true-previous-history",
+  "build": 1263,
+  "sourceBranch": "fix/cp1263-biscuits-gravy-pixabay",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1262",
-  "deploymentTrigger": "fix/cp1262-true-previous-history",
+  "checkpoint": "CP1263",
+  "deploymentTrigger": "fix/cp1263-biscuits-gravy-pixabay",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,7 +23,7 @@
   "automatedRC": "node --check app.js PASS; qa/cp1262-history-smoke PASS; selector browser smoke Meal Maybe→Back PASS; Restaurant mock browser smoke identified and was patched before final source-level pass",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1262 CP1260 instant loaded-card Details imagery + CP1261 Honey Buns photo + true previous-decision history for Meals/Restaurants + swipe button transaction repair + current restaurant search/radius, Family Mode, UI and catalog improvements",
+  "currentBaseline": "CP1263 adds the user-selected Pixabay Biscuits & Gravy photo while preserving CP1262 true previous-decision history and all existing swipe/search/radius/Family/UI/catalog work",
   "mealImageSystem": "CP1261 Honey Buns uses the user-selected Pexels 8588846 image; all other meal-image behavior remains unchanged",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
@@ -35,5 +35,6 @@
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
   "swipeFeel": "CP1258 softer release-back and adaptive 240-300ms flight; no new swipe features",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained where Pexels was not a better exact match",
-  "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening"
+  "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening",
+  "mealPhotoUpdate": "User-selected Pixabay image for Biscuits & Gravy; Pixabay host added to built-in meal-photo allowlist."
 }
