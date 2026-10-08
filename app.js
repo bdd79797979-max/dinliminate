@@ -7037,8 +7037,9 @@ renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
 hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
-// CP1138 — reveal only after the correct persisted screen has been painted.
-requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
+// CP1275 — restore and render the persisted screen while the boot mask is still
+// covering the page, then reveal it on the next paint. This prevents Safari from
+// exposing the stale Home/previous-screen snapshot during refresh.
 if (S.saved && S.screen === 'food' && S.pool.length) {
 show('food'); foodQuick(); drawFood();
 } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
@@ -7046,6 +7047,7 @@ show('restaurant'); restaurantQuick(); drawRestaurants();
 } else {
 home();
 }
+requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({
