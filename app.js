@@ -2422,7 +2422,6 @@ function drawFood(options={}){
     foodCard.style.visibility='visible';
     foodCard.style.pointerEvents='auto';
    }
-   }
   }else{
    mealReadyResolve(false);
   }
