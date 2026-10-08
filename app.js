@@ -1318,8 +1318,8 @@ S.foodMaybeRound = !!d.foodMaybeRound;
 S.restaurantCuts = new Set(d.restaurantCuts || []);
 S.foodActions = Array.isArray(d.foodActions) ? d.foodActions : [];
 S.restaurantActions = Array.isArray(d.restaurantActions) ? d.restaurantActions : [];
-S.foodHistory = Array.isArray(d.foodHistory) ? d.foodHistory : [];
-S.restaurantHistory = Array.isArray(d.restaurantHistory) ? d.restaurantHistory : [];
+S.foodHistory = Array.isArray(d.foodHistory) ? d.foodHistory.filter(x=>x&&Array.isArray(x.poolIds)) : [];
+S.restaurantHistory = Array.isArray(d.restaurantHistory) ? d.restaurantHistory.filter(x=>x&&Array.isArray(x.poolIds)) : [];
 S.restaurantMaybeRound = !!d.restaurantMaybeRound;
 S.restaurantPool = Array.isArray(d.restaurantPool) ? d.restaurantPool.map(row=>{const copy={...row};delete copy._photoUnavailable;delete copy._photoUnavailableAt;return copy;}) : [];
 S.custom = Array.isArray(d.custom) ? d.custom.map(item=>({...item,images:mealPhotoList(item)})) : [];
@@ -4253,6 +4253,7 @@ const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+
  // CP1186: radius changes must never inherit a prior-radius pool.
  let replacingSearchTarget=!!previousSearchKey&&previousSearchKey!==searchKey;
  if(replacingSearchTarget&&!sameLocationQuery){
+   clearDecisionHistory('restaurant');
    // CP1078: never leave the previous location/radius/query cards on screen
    // while a materially different restaurant search is being rebuilt.
    S.restaurantPool=[];
