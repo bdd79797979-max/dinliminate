@@ -3268,7 +3268,7 @@ window.DINLIMINATE_FOODS = [
       "Soup/Stew",
       "Mexican"
     ],
-    "image": "https://images.pexels.com/photos/28286253/pexels-photo-28286253.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.pexels.com/photos/38431288/pexels-photo-38431288.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "chicken",
       "white beans",
