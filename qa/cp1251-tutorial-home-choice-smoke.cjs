@@ -14,7 +14,7 @@ const tutorial=app.slice(tutorialStart,tutorialEnd);
 
 assert.match(tutorial,/target:'#tutorialModeToggle'/,'Tour target remains the real Tour control');
 assert.match(tutorial,/target:'#home-slogan'/,'How-it-works target remains the real slogan');
-assert.match(tutorial,/targets:\['#foodStart','#restStart'\]/,'Get Started targets the two actual Home/Restaurant choices');
+assert.match(tutorial,/targets:['#foodStart .home-choice-content','#restStart .home-choice-content']/,'Get Started targets the two actual Home/Restaurant choices');
 assert.doesNotMatch(tutorial,/target:'#home \.home-choice-rail'/,'Tutorial must not target the full-screen choice rail');
 assert.match(tutorial,/title:'GET STARTED'/);
 assert.match(tutorial,/body:'Tap Home or Restaurant to get started\.'/);
