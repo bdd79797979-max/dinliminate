@@ -5013,12 +5013,39 @@ function bindDetailNotes(modal,item,type){
  render();
 }
 
+function visibleCardDetailImage(item,type){
+ const card=type==='restaurant'?$('restaurantCard'):$('foodCard');
+ const img=card?.querySelector?.('img');
+ if(!img)return '';
+ if(type==='restaurant'){
+  const key=String(item?.id||item?.canonicalId||'').trim();
+  const currentKey=String(img.dataset.restaurantPhotoKey||'').trim();
+  if(!key||!currentKey||key!==currentKey)return '';
+ }
+ if(!img.complete||!(Number(img.naturalWidth)>0))return '';
+ const src=String(img.currentSrc||img.src||'').trim();
+ if(!src||src.startsWith('data:image/svg'))return '';
+ return src;
+}
+function warmDetailImage(src){
+ const url=String(src||'').trim();
+ if(!url||url.startsWith('data:')||url.startsWith('blob:'))return;
+ try{
+  const img=new Image();
+  img.decoding='async';
+  img.referrerPolicy='no-referrer';
+  img.src=url;
+  if(typeof img.decode==='function')img.decode().catch(()=>{});
+ }catch{}
+}
 function detailsSheet(item,type){
  if(item?.category==='Hungry')return;
  const isRestaurant=type==='restaurant';
+ const cardImage=visibleCardDetailImage(item,type);
  const image=isRestaurant
-  ? imageProxyUrl(item.image||item.photo||item.photoFallback||restaurantFallbackImage(item))
-  : mealImageUrl(item.image||item.photo||item.photoFallback||HUNGRY_IMAGE);
+  ? (cardImage||imageProxyUrl(item.image||item.photo||item.photoFallback||restaurantFallbackImage(item)))
+  : (cardImage||foodPhoto(item)||mealImageUrl(item.image||item.photo||item.photoFallback||HUNGRY_IMAGE));
+ warmDetailImage(image);
  const note=itemNote(item,type);
  const notePreview=note.replace(/\s+/g,' ').trim();
  const notesSection='<section class="detail-section detail-notes-section" id="detailNotesSection"><div class="detail-section-head"><div><div class="detail-section-title">Notes</div><p class="detail-section-helper">Private to this device.</p></div><div class="detail-notes-actions"><button class="detail-notes-toggle" id="detailNotesToggle" type="button" aria-expanded="false"><span class="detail-notes-toggle-icon" aria-hidden="true">✎</span><span> '+(note?'Edit note':'Add a note')+'</span></button></div></div><div class="detail-note-row '+(note?'':'hidden')+'" id="detailNoteRow"><p class="detail-note-preview" id="detailNotesPreview">'+esc(notePreview)+'</p><div class="detail-note-row-actions"><button class="detail-note-edit" id="detailNoteEdit" type="button" aria-label="Edit note for '+esc(item.name)+'" title="Edit note"><span aria-hidden="true">✎</span><span>Edit</span></button><button class="detail-notes-delete" id="detailNotesDelete" type="button" aria-label="Delete note for '+esc(item.name)+'" title="Delete note"><span aria-hidden="true">×</span></button></div></div><p class="detail-notes-empty '+(note?'hidden':'')+'" id="detailNotesEmpty">Add a quick reminder, favorite, or thought.</p><div class="detail-notes-editor hidden" id="detailNotesEditor"><textarea id="detailNotesInput" maxlength="1200" rows="4" placeholder="Write a note about this '+(isRestaurant?'restaurant':'meal')+'…"></textarea><div class="detail-notes-editor-actions"><button class="secondary" id="detailNotesCancel" type="button">Cancel</button><button class="detail-notes-save" id="detailNotesSave" type="button">Save Note</button></div></div></section>';
