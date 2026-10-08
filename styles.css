@@ -10594,3 +10594,12 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 #restaurantNextCard .card-copy{
   pointer-events:none;
 }
+
+
+/* CP1252 — deck transform variables cooperate with legacy next-card rules. */
+.swipe-card-stack>#foodNextCard,.restaurant-card-stack>#restaurantNextCard{
+  --deck-scale:.965;
+  --deck-opacity:1;
+  transform:scale(var(--deck-scale)) !important;
+  opacity:var(--deck-opacity) !important;
+}
