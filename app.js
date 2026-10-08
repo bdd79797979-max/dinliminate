@@ -2257,7 +2257,6 @@ const firstSrc=firstItem ? (foodPhoto(firstItem)||foodPhotoFallback(firstItem)||
 if(firstSrc)preloadSwipeImage(firstSrc);
 foodQuick();
 drawFood({deferPrime:true});
-await waitForMealCardReady($('foodCard'),1200);
 show('food');
 save();
 maybeShowInCardSwipeCoach();
@@ -4444,12 +4443,15 @@ const restoreExact=!!S.restaurantRestoreExact;
 S.restaurantRestoreExact=false;
 S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
-const prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,options.startup?1:2);
-if(drawSeq!==restaurantDrawSeq)return;
-rows=restaurantPoolFiltered();
-if(prepared.firstId&&!restoreExact){
- const readyIndex=rows.findIndex(row=>String(row.id)===String(prepared.firstId));
- if(readyIndex>=0)S.restaurantIndex=readyIndex;
+let prepared={firstId:String(rows[S.restaurantIndex]?.id||''),readyIds:[]};
+if(!options.startup){
+ prepared=await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
+ if(drawSeq!==restaurantDrawSeq)return;
+ rows=restaurantPoolFiltered();
+ if(prepared.firstId&&!restoreExact){
+  const readyIndex=rows.findIndex(row=>String(row.id)===String(prepared.firstId));
+  if(readyIndex>=0)S.restaurantIndex=readyIndex;
+ }
 }
 if(S.restaurantIndex<0||S.restaurantIndex>=rows.length)S.restaurantIndex=0;
 const row = rows[S.restaurantIndex];
@@ -5252,8 +5254,10 @@ function visibleCardDetailImage(item,type){
  }else{
   const key=String(item?.id||'').trim();
   const currentKey=String(card?.dataset.mealId||'').trim();
-  // The Meals card DOM node is reused. Never reuse its prior bitmap for a new meal.
-  if(!key||!currentKey||key!==currentKey)return '';
+  const loaded=String(img.dataset.mealPhotoLoaded||'false')==='true';
+  // The Meals card DOM node is reused. Never reuse its prior bitmap until the
+  // current meal's own image has completed resolution.
+  if(!key||!currentKey||key!==currentKey||!loaded)return '';
  }
  const src=String(img.currentSrc||img.src||'').trim();
  if(!src||src.startsWith('data:image/svg'))return '';
@@ -7097,7 +7101,6 @@ try{
   show('food');
   foodQuick();
   drawFood({deferPrime:true});
-  await waitForMealCardReady($('foodCard'),1200);
   primeFoodSwipeMedia();
  } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
   show('restaurant');
