@@ -2561,6 +2561,7 @@ async function primeFoodSwipeMedia(){
   nextCard.style.zIndex='1';
  }
  const firstPromise=populateFoodDeckCard(nextCard,nextView,1);
+ if(nextCard)nextCard.__deckReadyPromise=firstPromise;
  if(thirdCard)populateFoodDeckCard(thirdCard,thirdView,2).catch(()=>{});
  return firstPromise;
 }
@@ -2756,7 +2757,7 @@ async function waitForDisplayedImage(img,timeoutMs=1200){
 function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
  const card=$(cardId);if(!card)return;
  const next=$(nextId);
- const staticWaitingCard=cardId==='foodCard';
+ const third=options?.thirdId?$(options.thirdId):null;
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
  card.dataset.swipeBindingToken=swipeBindingToken;
  const inheritedSwipeLock=card.dataset.swipeTransaction==='active';
@@ -2781,264 +2782,140 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
  });
 
  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
- const cancelMoveFrame=()=>{
-  if(moveFrame!=null){
-   try{cancelAnimationFrame(moveFrame);}catch{}
-   moveFrame=null;
-  }
- };
- const clearCompletionTimer=()=>{
-  if(completionTimer){clearTimeout(completionTimer);completionTimer=0;}
- };
+ const cancelMoveFrame=()=>{if(moveFrame!=null){try{cancelAnimationFrame(moveFrame);}catch{}moveFrame=null;}};
+ const clearCompletionTimer=()=>{if(completionTimer){clearTimeout(completionTimer);completionTimer=0;}};
  const cardWidth=()=>Math.max(280,Number(card.clientWidth)||430);
-
- const settleBack=()=>{
-  cancelMoveFrame();
-  if(phase!=='dragging'&&phase!=='idle')return;
-  phase='idle';
-  velocityX=0;
-  hapticTriggered=false;
-  card.classList.remove('swipe-active');
-  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease';
-  card.style.transform='translate3d(0,0,0) rotate(0deg)';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.pointerEvents='auto';
-  card.style.setProperty('--swipe-tint-alpha','0');
-  card.dataset.swipe='';
-  card.dataset.swipePhase='idle';
-  card.dataset.swipeTransaction='';
-  window.setTimeout(()=>{
-   if(phase==='idle'){
-    card.style.transition='';
-    card.style.transform='';
-   }
-  },185);
- };
 
  const releasePointer=()=>{
   try{if(pointerId!=null&&card.hasPointerCapture?.(pointerId))card.releasePointerCapture(pointerId);}catch{}
   pointerId=null;
  };
 
+ const settleBack=()=>{
+  cancelMoveFrame();clearCompletionTimer();
+  if(phase!=='dragging'&&phase!=='idle')return;
+  phase='idle';velocityX=0;hapticTriggered=false;releasePointer();
+  card.classList.remove('swipe-active');
+  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease';
+  card.style.transform='translate3d(0,0,0) rotate(0deg)';
+  card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';card.style.zIndex='2';
+  card.style.setProperty('--swipe-tint-alpha','0');
+  card.dataset.swipe='';card.dataset.swipePhase='idle';card.dataset.swipeTransaction='';
+  window.setTimeout(()=>{if(phase==='idle'){card.style.transition='';card.style.transform='';}},185);
+ };
+
  const cancel=()=>{
   if(phase!=='dragging')return;
-  phase='idle';
-  hapticTriggered=false;
-  velocityX=0;
-  releasePointer();
-  settleBack();
+  phase='idle';hapticTriggered=false;velocityX=0;releasePointer();settleBack();
  };
 
- const waitForPaint=()=>new Promise(resolve=>{
-  requestAnimationFrame(()=>requestAnimationFrame(resolve));
- });
+ const waitForPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 
  const waitForNextReady=async()=>{
-  if(!next?.isConnected)return false;
-  if(staticWaitingCard){
-   if(next.dataset.foodReady==='1')return true;
-   try{return await ensureFoodNextCardReady(next);}catch{return false;}
+  if(!next?.isConnected)return true;
+  if(next.dataset.deckReady==='1')return true;
+  const pending=next.__deckReadyPromise;
+  if(pending){
+   try{const ok=await pending;if(ok&&next.dataset.deckReady==='1')return true;}catch{}
   }
-  if(next.dataset.swipePreviewReady==='1')return true;
-  try{
-   const ready=await ensureSwipePreviewReady(next);
-   if(ready)return true;
-  }catch{}
+  if(next.dataset.deckReady==='1')return true;
   const img=next.querySelector('img');
-  return !!img&&img.complete&&img.naturalWidth>0;
+  if(img?.complete&&img.naturalWidth>0){try{await img.decode?.();}catch{}return true;}
+  return false;
  };
 
- const finishAfterFlight=()=>{
+ const finishAfterFlight=async()=>{
   if(phase!=='committing')return;
   clearCompletionTimer();
   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
   const direction=String(card.dataset.swipeDirection||'');
   const action=direction==='cut'?onCut:onMaybe;
-  const handoffMeal=staticWaitingCard&&cardId==='foodCard';
-  const handoffRestaurant=cardId==='restaurantCard';
+  const promotedPreview=next?.isConnected?next:null;
+  const preserveOptions={preserveSwipe:true};
 
-  // The active card has fully left. The already-painted next card becomes the
-  // visible surface immediately; the old active node remains in the DOM only
-  // long enough to let the state/render pipeline prepare its replacement.
-  if(next?.isConnected){
-   next.style.visibility='visible';
-   next.style.opacity='1';
-   next.style.pointerEvents='none';
-   next.style.filter='none';
-   next.style.zIndex='3';
-   next.dataset.swipePromoted='1';
+  if(promotedPreview){
+   promotedPreview.style.transition='none';
+   promotedPreview.style.transform='scale(1)';
+   promotedPreview.style.opacity='1';
+   promotedPreview.style.visibility='visible';
+   promotedPreview.style.pointerEvents='none';
+   promotedPreview.style.zIndex='2';
+   promotedPreview.dataset.swipePromoted='1';
   }
+  if(third?.isConnected){third.style.pointerEvents='none';third.style.zIndex='1';}
 
-  phase='completing';
-  card.dataset.swipePhase='completing';
-  card.dataset.swipeTransaction='active';
   card.style.transition='none';
   card.style.transform='translate3d(-120vw,0,0)';
-  card.style.opacity='0';
-  card.style.visibility='hidden';
-  card.style.pointerEvents='none';
-  card.classList.remove('swipe-active');
-  card.style.removeProperty('--swipe-tint-alpha');
-  card.dataset.swipe='';
+  card.style.opacity='0';card.style.visibility='hidden';card.style.pointerEvents='none';
+  card.classList.remove('swipe-active');card.style.removeProperty('--swipe-tint-alpha');
+  card.dataset.swipe='';card.dataset.swipePhase='completing';card.dataset.swipeTransaction='active';
+  phase='completing';
 
-  const run=async()=>{
-   try{
-    if(handoffMeal)foodSwipeHandoff=true;
-    if(handoffRestaurant)restaurantSwipeHandoff=true;
+  try{
+   await Promise.resolve(action?.(preserveOptions));
+   let refreshed=false;
+   if(cardId==='foodCard')refreshed=await refreshFoodSwipeDeckAfterDecision(promotedPreview);
+   else if(cardId==='restaurantCard')refreshed=await refreshRestaurantSwipeDeckAfterDecision(promotedPreview);
 
-    // Keep the visual next card untouched while the decision mutates state.
-    // Meals redraw the hidden active node; Restaurants rebuild only after their
-    // async photo preparation finishes, leaving the promoted visual in place.
-    await Promise.resolve(action?.());
-
-    if(handoffMeal){
-     if(card.isConnected){
-      try{
-       const ready=card.__mealReadyPromise;
-       if(ready)await Promise.race([ready,new Promise(resolve=>setTimeout(resolve,1200))]);
-      }catch{}
-      await waitForPaint();
-      card.style.transition='none';
-      card.style.transform='none';
-      card.style.opacity='1';
-      card.style.visibility='visible';
-      card.style.pointerEvents='auto';
-      card.style.zIndex='2';
-      card.dataset.swipe='';
-      card.dataset.swipePhase='idle';
-      card.dataset.swipeTransaction='';
-      next?.style.removeProperty('z-index');
-      next?.style.pointerEvents='none';
-      next?.style.visibility='visible';
-      card.style.removeProperty('--swipe-tint-alpha');
-      foodSwipeHandoff=false;
-      await Promise.resolve(primeFoodSwipeMedia()).catch(()=>{});
-      bindFoodSwipe();
-     }
-     phase='idle';
-     return;
+   if(!refreshed){
+    const active=$(cardId);
+    if(active&&!active.classList.contains('hidden')){
+     await waitForPaint();
+     active.style.transition='none';active.style.transform='none';active.style.opacity='1';active.style.visibility='visible';active.style.pointerEvents='auto';active.style.zIndex='2';
+     active.dataset.swipe='';active.dataset.swipePhase='idle';active.dataset.swipeTransaction='';
     }
-
-    if(handoffRestaurant){
-     const fresh=$('restaurantCard');
-     if(fresh){
-      const freshImg=fresh.querySelector('img');
-      if(freshImg){
-       const canonical=String(freshImg.currentSrc||freshImg.src||'');
-       if(!freshImg.complete||freshImg.naturalWidth===0){
-        await waitForDisplayedImage(freshImg,1200);
-       }
-       if(canonical&&freshImg.currentSrc!==canonical){
-        // Photo hydration may have replaced the image while we waited; the
-        // card is still the authoritative current restaurant.
-       }
-      }
-      await waitForPaint();
-      fresh.style.transition='none';
-      fresh.style.transform='none';
-      fresh.style.opacity='1';
-      fresh.style.visibility='visible';
-      fresh.style.pointerEvents='auto';
-      fresh.style.zIndex='2';
-      fresh.dataset.swipePhase='idle';
-      fresh.dataset.swipeTransaction='';
-      fresh.dataset.swipe='';
-     }
-     restaurantSwipeHandoff=false;
-     bindRestaurantSwipe(restaurantPoolFiltered()?.[S.restaurantIndex]);
-     phase='idle';
-     return;
-    }
-
-    card.style.transition='';
-    card.style.transform='';
-    card.style.opacity='1';
-    card.style.visibility='visible';
-    card.style.pointerEvents='auto';
-    card.style.zIndex='2';
-    card.dataset.swipePhase='idle';
-    card.dataset.swipeTransaction='';
-    card.dataset.swipe='';
-    phase='idle';
-   }catch{
-    phase='idle';
-    card.dataset.swipePhase='idle';
-    card.dataset.swipeTransaction='';
-    try{card.style.visibility='visible';card.style.opacity='1';card.style.transform='';card.style.pointerEvents='auto';}catch{}
    }
-  };
-  void run();
+   phase='idle';
+  }catch(err){
+   phase='idle';
+   const active=$(cardId);
+   if(active){
+    active.style.transition='none';active.style.transform='none';active.style.opacity='1';active.style.visibility='visible';active.style.pointerEvents='auto';active.style.zIndex='2';
+    active.dataset.swipe='';active.dataset.swipePhase='idle';active.dataset.swipeTransaction='';
+   }
+   try{console.error('Dinliminate swipe handoff failed',err);}catch{}
+  }
  };
 
  const commit=async(dx,speed=0)=>{
   if(phase!=='dragging')return;
-  cancelMoveFrame();
-  phase='committing';
-  card.dataset.swipePhase='committing';
-  card.dataset.swipeTransaction='active';
-  card.style.pointerEvents='none';
-  hapticTriggered=false;
-  suppressClickUntil=Date.now()+900;
+  cancelMoveFrame();phase='committing';
+  card.dataset.swipePhase='committing';card.dataset.swipeTransaction='active';card.style.pointerEvents='none';
+  hapticTriggered=false;suppressClickUntil=Date.now()+900;
 
-  // A committed swipe only leaves the viewport once the next card is ready.
-  // This removes the black-gap race caused by an unpainted waiting image.
-  const hasNext=!!next?.isConnected;
-  if(hasNext){
-   const ready=await Promise.race([
-    waitForNextReady(),
-    new Promise(resolve=>setTimeout(()=>resolve(false),1400))
-   ]);
-   if(phase!=='committing')return;
-   if(!ready){
-    settleBack();
-    return;
-   }
-   await waitForPaint();
+  const ready=await Promise.race([waitForNextReady(),new Promise(resolve=>setTimeout(()=>resolve(false),1800))]);
+  if(phase!=='committing')return;
+  if(!ready){
+   phase='idle';card.dataset.swipePhase='idle';card.dataset.swipeTransaction='';
+   settleBack();return;
   }
+  await waitForPaint();
 
-  const width=cardWidth();
-  const direction=dx<0?-1:1;
+  const width=cardWidth(),direction=dx<0?-1:1;
   const decisionKind=cardId==='foodCard'?'food':'restaurant';
-  const decisionId=decisionKind==='food'
-    ?String(card.dataset.mealId||'')
-    :String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
+  const decisionId=decisionKind==='food'?String(card.dataset.mealId||''):String(card.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
   const decisionRow=decisionKind==='food'
     ?S.pool.find(item=>String(item?.id||'')===decisionId)
     :S.restaurantPool.find(item=>String(item?.id||'')===decisionId);
-  previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe:false);
-
+  previewDecisionCount(decisionKind,direction<0?'cut':'maybe',!!decisionRow?(decisionKind==='food'?S.maybe.has(decisionRow.id):!!decisionRow._maybe):false);
   card.dataset.swipeDirection=direction<0?'cut':'maybe';
-  const releaseAbs=Math.abs(dx);
-  const releaseRotation=direction*clamp((releaseAbs/width)*11,0,11);
+
+  const releaseAbs=Math.abs(dx),releaseRotation=direction*clamp((releaseAbs/width)*11,0,11);
   const fromTransform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+releaseRotation.toFixed(2)+'deg)';
-  card.style.transition='none';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.transform=fromTransform;
+  card.style.transition='none';card.style.opacity='1';card.style.visibility='visible';card.style.transform=fromTransform;
   card.style.setProperty('--swipe-tint-alpha',String(clamp(releaseAbs/(Math.max(72,swipeThreshold)*2.7),0,.26)));
   void card.offsetWidth;
 
-  const rect=card.getBoundingClientRect();
-  const edgePadding=64;
-  const remaining=direction<0 ? (rect.right+edgePadding) : (window.innerWidth-rect.left+edgePadding);
-  const targetX=direction<0 ? (dx-remaining) : (dx+remaining);
+  const rect=card.getBoundingClientRect(),edgePadding=64;
+  const remaining=direction<0?(rect.right+edgePadding):(window.innerWidth-rect.left+edgePadding);
+  const targetX=direction<0?(dx-remaining):(dx+remaining);
   const targetTransform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
-  const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(285-(magnitude*30),210,285));
-
+  const magnitude=clamp(Math.abs(speed),0,2.4),duration=Math.round(clamp(285-(magnitude*30),210,285));
   dismissSwipeHint();
-  if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
 
-  const done=()=>{
-   if(phase==='committing')finishAfterFlight();
-  };
-
+  const done=()=>{if(phase==='committing')void finishAfterFlight();};
   if(typeof card.animate==='function'){
-   exitAnimation=card.animate(
-    [{transform:fromTransform},{transform:targetTransform}],
-    {duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'}
-   );
+   exitAnimation=card.animate([{transform:fromTransform},{transform:targetTransform}],{duration,easing:'cubic-bezier(.20,.84,.24,1)',fill:'forwards'});
    exitAnimation.finished.then(done).catch(()=>{});
    completionTimer=window.setTimeout(done,duration+500);
   }else{
@@ -3053,115 +2930,57 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
 
  card.__triggerSwipeDecision=(direction)=>{
   if(phase!=='idle'||card.dataset.swipeTransaction==='active')return 'busy';
-  const dir=Number(direction)<0?-1:1;
-  const distance=Math.max(48,swipeThreshold);
-  phase='dragging';
-  card.dataset.swipePhase='dragging';
-  void commit(dir*distance,0);
-  return 'accepted';
+  const dir=Number(direction)<0?-1:1,distance=Math.max(48,swipeThreshold);
+  phase='dragging';card.dataset.swipePhase='dragging';
+  void commit(dir*distance,0);return 'accepted';
  };
 
  const paintMove=()=>{
-  moveFrame=null;
-  if(phase!=='dragging')return;
-  const dx=lastX-downX;
-  if(Math.abs(dx)<=3)return;
+  moveFrame=null;if(phase!=='dragging')return;
+  const dx=lastX-downX;if(Math.abs(dx)<=3)return;
   const absX=Math.abs(dx),width=cardWidth();
   swipeThreshold=clamp(Math.round(width*.21),72,108);
-  const progress=clamp(absX/swipeThreshold,0,1.5);
-  const rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
+  const progress=clamp(absX/swipeThreshold,0,1.5),rotation=(dx<0?-1:1)*clamp((absX/width)*11,0,11);
   card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
-  card.style.opacity='1';
-  card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*2.7),0,.26)));
+  card.style.opacity='1';card.style.setProperty('--swipe-tint-alpha',String(clamp(absX/(swipeThreshold*2.7),0,.26)));
   card.dataset.swipe=dx<0?'cut':'maybe';
-  if(progress>=1&&!hapticTriggered){
-   hapticTriggered=true;
-   triggerSwipeHaptic();
-  }
+  if(progress>=1&&!hapticTriggered){hapticTriggered=true;triggerSwipeHaptic();}
  };
 
- const scheduleMove=()=>{
-  if(moveFrame!=null)return;
-  moveFrame=requestAnimationFrame(paintMove);
- };
+ const scheduleMove=()=>{if(moveFrame==null)moveFrame=requestAnimationFrame(paintMove);};
 
  const finish=(e)=>{
   if(phase!=='dragging')return;
   if(e?.clientX!=null)lastX=e.clientX;
   cancelMoveFrame();
-  const dx=lastX-downX;
-  const speed=Number.isFinite(velocityX)?velocityX/1000:0;
+  const dx=lastX-downX,speed=Number.isFinite(velocityX)?velocityX/1000:0;
   swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
-  const distanceCommit=Math.abs(dx)>=swipeThreshold;
-  const flickCommit=Math.abs(dx)>=48&&Math.abs(speed)>=.50;
-  if(distanceCommit||flickCommit)void commit(dx,speed);
-  else{
-   phase='idle';
-   velocityX=0;
-   releasePointer();
-   settleBack();
-  }
+  if(Math.abs(dx)>=swipeThreshold||Math.abs(dx)>=48&&Math.abs(speed)>=.50)void commit(dx,speed);
+  else{phase='idle';velocityX=0;releasePointer();settleBack();}
  };
 
  card.onpointerdown=e=>{
-  if(e.isPrimary===false){
-   if(phase==='dragging')cancel();
-   return;
-  }
+  if(e.isPrimary===false){if(phase==='dragging')cancel();return;}
   if(e.button!=null&&e.button!==0)return;
-  if(phase==='locked'){
-   if(card.dataset.swipeTransaction==='active')return;
-   phase='idle';
-   card.dataset.swipePhase='idle';
-  }
-  if(card.dataset.swipeTransaction==='active')return;
-  if(phase!=='idle'||card.dataset.swipePhase!=='idle')return;
+  if(phase==='locked'){if(card.dataset.swipeTransaction==='active')return;phase='idle';card.dataset.swipePhase='idle';}
+  if(card.dataset.swipeTransaction==='active'||phase!=='idle'||card.dataset.swipePhase!=='idle')return;
   if(e.target.closest?.('button,a,input,select'))return;
-  downX=e.clientX;
-  lastX=e.clientX;
-  lastMoveX=e.clientX;
-  lastMoveTime=performance.now();
-  velocityX=0;
+  downX=e.clientX;lastX=e.clientX;lastMoveX=e.clientX;lastMoveTime=performance.now();velocityX=0;
   swipeThreshold=clamp(Math.round(cardWidth()*.21),72,108);
-  phase='dragging';
-  card.dataset.swipePhase='dragging';
-  card.dataset.swipeDirection='';
-  card.dataset.swipe='';
-  card.classList.add('swipe-active');
-  card.style.transition='none';
-  card.style.opacity='1';
-  card.style.visibility='visible';
-  card.style.pointerEvents='auto';
-  try{card.setPointerCapture?.(e.pointerId);}catch{}
-  pointerId=e.pointerId;
+  phase='dragging';card.dataset.swipePhase='dragging';card.dataset.swipeDirection='';card.dataset.swipe='';
+  card.classList.add('swipe-active');card.style.transition='none';card.style.opacity='1';card.style.visibility='visible';card.style.pointerEvents='auto';
+  try{card.setPointerCapture?.(e.pointerId);}catch{}pointerId=e.pointerId;
  };
-
  card.onpointermove=e=>{
   if(phase!=='dragging'||e.isPrimary===false||e.pointerId!==pointerId)return;
-  const now=performance.now();
-  const x=e.clientX;
-  const dt=Math.max(1,now-lastMoveTime);
-  velocityX=((x-lastMoveX)/dt)*1000;
-  lastMoveX=x;
-  lastMoveTime=now;
-  lastX=x;
-  if(Math.abs(lastX-downX)>3){
-   if(e.cancelable)e.preventDefault();
-   scheduleMove();
-  }
+  const now=performance.now(),x=e.clientX,dt=Math.max(1,now-lastMoveTime);
+  velocityX=((x-lastMoveX)/dt)*1000;lastMoveX=x;lastMoveTime=now;lastX=x;
+  if(Math.abs(lastX-downX)>3){if(e.cancelable)e.preventDefault();scheduleMove();}
  };
-
  card.onpointerup=e=>finish(e);
  card.onpointercancel=cancel;
- card.onlostpointercapture=()=>{
-  if(phase==='dragging')cancel();
- };
- card.onclick=e=>{
-  if(Date.now()<suppressClickUntil){
-   e.preventDefault();
-   e.stopPropagation();
-  }
- };
+ card.onlostpointercapture=()=>{if(phase==='dragging')cancel();};
+ card.onclick=e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();}};
 }
 function bindMealPhotoCountControls(){
  if(document.documentElement.dataset.mealPhotoCountBound==='1')return;
