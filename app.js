@@ -1555,9 +1555,20 @@ function tutorialTargetRect(step){
  return main;
 }
 function tutorialBlockerRects(step){
+ const target=tutorialTargetRect(step);
+ const tx=target?(target.left+target.right)/2:null;
+ const ty=target?(target.top+target.bottom)/2:null;
  return (step?.avoid||[]).map(sel=>{
-  try{return document.querySelector(sel)?.getBoundingClientRect()||null}catch{return null}
- }).filter(r=>r&&r.width&&r.height);
+  try{
+   const el=document.querySelector(sel),r=el?.getBoundingClientRect();
+   if(!r||!r.width||!r.height)return null;
+   // A parent/container that contains the highlighted target should not
+   // become a placement blocker; it would force the bubble away from the
+   // very control it is explaining.
+   if(Number.isFinite(tx)&&Number.isFinite(ty)&&tx>=r.left&&tx<=r.right&&ty>=r.top&&ty<=r.bottom)return null;
+   return r;
+  }catch{return null}
+ }).filter(Boolean);
 }
 function tutorialPosition(expectedToken=tutorialState.token,retry=0){
  if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
