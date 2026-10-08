@@ -137,3 +137,7 @@ CP1247 fixes the first Home Tour transition by giving the Home slogan the stable
 ## CP1248 — eliminate swipe handoff gap
 
 CP1248 keeps the actual prepared waiting card visible throughout the outgoing-card handoff. The optional overlap clone remains available for early next-card input, but it is no longer the sole visual bridge. This guarantees that a prepared next card remains underneath the outgoing card instead of allowing the stack to become visually empty for a frame.
+
+## CP1249 — commit-time next-card paint
+
+CP1249 moves visual next-card promotion to the swipe commit point. The prepared waiting card is made visible and composited before the outgoing card begins its off-screen animation, closing the remaining paint window that could expose the black stage for a split second. CP1248's always-visible waiting-card safeguard remains in place.
