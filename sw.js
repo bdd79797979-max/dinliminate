@@ -1,5 +1,5 @@
 // CP1280: shell/cache version bump for quiet meal autofill.
-const CACHE='dinliminate-shell-v1280';
+const CACHE='dinliminate-shell-v1291';
 const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
@@ -168,7 +168,7 @@ async function touchCachedImage(req){
   }catch{}
 }
 
-const SHELL=['./','./index.html','./viewport.js?v=1280','./styles.css?v=1280','./app.js?v=1280','./logo.svg?v=1280','./data/foods.js?v=1280','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg?v=1280','./app-icon.svg?v=1239','./apple-touch-icon.png?v=1280','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./','./index.html','./viewport.js?v=1291','./styles.css?v=1291','./app.js?v=1291','./logo.svg?v=1291','./data/foods.js?v=1291','./data/restaurant-taxonomy.js','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg?v=1291','./app-icon.svg?v=1239','./apple-touch-icon.png?v=1291','./fallback-food.svg','./fallback-restaurant.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([
