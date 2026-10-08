@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1291,
+  "build": 1292,
   "sourceBranch": "main",
-  "checkpoint": "CP1291",
-  "deploymentTrigger": "deep-transition-media-audit",
+  "checkpoint": "CP1292",
+  "deploymentTrigger": "deep-transition-media-audit-2",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1291 deep transition + media smoothness audit; CP1279 Home styling retained.",
+  "currentBaseline": "CP1292 critical-path transition/media audit; CP1279 Home styling retained.",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -44,6 +44,6 @@
   "tutorialFix": "CP1251-home-choice-union-target-and-CP1076-style-click-capture",
   "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better",
-  "detailPhotoUX": "CP1291 authoritative card-image reuse with meal identity guard and non-blocking Details warm path",
+  "detailPhotoUX": "CP1292 current-card identity guards for Meal + Restaurant Details; non-blocking media hydration",
   "mealPhotoUpdate": "Four blocked Pixabay meal images replaced with Pexels sources; PB&J remains on the approved Unsplash source."
 }
