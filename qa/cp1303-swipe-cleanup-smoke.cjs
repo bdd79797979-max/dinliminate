@@ -26,7 +26,7 @@ for(const symbol of legacySymbols){
   assert.equal(app.includes(symbol),false,'retired swipe symbol remains: '+symbol);
 }
 
-const bindStart=app.indexOf('function bindSwipeCard(cardId,nextId,onCut,onMaybe){');
+const bindStart=app.indexOf('function bindSwipeCard(cardId,onCut,onMaybe){');
 assert(bindStart>=0,'single swipe binder is present');
 const bindEnd=app.indexOf('\nfunction bindMealPhotoCountControls',bindStart);
 assert(bindEnd>bindStart,'single swipe binder has a bounded source block');
