@@ -169,7 +169,7 @@ async function touchCachedImage(req){
   }catch(error){console.error('Dinliminate error',error)}
 }
 
-const SHELL=['./api/_lib/imageHosts.js?v=1308','./','./index.html','./boot.js?v=1308','./viewport.js?v=1308','./styles.css?v=1308','./src/main.js?v=1308','./logo.svg?v=1308','./data/foods.js?v=1308','./src/data/restaurant-taxonomy.js?v=1308','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg?v=1308','./app-icon.svg?v=1308','./apple-touch-icon.png?v=1308','./fallback-food.svg','./fallback-restaurant.svg'];
+const SHELL=['./api/_lib/imageHosts.js?v=1308','./','./index.html','./boot.js?v=1308','./viewport.js?v=1308','./src/main.js?v=1308','./logo.svg?v=1308','./data/foods.js?v=1308','./src/data/restaurant-taxonomy.js?v=1308','./manifest.webmanifest','./app-release.json','./release-manifest.json','./icon.svg?v=1308','./app-icon.svg?v=1308','./apple-touch-icon.png?v=1308','./fallback-food.svg','./fallback-restaurant.svg','./tokens.css?v=1308','./base.css?v=1308','./chrome.css?v=1308','./modal.css?v=1308','./swipe.css?v=1308','./home.css?v=1308','./meals.css?v=1308','./restaurants.css?v=1308','./winner.css?v=1308','./history.css?v=1308','./family.css?v=1308','./settings.css?v=1308','./tutorial.css?v=1308'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([

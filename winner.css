@@ -1,0 +1,154 @@
+.winner-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:11px}
+.winner-actions button{min-height:50px;font-weight:750;border-radius:999px}
+html:root #winner{background:#090909;color:#fff;overflow:hidden;position:relative;justify-content:flex-start;min-height:100svh;padding:0 0 15px;overflow-x:hidden}
+.winner img.hungry-image{object-fit:cover}
+#detailsModal .winner-actions{grid-template-columns:1fr auto;margin-top:12px}
+#detailsModal .winner-actions .small{height:42px;min-height:42px;border-radius:999px}
+#detailsModal .winner-actions .cut{height:42px;border-radius:999px}
+html:root .winner-details-action{width:46px;min-width:46px}
+.winner-details-action .details-icon{width:21px;height:21px}
+.hungry-note{margin:-8px 0 10px;color:#777;font-size:12px;letter-spacing:.04em;text-align:center}
+.winner-reveal #winImg{animation:winnerImageReveal .72s cubic-bezier(.16,.8,.25,1) both}
+.winner-reveal #winName{animation:winnerNameReveal .62s cubic-bezier(.16,.8,.25,1) .08s both}
+.winner-reveal .winner-actions{animation:winnerActionsReveal .5s ease-out .22s both}
+@media(prefers-reduced-motion:reduce){
+.winner-reveal #winImg,.winner-reveal #winName,.winner-reveal .winner-actions{animation:none}
+}
+.winner-nav{width:100%;height:43px;display:grid;grid-template-columns:42px 1fr 42px;align-items:center;position:relative;flex:0 0 43px}
+html:root .winner .winner-back{position:static;width:42px;height:40px;min-width:42px;min-height:40px;margin:0;padding:0;border:0;background:none;color:#aaa;font-size:29px;line-height:1;z-index:20;text-align:left}
+.winner-brand{text-align:center;font-size:20px;font-weight:850;letter-spacing:-.05em;color:#eee;line-height:1}
+html:root .winner .winner-back:active{transform:scale(.94)}
+.winner.hungry-mode{justify-content:flex-start;min-height:calc(100svh - 62px);padding-top:30px;overflow:hidden}
+html:root .winner.hungry-mode .winner-back{top:8px}
+.winner.hungry-mode .eyebrow{margin:0 0 5px;color:#c6a46a;letter-spacing:.22em}
+.winner.hungry-mode .hungry-note{max-width:34em;margin:0 0 10px;font-size:11px;line-height:1.45;color:#89837a}
+.hungry-wheel-panel{width:100%;display:flex;flex-direction:column;align-items:center}
+.hungry-wheel-copy{width:100%;display:grid;gap:3px;margin-bottom:7px}
+.hungry-wheel-copy span{font-size:8px;font-weight:900;letter-spacing:.2em;color:#99a7b7}
+.hungry-wheel-copy b{font-size:14px;color:#eee9e0;letter-spacing:-.025em}
+.hungry-wheel-copy small{font-size:8px;color:#69655d}
+.hungry-wheel-stage{position:relative;width:min(82vw,365px);aspect-ratio:1;display:grid;place-items:center;margin:0 auto 7px;filter:drop-shadow(0 16px 28px #0008);touch-action:none;cursor:grab}
+.hungry-wheel-stage:before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid #c6a46a2b;box-shadow:0 0 0 8px #0e0e0d,0 0 0 9px #302b23,0 0 40px #c6a46a12}
+.hungry-wheel-ring{position:relative;width:100%;height:100%;display:grid;place-items:center;overflow:hidden;border-radius:50%}
+html:root .hungry-wheel-ring svg{width:100%;height:100%;display:block;transform-origin:50% 50%;transform:rotate(var(--wheel-rotation,0deg));transition:none;overflow:visible}
+html:root .hungry-wheel-ring svg.is-spinning{transform:rotate(var(--wheel-rotation));transition:transform 1.75s cubic-bezier(.12,.72,.11,1)}
+html:root .hungry-wheel-pointer{position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:22px solid #f2eadb;filter:drop-shadow(0 3px 4px #0009);border-top-color:#f3ead8;z-index:8}
+.hungry-wheel-pointer:after{content:"";position:absolute;left:-5px;top:-20px;width:10px;height:10px;border-radius:50%;background:#c6a46a}
+.hungry-wheel-result{width:100%;min-height:73px;display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center;padding:7px;margin:2px 0 8px;border:1px solid #514331;border-radius:15px;background:linear-gradient(145deg,#1e1b17,#131310);box-shadow:inset 0 1px 0 #ffffff08}
+.hungry-wheel-result-image-wrap{width:62px;height:58px;border-radius:11px;overflow:hidden;border:1px solid #39342c}
+.hungry-wheel-result img{width:100%;height:100%;object-fit:cover;display:block}
+.hungry-wheel-result-copy{display:grid;gap:3px;min-width:0}
+.hungry-wheel-result-copy span{font-size:8px;font-weight:900;letter-spacing:.18em;color:#bba06d}
+.hungry-wheel-result-copy b{font-size:21px;letter-spacing:-.045em;color:#f4efe7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hungry-wheel-actions{width:100%;display:grid;grid-template-columns:1.2fr .9fr;gap:8px}
+.hungry-wheel-actions button{min-height:48px;border-radius:15px;font-weight:850}
+.winner.hungry-mode .winner-actions{width:100%;grid-template-columns:1fr 1fr;margin-top:8px}
+.winner.hungry-mode #details{display:none}
+@media(max-width:390px){
+.winner.hungry-mode{padding-top:27px}
+.hungry-wheel-stage{width:min(79vw,345px);margin-bottom:5px}
+.hungry-wheel-copy b{font-size:13px}
+.hungry-wheel-result{grid-template-columns:58px 1fr}
+.hungry-wheel-result-image-wrap{width:58px;height:54px}
+.hungry-wheel-result-copy b{font-size:18px}
+.hungry-wheel-actions button{min-height:46px}
+}
+.winner.hungry-mode .winner-nav{margin-bottom:0}
+.hungry-restaurant-panel{width:100%;display:flex;flex-direction:column;align-items:center}
+.hungry-mystery-copy{width:100%;display:grid;gap:3px;margin-bottom:10px}
+.hungry-mystery-copy span{font-size:8px;font-weight:900;letter-spacing:.2em;color:#9ebfca}
+.hungry-mystery-copy b{letter-spacing:-.025em;font-size:17px;color:#f4efe7}
+.hungry-mystery-copy small{font-size:8px;color:#746f66}
+.hungry-mystery-stage{position:relative;width:min(78vw,345px);aspect-ratio:1.08;margin:0 auto 8px;perspective:1000px}
+.hungry-mystery-card{position:relative;width:100%;height:100%;overflow:hidden;border-radius:23px;border:1px solid #4b4235;background:#151412;transform:translateZ(0);border-color:rgba(205,177,119,.44);box-shadow:0 22px 48px #000b,inset 0 1px 0 #ffffff0b,0 0 28px rgba(205,177,119,.055)}
+html:root .hungry-mystery-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:blur(22px) saturate(.7) brightness(.52);transform:scale(1.16);transition:filter 2.8s cubic-bezier(.22,.72,.2,1),transform 2.8s cubic-bezier(.22,.72,.2,1)}
+html:root .hungry-mystery-card.is-revealed img{filter:blur(0) saturate(1) brightness(.9);transform:scale(1)}
+.hungry-mystery-blur{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(circle at 50% 38%,rgba(202,174,116,.12),transparent 32%),
+    linear-gradient(180deg,rgba(4,5,6,.10),rgba(4,4,4,.70) 84%);transition:opacity .8s ease}
+.hungry-mystery-cover{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;background:radial-gradient(circle at 50% 38%,rgba(208,180,122,.12),transparent 27%),
+    linear-gradient(180deg,rgba(8,8,8,.78),rgba(8,8,8,.90));transition:opacity .48s ease,transform .6s cubic-bezier(.2,.8,.2,1),filter .5s ease}
+html:root .hungry-mystery-cover.hidden{transform:scale(1.04);pointer-events:none;opacity:0;place-items:center;border:1px solid rgba(211,181,121,.66);border-radius:50%;color:#d8c195;box-shadow:0 0 0 7px rgba(211,181,121,.045),0 0 30px rgba(211,181,121,.14),inset 0 1px 0 rgba(255,255,255,.06);background:radial-gradient(circle at 38% 30%,rgba(255,247,224,.10),rgba(120,143,150,.04) 60%,transparent 72%)}
+.hungry-mystery-cover span{width:54px;height:54px;display:grid;place-items:center;border:1px solid #c6a46a77;border-radius:50%;color:#d9c49d;font-size:26px;font-weight:500;box-shadow:0 0 0 7px #c6a46a0d,0 0 24px #c6a46a16}
+.hungry-mystery-cover b{color:#f0ebe2;font-size:10px;letter-spacing:.22em}
+.hungry-mystery-cover small{font-size:9px;color:#928b80}
+.hungry-mystery-card.is-revealed:after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;background:linear-gradient(180deg,transparent 45%,#0002 75%,#0008 100%);opacity:1}
+.hungry-mystery-result{width:100%;display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center;border:1px solid #514331;border-radius:15px;min-height:82px;padding:8px;margin:0 0 9px;border-color:rgba(205,177,119,.38);background:radial-gradient(circle at 0 50%,rgba(205,177,119,.07),transparent 34%),
+    linear-gradient(145deg,#201d18,#121210);box-shadow:inset 0 1px 0 #ffffff09,0 12px 28px #0005}
+.hungry-mystery-result-image-wrap{border-radius:11px;overflow:hidden;border:1px solid #39342c;width:68px;height:66px}
+.hungry-mystery-result-image-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.hungry-mystery-result-copy{display:grid;gap:3px;min-width:0}
+.hungry-mystery-result-copy span{font-size:8px;font-weight:900;color:#bca273;letter-spacing:.19em}
+.hungry-mystery-result-copy b{letter-spacing:-.045em;color:#f4efe7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:21px;line-height:1}
+.hungry-mystery-result-copy small{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8b8479}
+.hungry-mystery-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hungry-mystery-actions button{min-height:48px;border-radius:15px;font-weight:850}
+html:root .hungry-mystery-actions #hungryMysteryReveal{grid-column:1/-1;background:linear-gradient(180deg,#e5d2aa,#c4a263);color:#151411;border:1px solid rgba(239,219,178,.70);box-shadow:0 9px 22px #0006,0 0 18px rgba(198,164,99,.10)}
+.winner.hungry-mode .hungry-restaurant-panel + #winImg{display:none}
+@media(max-width:390px){
+.hungry-mystery-stage{width:min(76vw,335px);margin-bottom:6px}
+.hungry-mystery-result{grid-template-columns:58px 1fr}
+.hungry-mystery-result-image-wrap{width:62px;height:60px}
+.hungry-mystery-result-copy b{font-size:19px}
+.hungry-mystery-actions button{min-height:46px}
+}
+html:root #winner .winner-nav{column-gap:2px;margin:0;padding:0;position:sticky;top:0;left:0;width:100%;height:43px;min-height:43px;flex:0 0 43px;display:grid;grid-template-columns:42px 1fr 42px;align-items:center;z-index:40;background:#090909}
+html:root #winner .winner-brand{background:linear-gradient(115deg,#fff 5%,#ecd6a8 48%,#db8c55 78%,#fff1d8 96%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;justify-self:center;text-align:center;color:#d8bd84;font-size:20px;font-weight:850;letter-spacing:-.05em;line-height:1}
+html:root #winner .winner-back{padding:0;display:flex;align-items:center;justify-content:flex-start;position:static;justify-self:start;width:42px;height:40px;min-width:42px;min-height:40px;margin:0;color:#aaa}
+html:root #winner .winner-back:disabled{opacity:.28;pointer-events:none}
+@media(max-width:390px){
+html:root #winner .winner-nav{grid-template-columns:42px 1fr 42px}
+html:root #winner .winner-back{width:42px;min-width:42px}
+html:root #winner .winner-brand{font-size:19px}
+}
+html:root #winner.hungry-mode .winner-nav{margin-bottom:2px}
+html:root #winner.hungry-mode .hungry-note{margin-top:0}
+html:root #winner.hungry-mode .hungry-wheel-panel, html:root #winner.hungry-mode .hungry-restaurant-panel{padding-top:2px}
+#winner .winner-actions, #winner .hungry-wheel-actions, #winner .hungry-mystery-actions{width:100%}
+html:root #winner .winner-actions button, html:root #winner .hungry-wheel-actions button, html:root #winner .hungry-mystery-actions button{min-height:48px;height:48px;border-radius:14px;border:1px solid #38352f;background:linear-gradient(145deg,#1b1b19,#121210);color:#e9e4dc;box-shadow:inset 0 1px 0 #ffffff08,0 10px 22px #0005;font-size:11px;font-weight:850;letter-spacing:.01em;transition:transform .14s ease,border-color .14s ease,background .14s ease,box-shadow .14s ease}
+html:root #winner .winner-actions button.cut, html:root #winner .hungry-wheel-actions button.cut, html:root #winner .hungry-mystery-actions button.cut{background:linear-gradient(145deg,#d7ba7c,#b99557);border-color:#e1c58e;color:#14120f;box-shadow:inset 0 1px 0 #fff6,0 12px 24px #0007}
+html:root #winner .winner-actions button.secondary, html:root #winner .hungry-wheel-actions button.secondary, html:root #winner .hungry-mystery-actions button.secondary{background:linear-gradient(145deg,#1c1c1b,#121211);color:#e5e1d9}
+html:root #winner .winner-actions button:active, html:root #winner .hungry-wheel-actions button:active, html:root #winner .hungry-mystery-actions button:active{transform:scale(.97);box-shadow:inset 0 1px 0 #ffffff05,0 7px 14px #0005}
+html:root #winner.hungry-mode .winner-actions{margin-top:9px;grid-template-columns:1fr 1fr}
+html:root .hungry-mystery-card.is-revealing img{filter:blur(22px) saturate(.72) brightness(.58);transform:scale(1.14)}
+html:root .hungry-mystery-card.is-revealing .hungry-mystery-cover{opacity:1;transform:scale(1);transition:opacity 2.35s ease,transform 2.35s ease}
+html:root .hungry-mystery-card.is-revealed .hungry-mystery-cover.hidden{opacity:0;transform:scale(1.045);transition:opacity .45s ease,transform .55s ease}
+.hungry-mystery-card.is-revealing:after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 8%,#09090912 48%,#09090952 100%),
+    linear-gradient(180deg,#09090918,#09090955);opacity:1;transition:opacity 2.6s ease}
+html:root #winner.hungry-mode .winner-actions #details{display:none}
+html:root #winner.hungry-mode #winImg{display:none}
+@media(max-width:390px){
+html:root #winner .winner-actions button, html:root #winner .hungry-wheel-actions button, html:root #winner .hungry-mystery-actions button{height:46px;min-height:46px;border-radius:13px}
+}
+html:root #winner .winner-menu{justify-self:end;align-self:center;width:42px;height:42px;min-width:42px;min-height:42px;margin:0}
+html:root #winner #celebration:not(.hidden) .firework-burst.burst-1, html:root #winner #celebration:not(.hidden) .firework-burst.burst-2, html:root #winner #celebration:not(.hidden) .firework-burst.burst-3{animation-duration:5.4s;animation-iteration-count:infinite}
+html:root #winner #celebration:not(.hidden) .firework-burst span{animation-duration:2.7s;animation-iteration-count:infinite}
+html:root .menu, html:root .decision-menu, html:root #winner .winner-menu, html:root .confirm-hero .menu{width:42px;min-width:42px;height:42px;min-height:42px;padding:0;border-radius:14px;display:grid;place-items:center;gap:4px;background:radial-gradient(circle at 32% 20%,rgba(255,248,228,.08),transparent 38%),
+    linear-gradient(145deg,rgba(24,24,23,.94),rgba(8,8,8,.86));border:1px solid rgba(224,199,151,.58);color:#edd09a;box-shadow:inset 0 1px 0 rgba(255,250,234,.13),
+    0 7px 20px rgba(0,0,0,.34),
+    0 0 16px rgba(216,184,119,.10)}
+.hungry-wheel-stage:active{cursor:grabbing}
+html:root .hungry-wheel-ring svg.is-dragging{transition:none}
+html:root .wheel-label{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;font-size:8.2px;font-weight:800;letter-spacing:-.02em;pointer-events:none;display:none}
+.wheel-segment{transition:filter .2s ease,opacity .2s ease;vector-effect:non-scaling-stroke}
+.wheel-segment.is-landed{filter:drop-shadow(0 0 10px rgba(198,164,106,.82))}
+.wheel-center{filter:drop-shadow(0 0 9px #c6a46a44)}
+.hungry-wheel-pointer:before{content:"";position:absolute;left:-14px;top:-25px;width:28px;height:28px;border-radius:50%;background:#c6a46a12;filter:blur(3px)}
+html:root .hungry-wheel-panel.has-landed .hungry-wheel-pointer{filter:drop-shadow(0 0 7px rgba(198,164,106,.85)) drop-shadow(0 3px 5px rgba(0,0,0,.55))}
+.hungry-wheel-actions .cut{box-shadow:0 10px 28px #c6a46a2a}
+html:root .app-topbar .brand, html:root .decision-brand, html:root .winner-brand{display:block;text-align:center;font-size:17px;line-height:1;font-weight:850;letter-spacing:-.05em;background:linear-gradient(115deg,#fff8e8 8%,#e7c98f 42%,#e28a4f 70%,#fff2d5 96%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 22px #d5a25b18}
+html:root .decision-brand, html:root .winner-brand{justify-self:center}
+html:root .decision-back, html:root .winner-back{width:42px;min-width:42px;height:40px;min-height:40px;padding:0;margin:0;background:transparent;border:0;border-radius:0;box-shadow:none;color:#c6a46a;font-size:30px;line-height:1;text-align:left;backdrop-filter:none}
+html:root .hungry-wheel-ring svg.is-continuous{transition:none}
+html:root .hungry-wheel-ring svg.is-slowing{transition:transform 2.85s cubic-bezier(.06,.69,.12,1)}
+.hungry-mystery-card:before{content:"";position:absolute;inset:-35% -65%;z-index:5;pointer-events:none;opacity:0;transform:translateX(-72%) rotate(12deg);background:linear-gradient(90deg,transparent 34%,rgba(245,232,200,.04) 44%,rgba(245,232,200,.32) 50%,rgba(146,183,195,.07) 57%,transparent 68%)}
+.hungry-mystery-card.is-revealing:before{opacity:1;animation:mysteryRevealSweep 1.55s cubic-bezier(.22,.72,.2,1) forwards}
+.hungry-mystery-card.is-revealed .hungry-mystery-blur{opacity:.18}
+.hungry-mystery-seal svg{width:35px;height:35px}
+html:root .hungry-mystery-actions #hungryMysteryChoose{background:linear-gradient(180deg,#e5d2aa,#c4a263);color:#151411;border:1px solid rgba(239,219,178,.70);box-shadow:0 9px 22px #0006}
+html:root .hungry-mystery-actions #hungryMysteryAgain{background:rgba(22,22,20,.74);color:#b6aea2;border:1px solid #35312a}
+.hungry-mystery-actions button:active{transform:scale(.985)}
+@media(max-width:390px){
+.hungry-mystery-copy b{font-size:16px}
+html:root .hungry-mystery-seal{width:58px;height:58px}
+.hungry-mystery-seal svg{width:32px;height:32px}
+}

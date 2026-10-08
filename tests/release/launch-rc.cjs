@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 
 const root = path.resolve(__dirname, '..', '..');
 const requiredFiles = [
-  'index.html','boot.js','styles.css','src/main.js','viewport.js','sw.js',
+  'index.html','boot.js','tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','src/main.js','viewport.js','sw.js',
   'manifest.webmanifest','logo.svg','icon.svg','app-release.json','api/_lib/http.js','api/_lib/rateLimit.js','api/_lib/ssrf.js','api/_lib/imageHosts.js',
   'release-manifest.json','package.json','scripts/stamp.mjs','api/restaurants.js',
   'api/restaurant-photo.js','api/google-restaurant-photo.js',
@@ -87,6 +87,7 @@ assert.equal(release.sourceBranch,'main','release source branch must be main');
 assert.equal(releaseManifest.sourceBranch,'main','release-manifest source branch must be main');
 assert.equal((index.match(/<script(?![^>]*src)[^>]*>/g)||[]).length,0,'index.html must not contain inline executable scripts');
 assert.ok(index.includes('./boot.js?v='+build),'index.html must load boot.js');
+assert.equal(exists('styles.css'),false,'legacy monolithic styles.css must be removed');
 assert.match(index, /<script type="module" src="\.\/src\/main\.js\?v=\d+"><\/script>/, 'index.html must load native ESM entry');
 assert.ok(main.includes("import { FOODS } from '../data/foods.js';"),'main must import foods as ESM');
 assert.ok(main.includes("import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';"),'main must import taxonomy as ESM');
@@ -125,6 +126,7 @@ assert.ok(main.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read(
 const versionedAssets=[
  './boot.js?v='+build,'./src/main.js?v='+build,'./styles.css?v='+build,'./viewport.js?v='+build,
  './logo.svg?v='+build,'./icon.svg?v='+build,'./apple-touch-icon.png?v='+build,
+ './tokens.css?v='+build,'./base.css?v='+build,'./chrome.css?v='+build,'./modal.css?v='+build,'./swipe.css?v='+build,'./home.css?v='+build,'./meals.css?v='+build,'./restaurants.css?v='+build,'./winner.css?v='+build,'./history.css?v='+build,'./family.css?v='+build,'./settings.css?v='+build,'./tutorial.css?v='+build,
 ];
 for(const asset of versionedAssets){
  assert.ok(index.includes(asset),'index.html missing versioned asset: '+asset);

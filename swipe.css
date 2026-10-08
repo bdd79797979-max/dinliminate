@@ -1,0 +1,116 @@
+.chip.cut{color:#666;text-decoration:line-through;background:#2a2a2a}
+.count{position:absolute;left:50%;transform:translateX(-50%);color:#bbb;border:1px solid #292929;border-radius:999px;z-index:2;top:0;font-size:10px;padding:5px 8px;background:#151515;border-color:#303030}
+.card{width:min(100%,435px);aspect-ratio:4/5;max-height:61svh;position:relative;overflow:hidden;border-radius:24px;touch-action:pan-y;user-select:none;will-change:transform,opacity;transition:box-shadow .18s ease,transform .12s ease;--swipe-tint-alpha:0;border:0;background:#0d0d0d;box-shadow:0 28px 80px #000b}
+.card img{width:100%;height:100%;display:block;object-fit:cover;filter:saturate(.98) contrast(1.02)}
+.card-copy{position:absolute;left:17px;right:17px;bottom:16px}
+.card-copy small{display:inline-flex;align-items:center;min-height:24px;padding:4px 9px;border-radius:999px;background:#ffffff16;border:1px solid #ffffff2b;backdrop-filter:blur(8px);font-size:10px;color:#fff}
+.card-copy h3{line-height:1;letter-spacing:-.055em;margin:9px 0 0;text-shadow:0 2px 18px #000;margin-top:8px;font-size:33px}
+.actions{display:grid;grid-template-columns:.8fr 1fr 1.3fr .8fr;gap:7px;margin-top:11px}
+.actions button{min-height:52px;border-radius:16px;font-weight:750}
+.maybe{background:var(--cream);color:#111}
+.cut{background:var(--orange);color:#111}
+@media(max-width:390px){
+.card{max-height:56svh}
+.actions button{min-height:50px;font-size:13px}
+}
+.card-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
+.card-actions button{border-radius:999px;height:28px;min-height:28px;font-size:8px}
+.photo-chip.cut{filter:grayscale(.8);opacity:.62}
+.card[data-swipe="cut"]::after,.card[data-swipe="maybe"]::after{position:absolute;top:18px;padding:7px 10px;border:2px solid currentColor;border-radius:11px;font-size:12px;letter-spacing:.12em;font-weight:900;z-index:4;background:#090909cc;text-transform:uppercase}
+.card[data-swipe="cut"]::after{content:"CUT";left:50%;right:auto;transform:translateX(-50%) rotate(0deg);color:#e06a61;border-color:#b84c45;text-shadow:0 0 12px #b84c4538}
+.card[data-swipe="maybe"]::after{content:"MAYBE";left:50%;right:auto;transform:translateX(-50%) rotate(0deg);color:#79c892;border-color:#4e9c68;text-shadow:0 0 12px #4e9c6850}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:var(--swipe-tint-alpha)}
+.card[data-swipe="cut"]::before{background:linear-gradient(90deg,rgba(196,62,56,1) 0%,rgba(196,62,56,.48) 24%,rgba(196,62,56,0) 58%)}
+.card[data-swipe="maybe"]::before{background:linear-gradient(270deg,rgba(72,176,112,1) 0%,rgba(72,176,112,.48) 24%,rgba(72,176,112,0) 58%)}
+.card .card-copy{z-index:3}
+.card:active{cursor:grabbing}
+html:root .next-card{transform:none;opacity:1;filter:none;transition:none;will-change:transform,opacity;backface-visibility:hidden;border:0;box-shadow:0 18px 46px #0007}
+.next-card img{transform:scale(1)}
+.swipe-actions{padding:0;display:grid;grid-template-columns:42px 66px 66px 42px;justify-content:center;align-items:center;gap:14px;margin:8px 0 2px;position:relative;z-index:10}
+html:root .count-inline{position:static;transform:none;white-space:nowrap;align-items:center;justify-content:center;letter-spacing:.02em;display:inline-block;min-height:0;padding:0;border:0;border-radius:0;background:transparent;color:#888;font-size:10px;font-weight:700;box-shadow:none}
+.card-details{display:flex;align-items:center;justify-content:center;position:relative;z-index:8;pointer-events:auto;height:34px;margin:8px 0 0 auto;border:1px solid #ffffff55;background:#fff;color:#111;box-shadow:0 8px 20px #0009;width:auto;min-width:82px;min-height:34px;padding:0 13px;margin-top:0;border-radius:999px;font-size:9px;font-weight:900}
+@media(max-width:390px){
+.swipe-actions{gap:15px}
+}
+.card-details::after{content:''}
+.card-detail-line{font-size:10px;color:#d5d5d5;line-height:1.3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px #000}
+.card-status{margin-top:6px}
+.card-status .status-badge{background:#ffffff18;border-color:#ffffff32;color:#f1f1f1;backdrop-filter:blur(7px)}
+@media(max-width:390px){
+.card-copy h3{font-size:30px}
+.card-detail-line{font-size:9px}
+}
+html:root .card-card-actions{justify-content:flex-end;display:flex;margin-top:7px;gap:10px;align-items:center}
+.card-card-actions .card-card-action{width:auto;min-height:32px}
+html:root .card-phone-fallback{color:#a9c4d0}
+.card-card-action{display:inline-flex;align-items:center;justify-content:center;background:#171717;color:#ead9b8;border:1px solid #4a402f;box-shadow:none;border-radius:12px;min-height:34px;height:34px;padding:0 12px;font-size:10px;font-weight:850;text-decoration:none;letter-spacing:.02em}
+.card-phone{text-decoration:none;color:#ded6ca;display:block;max-width:max-content;font-size:10px;text-underline-offset:2px}
+html:root .swipe-hint{color:#ded2bd;font-weight:800;pointer-events:none;position:fixed;left:50%;right:auto;bottom:86px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:8px;min-height:32px;padding:7px 12px;border-radius:12px;background:#171614f2;border:1px solid #3a342b;box-shadow:0 9px 20px #0009,inset 0 1px 0 #ffffff08;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:8px;letter-spacing:.03em;z-index:35;cursor:pointer;touch-action:manipulation}
+.card-details-action{color:#f5f1e8}
+html:root .card-card-action.icon-action{padding:0;background:linear-gradient(180deg,#1b1b1b,#101010);border-color:#665538;color:#d8bf8d;box-shadow:0 4px 12px #0008,inset 0 1px 0 #ffffff0f;border-radius:8px;margin-top:0;width:28px;min-width:28px;height:28px;min-height:28px;margin-left:3px;flex:0 0 28px}
+html:root .card-copy>.icon-action{align-self:flex-end;width:32px;min-width:32px;height:32px;min-height:32px;border-radius:9px;margin-top:6px}
+html:root .card-card-action.icon-action, html:root .card-copy>.icon-action{width:30px;min-width:30px;height:30px;min-height:30px;border-radius:9px;padding:0;margin-top:4px}
+html:root .card-card-action.icon-action:hover{background:linear-gradient(180deg,#25221e,#141310);border-color:#a08351;color:#fff}
+.card-cuisine-row{margin-top:3px;display:flex;align-items:center;justify-content:flex-start;gap:7px;min-width:0}
+.card-cuisine-row .cuisine-line{margin-top:0;flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .card-cuisine-row .icon-action{flex:0 0 auto;margin:0}
+html:root .card-cuisine-row .card-details-action{flex:0 0 28px;margin:0}
+html:root .round-add-food{width:40px;height:40px;min-height:40px;border-radius:50%;background:#151515;color:#d7bd7b;border:1px solid #4a4133;box-shadow:0 6px 16px #0007;padding:0;display:grid;place-items:center}
+html:root .round-add-food span{font-size:22px;font-weight:500;line-height:1}
+html:root .round-add-food:active{transform:scale(.94)}
+@media(max-width:390px){
+html:root .round-add-food{width:38px;height:38px;min-height:38px}
+html:root .round-add-food span{font-size:20px}
+}
+.card-header-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+html:root .card-header-actions .card-details-action, html:root .card-header-actions .choose-card-action{margin:0}
+@media(max-width:600px) and (max-height:720px){
+html:root .swipe-actions{margin-top:4px}
+}
+html:root .swipe-hint-cut{color:#e06a61}
+html:root .swipe-hint-maybe{color:#79c892}
+html:root .swipe-hint-mid{color:#bdb5a8}
+.maybe-stamp{position:absolute;top:17px;left:50%;transform:translateX(-50%);z-index:6;padding:6px 10px;border-radius:10px;border:1.5px solid #79c892;background:#101b14e8;color:#79c892;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 8px 20px #0007,0 0 14px #4e9c6828;pointer-events:none}
+html:root .quick-label .count-inline{white-space:nowrap;color:#72d29a;font-size:10px;font-weight:850;padding:0;min-height:0;background:transparent;border:0}
+html:root .swipe-hint:active{transform:translateX(-50%) scale(.97)}
+@media(max-width:390px){
+html:root .swipe-hint{bottom:82px}
+}
+html:root .swipe-card-coach{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:35;display:flex;align-items:center;justify-content:center;width:calc(100% - 24px);min-height:28px;padding:7px 10px;box-sizing:border-box;border:0;border-radius:0;background:linear-gradient(180deg,rgba(8,8,8,.05),rgba(8,8,8,.18));box-shadow:none;color:#ddd3c2;font-size:8px;font-weight:850;letter-spacing:.06em;text-align:center;pointer-events:none;user-select:none;-webkit-user-select:none;opacity:1;transition:opacity .22s ease,transform .22s ease}
+html:root .swipe-card-coach-cut{color:#ef786f}
+html:root .swipe-card-coach-mid{color:#c9c0b5;letter-spacing:.12em}
+html:root .swipe-card-coach-maybe{color:#80d29b}
+html:root .swipe-card-coach.is-dismissing{opacity:0;transform:translateX(-50%) translateY(3px)}
+.count-inline.count-updated{animation:cp774ChoiceCount .38s cubic-bezier(.22,1,.36,1)}
+@media(max-width:390px){
+html:root .swipe-card-coach{bottom:4px;width:calc(100% - 18px);font-size:7.6px}
+}
+@media(prefers-reduced-motion:reduce){
+html:root .quick-section .quick-cuts-collapse-toggle::after, html:root .count-inline.count-updated, html:root .unified-swipe-actions .round-maybe::before{animation:none}
+html:root .swipe-card-coach{transition:none}
+}
+html:root .swipe-hint, html:root [data-swipe-instruction="true"]{display:none;visibility:hidden;pointer-events:none}
+html:root .canonical-maybe-control .maybe-control-all, html:root .canonical-maybe-control .maybe-control-maybe{color:#85817a}
+html:root .canonical-maybe-control .maybe-control-divider{padding:0 2px;color:rgba(198,164,106,.52);font-size:10px;font-weight:500;pointer-events:none}
+html:root .canonical-maybe-control .maybe-control-count{min-width:14px;padding:0 3px;font-size:10px;letter-spacing:.02em;font-variant-numeric:tabular-nums;pointer-events:none;color:#55d88a;text-shadow:0 0 10px rgba(85,216,138,.26);font-weight:950;opacity:1}
+html:root .canonical-maybe-control.is-all .maybe-control-all, html:root .canonical-maybe-control.is-maybe .maybe-control-maybe{background:#26362d;color:#55d88a;box-shadow:inset 0 0 0 1px #2f7d50,0 0 9px rgba(85,216,138,.08)}
+html:root .canonical-maybe-control.is-all .maybe-control-maybe, html:root .canonical-maybe-control.is-maybe .maybe-control-all{background:transparent;box-shadow:none;color:#77736c;opacity:1}
+html:root .canonical-maybe-control.is-all .maybe-control-all, html:root .canonical-maybe-control.is-all .maybe-control-count, html:root .canonical-maybe-control.is-maybe .maybe-control-maybe, html:root .canonical-maybe-control.is-maybe .maybe-control-count{background:transparent;box-shadow:none;color:#55d88a;text-shadow:0 0 10px rgba(85,216,138,.26);font-weight:950;opacity:1}
+@media(max-width:390px){
+html:root .canonical-maybe-control .maybe-control-count{min-width:13px;padding:0 2px;font-size:9.5px}
+}
+@media(max-width:340px){
+html:root .canonical-maybe-control .maybe-control-divider{padding:0 1px}
+html:root .canonical-maybe-control .maybe-control-count{min-width:12px;padding:0 2px;font-size:9px}
+}
+html:root .card[data-swipe-phase="committing"], html:root .card[data-swipe-phase="completing"]{pointer-events:none;user-select:none;cursor:default}
+html:root \n.canonical-maybe-control .maybe-control-count{color:#55d88a;text-shadow:0 0 10px rgba(85,216,138,.26)}
+html:root \n.canonical-maybe-control.is-all .maybe-control-all, html:root .canonical-maybe-control.is-all .maybe-control-count{color:#55d88a;text-shadow:0 0 10px rgba(85,216,138,.26);font-weight:950}
+html:root \n.canonical-maybe-control.is-maybe .maybe-control-maybe, html:root .canonical-maybe-control.is-maybe .maybe-control-count{color:#55d88a;text-shadow:0 0 10px rgba(85,216,138,.26);font-weight:950}
+html:root \n.canonical-maybe-control.is-all .maybe-control-maybe, html:root .canonical-maybe-control.is-maybe .maybe-control-all{color:#77736c;background:transparent;box-shadow:none}
+html:root \n.canonical-maybe-control.is-all .maybe-control-all, html:root .canonical-maybe-control.is-maybe .maybe-control-maybe{background:transparent;box-shadow:none}
+.canonical-maybe-control .maybe-control-count.decision-count-updated{animation:cp1219DecisionCount .22s cubic-bezier(.22,1,.36,1)}
+@media(prefers-reduced-motion:reduce){
+html:root .canonical-maybe-control .maybe-control-count.decision-count-updated{animation:none}
+}
+.swipe-card-stack>.deck-third-card{z-index:0}
