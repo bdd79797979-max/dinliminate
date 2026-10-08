@@ -11,6 +11,7 @@ import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';
 import { store } from './state/store.js';
 const S = store.get();
 import { $, readImageFile } from './ui/dom.js';
+import { imageProxyUrl, mealImageUrl } from './api/client.js';
 import { esc } from './ui/esc.js';
 import { appToast, appConfirm, openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet } from './ui/modal.js';
 import { configureStorage, save, loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos } from './state/storage.js';
