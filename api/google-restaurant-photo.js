@@ -69,7 +69,7 @@ async function googleJson(url,options={},timeout=6500){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
   try{
     const res=await fetch(url,{...options,signal:ctl.signal,headers:{'Content-Type':'application/json','X-Goog-Api-Key':GOOGLE_PLACES_API_KEY,...(options.headers||{})}});
-    const raw=await res.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{}
+    const raw=await res.text();let data=null;try{data=raw?JSON.parse(raw):null}catch(error){console.error('Dinliminate error',error)}
     if(!res.ok){const err=new Error('Google Places request failed ('+res.status+').');err.status=res.status;err.body=data;throw err;}
     return data||{};
   }finally{clearTimeout(timer)}
@@ -84,7 +84,7 @@ async function googlePhotoMedia(photoName){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),7000);
   try{
     const res=await fetch(url,{signal:ctl.signal,headers:{'Accept':'image/avif,image/webp,image/jpeg,image/png','X-Goog-Api-Key':GOOGLE_PLACES_API_KEY,'User-Agent':'Dinliminate/1.0 (Google Places photo)'}});
-    if(!res.ok){let body=null;try{body=await res.json()}catch{};if(isQuotaError(res.status,body))await disableGoogleSkuForMonth('place-photo');return null;}
+    if(!res.ok){let body=null;try{body=await res.json()}catch(error){console.error('Dinliminate error',error)};if(isQuotaError(res.status,body))await disableGoogleSkuForMonth('place-photo');return null;}
     const type=(res.headers.get('content-type')||'').split(';')[0].toLowerCase();
     if(!type.startsWith('image/')||type==='image/svg+xml'||type==='image/svg')return null;
     const bytes=Buffer.from(await res.arrayBuffer());
