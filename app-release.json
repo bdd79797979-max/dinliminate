@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1300,
+  "build": 1302,
   "sourceBranch": "main",
-  "checkpoint": "CP1300",
-  "deploymentTrigger": "CP1300-menu-order-simplification",
+  "checkpoint": "CP1302",
+  "deploymentTrigger": "CP1302-settings-color-hierarchy",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1297 single-live-card lifecycle with non-blocking media handoff; stale recycled Meal bitmap blocked",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1300 reordered main menu for simpler navigation; CP1299 Tour flow retained.",
+  "currentBaseline": "CP1302 reordered Settings actions with unified normal styling and restrained destructive Reset emphasis; CP1300 menu order retained.",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1299 Tour remembers starting side; second decision screen finishes to Home; Tour button cancels and closes cleanly in both direct and capture handlers",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -47,6 +47,7 @@
   "detailPhotoUX": "CP1297 current-card identity guard retained; Details uses decoded current-media path without entry wait",
   "mealPhotoUpdate": "Four blocked Pixabay meal images replaced with Pexels sources; PB&J remains on the approved Unsplash source.",
   "bootRouting": "CP1297 persistent screen route synchronized with saved app state and first-paint boot mask",
-  "cacheSync": "CP1300 app/index/service-worker menu asset versions synchronized",
-  "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer"
+  "cacheSync": "CP1302 app/index/service-worker Settings asset versions synchronized",
+  "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer",
+  "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action"
 }
