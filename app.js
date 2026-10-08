@@ -5285,7 +5285,9 @@ async function detailsSheet(item,type){
  const image=isRestaurant
   ? (cardImage||imageProxyUrl(item.image||item.photo||item.photoFallback||restaurantFallbackImage(item)))
   : (cardImage||foodPhoto(item)||mealImageUrl(item.image||item.photo||item.photoFallback||HUNGRY_IMAGE));
- await waitForVisualImage(image,sourceImage,900);
+ // CP1280: the card is already the authoritative visual source. Do not block
+ // opening Details on a second network/decode wait; warm the same URL and let
+ // the modal reuse the browser's decoded resource immediately.
  warmDetailImage(image);
  const note=itemNote(item,type);
  const notePreview=note.replace(/\s+/g,' ').trim();
