@@ -125,3 +125,7 @@ This keeps the CP1241 early next-card input handoff intact: the outgoing card re
 ## CP1245 — meal photo and catalog refresh
 
 CP1245 refreshes the strongest affected meal photos with verified free Unsplash images where a clearly better match was available. The existing Peanut Butter & Jelly image remains the verified free Unsplash selection; Biscuits & Gravy and White Chicken Chili remain unchanged where a free Unsplash result did not clearly improve the current match. Chocolate Covered Peanuts is added as meal 117, and Fish Sticks is intentionally the final catalog entry.
+
+## CP1246 — no-black swipe handoff
+
+CP1246 keeps the already-prepared overlap next-card visible as a visual bridge while the recycled live card is redrawn and its new image is prepared. The bridge is removed only after the live card is painted visible, eliminating the brief empty/black frame between Cut/Maybe and the next card.
