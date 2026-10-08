@@ -1521,7 +1521,7 @@ function tutorialStepsForScreen(screen){
   {target:'#restChoose',title:'CHOOSE',body:'Make your decision early.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'RESTAURANT SEARCH',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'CUISINE',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
-  {target:'#restaurantHoursToggle',title:'OPEN NOW',body:'Show restaurants that are open now, closed now, or all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
+  {target:'#restaurantHoursToggle',title:'OPEN',body:'Show only restaurants that are open now. Tap again to show all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'ALL / MAYBES / COUNT',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
   {target:'#restaurantMenu',title:'MENU',body:'This opens the app menu.',avoid:['#drawer']},
   {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this Tour message to continue through the Meals side of Dinliminate.',action:'enter-food'}
