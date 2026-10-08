@@ -22,6 +22,18 @@ try {
     try { root.classList.add('dinliminate-page-unloading'); } catch {}
   };
   try { root.classList.add('dinliminate-booting'); } catch {}
+  /* CP1261 — know the last decision screen before the app bundle finishes booting.
+     This prevents the static Home section from ever becoming the first visible frame
+     when a refresh started from Meals or Restaurants. */
+  try {
+    const raw = localStorage.getItem('dinliminate.clean.cp1');
+    const state = raw ? JSON.parse(raw) : null;
+    const initialScreen = state?.saved && (state?.screen === 'food' || state?.screen === 'restaurant')
+      ? String(state.screen) : 'home';
+    root.dataset.initialScreen = initialScreen;
+  } catch {
+    root.dataset.initialScreen = 'home';
+  }
   window.addEventListener('beforeunload', hideForNavigation, {capture:true});
   window.addEventListener('pagehide', hideForNavigation, {capture:true});
   window.addEventListener('pageshow', () => {
@@ -46,6 +58,10 @@ button{font:inherit;border:0}
 .hidden{display:none!important}
 html.dinliminate-booting .app,
 html.dinliminate-page-unloading .app{visibility:hidden!important}
+/* CP1261 — even if the browser gets a reload frame before JavaScript finishes,
+   never expose the static Home DOM when the persisted screen is Meals/Restaurants. */
+html[data-initial-screen="food"] #home,
+html[data-initial-screen="restaurant"] #home{display:none!important}
 html.dinliminate-booting,
 html.dinliminate-page-unloading,
 html.dinliminate-booting body,
