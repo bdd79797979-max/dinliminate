@@ -1,6 +1,6 @@
-# CURRENT RELEASE — BUILD 1276 / CP1276
+# CURRENT RELEASE — BUILD 1277 / CP1277
 
-CP1276 groups the Home copy refinement with iPhone/Safari visual stability fixes: no-pill Home/Restaurant readability plaques, lower Home tagline placement, immediate Meals first-card paint, refresh route restoration, and hidden Meal Auto-Fill controls.
+CP1277 groups the Home copy refinement with iPhone/Safari visual stability fixes: no-pill Home/Restaurant readability plaques, lower Home tagline placement, immediate Meals first-card paint, refresh route restoration, and hidden Meal Auto-Fill controls.
 
 ## CP1269 — optional meal nutrition
 Nutrition is now optional when adding or editing a meal. Blank Calories, Protein, Carbs, Fat, and Sodium fields save as 0 rather than blocking Save.
