@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1264,
-  "sourceBranch": "fix/cp1264-five-meal-photos",
+  "build": 1265,
+  "sourceBranch": "fix/cp1265-working-meal-photos",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
   "netlify": "legacy/backup configuration",
-  "checkpoint": "CP1264",
-  "deploymentTrigger": "fix/cp1264-five-meal-photos",
+  "checkpoint": "CP1265",
+  "deploymentTrigger": "fix/cp1265-working-meal-photos",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -23,7 +23,7 @@
   "automatedRC": "node --check app.js PASS; qa/cp1262-history-smoke PASS; selector browser smoke Meal Maybe→Back PASS; Restaurant mock browser smoke identified and was patched before final source-level pass",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
-  "currentBaseline": "CP1264 refreshes five requested built-in meal photos while preserving CP1262 true previous-decision history and CP1263 Biscuits & Gravy",
+  "currentBaseline": "CP1265 replaces the four blocked Pixabay meal photos with working Pexels sources while preserving the selected Unsplash Peanut Butter & Jelly photo and existing swipe/search/radius/Family/UI/catalog work",
   "mealImageSystem": "CP1261 Honey Buns uses the user-selected Pexels 8588846 image; all other meal-image behavior remains unchanged",
   "radiusEngine": "CP1193 deterministic coverage grid + Overpass/ArcGIS/Photon integration + exact-distance filtering + Google enrichment separation",
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
@@ -36,5 +36,5 @@
   "swipeFeel": "CP1258 softer release-back and adaptive 240-300ms flight; no new swipe features",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained where Pexels was not a better exact match",
   "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening",
-  "mealPhotoUpdate": "Five exact user-selected source images applied; Pixabay and Unsplash hosts already permitted by CP1263."
+  "mealPhotoUpdate": "CP1265 replaces the four blocked Pixabay sources with Pexels: 36863862, 37271311, 5604808, and 33671581; Peanut Butter & Jelly remains Unsplash."
 }
