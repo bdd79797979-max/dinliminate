@@ -969,8 +969,8 @@ const STORAGE_VERSION = 7;
 const DECISION_HISTORY_LIMIT = 256;
 
 function clearDecisionHistory(kind){
- if(kind==='food')S.foodHistory=[];
- else if(kind==='restaurant')S.restaurantHistory=[];
+ if(kind==='food'){S.foodHistory=[];S.foodActions=[];}
+ else if(kind==='restaurant'){S.restaurantHistory=[];S.restaurantActions=[];}
  updateDecisionBackButtons();
 }
 
