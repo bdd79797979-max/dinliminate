@@ -5250,7 +5250,8 @@ function visibleCardDetailImage(item,type){
  if(type==='restaurant'){
   const key=String(item?.id||item?.canonicalId||'').trim();
   const currentKey=String(img.dataset.restaurantPhotoKey||'').trim();
-  if(!key||!currentKey||key!==currentKey)return '';
+  const rendered=img.complete&&img.naturalWidth>0;
+  if(!key||!currentKey||key!==currentKey||!rendered)return '';
  }else{
   const key=String(item?.id||'').trim();
   const currentKey=String(card?.dataset.mealId||'').trim();
