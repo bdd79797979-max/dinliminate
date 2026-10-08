@@ -149,3 +149,7 @@ CP1250 removes the last known visual-gap path in the overlap handoff. When the o
 ## CP1263 — Biscuits & Gravy Pixabay photo
 
 The built-in Biscuits & Gravy meal now uses the exact Pixabay image selected by the user: `https://cdn.pixabay.com/photo/2014/10/04/03/11/biscuits-472409_1280.jpg`. `cdn.pixabay.com` is included in the built-in meal-photo allowlist so the catalog can display the selected source.
+
+## CP1264 — five requested meal photos
+
+Updated the built-in photos for Buttermilk & Cornbread, Cabbage & Sausage, Chocolate Covered Peanuts, Peanut Butter & Jelly Sandwich & Chips, and Chicken & Dumplings using the exact user-selected Pixabay/Unsplash images. Pixabay and Unsplash hosts were already in the approved built-in meal-photo allowlist.
