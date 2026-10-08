@@ -696,14 +696,14 @@ async function waitForRestaurantPhotoDecoded(url,timeoutMs=2500){
   };
   img.onload=()=>{
    const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
-   Promise.resolve(decoded).catch(()=>{}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
+   Promise.resolve(decoded).catch(error=>{console.error('Dinliminate async operation failed',error);}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
   };
   img.onerror=()=>finish(false);
   timer=window.setTimeout(()=>finish(img.complete&&img.naturalWidth>0&&img.naturalHeight>0),timeoutMs);
   img.src=src;
   if(img.complete&&img.naturalWidth>0){
    const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
-   Promise.resolve(decoded).catch(()=>{}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
+   Promise.resolve(decoded).catch(error=>{console.error('Dinliminate async operation failed',error);}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
   }
  });
 }
@@ -801,7 +801,7 @@ function prefetchRestaurantPhotos(rows,startIndex,count=RESTAURANT_PHOTO_PREFETC
  restaurantPhotoPrefetchTimer=window.setTimeout(()=>{
   restaurantPhotoPrefetchTimer=0;
   if(token!==restaurantPhotoPrefetchToken)return;
-  targets.forEach(row=>{loadRestaurantPhoto(row).catch(()=>{});});
+  targets.forEach(row=>{loadRestaurantPhoto(row).catch(error=>{console.error('Dinliminate async operation failed',error);});});
  },0);
 }
 
@@ -1325,7 +1325,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', async () => {
       return script && !script.endsWith(desiredSuffix) ? reg.unregister() : Promise.resolve(false);
     }));
     const reg = await navigator.serviceWorker.register(`./sw.js${desiredSuffix}`, { updateViaCache: 'none' });
-    await reg.update().catch(() => {});
+    await reg.update().catch(error=>{console.error('Dinliminate async operation failed',error);});
   } catch(error){console.error('Dinliminate error',error)}
 });
 configureStorage({$,restaurantCanonicalId,allFoods,normKey,mealPhotoList,dedupeMealPhotos,DEFAULT_FOOD_IMAGE,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,STORAGE_VERSION,KEY});
@@ -1338,7 +1338,7 @@ loadRestaurantWebsiteStore();
 renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
-hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
+hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(error=>{console.error('Dinliminate async operation failed',error);});
 
 /* CP1279 — deep transition audit:
    Prime the first persisted/default media while Home is still covering the app.
@@ -1349,7 +1349,7 @@ try{
  const firstMealSrc=firstMeal?(foodPhoto(firstMeal)||foodPhotoFallback(firstMeal)||FINAL_FOOD_IMAGE):'';
  if(firstMealSrc)preloadSwipeImage(firstMealSrc);
  const firstRestaurant=restaurantPoolFiltered()?.[S.restaurantIndex||0];
- if(firstRestaurant)loadRestaurantPhoto(firstRestaurant).then(data=>{if(data?.url)waitForRestaurantPhotoDecoded(data.url).catch(()=>{});}).catch(()=>{});
+ if(firstRestaurant)loadRestaurantPhoto(firstRestaurant).then(data=>{if(data?.url)waitForRestaurantPhotoDecoded(data.url).catch(error=>{console.error('Dinliminate async operation failed',error);});}).catch(error=>{console.error('Dinliminate async operation failed',error);});
 }catch(error){console.error('Dinliminate error',error)}
 
 (async()=>{

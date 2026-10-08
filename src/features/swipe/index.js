@@ -278,7 +278,7 @@ function waitForSwipeImage(img,card,key,timeoutMs=1400){
    if(!sameTarget()){finish(false);return;}
    if(!img.complete||img.naturalWidth===0)return;
    const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
-   Promise.resolve(decoded).catch(()=>{}).then(()=>{
+   Promise.resolve(decoded).catch(error=>{console.error('Dinliminate async operation failed',error);}).then(()=>{
     if(!sameTarget()){finish(false);return;}
     finish(img.naturalWidth>0);
    });
@@ -534,7 +534,7 @@ function preloadSwipeImage(src){
   const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
   img.onload=()=>{
    const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
-   Promise.resolve(decoded).catch(()=>{}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
+   Promise.resolve(decoded).catch(error=>{console.error('Dinliminate async operation failed',error);}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
   };
   img.onerror=()=>finish(false);
   try{img.src=url;}catch{finish(false);}

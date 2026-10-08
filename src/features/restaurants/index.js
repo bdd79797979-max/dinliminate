@@ -644,7 +644,7 @@ async function maybeAutoRefreshRestaurantLocation(){
    setLocation(fresh.lat,fresh.lon,'Current location','device');
    if(S.screen==='restaurant'){
     $('status').textContent='Location updated. Refreshing restaurants…';
-    await searchRestaurants().catch(()=>{});
+    await searchRestaurants().catch(error=>{console.error('Dinliminate async operation failed',error);});
    }
    return true;
   }
@@ -941,7 +941,7 @@ S.restaurantSearchDegraded=true;
    S.restaurantSearchKey='';
    S.restaurantPool=[];
    S.restaurantIndex=0;
-   await drawRestaurants().catch(()=>{});
+   await drawRestaurants().catch(error=>{console.error('Dinliminate async operation failed',error);});
  }
 $('status').textContent = timedOut ? 'The restaurant search took too long. Please try again.' : (err?.message || 'Could not complete the search.');
 } finally {
@@ -1098,7 +1098,7 @@ if(handoffRendering){
    }
  });
 }else{
- currentPhotoPromise.catch(()=>{});
+ currentPhotoPromise.catch(error=>{console.error('Dinliminate async operation failed',error);});
 }
 if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
 prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);

@@ -232,7 +232,7 @@ function warmDetailImage(src){
   img.fetchPriority='high';
   img.referrerPolicy='no-referrer';
   img.src=url;
-  if(typeof img.decode==='function')img.decode().catch(()=>{});
+  if(typeof img.decode==='function')img.decode().catch(error=>{console.error('Dinliminate async operation failed',error);});
  }catch(error){console.error('Dinliminate error',error)}
 }
 async function detailsSheet(item,type){

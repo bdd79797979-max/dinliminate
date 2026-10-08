@@ -126,8 +126,8 @@ async function shareApp(){
 function shareWinner() {
 if (!S.winnerItem)return;
 const text='Tonight: '+S.winnerItem.name;
-if(navigator.share){navigator.share({title:'Dinliminate',text}).catch(()=>{});}
-else if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>appToast('Decision copied.')).catch(()=>{});
+if(navigator.share){navigator.share({title:'Dinliminate',text}).catch(error=>{console.error('Dinliminate async operation failed',error);});}
+else if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>appToast('Decision copied.')).catch(error=>{console.error('Dinliminate async operation failed',error);});
 }
 async function clearMealPhotoStorage(id){
   const target=String(id||'').trim();
@@ -189,7 +189,7 @@ async function updateAppFlow(){
  appToast('Checking for updates…');
  try{
   const registrations=await navigator.serviceWorker?.getRegistrations?.()||[];
-  await Promise.all(registrations.map(reg=>reg.update().catch(()=>{})));
+  await Promise.all(registrations.map(reg=>reg.update().catch(error=>{console.error('Dinliminate async operation failed',error);})));
  }catch(error){console.error('Dinliminate error',error)}
  try{
   const url=new URL(window.location.href);
