@@ -50,9 +50,9 @@ const expectedBranch=String(release.sourceBranch||'');
 assert('release build is a positive integer',Number.isInteger(build)&&build>0);
 assert('current build agrees across manifests',releaseManifest.build===build);
 assert('checkpoint metadata is synchronized',releaseManifest.checkpoint===expectedCheckpoint);
-assert('deployment verification stays false',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
+assert('deployment verification stays false before production promotion',release.vercelProductionVerified===false&&releaseManifest.vercelProductionVerified===false);
 assert('release branches agree',releaseManifest.sourceBranch===expectedBranch);
-assert('launch candidate branch is explicit',expectedBranch==='cp1165-remaining-meal-photo-refresh'&&expectedCheckpoint==='CP1165');
+assert('launch candidate branch is explicit',expectedBranch==='fix/cp1252-unified-abc-swipe'&&expectedCheckpoint==='CP1252');
 
 for(const asset of [`./app.js?v=${build}`,`./styles.css?v=${build}`,`./viewport.js?v=${build}`,`./logo.svg?v=${build}`,`./icon.svg?v=${build}`]){
  assert('index cache '+asset,index.includes(asset));
