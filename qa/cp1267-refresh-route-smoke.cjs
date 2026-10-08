@@ -9,8 +9,8 @@ const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 assert.match(index, /localStorage\.getItem\('dinliminate\.start-screen'\)/, 'index must read the startup route marker before first paint');
 assert.match(index, /dinliminate-start-food/, 'index must support a saved Meals first-paint route');
 assert.match(index, /dinliminate-start-restaurant/, 'index must support a saved Restaurant first-paint route');
-assert.match(index, /#home\{display:none!important\}/, 'saved startup routes must hide Home before paint');
-assert.match(index, /#food\{display:block!important\}/, 'saved Meals route must be visible before paint');
+assert.match(index, /dinliminate-start-(?:food|restaurant|winner|family) #home[\s\S]*?\{display:none!important\}/, 'saved startup routes must hide Home before paint');
+assert.match(index, /dinliminate-start-food #food[\s\S]*?\{display:block!important\}/, 'saved Meals route must be visible before paint');
 
 assert.match(app, /localStorage\.setItem\('dinliminate\.start-screen', String\(screen\)\)/, 'show() must keep the startup route marker current');
 assert.match(app, /requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>\{/, 'app reveal must wait for two paint frames');
