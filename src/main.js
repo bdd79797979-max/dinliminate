@@ -1419,6 +1419,6 @@ export { HISTORY_KEY };
 export { RESTAURANT_PHOTO_PREFETCH_COUNT, RESTAURANT_NAME_GENERIC_UI, RESTAURANT_NAME_VARIANT_BLOCKERS_UI, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE };
 
 
-export { foodQuickImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, openModal, readImageFile };
+export { foodQuickImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal, readImageFile };
 
-export { show, startFood, openRestaurant, winner, closeDrawer };
+
