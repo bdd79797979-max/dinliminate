@@ -27,7 +27,7 @@ let swipeOverlapSerial=0;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1262';
+let APP_BUILD = '1265';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -6119,24 +6119,21 @@ function settingsView(){
  '<section class="settings-section"><div class="settings-section-kicker">YOUR CHOICES</div><h4>Hidden Restaurants</h4><p class="settings-section-note">Restaurants you have chosen to hide stay out of your current restaurant decisions.</p><div class="settings-inline-list">'+
  (hiddenRestaurants.length?hiddenRestaurants.map(x=>'<div class="food-row settings-hidden-row"><span><b>'+esc(x.name)+'</b><small>Hidden restaurant</small></span><button class="restore settings-inline-action" data-setting-rest="'+esc(x.id)+'">Restore</button></div>').join(''):'<p class="settings-empty">No hidden restaurants.</p>')+
  '</div></section>'+
- '<section class="settings-section"><div class="settings-section-kicker">TOOLS</div><div class="settings-actions">'+
- 
-settingsActionButton('tutorialModeSettings','✦','Tutorial Mode','Walk through Home, Meals, Restaurants, and the Menu again.','tutorial-action')+
- settingsActionButton('appDiagnosis','⌁','App Diagnosis','Live checks for the current build and restaurant system.','diagnosis-action')+
- settingsActionButton('resetRestore','↺','Reset & Restore','Restore original meals or wipe all local app data.','restore-action')+
- '</div></section>'+
- '<section class="settings-section"><div class="settings-section-kicker">YOUR DATA</div><div class="settings-actions settings-actions-utility">'+
- settingsActionButton('exportPdf','▣','Export PDF','Save or share your Dinliminate history as a polished PDF.','export-action')+
- settingsActionButton('privacySettings','◇','Privacy & Data','How location, history, notes, and third-party data are handled.','privacy-action')+
+ '<section class="settings-section"><div class="settings-section-kicker">APP</div><div class="settings-actions">'+
+ settingsActionButton('updateApp','↻','Update','Check for and load the latest Dinliminate build.','update-action')+
+ settingsActionButton('resetApp','×','Reset','Erase all Dinliminate data stored on this device.','reset-action')+
+ settingsActionButton('restoreApp','↺','Restore','Return built-in meals to their original catalog state.','restore-action')+
+ settingsActionButton('privacySettings','◇','Privacy','How location, history, notes, images, and third-party services are handled.','privacy-action')+
+ settingsActionButton('appDiagnosis','⌁','Diagnosis','Run live checks for the current build and app systems.','diagnosis-action')+
  '</div></section>'+
  '<section class="settings-section settings-about-section"><div class="settings-section-kicker">ABOUT DINLIMINATE</div><div class="settings-about-copy"><p>Cut the dinner choices until one survives.</p></div><div class="about-meta"><p><span>Version</span><b>'+esc(APP_VERSION)+'</b></p><p><span>Build</span><b>'+esc(APP_BUILD)+'</b></p><p><span>Date</span><b>'+esc(new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date()))+'</b></p></div><p class="about-credit">Made by Brian Dunn for Devona Dunn</p></section>'+
  '</div>';
  const modal=openModal('settingsModal','Settings',body);
  modal.querySelectorAll('[data-setting-rest]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.settingRest;delete S.hiddenRestaurants[id];const row=S.restaurantPool.find(x=>x.id===id);if(row)row._hidden=false;save();modal.remove();$('settingsModalBg')?.remove();settingsView();});
+ $('updateApp').onclick=async()=>{modal.remove();$('settingsModalBg')?.remove();await updateAppFlow();};
+ $('resetApp').onclick=async()=>{modal.remove();$('settingsModalBg')?.remove();await resetAppDataFlow();};
+ $('restoreApp').onclick=async()=>{modal.remove();$('settingsModalBg')?.remove();await systemRestoreFlow();};
  $('appDiagnosis').onclick=()=>{modal.classList.add('diagnosis-modal');modal.style.minHeight='min(78svh,720px)';modal.style.maxHeight='88svh';appDiagnosisView(modal);};
- $('tutorialModeSettings').onclick=()=>{const next=!tutorialModeEnabled();modal.remove();$('settingsModalBg')?.remove();setTutorialMode(next,true);};
- $('resetRestore').onclick=()=>resetRestoreView();
- $('exportPdf').onclick=()=>exportPdfView();
  $('privacySettings').onclick=()=>privacyView();
 }
 function diagnosisMiles(a,b,c,d){
@@ -6581,6 +6578,20 @@ function resetRound(){
   S.pool=[];S.restaurantPool=[];S.restaurantSearchOrigin=null;S.index=0;S.restaurantIndex=0;S.restaurantQuery='';S.restaurantHours='all';S.restaurantHoursCollapsed=true;S.restaurantSearchKey='';S.restaurantSearchDegraded=false;S.saved=false;
   try{localStorage.removeItem(KEY);}catch{}
   home();
+}
+async function updateAppFlow(){
+ appToast('Checking for updates…');
+ try{
+  const registrations=await navigator.serviceWorker?.getRegistrations?.()||[];
+  await Promise.all(registrations.map(reg=>reg.update().catch(()=>{})));
+ }catch{}
+ try{
+  const url=new URL(window.location.href);
+  url.searchParams.set('_update',String(Date.now()));
+  window.location.replace(url.toString());
+ }catch{
+  window.location.reload();
+ }
 }
 function resetRestoreView(){
   document.querySelector('#settingsModal')?.remove();document.querySelector('#settingsModalBg')?.remove();removeFoodOverlays();
