@@ -10719,3 +10719,22 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
 .meal-editor-duplicate-hint{
   display:none!important;
 }
+
+/* CP1294 — Home choice controls: remove all translucent backing.
+   Keep placement, typography, arrows, hit areas, and interaction behavior unchanged. */
+.app.home-active #home .home-choice-zone,
+.app.home-active #home .home-choice-zone:hover,
+.app.home-active #home .home-choice-zone:active,
+.app.home-active #home .home-choice-zone:focus,
+.app.home-active #home .home-choice-zone:focus-visible,
+.app.home-active #home .home-choice-content,
+.app.home-active #home .home-choice-content:hover,
+.app.home-active #home .home-choice-content:active,
+.app.home-active #home .home-choice-content:focus,
+.app.home-active #home .home-choice-content:focus-visible{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
