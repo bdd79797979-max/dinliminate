@@ -533,7 +533,7 @@ async function putPersistentRestaurantPhoto(row,blob,attributions,source,sourceU
   if(sourceUrl)headers.set('X-Restaurant-Photo-Source-URL',String(sourceUrl));
   if(attributions?.length){
    const raw=JSON.stringify(attributions);
-   const bytes=new TextEncoder().encode(raw); let binary=''; for(const byte of bytes)binary+=String.fromCharCode(byte); let encoded=btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+   const bytes=new TextEncoder().encode(raw); let binary=''; for(const byte of bytes)binary+=String.fromCharCode(byte); const encoded=btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
    headers.set('X-Restaurant-Photo-Attributions',encoded);
   }
   await cache.put(request,new Response(blob,{status:200,headers}));
