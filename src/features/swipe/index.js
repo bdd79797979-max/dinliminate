@@ -7,7 +7,7 @@ import { mealPhotoList, foodPhoto, foodPhotoFallback } from '../../main.js';
 import { winner } from '../winner/index.js';
 import { markMealImageUnavailable, swapImageWhenReady, loadMealPhotoCandidates, ensureMealCardPhotoPager } from '../../main.js';
 import { updateDecisionBackButtons, pushDecisionHistory, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, show, previewDecisionCount, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage } from '../../main.js';
-import { bindSwipeCard, getSwipeMachine } from './swipeMachine.js';
+import { bindSwipeCard, getSwipeMachine, triggerSwipeHaptic } from './swipeMachine.js';
 
 function clearLegacySwipeInstructions(){
  document.querySelectorAll('.swipe-card-coach,.swipe-hint,[data-swipe-instruction="true"]').forEach(el=>el.remove());
@@ -608,4 +608,4 @@ function bindRestaurantPhotoPinch(target){
 }
 
 function bindFoodSwipe(){bindSwipeCard('foodCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(undefined,{fromSwipe:true}),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(undefined,{fromSwipe:true}),{kind:'food',getContext:()=>{const item=S.pool[S.index];return {id:String(item?.id||''),row:item,wasMaybe:!!item&&S.maybe.has(item.id)};},onPreview:context=>previewDecisionCount('food',context.direction,context.wasMaybe)});}
-export { clearLegacySwipeInstructions, dismissSwipeHint, maybeShowInCardSwipeCoach, setChoiceCount, foodChoiceIndex, drawFood, foodCommit, foodCut, foodMaybe, resolveFoodAfterDecision, foodBack, waitForSwipeImage, stageSwipePreview, nextFoodIndexList, buildPreparedFoodCard, cachePreparedFoodCards, ensurePreparedFoodNextCardMarkup, setFoodNextCardImage, populateFoodNextCard, prepareFoodNextCard, preloadSwipeImage, waitForVisualImage, primeFoodSwipeMedia, bindRestaurantPhotoPinch, bindSwipeCard, getSwipeMachine, bindFoodSwipe, startFood, waitForNextPaints };
+export { clearLegacySwipeInstructions, dismissSwipeHint, maybeShowInCardSwipeCoach, setChoiceCount, foodChoiceIndex, drawFood, foodCommit, foodCut, foodMaybe, resolveFoodAfterDecision, foodBack, waitForSwipeImage, stageSwipePreview, nextFoodIndexList, buildPreparedFoodCard, cachePreparedFoodCards, ensurePreparedFoodNextCardMarkup, setFoodNextCardImage, populateFoodNextCard, prepareFoodNextCard, preloadSwipeImage, waitForVisualImage, primeFoodSwipeMedia, bindRestaurantPhotoPinch, bindSwipeCard, getSwipeMachine, triggerSwipeHaptic, bindFoodSwipe, startFood, waitForNextPaints };
