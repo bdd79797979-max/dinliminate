@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1267,
+  "build": 1268,
   "sourceBranch": "fix/cp1267-refresh-route-flash",
-  "checkpoint": "CP1267",
+  "checkpoint": "CP1268",
   "deploymentTrigger": "fix/cp1267-refresh-route-flash",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
