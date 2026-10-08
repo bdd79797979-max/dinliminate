@@ -26,7 +26,7 @@ const SWIPE_OVERLAP_DELAY=95;
 let swipeOverlapContext=null;
 let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1242';
+let APP_BUILD = '1243';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1550,6 +1550,9 @@ function advanceTutorial(){
  if(tutorialState.index>=tutorialState.steps.length){stopTutorialMode();return;}
  renderTutorialStep();
 }
+let tutorialPointerContext=null;
+let tutorialSuppressClick=null;
+
 function tutorialTargetHit(event,selector){
  try{return !!event.target?.closest?.(selector);}catch{return false;}
 }
@@ -1578,16 +1581,64 @@ function tutorialAdvanceFromTarget(event,step){
  advanceTutorial();
  return true;
 }
+function tutorialCurrentTargetForEvent(event,step){
+ if(!step?.target)return null;
+ if(step.action==='home-choice')return event.target?.closest?.('#foodStart,#restStart')||null;
+ return tutorialTargetHit(event,String(step.target)) ? event.target?.closest?.(String(step.target)) : null;
+}
+function tutorialBlockPointer(event){
+ if(!tutorialModeEnabled()||!tutorialState.active)return false;
+ const step=tutorialState.steps[tutorialState.index];
+ const target=tutorialCurrentTargetForEvent(event,step);
+ if(!target)return false;
+ tutorialPointerContext={
+  pointerId:event.pointerId,
+  target,
+  screen:tutorialState.screen,
+  index:tutorialState.index
+ };
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ return true;
+}
+function tutorialHandlePointerUp(event){
+ if(!tutorialPointerContext)return false;
+ const ctx=tutorialPointerContext;
+ tutorialPointerContext=null;
+ if(ctx.pointerId!==event.pointerId)return false;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ const stillSameScreen=tutorialState.active&&tutorialState.screen===ctx.screen&&tutorialState.index===ctx.index;
+ if(stillSameScreen){
+  tutorialSuppressClick={target:ctx.target,expires:Date.now()+650};
+  const step=tutorialState.steps[ctx.index];
+  tutorialAdvanceFromTarget(event,step);
+ }
+ return true;
+}
+function tutorialHandlePointerCancel(event){
+ if(!tutorialPointerContext||tutorialPointerContext.pointerId!==event.pointerId)return false;
+ tutorialPointerContext=null;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ return true;
+}
 function tutorialHighlightedTargetClick(event){
+ if(tutorialSuppressClick){
+  const suppressed=tutorialSuppressClick;
+  if(Date.now()<=suppressed.expires&&suppressed.target?.isConnected&&
+     (event.target===suppressed.target||suppressed.target.contains?.(event.target))){
+   tutorialSuppressClick=null;
+   event.preventDefault();
+   event.stopImmediatePropagation();
+   return;
+  }
+  tutorialSuppressClick=null;
+ }
  if(!tutorialModeEnabled()||!tutorialState.active)return;
  const step=tutorialState.steps[tutorialState.index];
- if(!step?.target)return;
- const selector=String(step.target||'');
- if(step.action==='home-choice'){
-  if(!tutorialTargetHit(event,'#foodStart,#restStart'))return;
- }else if(!tutorialTargetHit(event,selector)){
-  return;
- }
+ const target=tutorialCurrentTargetForEvent(event,step);
+ if(!target)return;
  event.preventDefault();
  event.stopImmediatePropagation();
  tutorialAdvanceFromTarget(event,step);
@@ -1601,6 +1652,9 @@ function bindTutorialUI(){
  }
  if(!document.documentElement.dataset.tutorialTargetBound){
   document.documentElement.dataset.tutorialTargetBound='1';
+  document.addEventListener('pointerdown',tutorialBlockPointer,true);
+  document.addEventListener('pointerup',tutorialHandlePointerUp,true);
+  document.addEventListener('pointercancel',tutorialHandlePointerCancel,true);
   document.addEventListener('click',tutorialHighlightedTargetClick,true);
  }
  window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
