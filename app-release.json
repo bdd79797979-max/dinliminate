@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1241,
-  "sourceBranch": "fix/cp1241-overlap-next-swipe",
-  "checkpoint": "CP1241",
+  "build": 1242,
+  "sourceBranch": "fix/cp1242-tutorial-tour",
+  "checkpoint": "CP1242",
   "deploymentTrigger": "fix/cp1218-swipe-polish",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1241-overlap-next-card-input-handoff",
@@ -32,8 +32,9 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "final consolidated source gate; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1241 overlap next-card input handoff + CP1240 Chicken Pot Pie free-Unsplash photo refresh + CP1239 atomic full-flight swipe exit",
+  "currentBaseline": "CP1242 tutorial/tour target ownership cleanup + CP1241 overlap next-card input handoff + CP1240 Chicken Pot Pie free-Unsplash photo refresh + CP1239 atomic full-flight swipe exit",
   "mealImageSystem": "CP1237 tested free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
-  "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent"
+  "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
+  "tutorialAudit": "CP1242-central-target-interception-and-tour-lifecycle"
 }
