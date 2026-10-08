@@ -121,3 +121,7 @@ CP1243 retains the CP1242 centralized target ownership and removes no useful app
 CP1244 fixes a race where a second Cut/Maybe press during an active off-screen flight could bypass the swipe trigger and fall through to the raw decision function, mutating state while the first card was still completing. The decision buttons now use one authoritative click activation path. Their swipe trigger returns explicit transaction outcomes: accepted or busy. A busy active card consumes the later command instead of running the underlying Cut/Maybe handler.
 
 This keeps the CP1241 early next-card input handoff intact: the outgoing card remains visually committed, the next promoted card owns the next transaction, and the old transaction cannot accept or leak a second decision.
+
+## CP1245 — meal photo and catalog refresh
+
+CP1245 refreshes the strongest affected meal photos with verified free Unsplash images where a clearly better match was available. The existing Peanut Butter & Jelly image remains the verified free Unsplash selection; Biscuits & Gravy and White Chicken Chili remain unchanged where a free Unsplash result did not clearly improve the current match. Chocolate Covered Peanuts is added as meal 117, and Fish Sticks is intentionally the final catalog entry.
