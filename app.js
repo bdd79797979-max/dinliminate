@@ -27,7 +27,8 @@ let swipeOverlapSerial=0;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1265';
+let APP_BUILD = '1268';
+const MEAL_AUTOFILL_ENABLED = false;
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1420,6 +1421,7 @@ if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 S.screen = screen;
+try { localStorage.setItem('dinliminate.start-screen', String(screen)); } catch {}
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
 $('globalBack')?.classList.add('hidden');
 $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
@@ -7006,15 +7008,23 @@ renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
 hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
-// CP1138 — reveal only after the correct persisted screen has been painted.
-requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
+// CP1267 — reveal only after the correct persisted screen has been laid out,
+// with a second frame giving the browser one paint cycle without Home showing through.
 if (S.saved && S.screen === 'food' && S.pool.length) {
 show('food'); foodQuick(); drawFood();
 } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
 show('restaurant'); restaurantQuick(); drawRestaurants();
+} else if (S.saved && S.screen === 'winner' && S.winnerItem) {
+show('winner');
+} else if (S.saved && S.screen === 'family') {
+show('family');
 } else {
 home();
 }
+requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  document.documentElement.classList.remove('dinliminate-booting','dinliminate-page-unloading');
+  document.documentElement.classList.remove('dinliminate-start-food','dinliminate-start-restaurant','dinliminate-start-winner','dinliminate-start-family');
+}));
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({

@@ -20,6 +20,7 @@
     "test:swipe-handoff": "node qa/cp1249-commit-time-card-handoff-smoke.cjs",
     "test:swipe-gap": "node qa/cp1250-never-hide-waiting-card-smoke.cjs",
     "test:swipe-abc": "node qa/cp1252-unified-abc-swipe-smoke.cjs",
-    "test:meal-autofill": "node qa/cp1266-meal-autofill-smoke.cjs"
+    "test:meal-autofill": "node qa/cp1266-meal-autofill-smoke.cjs",
+    "test:refresh-route": "node qa/cp1267-refresh-route-smoke.cjs"
   }
 }
