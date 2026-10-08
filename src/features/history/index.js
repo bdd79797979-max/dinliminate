@@ -1,10 +1,8 @@
 import { state as S } from '../../state/store.js';
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
-import { imageProxyUrl, mealImageUrl, bindImageFallback, restaurantFallbackImage, hydrateRestaurantPhoto, mealTimesFor, restaurantCategory, openModal, detailsSheet } from '../../main.js';
+import { imageProxyUrl, mealImageUrl, bindImageFallback, restaurantFallbackImage, hydrateRestaurantPhoto, mealTimesFor, restaurantCategory, openModal, detailsSheet, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE } from '../../main.js';
 
-const HUNGRY_IMAGE = '../../fallback-food.svg';
-const FINAL_RESTAURANT_IMAGE = '../../fallback-restaurant.svg';
 
 const HISTORY_KEY = 'dinliminate.clean.history';
 function historyImageSource(row){

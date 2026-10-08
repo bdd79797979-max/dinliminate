@@ -5833,4 +5833,6 @@ configureMigrations({loadItemNotes,ensureMealTimeSettings,mealTimeNames,currentM
 
 export { HISTORY_KEY };
 
+export { HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE };
+
 export { show, startFood, openRestaurant, winner, closeDrawer };
