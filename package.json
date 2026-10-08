@@ -6,17 +6,18 @@
     "@neondatabase/serverless": "^1.0.0",
     "sharp": "^0.35.5"
   },
+  "devDependencies": {
+    "@playwright/test": "1.64.0"
+  },
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test:rc": "node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs && node qa/cp1304-transition-visual-smoke.cjs && node qa/cp1305-swipe-stability-smoke.cjs && node qa/cp1306-meal-deck-selection-smoke.cjs",
-    "audit:meal-images": "node qa/verify-meal-images.mjs",
-    "audit:meal-images:two": "node qa/verify-meal-images.mjs --require-two",
-    "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs",
-    "test:tutorial": "node qa/cp1251-tutorial-home-choice-smoke.cjs",
-    "test:meal-catalog": "node qa/cp1245-meal-catalog-smoke.cjs",
-    "test:meal-autofill": "node qa/cp1266-meal-autofill-smoke.cjs",
-    "test:swipe-cleanup": "node qa/cp1303-swipe-cleanup-smoke.cjs"
+    "test": "node scripts/stamp.mjs --check && node tests/release/launch-rc.cjs && node tests/api/restaurants.cjs && node tests/api/security.cjs && playwright test",
+    "test:e2e": "playwright test",
+    "test:api": "node tests/api/restaurants.cjs",
+    "test:release": "node tests/release/launch-rc.cjs",
+    "stamp": "node scripts/stamp.mjs",
+    "stamp:check": "node scripts/stamp.mjs --check"
   }
 }

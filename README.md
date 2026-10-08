@@ -5,12 +5,11 @@ Dinliminate is a phone-first meal and restaurant decision app built around fast,
 ## Current release
 
 - **Version:** 1.0
-- **Build:** 1000
-- **Checkpoint:** CP1000
+- **Build metadata:** `app-release.json`
 - **Source:** `main`
 - **Release state:** candidate source; production verification is still pending because the connected Vercel account has exhausted its Hobby daily deployment allowance.
-- **Photo policy:** restaurant photography uses the no-Google resolver/source ladder.
-- **Hosting:** Vercel is the official runtime target; Netlify remains legacy/backup configuration.
+- **Photo policy:** Google Places photos are allowed and preferred when they pass exact restaurant identity validation; official restaurant, exact venue, OSM, and other validated sources remain fallbacks.
+- **Hosting:** Vercel is the official runtime target.
 
 ## What is active
 
@@ -22,51 +21,30 @@ The deployable app lives at the repository root.
 - `sw.js` — PWA service worker and cache management
 - `api/` — Vercel serverless routes, including restaurant photography
 - `data/` — meal and restaurant taxonomy data
-- `qa/` — current release verification and regression checks
-
-The large single-file runtime is intentional for now. Do not split or broadly refactor `app.js` or `styles.css` as part of routine cleanup.
-
-## CP995 highlights
-
-CP996 restores Settings → Tutorial Mode, fixes the Home Tutorial launch wiring, and makes Add to phone, Share, and Tutorial visually consistent while preserving CP995 Tutorial Mode state/navigation.
+- `tests/` — release, API, and browser behavior verification
 
 ## Restaurant photo rule
 
-Restaurant cards must not use Google photo/API credentials.
+Google Places restaurant photos are intentionally supported.
 
-The resolver prefers:
-1. official restaurant website/gallery/location page
-2. exact public venue page
-3. exact OSM/Photon venue imagery
-4. tightly validated exact-restaurant search imagery
-5. safe restaurant/category fallback
+The resolver prefers an existing verified/cached photo first, then uses Google Places when the restaurant identity matches by name, address, and location. It then falls back through official restaurant sources, exact public venue pages, OSM/Photon imagery, and tightly validated exact-restaurant search imagery.
 
-Exact identity validation and cached results protect against wrong-venue photos.
+Google Places usage is protected by a durable Neon-backed SKU budget tracker and monthly hard stops. Google media is not persisted as an app-owned photo cache.
+
+## Restaurant website discovery
+
+Website discovery does not scrape Google search-result HTML. It uses deterministic domain candidates plus Bing and DuckDuckGo result pages, followed by restaurant identity verification.
 
 ## Recovery strategy
 
-Keep `main` as the current source of truth and preserve these rollback anchors until the current release has been physically verified:
-
-- **CP994** — immediate pre-CP995 tutorial baseline: `435a0312af4f137f58af6d0b4dece1e474907d71`
-- **CP957** — protected restaurant-photo baseline: `d03a75ab63f1708524f1406e33d5a09c74f689f4`
-- `recovery/cp957-before-restaurant-photo-repair`
-
-Historical checkpoint detail remains available in Git history and preserved branches rather than being repeated in the active README.
+Keep `main` as the current source of truth. Historical recovery anchors remain available through Git history and preserved history; active documentation does not depend on a retired branch name.
 
 ## Verification
 
-Repository-level checks should cover JavaScript syntax, release/cache-version consistency, tutorial state hooks, restaurant-photo source policy, and regression-sensitive swipe/navigation invariants.
+Repository-level CI covers JavaScript syntax, release/cache-version consistency, deterministic API contracts, and end-to-end behavior in mobile Chromium and WebKit.
 
 Real iPhone Safari/PWA checks are still required for touch, GPS, installation, keyboard behavior, image loading, memory, and deployment verification.
 
+## Refactoring policy
 
-## CP1002 Home background cleanup
-The Home page uses the original uploaded double-door JPEG as its only Home photo. At Home and Restaurant cards are photo-free, and the obsolete bundled Home door asset was removed.
-
-
-## CP1003 Home polish
-The Home screen now uses the supplied double-door image as the full-screen visual canvas. HUNGRY? was removed from the primary hierarchy; At Home and Restaurant are transparent window-style choices; their photo layers are removed; the arrows are simple chevrons; the Home menu is lines-only; and Add to phone, Share, and Tutorial are equal, borderless utility controls.
-
-
-## CP1003 — Full iPhone viewport adaptation
-The shared mobile shell now uses the complete iPhone viewport and safe-area-aware top/bottom spacing without changing the Meals, Restaurants, Winner, or Menu designs.
+The runtime may be reorganized as needed. Keep behavior stable unless a task explicitly changes it; prefer moving code before improving it.

@@ -1,61 +1,39 @@
-const ALLOWED_HOSTS=new Set([
-  'irp.cdn-website.com',
-  'www.banquet.com',
-  'images.pexels.com',
-  'images.unsplash.com',
-  'commons.wikimedia.org',
-  'upload.wikimedia.org',
-  'thumb.wikimedia.org',
-  'static.spotapps.co',
-  'www.goodnes.com',
-  'hips.hearstapps.com',
-  'calliesbiscuits.com',
-  'vinovoss.com',
-  'southernbite.com',
-  'snapcalorie-webflow-website.s3.us-east-2.amazonaws.com',
-  'butterhearth.com',
-  'slicelife.imgix.net',
-  'cdn.shopify.com',
-  'savouryflavor.com',
-  'resizer.otstatic.com',
-  'kookycrunch.com',
-  'cdn.apartmenttherapy.info','www.southernliving.com','shop.barebells.com','b1880159.assetcdn.net','www.mybakingaddiction.com','a.fsimg.co.nz','ourstate.s3.amazonaws.com','whitneybond.com','thedailymeal.com','crockncle.com','www.africanbites.com','www.foodrepublic.com','shop.camelliabrand.com','parade.com','sweetasirem.com','www.sugardale.com','myhomemaderecipe.com','www.finedininglovers.com','img.staticmb.com'
-]);
+'use strict';
+
+const {json}=require('./_lib/http');
+const {safeFetchBuffer}=require('./_lib/ssrf');
+const {isAllowedImageHost}=require('./_lib/imageHosts');
+
 const MAX_BYTES=8*1024*1024;
+function allowedImageUrl(raw){
+  try{
+    const u=new URL(String(raw||'').trim());
+    return u.protocol==='https:'&&isAllowedImageHost(u.hostname);
+  }catch{return false}
+}
 module.exports=async function handler(req,res){
   try{
     const raw=String(req.query?.url||'').trim();
-    if(!raw)return res.status(400).json({ok:false,error:'Missing image URL'});
-    const u=new URL(raw);
-    if(u.protocol!=='https:'||!ALLOWED_HOSTS.has(u.hostname))return res.status(403).json({ok:false,error:'Image host not allowed'});
-    const ctl=new AbortController();
-    const timer=setTimeout(()=>ctl.abort(),8000);
-    let r,current=u;
-    try{
-      for(let redirectCount=0;redirectCount<=3;redirectCount++){
-        if(current.protocol!=='https:'||!ALLOWED_HOSTS.has(current.hostname))throw new Error('Redirected image host not allowed');
-        r=await fetch(current.href,{signal:ctl.signal,redirect:'manual',headers:{Accept:'image/webp,image/jpeg,image/png,image/apng,image/svg+xml,image/*;q=0.8,*/*;q=0.5'}});
-        if(r.status<300||r.status>=400)break;
-        const location=r.headers.get('location');
-        if(!location||redirectCount===3)throw new Error('Too many image redirects');
-        current=new URL(location,current.href);
-      }
-    }finally{clearTimeout(timer);}
-    if(!r||!r.ok)return res.status(502).json({ok:false,error:'Upstream image unavailable'});
+    if(!raw)return json(res,400,{ok:false,error:'Missing image URL'});
+    if(!allowedImageUrl(raw))return json(res,403,{ok:false,error:'Image host not allowed'});
+    const result=await safeFetchBuffer(raw,{
+      headers:{Accept:'image/webp,image/jpeg,image/png,image/apng,image/svg+xml,image/*;q=0.8,*/*;q=0.5'}
+    },{
+      timeoutMs:8000,maxBytes:MAX_BYTES,maxRedirects:3,validateUrl:allowedImageUrl
+    });
+    const r=result.response;
     const type=(r.headers.get('content-type')||'').split(';')[0].toLowerCase();
-    if(!type.startsWith('image/'))return res.status(415).json({ok:false,error:'Upstream content is not an image'});
-    const length=Number(r.headers.get('content-length')||0);
-    if(Number.isFinite(length)&&length>MAX_BYTES)return res.status(413).json({ok:false,error:'Image too large'});
-    const data=Buffer.from(await r.arrayBuffer());
-    if(data.length>MAX_BYTES)return res.status(413).json({ok:false,error:'Image too large'});
-    res.setHeader('Content-Type',type);
+    if(!type.startsWith('image/'))return json(res,415,{ok:false,error:'Upstream content is not an image'});
     const isMealImage=String(req.query?.meal||'')==='1';
-    res.setHeader('Cache-Control',isMealImage?'no-store':'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
-    res.setHeader('X-Content-Type-Options','nosniff');
-    res.setHeader('Cross-Origin-Resource-Policy','same-origin');
-    res.setHeader('Referrer-Policy','no-referrer');
-    res.status(200).end(data);
-  }catch{
-    res.status(502).json({ok:false,error:'Could not load image'});
+    res.setHeader?.('Content-Type',type);
+    res.setHeader?.('Cache-Control',isMealImage?'no-store':'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
+    res.setHeader?.('X-Content-Type-Options','nosniff');
+    res.setHeader?.('Cross-Origin-Resource-Policy','same-origin');
+    res.setHeader?.('Referrer-Policy','no-referrer');
+    res.statusCode=200;
+    res.end?.(result.bytes);
+  }catch(error){
+    const status=Number(error?.status)===413?413:502;
+    return json(res,status,{ok:false,error:status===413?'Image too large':'Could not load image'});
   }
-}
+};

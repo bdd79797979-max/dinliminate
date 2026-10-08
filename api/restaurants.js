@@ -302,60 +302,38 @@ function htmlText(value){
  return String(value||'').replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/\s+/g,' ').trim();
 }
 async function fetchValidatedWebsite(url,options={},validate=safeWebsiteUrl,maxRedirects=4){
-  let current=validate(url);
-  if(!current)return null;
-  for(let hop=0;hop<=maxRedirects;hop++){
-    const response=await fetch(current,{...options,redirect:'manual'});
-    if(!(response.status>=300&&response.status<400))return {response,url:current};
-    const location=response.headers.get('location');
-    if(!location)return null;
-    try{
-      const next=new URL(location,current).toString();
-      if(!validate(next))return null;
-      current=next;
-    }catch{return null}
-  }
-  return null;
+  const current=validate(url);if(!current)return null;
+  try{
+    const result=await safeFetch(current,options,{maxRedirects,maxBytes:2*1024*1024,timeoutMs:7000,validateUrl:validate});
+    if(!result||!validate(result.url))return null;
+    return result;
+  }catch{return null}
 }
-
 async function fetchWebPage(url,timeout=3500,maxBytes=1200000){
  const page=safeWebsiteUrl(url);if(!page)return null;
- const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
- try{
-  const result=await fetchValidatedWebsite(page,{headers:{
+ const result=await fetchValidatedWebsite(page,{headers:{
    Accept:'text/html,application/xhtml+xml',
    'Accept-Language':'en-US,en;q=0.8',
    'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; official-website-resolver)'
-  },signal:ctl.signal},safeWebsiteUrl);
-  if(!result)return null;
-  const response=result.response;
-  if(!response.ok||isBlockedWebsite(result.url))return null;
-  const bytes=Buffer.from(await response.arrayBuffer());
-  if(bytes.length>maxBytes)return null;
-  return {url:page,finalUrl:result.url,html:bytes.toString('utf8')};
- }catch{return null}finally{clearTimeout(timer)}
-}
-async function fetchDiscoveryPage(url,timeout=3000,maxBytes=1000000){
+  }},safeWebsiteUrl);
+ if(!result||!result.response.ok||isBlockedWebsite(result.url))return null;
+ try{return {url:page,finalUrl:result.url,html:(await readResponseBody(result.response,maxBytes)).toString('utf8')}}catch{return null}
+}async function fetchDiscoveryPage(url,timeout=3000,maxBytes=1000000){
  const page=safeDiscoveryUrl(url);if(!page)return null;
- const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
- try{
-  const result=await fetchValidatedWebsite(page,{headers:{
+ const result=await fetchValidatedWebsite(page,{headers:{
    Accept:'text/html,application/xhtml+xml',
    'Accept-Language':'en-US,en;q=0.8',
    'User-Agent':'Mozilla/5.0 (compatible; Dinliminate/1.0; official-web-presence-resolver)'
-  },signal:ctl.signal},safeDiscoveryUrl);
-  if(!result)return null;
-  const response=result.response;
-  if(!response.ok)return null;
-  const bytes=Buffer.from(await response.arrayBuffer());
-  if(bytes.length>maxBytes)return null;
-  const finalUrl=safeWebsiteUrl(result.url);
-  if(finalUrl&&!isDiscoveryHost(result.url))return {url:page,finalUrl,html:bytes.toString('utf8')};
-  if(!isDiscoveryHost(result.url))return null;
-  return {url:page,finalUrl:'',html:bytes.toString('utf8')};
- }catch{return null}finally{clearTimeout(timer)}
-}
-async function fetchBingSearchPage(query){
+  }},safeDiscoveryUrl);
+ if(!result||!result.response.ok)return null;
+ try{
+   const html=(await readResponseBody(result.response,maxBytes)).toString('utf8');
+   const finalUrl=safeWebsiteUrl(result.url);
+   if(finalUrl&&!isDiscoveryHost(result.url))return {url:page,finalUrl,html};
+   if(!isDiscoveryHost(result.url))return null;
+   return {url:page,finalUrl:'',html};
+ }catch{return null}
+}async function fetchBingSearchPage(query){
  const url='https://www.bing.com/search?'+new URLSearchParams({q:String(query||''),mkt:'en-US',first:'1'}).toString();
  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),3500);
  try{
@@ -391,9 +369,6 @@ async function fetchPublicSearchPage(base,query){
 }
 async function fetchDuckDuckGoSearchPage(query){
  return fetchPublicSearchPage('https://html.duckduckgo.com/html/',query);
-}
-async function fetchGoogleWebSearchPage(query){
- return fetchPublicSearchPage('https://www.google.com/search',query);
 }
 function extractSearchResultUrl(raw,base='https://www.google.com/'){
  const decoded=decodeHtmlAttribute(raw);
@@ -735,8 +710,7 @@ async function discoverOfficialWebsite(name,address,brand='',phone=''){
 
  const searchSources=[
   {base:'https://www.bing.com/search',host:'bing.com'},
-  {base:'https://html.duckduckgo.com/html/',host:'duckduckgo.com'},
-  {base:'https://www.google.com/search',host:'google.com'}
+  {base:'https://html.duckduckgo.com/html/',host:'duckduckgo.com'}
  ];
  const searchPages=[];
  for(const source of searchSources){
@@ -1854,6 +1828,6 @@ const data={ok:true,version:API_VERSION,radiusEngine:'v2',coverageVerified:!engi
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,enrichOpenNowHours,googleTextHoursForRow,officialHoursForRow,radiusEngineProviderQuery,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,enrichOpenNowHours,googleTextHoursForRow,officialHoursForRow,radiusEngineProviderQuery,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.

@@ -22,9 +22,9 @@ let restaurantBackBusy=false;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1306';
+const APP_BUILD = '1308';
+const APP_BUILD_DATE = '2026-10-08';
 const MEAL_AUTOFILL_ENABLED = false;
-fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
 if(!RESTAURANT_TAXONOMY) throw new Error('Restaurant taxonomy failed to load.');
@@ -3785,7 +3785,7 @@ const ctl=new AbortController();
 reverseLocationController=ctl;
 const timer=setTimeout(()=>ctl.abort(),5000);
 try{
-const r=await fetch('/api/restaurant-search?mode=reverse&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon),{signal:ctl.signal});
+const r=await fetch('/api/restaurants?mode=reverse&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon),{signal:ctl.signal});
 const d=await r.json();
 if(seq!==locationRequestSeq||ctl.signal.aborted)return null;
 if(!r.ok||!d.ok)return null;
@@ -3943,7 +3943,7 @@ suggestTimer=setTimeout(async()=>{
 suggestController?.abort();
 suggestController=new AbortController();
 try{
-const r=await fetch('/api/restaurant-search?mode=suggest&q='+encodeURIComponent(q),{signal:suggestController.signal});
+const r=await fetch('/api/restaurants?mode=suggest&q='+encodeURIComponent(q),{signal:suggestController.signal});
 const d=await r.json();
 if(seq!==suggestSeq)return;
 const rows=Array.isArray(d.results)?d.results:[];
@@ -4105,7 +4105,7 @@ let loc = S.location;
 if (!loc) {
 const q = $('address').value.trim();
 if (!q) { $('status').textContent = 'Enter an address or use your location.'; return; }
-const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=resolve&q='+encodeURIComponent(q),signal);
+const rr = await fetchRestaurantEndpoint('/api/restaurants?mode=resolve&q='+encodeURIComponent(q),signal);
 const rd = await responseJson(rr,'Could not locate that address. Please try another address.');
 if (searchSeq !== restaurantSearchSeq) return;
 if (!rr.ok || !rd.ok) throw new Error(rr.status===429 ? 'Address lookup is temporarily busy. Please try again.' : (rd.message || 'Could not locate that address.'));
@@ -4139,7 +4139,7 @@ const searchKey = Number(loc.lat).toFixed(4)+':'+Number(loc.lon).toFixed(4)+':'+
    await drawRestaurants();
  }
 const queryParam = searchTerm ? '&q='+encodeURIComponent(searchTerm) : '';
-const rr = await fetchRestaurantEndpoint('/api/restaurant-search?mode=search&lat='+encodeURIComponent(loc.lat)+'&lon='+encodeURIComponent(loc.lon)+'&radius='+radius+queryParam,signal);
+const rr = await fetchRestaurantEndpoint('/api/restaurants?mode=search&lat='+encodeURIComponent(loc.lat)+'&lon='+encodeURIComponent(loc.lon)+'&radius='+radius+queryParam,signal);
 const d = await responseJson(rr,'Restaurant search returned an invalid response. Please try again.');
 if (searchSeq !== restaurantSearchSeq) return;
 if (!rr.ok || !d.ok) throw new Error(rr.status===429 ? 'Restaurant search is temporarily busy. Please try again.' : (d.message || 'Restaurant search failed.'));
@@ -6174,7 +6174,7 @@ function settingsView(){
  settingsActionButton('appDiagnosis','⌁','Diagnosis','Run live checks for the current build and app systems.','diagnosis-action')+
  settingsActionButton('resetApp','×','Reset','Erase all Dinliminate data stored on this device.','reset-action danger-action')+
  '</div></section>'+
- '<section class="settings-section settings-about-section"><div class="settings-section-kicker">ABOUT DINLIMINATE</div><div class="settings-about-copy"><p>Cut the dinner choices until one survives.</p></div><div class="about-meta"><p><span>Version</span><b>'+esc(APP_VERSION)+'</b></p><p><span>Build</span><b>'+esc(APP_BUILD)+'</b></p><p><span>Date</span><b>'+esc(new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date()))+'</b></p></div><p class="about-credit">Made by Brian Dunn for Devona Dunn</p></section>'+
+ '<section class="settings-section settings-about-section"><div class="settings-section-kicker">ABOUT DINLIMINATE</div><div class="settings-about-copy"><p>Cut the dinner choices until one survives.</p></div><div class="about-meta"><p><span>Version</span><b>'+esc(APP_VERSION)+'</b></p><p><span>Build</span><b>'+esc(APP_BUILD)+'</b></p><p><span>Date</span><b>'+esc(new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date(APP_BUILD_DATE+'T12:00:00')))+'</b></p></div><p class="about-credit">Made by Brian Dunn for Devona Dunn</p></section>'+
  '</div>';
  const modal=openModal('settingsModal','Settings',body);
  modal.querySelectorAll('[data-setting-rest]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.settingRest;delete S.hiddenRestaurants[id];const row=S.restaurantPool.find(x=>x.id===id);if(row)row._hidden=false;save();modal.remove();$('settingsModalBg')?.remove();settingsView();});
@@ -6332,7 +6332,7 @@ async function appDiagnosisView(existingModal){
    info('restaurant','Photo/search credential independence','Restaurant photography and search are integrated without requiring a Google credential in the client.','The backend can use provider/official/web verification paths when available; the diagnosis does not require a Google key to run.');
    const currentRestaurants=S.restaurantPool||[];
    currentRestaurants.length?info('restaurant','Current restaurant pool',currentRestaurants.length+' restaurant result(s) are loaded on this device.', 'Run the restaurant search to inspect live counts and current Cuisine Cut behavior.'):info('restaurant','Current restaurant pool','No Restaurant results are loaded on this screen.','This is normal while the diagnosis is opened from Home or Settings.');
-   const healthUrl='./api/restaurant-search?mode=health&diagnosis='+Date.now();
+   const healthUrl='./api/restaurants?mode=health&diagnosis='+Date.now();
    try{
     const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),5000);
     const rr=await fetch(healthUrl,{cache:'no-store',signal:ctl.signal});
@@ -6455,7 +6455,7 @@ async function appDiagnosisView(existingModal){
     runtimeMatches?pass('release','Release API identity','The runtime release endpoint matches the current build metadata.','Runtime Build '+runtimeBuild+(runtimeBranch?' · '+runtimeBranch:'')+'.'):warn('release','Release API identity','The runtime release endpoint does not match the current build metadata.','Runtime build='+runtimeBuild+', expected='+releaseExpectedBuild+', branch='+runtimeBranch);
    }catch{warn('release','Release API identity','The release endpoint could not be checked.','Hosted release identity remains unconfirmed.');}
    const currentReleaseSource=APP_BUILD===releaseExpectedBuild;
-   currentReleaseSource?pass('release','About / Diagnosis build source','App build display starts from the current release fallback and refreshes from app-release.json.'):warn('release','About / Diagnosis build source','The app build display fallback is stale.');
+   currentReleaseSource?pass('release','About / Diagnosis build source','App build display is stamped from app-release.json.'):fail('release','About / Diagnosis build source','The stamped app build does not match app-release.json.','Run npm run stamp before release validation.');
    info('release','Hosted verification','Diagnosis is capable of checking live API/release endpoints from the current browser, but it does not claim Netlify/Vercel deployment success unless those endpoints answer accordingly.','Current target: dinliminate22.');
    info('release','Physical iPhone gate','Desktop/browser diagnosis cannot certify physical iPhone Safari/PWA behavior.','Final device check still covers install, GPS permission, touch/swipe behavior, and share/add-to-home-screen behavior.');
   }catch(e){
@@ -6912,7 +6912,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', async () => {
   try {
     // APP_BUILD has the current release as its synchronous fallback so the
     // first page load cannot register an older service-worker query string.
-    const build = encodeURIComponent(String(APP_BUILD || '1054'));
+    const build = encodeURIComponent(String(APP_BUILD));
     const desiredSuffix = `?v=${build}`;
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(registrations.map(reg => {

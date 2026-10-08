@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1306,
+  "build": 1308,
   "sourceBranch": "main",
-  "checkpoint": "CP1306",
-  "deploymentTrigger": "CP1306-meal-deck-selection",
+  "checkpoint": "CP1308",
+  "deploymentTrigger": "CP1308-api-security-hardening",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1306 active Meal selector excludes Cut items, Maybe advances exactly once, and waiting-card previews cannot reintroduce rejected cards",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -27,7 +27,7 @@
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
-  "securityHardening": "Family request bounds + endpoint throttles + safe image proxy redirects + safe Family snapshot URLs + security response headers",
+  "securityHardening": "shared HTTP helpers + Neon-backed rate limits + DNS-aware SSRF fetch + centralized image-host policy + escaped/textContent UI sinks",
   "automatedRC": "CP1303 swipe cleanup regression + CP1304 transition/refresh/details source smoke + CP1305 swipe stability source smoke + CP1306 Meal deck selection source smoke",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
@@ -49,5 +49,6 @@
   "bootRouting": "CP1304 persistent navigation boot shield covers iPhone refresh snapshots until the restored route has painted",
   "cacheSync": "CP1304 app/index/service-worker asset versions synchronized",
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer",
-  "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action"
+  "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action",
+  "buildDate": "2026-10-08"
 }
