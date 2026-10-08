@@ -1410,7 +1410,6 @@ try{
  document.documentElement.classList.add('dinliminate-ready');
 })();
 /* CP851 — Family Mode reuses the existing Meal / Restaurant screens. */
-configureTutorial({show,startFood,openRestaurant,winner,closeDrawer});
 bindTutorialUI();
 
 
