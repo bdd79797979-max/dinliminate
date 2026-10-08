@@ -58,7 +58,7 @@
 .swipe-card-stack>.card,.restaurant-card-stack>.card{position:absolute;inset:0;width:100%;height:100%;max-height:none}
 .swipe-card-stack>.card:first-child,.restaurant-card-stack>.card:first-child{z-index:1}
 .swipe-card-stack>#foodCard,.restaurant-card-stack>#restaurantCard{z-index:2}
-.next-card{transform:none!important;opacity:1;filter:none;transition:none!important;will-change:auto}
+.next-card{transform:none!important;opacity:1;filter:none;transition:none!important;will-change:transform,opacity;backface-visibility:hidden}
 .next-card img{transform:scale(1)}
 .restaurant-card-stack{margin-bottom:0}
 .rest-stage>.rest-card-extra,.rest-stage>.actions{position:relative;z-index:3}
@@ -4999,7 +4999,7 @@ elegant Dine In/Out visual identity{
   border-radius:6px!important;
   background:transparent!important;
   color:#5d5b57!important;
-  font-size:14px!important;
+  font-size:13.5px!important;
   font-weight:900!important;
   line-height:1!important;
   transition:color .18s ease,background .18s ease,transform .18s ease!important;
@@ -10497,3 +10497,102 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
   visibility:hidden!important;
   pointer-events:none!important;
 }
+
+
+/* CP1213 — Open inactive state uses the same muted color as Search/Cuisine.
+   Active Open is the only state rendered white. */
+#restaurant .restaurant-hours-toggle{
+  color:#d7cec1!important;
+  text-shadow:none!important;
+  text-decoration-line:line-through!important;
+  text-decoration-thickness:1px!important;
+  text-decoration-color:#d7cec1!important;
+  text-underline-offset:3px!important;
+  text-decoration-skip-ink:none!important;
+}
+#restaurant .restaurant-hours-toggle.is-active,
+#restaurant .restaurant-hours-toggle[data-active="true"]{
+  color:#fffaf0!important;
+  text-shadow:none!important;
+  text-decoration-line:underline!important;
+  text-decoration-thickness:1px!important;
+  text-decoration-color:#fffaf0!important;
+  text-underline-offset:3px!important;
+  text-decoration-skip-ink:none!important;
+}
+
+
+/* CP1219 — swipe decision feedback polish. Keep the waiting card static. */
+.unified-swipe-actions .round-cut.is-pressed,
+.unified-swipe-actions .round-maybe.is-pressed{
+  transform:scale(.93)!important;
+  filter:brightness(1.08)!important;
+}
+.unified-swipe-actions .round-cut.is-pressed{
+  box-shadow:0 8px 24px #ef334044,0 0 0 2px #ef33401c!important;
+}
+.unified-swipe-actions .round-maybe.is-pressed{
+  box-shadow:0 8px 24px #28c76f44,0 0 0 2px #28c76f1c!important;
+}
+.canonical-maybe-control .maybe-control-count.decision-count-updated{
+  animation:cp1219DecisionCount .22s cubic-bezier(.22,1,.36,1);
+}
+@keyframes cp1219DecisionCount{
+  0%{transform:scale(.88);opacity:.55}
+  60%{transform:scale(1.12);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .canonical-maybe-control .maybe-control-count.decision-count-updated{animation:none!important}
+}
+
+
+/* CP1234 — enlarge card Cuisine type + Details control without changing upper controls or card geometry. */
+#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:13.5px!important;}
+#food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}
+#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:22.5px!important;height:22.5px!important;flex-basis:22.5px!important;}
+#food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}
+@media(max-width:390px){#food .card-cuisine-text,#restaurant .card-cuisine-text,#food #foodCat,#restaurant .restaurant-card-meta{font-size:13.5px!important;}#food .card-details-inline,#restaurant .card-details-inline{flex-basis:42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;}#food .card-details-inline .details-icon,#restaurant .card-details-inline .details-icon{width:22.5px!important;height:22.5px!important;flex-basis:22.5px!important;}#food .card-info-row,#restaurant .card-info-row{height:42px!important;min-height:42px!important;max-height:42px!important;gap:8px!important;}}
+
+
+/* CP1235 — enlarge Meal/Restaurant card names 50%; leave card geometry and upper controls unchanged. */
+#food .card-copy h3,#restaurant .restaurant-card-stack .card-copy h3{font-size:45px!important;line-height:1.02!important;}
+
+
+/* CP1236 — enlarge Restaurant card location + distance by 50%; do not change card geometry. */
+#restaurant .restaurant-card-location-distance{font-size:13.5px!important;line-height:1.35!important;}
+@media(max-width:390px){#restaurant .restaurant-card-location-distance{font-size:13.5px!important;line-height:1.35!important;}}
+
+
+/* CP1252 — unified A/B/C swipe deck: B is painted underneath A; C stays prepared behind B. */
+.swipe-card-stack>.deck-third-card,
+.restaurant-card-stack>.deck-third-card{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  border:0;
+  visibility:hidden;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
+.swipe-card-stack>.deck-third-card{z-index:0}
+.swipe-card-stack>#foodNextCard,
+.restaurant-card-stack>#restaurantNextCard{
+  z-index:1;
+  pointer-events:none;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
+.swipe-card-stack>#foodCard,
+.restaurant-card-stack>#restaurantCard{
+  z-index:2;
+}
+.deck-third-card .card-copy,
+#foodNextCard .card-copy,
+#restaurantNextCard .card-copy{
+  pointer-events:none;
+}
+
+

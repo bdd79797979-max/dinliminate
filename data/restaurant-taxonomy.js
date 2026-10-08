@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-const RESTAURANT_TAGS = ['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','BBQ','Seafood','Breakfast','Southern'];
+const RESTAURANT_TAGS = ['Fast Food','Burgers','Pizza','Mexican','American','Italian','Asian','Indian','Mediterranean','BBQ','Seafood','Breakfast','Southern'];
 
 const RESTAURANT_SEARCH_ALIASES = {
   'Fast Food':['fast food','fastfood','quick service','quick-service','drive thru','drive through','drive-thru'],
@@ -11,6 +11,8 @@ const RESTAURANT_SEARCH_ALIASES = {
   American:['american','american food','diner'],
   Italian:['italian','italian food','pasta','pizzeria','trattoria','osteria','ristorante'],
   Asian:['asian','asian food','chinese','japanese','thai','korean','sushi','vietnamese','ramen','pho','hibachi','teriyaki'],
+  Indian:['indian','indian food','curry','tandoori','masala','biryani','naan','tikka','vindaloo','korma'],
+  Mediterranean:['mediterranean','mediterranean food','greek','greek food','lebanese','lebanese food','turkish','turkish food','middle eastern','middle eastern food','shawarma','gyro','gyros','falafel','kebab','kebabs','hummus'],
   BBQ:['bbq','barbecue','barbeque','smokehouse','smoke shack','pit bbq','bar-b-q','bar-b-que'],
   Seafood:['seafood','fish house','fish restaurant','fish','shrimp','crab','lobster','oyster','catfish'],
   Breakfast:['breakfast','breakfast food','brunch','waffle','waffles','pancake','pancakes','omelet','omelette']
@@ -60,6 +62,8 @@ const RESTAURANT_MENU_SIGNALS = {
   Mexican:['taco','burrito','enchilada','quesadilla','fajita','tamale','torta','pozole','churro'],
   Asian:['sushi','sashimi','ramen','pho','hibachi','teriyaki','tempura','bao','dim sum','pad thai','kimchi'],
   Italian:['pasta','spaghetti','lasagna','ravioli','gnocchi','alfredo','risotto','carbonara'],
+  Indian:['curry','tandoori','masala','biryani','naan','tikka','vindaloo','korma','paneer','dal','samosa'],
+  Mediterranean:['hummus','falafel','shawarma','gyro','gyros','kebab','kebabs','tabbouleh','tzatziki','feta','baklava'],
   American:['american'],
   BBQ:['bbq','barbecue','barbeque','brisket','ribs','pulled pork','smokehouse','smoked'],
   Seafood:['seafood','shrimp','crab','lobster','oyster','catfish','salmon','tilapia'],
@@ -184,6 +188,8 @@ function classifyRestaurant(row){
     Mexican:/\b(mexican restaurant|mexican|tex mex|taqueria|taco shop|burrito|quesadilla|enchilada|fajita)\b/,
     Asian:/\b(asian restaurant|chinese restaurant|japanese restaurant|thai restaurant|korean restaurant|asian|chinese|japanese|thai|korean|sushi|vietnamese|hibachi|ramen|pho|teriyaki)\b/,
     Italian:/\b(italian restaurant|italian|pizzeria|pasta|spaghetti|lasagna|ravioli|trattoria|osteria|ristorante)\b/,
+  Indian:/\b(indian restaurant|indian|tandoori|masala|biryani|naan|tikka|vindaloo|korma)\b/,
+  Mediterranean:/\b(mediterranean restaurant|mediterranean|greek restaurant|greek|lebanese|turkish|middle eastern|shawarma|gyro|gyros|falafel|kebab)\b/,
     Southern:/\b(southern restaurant|southern|soul food|country cooking|meat and three|comfort food)\b/,
     BBQ:/\b(barbecue restaurant|bbq restaurant|bbq|barbecue|barbeque|smokehouse|smoke shack|pit bbq|brisket|ribs|pulled pork)\b/,
     Seafood:/\b(seafood restaurant|fish restaurant|fish house|seafood|catfish|shrimp|crab house|lobster|oyster|salmon)\b/,
@@ -194,7 +200,7 @@ function classifyRestaurant(row){
 
   for(const [tag,re] of Object.entries(RESTAURANT_NAME_SIGNALS))if(re.test(nameHay))add(tag,'restaurant name');
 
-  for(const tag of ['Pizza','Mexican','Asian','Italian','Southern','BBQ','Seafood','Breakfast']){
+  for(const tag of ['Pizza','Mexican','Asian','Italian','Indian','Mediterranean','Southern','BBQ','Seafood','Breakfast']){
     if(menuSignalCount(row,tag)>=2)add(tag,'menu corroboration');
   }
 
@@ -207,6 +213,8 @@ function classifyRestaurant(row){
       Mexican:/\b(mexican|taco|burrito|taqueria|enchilada|quesadilla|fajita)\b/,
       Asian:/\b(asian|chinese|japanese|thai|korean|sushi|ramen|pho|hibachi|teriyaki|dim sum)\b/,
       Italian:/\b(italian|pasta|spaghetti|lasagna|ravioli|trattoria|ristorante)\b/,
+      Indian:/\b(indian|tandoori|masala|biryani|naan|tikka|vindaloo|korma|paneer|samosa)\b/,
+      Mediterranean:/\b(mediterranean|greek|lebanese|turkish|middle eastern|shawarma|gyro|gyros|falafel|kebab|hummus)\b/,
       BBQ:/\b(bbq|barbecue|smokehouse|smoked|brisket|ribs|pulled pork)\b/,
       Seafood:/\b(seafood|fish house|catfish|shrimp|crab|lobster|oyster|salmon)\b/,
       Breakfast:/\b(breakfast|brunch|pancake|waffle|omelet|omelette|eggs benedict|biscuits and gravy)\b/,
@@ -217,7 +225,7 @@ function classifyRestaurant(row){
     for(const [tag,re] of Object.entries(fallbackSignals))if(re.test(nameHay)||re.test(primary))add(tag,'fallback identity');
   }
 
-  const primaryOrder=['Fast Food','Burgers','Pizza','Mexican','Asian','Italian','BBQ','Seafood','Breakfast','Southern','American'];
+  const primaryOrder=['Fast Food','Burgers','Pizza','Mexican','Asian','Italian','Indian','Mediterranean','BBQ','Seafood','Breakfast','Southern','American'];
   if(profile?.blockFastFood){
     tags.delete('Fast Food');
     delete evidence['Fast Food'];

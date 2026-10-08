@@ -1,9 +1,11 @@
-// CP1186: radius searches are independent and each selected radius gets direct origin coverage.
+// CP1189: radius searches use independent origin coverage plus throttled, exact-distance expansion for every selected radius.
+// CP1201 final wide-radius preview: 50/100-mile bounded discovery.
 // CP1178: add bounded Overpass expansion for 25/50-mile radius coverage.
 // CP1173: cumulative restaurant radius search — retained only as historical context.
 const RESTAURANT_TAXONOMY=require('../data/restaurant-taxonomy');
+const {runRadiusEngine}=require('../lib/radius-engine');
 const MAX_RADIUS=100;
-const API_VERSION='r44';
+const API_VERSION='r49';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -11,18 +13,13 @@ const TARGETED_FAST=["McDonald's","Taco Bell","Wendy's","Burger King","KFC","Chi
 const FAST=/\b(?:mcdonald|taco bell|wendy|burger king|kfc|chick[- ]?fil[- ]?a|popeye|subway|sonic|arby|whataburger|five guys|culver|raising cane|wingstop|bojangles|cook ?out|dairy queen|jack in the box|hardee|del taco|checkers|rally|zaxby|churchs|captain ds|long john silver|jimmy john|jersey mike|firehouse subs|little caesars|domino|papa john|pizza hut|marcos pizza|krystal|steak ?n shake|white castle|freddy|in[- ]?n[- ]?out|carl.?s jr|panda express|jacks|chipotle)\b/i;
 const cache=new Map(),buckets=new Map();
 const SEARCH_BUDGET_MS=15000;
-const WIDE_DISCOVERY_RESERVE_MS=11000;
-const WIDE_RADIUS_THRESHOLD=50;
-const RADIUS_DISCOVERY_THRESHOLD=3;
-const WIDE_PROVIDER_RADIUS_CAP=50;
-const WIDE_PRIMARY_TIMEBOX_MS=3500;
-const WIDE_DISCOVERY_TIMEBOX_MS=12000;
-const RADIUS_DISCOVERY_TIMEBOX_MS=11500;
-const OVERPASS_HTTP_TIMEOUT_MS=5500;
-const RADIUS_EXPANSION_QUERY_TIMEOUT_MS=3200;
-const WIDE_OVERPASS_GROUP_SIZE=1;
-const TILED_OVERPASS_GROUP_SIZE=1;
+const RADIUS_OVERPASS_FAST_TIMEOUT_MS=5500;
+const RADIUS_ENGINE_CONCURRENCY=7;
 const MAX_SEARCH_PER_MINUTE=60;
+const OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS=Math.max(1,Number.parseInt(process.env.GOOGLE_OPEN_NOW_ENRICH_LIMIT||'36',10)||36);
+const HOURS_MEMORY_CACHE_TTL=10*60*1000;
+const HOURS_MEMORY_NEGATIVE_TTL=3*60*1000;
+const hoursResolutionCache=new Map();
 const GOOGLE_KEY=String(process.env.GOOGLE_PLACES_API_KEY||process.env.GOOGLE_MAPS_API_KEY||'').trim();
 const {reserveGoogleSku,disableGoogleSkuForMonth,googleUsageHealth,HARD_LIMITS}=require('./google-usage');
 async function withinBudget(promise,ms,label){
@@ -99,7 +96,7 @@ async function googleBudgetedJson(skuKey,url,opt={},timeout=9000){
     throw e;
   }
 }
-function rate(req,mode){const headers=req?.headers||{},client=String(headers['x-forwarded-for']||headers['client-ip']||headers['x-nf-client-connection-ip']||headers['cf-connecting-ip']||'anon').split(',')[0].trim()||'anon',key=mode+':'+client,now=Date.now(),old=buckets.get(key),max=(mode==='suggest'||mode==='reverse'||mode==='resolve')?40:(mode==='search'?MAX_SEARCH_PER_MINUTE:18);if(!old||now-old.t>60000){buckets.set(key,{t:now,c:1});return false}old.c++;return old.c>max}
+function rate(req,mode){const headers=req?.headers||{},client=String(headers['x-forwarded-for']||headers['client-ip']||headers['x-nf-client-connection-ip']||headers['cf-connecting-ip']||'anon').split(',')[0].trim()||'anon',key=mode+':'+client,now=Date.now(),old=buckets.get(key),max=(mode==='suggest'||mode==='reverse'||mode==='resolve')?40:(mode==='search'?MAX_SEARCH_PER_MINUTE:(mode==='hours'?6:18));if(!old||now-old.t>60000){buckets.set(key,{t:now,c:1});return false}old.c++;return old.c>max}
 function osmRow(el,origin){const t=el?.tags||{},lat=n(el?.lat??el?.center?.lat),lon=n(el?.lon??el?.center?.lon),name=String(t.name||'').trim();if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;const amen=String(t.amenity||'restaurant').toLowerCase(),fast=amen==='fast_food'||isFastFoodName(name,String(t.brand||''),String(t.operator||''));let website=String(t.website||t['contact:website']||'').trim();if(website&&!/^https?:\/\//i.test(website))website='https://'+website;const key=norm(name)+'|'+lat.toFixed(4)+'|'+lon.toFixed(4);return{id:el?.osm_id?'osm-'+el.osm_id:'osm-'+key.replace(/ /g,'-'),name,category:fast?'Fast Food':(String(t.cuisine||'').trim()||'Restaurant'),fastFood:fast,cuisine:String(t.cuisine||''),providerType:String(t.amenity||''),address:[t['addr:housenumber'],t['addr:street'],t['addr:city'],t['addr:state'],t['addr:postcode']].filter(Boolean).join(', '),phone:String(t.phone||t['contact:phone']||''),website,opening_hours:String(t.opening_hours||''),hoursSource:String(t.opening_hours||'')?'OpenStreetMap':'',lat,lon,distance:miles(origin.lat,origin.lon,lat,lon),photo:String(t.image||t.image_url||''),menuItems:[t.dish,t['dish:name'],t['menu:items'],t.menu_items].flatMap(v=>String(v||'').split(/[|;•,]/)).map(x=>x.trim()).filter(Boolean).slice(0,10),brand:String(t.brand||''),source:'OpenStreetMap'} }
 function queryClause(lat,lon,radius,types=DINING_AMENITIES){
  const m=Math.round(Math.min(50,radius)*1609.344);
@@ -115,255 +112,12 @@ function query(lat,lon,radius,types=DINING_AMENITIES){
 function queryMany(points,types=DINING_AMENITIES,timeoutSeconds=10){
  return '[out:json][timeout:'+Math.max(6,Math.min(16,Number(timeoutSeconds)||10))+'];('+points.map(c=>queryClause(c.lat,c.lon,c.radius,types)).join('')+');out center tags;';
 }
-function centers(lat,lon,r){
- const radius=clamp(r);
- // Deterministic overlapping search tiles. The final origin-distance filter
- // still guarantees that only places inside the user's selected radius return.
- // 1-10mi: one exact-radius circle.
- if(radius<=10)return[{lat,lon,radius}];
- // 11-25mi: 15mi tiles on a 6-point ring plus the origin.
- if(radius<=25){
-  const tile=15,ring=15,count=6,out=[{lat,lon,radius:tile}];
-  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
-  for(let i=0;i<count;i++){
-   const ang=i*2*Math.PI/count;
-   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
-  }
-  return out;
- }
- // 26-50mi: 30mi tiles on a 6-point ring plus the origin.
- if(radius<=50){
-  const tile=30,ring=30,count=6,out=[{lat,lon,radius:tile}];
-  const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
-  for(let i=0;i<count;i++){
-   const ang=i*2*Math.PI/count;
-   out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
-  }
-  return out;
- }
- // 51-100mi: a 40mi origin tile plus a 12-point 75mi outer ring of 40mi
- // tiles. This fully covers the 100mi disk with overlap while keeping each
- // upstream query comfortably below the 50mi provider cap.
- const tile=40,ring=75,count=12,out=[{lat,lon,radius:tile}];
- const a=ring/69,b=ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
- for(let i=0;i<count;i++){
-  const ang=i*2*Math.PI/count;
-  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:tile});
- }
- return out;
-}
-
-function providerCenters(lat,lon,radius){
- const r=clamp(radius);
- if(r<=1)return[{lat,lon,radius:r}];
- const spec=r<=3?{tile:2.1,ring:1.8,count:6}:r<=5?{tile:3.3,ring:3,count:6}:{tile:6,ring:6,count:6};
- const out=[{lat,lon,radius:radius}];
- const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
- for(let i=0;i<spec.count;i++){
-  const ang=i*2*Math.PI/spec.count;
-  out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:spec.tile});
- }
- return out;
-}
-
-async function tiledPhotonPlaces(lat,lon,radius,searchTerm=''){
- const points=providerCenters(lat,lon,radius),rows=[],errors=[];
- // Two tiles at a time avoids hammering public providers while still giving
- // small radii deterministic geographic coverage instead of one capped query.
- for(let i=0;i<points.length;i+=2){
-  const settled=await Promise.allSettled(points.slice(i,i+2).map(p=>photonPlaces(p.lat,p.lon,p.radius,searchTerm)));
-  for(const result of settled){
-   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'Photon tile failed'));continue;}
-   rows.push(...(result.value?.rows||[]));
-   errors.push(...(result.value?.errors||[]));
-  }
- }
- return{rows:dedupe(rows),errors,tiles:points.length};
-}
-
-async function tiledArcgisPlaces(lat,lon,radius,searchTerm=''){
- const points=providerCenters(lat,lon,radius),rows=[],errors=[];
- for(let i=0;i<points.length;i+=2){
-  const settled=await Promise.allSettled(points.slice(i,i+2).map(p=>arcgisPlaces(p.lat,p.lon,p.radius,searchTerm)));
-  for(const result of settled){
-   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'ArcGIS tile failed'));continue;}
-   rows.push(...(result.value?.rows||[]));
-   errors.push(...(result.value?.errors||[]));
-  }
- }
- return{rows:dedupe(rows),errors,tiles:points.length};
-}
-
-function photonRow(feature,origin){
- const p=feature?.properties||{},c=feature?.geometry?.coordinates||[],lon=n(c[0]),lat=n(c[1]),name=String(p.name||p.label||'').split(',')[0].trim();
- if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
- const osmValue=String(p.osm_value||'').toLowerCase(),amenity=String(p.type||p.osm_key||'').toLowerCase(),fast=osmValue==='fast_food'||amenity==='fast_food'||isFastFoodName(name,String(p.brand||''),String(p.operator||''));
- const website=String(p.website||p.url||'').trim(),dist=miles(origin.lat,origin.lon,lat,lon);
- return {id:p.osm_id?'photon-'+p.osm_id:'photon-'+norm(name)+'-'+lat.toFixed(5)+'-'+lon.toFixed(5),name,category:fast?'Fast Food':(String(p.cuisine||'').trim()||'Restaurant'),fastFood:fast,cuisine:String(p.cuisine||''),providerType:String(p.osm_value||p.osm_key||p.type||''),address:[p.street,p.housenumber,p.city||p.town||p.village,p.state,p.postcode].filter(Boolean).join(', '),phone:String(p.phone||''),website:(/^https?:/.test(website)?website:(website?'https://'+website:'')),opening_hours:String(p.opening_hours||''),hoursSource:String(p.opening_hours||'')?'OpenStreetMap':'',lat,lon,distance:dist,photo:String(p.image||p.image_url||''),menuItems:[p.dish,p['dish:name'],p.menu_items,p['menu:items']].flatMap(v=>String(v||'').split(/[|;•,]/)).map(x=>x.trim()).filter(Boolean).slice(0,10),brand:String(p.brand||''),source:'Photon POI'};
-}
-async function photonPlaces(lat,lon,radius,searchTerm=''){
- const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180))),bbox=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
- const limit=radius>25?'250':'120',term=normalizeSearchQuery(searchTerm);
- const terms=providerSearchTerms(term);
- const base=[];
- for(const qTerm of terms){
-   base.push(new URLSearchParams({q:qTerm||'restaurant',osm_tag:'amenity:restaurant',bbox,limit,lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
-   base.push(new URLSearchParams({q:qTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit,lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
- }
- const rows=[],errors=[];
- const consume=(result)=>{if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));return}for(const feature of result.value?.features||[]){const pv=feature?.properties||{},ov=String(pv.osm_value||'').toLowerCase(),ok=String(pv.osm_key||'').toLowerCase();if(ok==='amenity'&&!DINING_AMENITIES.split('|').includes(ov)&&!FAST.test(String(pv.name||pv.brand||pv.operator||'')))continue;const row=photonRow(feature,{lat,lon});if(row&&row.distance<=radius&&!isClearlyNonDiningBusiness(row))rows.push(row)}};
- for(const result of await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},2200))))consume(result);
- const primaryFastCount=rows.filter(r=>r.fastFood).length;
- const missingKnown=!term && radius<=25 && rows.length===0 ? TARGETED_FAST.filter(name=>!rows.some(r=>norm(r.name)===norm(name)||norm(r.name).includes(norm(name)))).slice(0,3) : [];
- if(missingKnown.length){
-   const qs=missingKnown.map(q=>new URLSearchParams({q,bbox,limit:'10',lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
-   for(const result of await Promise.allSettled(qs.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},1800))))consume(result);
- }
- return {rows,errors};
-}
-
-async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=2400){
- const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
- const extent=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
- const terms=providerSearchTerms(searchTerm),categories=['Restaurant','Fast Food'],rows=[],errors=[];
- const jobs=[];
- for(const category of categories)for(const term of terms)jobs.push((async()=>{
-   const params=new URLSearchParams({SingleLine:term,category,location:lon+','+lat,searchExtent:extent,maxLocations:'50',outFields:'PlaceName,Type,Place_addr,City,Region,Country,Phone,URL',forStorage:'false',f:'json'});
-   return {category,data:await json('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?'+params.toString(),{},timeout)};
- })());
- const results=await Promise.allSettled(jobs);
- for(const result of results){
-   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));continue}
-   const category=result.value.category;
-   for(const cand of result.value.data?.candidates||[]){
-     const a=cand?.location||{},cl=n(a.y),cn=n(a.x),attrs=cand?.attributes||{},name=String(attrs.PlaceName||cand.address||'').trim();
-     if(!name||!Number.isFinite(cl)||!Number.isFinite(cn))continue;
-     const fast=category==='Fast Food'||isFastFoodName(name,String(attrs.Type||''));
-     const row={id:'arcgis-'+norm(name)+'-'+cl.toFixed(5)+'-'+cn.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',providerType:String(attrs.Type||''),address:String(attrs.Place_addr||cand.address||''),phone:String(attrs.Phone||attrs.phone||''),website:String(attrs.URL||attrs.Url||attrs.url||''),opening_hours:'',lat:cl,lon:cn,distance:miles(lat,lon,cl,cn),photo:'',menuItems:[],brand:'',source:'ArcGIS POI'};
-     if(row.distance<=r&&!isClearlyNonDiningBusiness(row))rows.push(row);
-   }
- }
- return {rows,errors};
-}
-
-function radiusExpansionSpec(radius){
- const r=clamp(radius);
- if(r<=10)return null;
- if(r<=25)return {tile:15,ring:15,count:6};
- if(r<=50)return {tile:30,ring:30,count:6};
- return {tile:50,ring:60,count:10};
-}
-function radiusExpansionCenters(lat,lon,radius){
- const spec=radiusExpansionSpec(radius);
- if(!spec)return [];
- const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
- const out=[{lat,lon,radius:spec.tile}];
- for(let i=0;i<spec.count;i++){
-  const ang=i*2*Math.PI/spec.count;
-  out.push({
-   lat:lat+Math.sin(ang)*a,
-   lon:lon+Math.cos(ang)*b,
-   radius:spec.tile
-  });
- }
- return out;
-}
-async function radiusOverpassExpansion(lat,lon,radius,searchTerm=''){
- const points=radiusExpansionCenters(lat,lon,radius);
- if(!points.length)return{rows:[],errors:[],tiles:0,provider:'none'};
- return overpassPoints(points,lat,lon,radius,'restaurant|fast_food',searchTerm,OVERPASS,OVERPASS_HTTP_TIMEOUT_MS);
-}
-
-async function photonRadiusExpansion(lat,lon,radius,searchTerm=''){
- const points=radiusExpansionCenters(lat,lon,radius),rows=[],errors=[];
- if(!points.length)return{rows,errors,tiles:0,provider:'none'};
- const tasks=points.map(p=>photonWideCenterPlaces(
-   p.lat,p.lon,p.radius,lat,lon,radius,searchTerm
- ));
- const settled=await Promise.allSettled(tasks);
- for(const result of settled){
-  if(result.status!=='fulfilled'){
-   errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));
-   continue;
-  }
-  rows.push(...(result.value?.rows||[]));
-  errors.push(...(result.value?.errors||[]));
- }
- return{rows:dedupe(rows),errors,tiles:points.length,provider:'Photon expansion'};
-}
-
-async function photonWideCenterPlaces(tileLat,tileLon,searchExtentRadius,originLat,originLon,selectedRadius,searchTerm=''){
- const r=Math.min(50,Math.max(1,Number(searchExtentRadius)||50));
- const latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(tileLat*Math.PI/180)));
- const bbox=[tileLon-lonD,tileLat-latD,tileLon+lonD,tileLat+latD].join(',');
- const base=[
-  new URLSearchParams({q:searchTerm||'restaurant',osm_tag:'amenity:restaurant',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(tileLat),lon:String(tileLon),zoom:'11'}),
-  new URLSearchParams({q:searchTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit:'250',lang:'en',countrycode:'US',dedupe:'1',lat:String(tileLat),lon:String(tileLon),zoom:'11'})
- ];
- const rows=[],errors=[];
- const settled=await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},RADIUS_EXPANSION_QUERY_TIMEOUT_MS)));
- for(const result of settled){
-  if(result.status!=='fulfilled'){
-   errors.push(String(result.reason?.message||result.reason||'Photon expansion failed'));
-   continue;
-  }
-  for(const feature of result.value?.features||[]){
-   const row=photonRow(feature,{lat:originLat,lon:originLon});
-   if(row&&row.distance<=selectedRadius&&!isClearlyNonDiningBusiness(row))rows.push(row);
-  }
- }
- return{rows,errors};
-}
-
-function firstProviderWithRows(tasks,timeoutMs=1800){
- const started=Date.now();
- return new Promise(resolve=>{
-   let settled=0,done=false;
-   const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value)};
-   const timer=setTimeout(()=>finish({provider:'timeout',value:{rows:[],errors:['Primary provider race timed out']}}),Math.max(600,timeoutMs));
-   tasks.forEach((task,i)=>{
-     Promise.resolve(task).then(value=>{
-       settled++;
-       if(value&&Array.isArray(value.rows)&&value.rows.length){
-         finish({provider:i,value});
-       }else if(settled===tasks.length){
-         finish({provider:'empty',value:{rows:[],errors:['All primary providers returned no restaurants'],elapsedMs:Date.now()-started}});
-       }
-     }).catch(error=>{
-       settled++;
-       if(settled===tasks.length)finish({provider:'error',value:{rows:[],errors:[String(error?.message||error||'Primary providers failed')],elapsedMs:Date.now()-started}});
-     });
-   });
- });
-}
-async function photonWidePlaces(lat,lon,radius,searchTerm=''){
- const points=widePhotonCenters(lat,lon,radius),rows=[],errors=[];
- const settled=await Promise.allSettled(points.map(p=>photonWideCenterPlaces(p.lat,p.lon,50,searchTerm)));
- for(const result of settled){
-  if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'Photon outer expansion failed'));continue}
-  rows.push(...(result.value?.rows||[]));
-  errors.push(...(result.value?.errors||[]));
- }
- return {rows:dedupe(rows),errors,expansionPoints:points.length};
-}
-
 function searchQueryClause(lat,lon,radius,searchTerm){
  const m=Math.round(Math.min(50,radius)*1609.344),pattern=searchRegexAlternatives(providerSearchTerms(searchTerm));
  if(!pattern)return '';
  return 'nwr[amenity~"^(restaurant|fast_food)$"][name~"'+pattern+'",i](around:'+m+','+lat+','+lon+');nwr[amenity~"^(restaurant|fast_food)$"][brand~"'+pattern+'",i](around:'+m+','+lat+','+lon+');nwr[amenity~"^(restaurant|fast_food)$"][operator~"'+pattern+'",i](around:'+m+','+lat+','+lon+');nwr[amenity~"^(restaurant|fast_food)$"][cuisine~"'+pattern+'",i](around:'+m+','+lat+','+lon+');';
 }
 function searchQueryMany(points,searchTerm,timeoutSeconds=10){return '[out:json][timeout:'+Math.max(6,Math.min(16,Number(timeoutSeconds)||10))+'];('+points.map(c=>searchQueryClause(c.lat,c.lon,c.radius,searchTerm)).join('')+');out center tags;'}
-function radiusDiscoveryPlan(lat,lon,radius){
- const r=clamp(radius),coverage=centers(lat,lon,r),groups=[];
- const groupSize=r>WIDE_RADIUS_THRESHOLD?WIDE_OVERPASS_GROUP_SIZE:TILED_OVERPASS_GROUP_SIZE;
- for(let i=0;i<coverage.length;i+=groupSize)groups.push(coverage.slice(i,i+groupSize));
- return {
-  mode:r>WIDE_RADIUS_THRESHOLD?'wide':'tiled',
-  reserveMs:r>WIDE_RADIUS_THRESHOLD?WIDE_DISCOVERY_RESERVE_MS:0,
-  coveragePoints:coverage.length,
-  groups
- };
-}
 async function overpassPoints(points,originLat,originLon,radius,types='restaurant|fast_food',searchTerm='',endpoints=OVERPASS,timeout=OVERPASS_HTTP_TIMEOUT_MS){
  const term=normalizeSearchQuery(searchTerm),seconds=Math.max(6,Math.min(16,Math.ceil(Number(timeout||OVERPASS_HTTP_TIMEOUT_MS)/1000)));
  const data=term?searchQueryMany(points,term,seconds):queryMany(points,types,seconds),rows=[],errors=[];
@@ -382,30 +136,109 @@ async function overpassPoints(points,originLat,originLon,radius,types='restauran
  }
  return{rows:dedupe(rows),errors};
 }
-async function tiledRadiusOverpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
- const plan=radiusDiscoveryPlan(lat,lon,radius),rows=[],errors=[];
- const endpointPairs=plan.groups.map((_,i)=>[
-   OVERPASS[i%OVERPASS.length],
-   OVERPASS[(i+1)%OVERPASS.length]
- ]);
- const tasks=plan.groups.map((group,i)=>overpassPoints(
-   group,lat,lon,radius,types,searchTerm,endpointPairs[i],OVERPASS_HTTP_TIMEOUT_MS
- ));
- const settled=await Promise.allSettled(tasks);
- for(const result of settled){
-   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason||'radius discovery failed'));continue;}
-   rows.push(...(result.value.rows||[]));
-   errors.push(...(result.value.errors||[]));
- }
- return{rows:dedupe(rows),errors,groups:plan.groups.length,coveragePoints:plan.coveragePoints,endpointPairs:endpointPairs.length*2};
-}
 async function overpass(lat,lon,radius,types='restaurant|fast_food',searchTerm=''){
- return tiledRadiusOverpass(lat,lon,radius,types,searchTerm);
+ const tile={lat,lon,radius:Math.min(50,Math.max(1,Number(radius)||1))};
+ return overpassPoints([tile],lat,lon,radius,types,searchTerm,[OVERPASS[0],OVERPASS[1]],RADIUS_OVERPASS_FAST_TIMEOUT_MS);
 }
+
+
+function wideRadiusCenters(lat,lon,radius){
+  const r=clamp(radius);
+  const spec=r<=50?{tile:30,ring:30,count:6}:{tile:50,ring:65,count:8};
+  const out=[{lat,lon,radius:spec.tile}];
+  const a=spec.ring/69,b=spec.ring/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+  for(let i=0;i<spec.count;i++){
+    const ang=i*2*Math.PI/spec.count;
+    out.push({lat:lat+Math.sin(ang)*a,lon:lon+Math.cos(ang)*b,radius:spec.tile});
+  }
+  return out;
+}
+async function wideRadiusArcgis(lat,lon,radius,searchTerm=''){
+  const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
+  const wide100=radius>50;
+  if(!wide100){
+    // 50 miles gets the full 7-tile ArcGIS coverage grid instead of a
+    // single-origin lookup. This keeps the selected radius broad without
+    // relying on the timeout-prone multi-provider radius-engine path.
+    let cursor=0;
+    const worker=async()=>{
+      while(cursor<points.length){
+        const i=cursor++,p=points[i];
+        const result=await withinBudget(
+          arcgisPlaces(p.lat,p.lon,30,searchTerm,2800),
+          3500,
+          '50-mile ArcGIS tile timed out'
+        );
+        if(result?.__timeout){
+          errors.push('50-mile ArcGIS tile timed out');
+          continue;
+        }
+        rows.push(...(result?.rows||[]));
+        errors.push(...(result?.errors||[]));
+      }
+    };
+    await Promise.all(Array.from({length:5},()=>worker()));
+    return {
+      rows:filterNonDiningRows(dedupe(rows)),
+      errors,
+      tileCount:points.length,
+      tileRadiusMiles:30,
+      ringMiles:30
+    };
+  }
+  let cursor=0;
+  const worker=async()=>{
+    while(cursor<points.length){
+      const i=cursor++,p=points[i];
+      const result=await withinBudget(
+        arcgisPlaces(p.lat,p.lon,50,searchTerm,2800),
+        3500,
+        'Wide ArcGIS tile timed out'
+      );
+      if(result?.__timeout){
+        errors.push('Wide ArcGIS tile timed out');
+        continue;
+      }
+      rows.push(...(result?.rows||[]));
+      errors.push(...(result?.errors||[]));
+    }
+  };
+  await Promise.all(Array.from({length:5},()=>worker()));
+  return {
+    rows:filterNonDiningRows(dedupe(rows)),
+    errors,
+    tileCount:points.length,
+    tileRadiusMiles:50,
+    ringMiles:65
+  };
+}
+
 async function wideRadiusOverpass(lat,lon,radius,searchTerm=''){
- const result=await tiledRadiusOverpass(lat,lon,radius,'restaurant|fast_food',searchTerm);
- return{...result};
+  const points=wideRadiusCenters(lat,lon,radius),rows=[],errors=[];
+  // Keep the proven 50-mile path unchanged. For 100 miles, batch the 13
+  // coverage tiles into a few multi-center Overpass queries so the function
+  // does not spend its serverless budget on 13 independent HTTP requests.
+  const wide100=radius>50;
+  const chunks=wide100
+    ? Array.from({length:Math.ceil(points.length/3)},(_,i)=>points.slice(i*3,i*3+3))
+    : points.map(p=>[p]);
+  const tasks=chunks.map((chunk,i)=>{
+    const endpoints=wide100
+      ? [OVERPASS[i%OVERPASS.length]]
+      : [OVERPASS[i%OVERPASS.length]];
+    const timeout=wide100?4500:5000;
+    return overpassPoints(chunk,lat,lon,radius,DINING_AMENITIES,searchTerm,endpoints,timeout);
+  });
+  const settled=await Promise.allSettled(tasks);
+  for(const result of settled){
+    if(result.status==='fulfilled'){
+      rows.push(...(result.value?.rows||[]));
+      errors.push(...(result.value?.errors||[]));
+    }else errors.push(String(result.reason?.message||result.reason||'Wide radius Overpass batch failed'));
+  }
+  return{rows:dedupe(rows),errors,tileCount:points.length,tileRadiusMiles:points[0]?.radius||0,ringMiles:radius<=50?30:65};
 }
+
 const KNOWN_RESTAURANT_WEBSITES={
   "mcdonald's":'https://www.mcdonalds.com',"taco bell":'https://www.tacobell.com',"wendy's":'https://www.wendys.com',"the thirsty goat":'https://www.thirstygoatsango.com',"johnny's big burger":'https://thebigburger.com',"edward's steakhouse":'https://www.edwardssteakhouse.net',"shelbys trio":'https://www.toasttab.com/local/order/shelbys-trio-304-north-2nd-street',"thirsty goat":'https://www.thirstygoatsango.com',"burger king":'https://www.bk.com',"kfc":'https://www.kfc.com',"chick fil a":'https://www.chick-fil-a.com',"popeyes":'https://www.popeyes.com',"subway":'https://www.subway.com',"sonic":'https://www.sonicdrivein.com',"arby's":'https://www.arbys.com',"whataburger":'https://whataburger.com',"five guys":'https://www.fiveguys.com',"culver's":'https://www.culvers.com',"raising cane's":'https://www.raisingcanes.com',"wingstop":'https://www.wingstop.com',"bojangles":'https://www.bojangles.com',"cook out":'https://www.cookout.com',"dairy queen":'https://www.dairyqueen.com',"zaxby's":'https://www.zaxbys.com',"church's chicken":'https://www.churchs.com',"captain d's":'https://www.captainds.com',"long john silver's":'https://www.ljsilvers.com',"jimmy john's":'https://www.jimmyjohns.com',"jersey mike's":'https://www.jerseymikes.com',"firehouse subs":'https://www.firehousesubs.com',"little caesars":'https://littlecaesars.com',"domino's":'https://www.dominos.com',"papa john's":'https://www.papajohns.com',"pizza hut":'https://www.pizzahut.com',"marco's pizza":'https://www.marcos.com',"krystal":'https://www.krystal.com',"steak 'n shake":'https://www.steaknshake.com',"white castle":'https://www.whitecastle.com',"freddy's":'https://www.freddys.com',"panda express":'https://www.pandaexpress.com',"jack in the box":'https://www.jackinthebox.com',"hardee's":'https://www.hardees.com',"del taco":'https://www.deltaco.com',"checkers":'https://www.checkers.com',"rally's":'https://www.rallys.com',"chipotle":'https://www.chipotle.com',"applebee's":'https://www.applebees.com',"chili's":'https://www.chilis.com',"olive garden":'https://www.olivegarden.com',"waffle house":'https://www.wafflehouse.com'
 };
@@ -1511,6 +1344,212 @@ async function suggest(q){
  const seen=new Set();return rows.filter(x=>{const k=norm(x.display);if(seen.has(k))return false;seen.add(k);return true}).slice(0,7)
 }
 async function reverse(lat,lon){try{const d=await json('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?'+new URLSearchParams({location:lon+','+lat,f:'json'}),{},7000);return String(d?.address?.Match_addr||'Current location')}catch{return'Current location'}}
+async function requestJsonBody(req,maxBytes=260000){
+  if(req?.body&&typeof req.body==='object')return req.body;
+  if(typeof req?.body==='string'){
+    if(Buffer.byteLength(req.body,'utf8')>maxBytes)throw new Error('Hours request is too large.');
+    try{return JSON.parse(req.body)}catch{throw new Error('Hours request body is invalid.');}
+  }
+  return await new Promise((resolve,reject)=>{
+    let raw='',size=0,done=false;
+    const finish=(fn,value)=>{if(done)return;done=true;fn(value);};
+    req?.on?.('data',chunk=>{
+      if(done)return;
+      raw+=String(chunk);
+      size+=Buffer.byteLength(String(chunk),'utf8');
+      if(size>maxBytes){finish(reject,new Error('Hours request is too large.'));try{req.destroy?.();}catch{}}
+    });
+    req?.on?.('end',()=>{
+      if(done)return;
+      if(!raw.trim())return finish(resolve,{});
+      try{finish(resolve,JSON.parse(raw))}catch{finish(reject,new Error('Hours request body is invalid.'));}});
+    req?.on?.('error',err=>finish(reject,err));
+  });
+}
+function hoursCacheKey(row){
+  const place=String(row?.googlePlaceId||'').trim();
+  if(place)return 'place:'+place;
+  return 'row:'+norm([row?.name,row?.address,row?.phone].filter(Boolean).join('|'));
+}
+function hoursCacheRead(row){
+  const key=hoursCacheKey(row),hit=hoursResolutionCache.get(key);
+  if(!hit)return null;
+  const age=Date.now()-Number(hit.t||0);
+  const ttl=hit.ok?HOURS_MEMORY_CACHE_TTL:HOURS_MEMORY_NEGATIVE_TTL;
+  if(age>ttl){hoursResolutionCache.delete(key);return null;}
+  return hit.value||null;
+}
+function hoursCacheWrite(row,value,ok=true){
+  const key=hoursCacheKey(row);
+  if(!key)return value;
+  hoursResolutionCache.set(key,{t:Date.now(),ok:!!ok,value:value||null});
+  return value||null;
+}
+function compactHoursRow(row){
+  return {
+    id:String(row?.id||''),
+    name:String(row?.name||'').slice(0,160),
+    address:String(row?.address||'').slice(0,240),
+    phone:String(row?.phone||'').slice(0,50),
+    website:String(row?.website||'').slice(0,700),
+    brand:String(row?.brand||'').slice(0,120),
+    lat:n(row?.lat),
+    lon:n(row?.lon),
+    distance:n(row?.distance),
+    googlePlaceId:String(row?.googlePlaceId||'').trim(),
+    opening_hours:String(row?.opening_hours||'').slice(0,1200),
+    openNow:typeof row?.openNow==='boolean'?row.openNow:null,
+    businessStatus:String(row?.businessStatus||''),
+    hoursSource:String(row?.hoursSource||''),
+    hoursTimeZone:String(row?.hoursTimeZone||'')
+  };
+}
+function hoursKnown(row){
+  return typeof row?.openNow==='boolean'||!!String(row?.opening_hours||'').trim()||/^(?:CLOSED_|OPEN_)/.test(String(row?.businessStatus||'').toUpperCase());
+}
+async function officialHoursForRow(row){
+  const website=safeWebsiteUrl(row?.website)||knownRestaurantWebsite(row);
+  if(!website)return null;
+  try{
+    const page=await fetchWebPage(website,2200,900000);
+    if(!page)return null;
+    const verified=verifiedWebsiteCandidate({...page,url:page.finalUrl||page.url},row.name,row.address,row.brand,row.phone);
+    if(!verified)return null;
+    const data=extractOfficialRestaurantData(page.html);
+    if(!data.opening_hours)return null;
+    return {
+      id:String(row.id||''),opening_hours:data.opening_hours,hoursSource:'Official Restaurant Website',
+      website:String(data.website||verified.url||website),phone:String(data.phone||row.phone||''),
+      openNow:null,googlePlaceId:String(row.googlePlaceId||'')
+    };
+  }catch{return null;}
+}
+async function googleTextHoursForRow(row){
+  if(!GOOGLE_KEY||!String(row?.name||'').trim())return null;
+  const q=[row.name,row.address].filter(Boolean).join(', ');
+  try{
+    const data=await googleBudgetedJson('text-search-enterprise','https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Goog-Api-Key':GOOGLE_KEY,
+        'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours.openNow,places.regularOpeningHours.weekdayDescriptions,places.businessStatus,places.primaryType,places.types'
+      },
+      body:JSON.stringify({
+        textQuery:q+' restaurant',
+        pageSize:3,
+        locationBias:{circle:{center:{latitude:n(row.lat),longitude:n(row.lon)},radius:3000}},
+        regionCode:'US'
+      })
+    },4800);
+    const candidates=(Array.isArray(data?.places)?data.places:[]).map(p=>{
+      const loc=p?.location||{},lat=n(loc.latitude),lon=n(loc.longitude),name=String(p?.displayName?.text||'').trim();
+      if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+      const targetName=restaurantNameSimilarity(row.name,name);
+      const addrScore=restaurantAddressSimilarity(row.address,String(p?.formattedAddress||''));
+      const distance=miles(n(row.lat),n(row.lon),lat,lon);
+      const exactName=norm(row.name)===norm(name);
+      const viable=(exactName||targetName>=0.70||nameVariantMatch(row.name,name))&&(addrScore>=0.72||distance<=0.35);
+      if(!viable||distance>1.5)return null;
+      const regularHours=Array.isArray(p?.regularOpeningHours?.weekdayDescriptions)
+        ?p.regularOpeningHours.weekdayDescriptions.map(String).filter(Boolean).join(' · '):'';
+      const openNow=typeof p?.currentOpeningHours?.openNow==='boolean'?p.currentOpeningHours.openNow:null;
+      const businessStatus=String(p?.businessStatus||'');
+      if(businessStatus==='CLOSED_PERMANENTLY')return null;
+      return {
+        name,address:String(p?.formattedAddress||row.address||''),phone:String(p?.nationalPhoneNumber||row.phone||''),
+        website:String(p?.websiteUri||row.website||''),opening_hours:regularHours,openNow,
+        businessStatus,googlePlaceId:String(p?.id||row.googlePlaceId||''),distance,
+        score:(exactName?1:targetName)+(addrScore*0.5)+(distance<=0.2?0.2:0)
+      };
+    }).filter(Boolean).sort((a,b)=>b.score-a.score);
+    return candidates[0]||null;
+  }catch(e){
+    if(e?.code==='GOOGLE_SKU_BUDGET')return {__budget:true};
+    return null;
+  }
+}
+async function resolveHoursForRow(row,budget){
+  const cached=hoursCacheRead(row);
+  if(cached)return {...cached,_cacheHit:true};
+  const existing=compactHoursRow(row);
+  if(hoursKnown(existing))return {...existing,_resolvedSource:existing.hoursSource||'existing'};
+  const official=await officialHoursForRow(existing);
+  if(official){
+    hoursCacheWrite(row,official,true);
+    return {...official,_resolvedSource:'official-website'};
+  }
+  if(!GOOGLE_KEY||budget.callsUsed>=budget.maxCalls)return null;
+  if(budget.callsUsed>=budget.maxCalls)return null;
+  budget.callsUsed++;
+  const googleId=String(existing.googlePlaceId||'').trim();
+  if(googleId){
+    const result=await googlePlaceDetails(googleId).catch(()=>({ok:false}));
+    if(result?.ok){
+      const value={
+        id:existing.id,name:result.name||existing.name,address:result.address||existing.address,phone:result.phone||existing.phone,
+        website:result.website||existing.website,opening_hours:result.opening_hours||'',openNow:typeof result.openNow==='boolean'?result.openNow:null,
+        businessStatus:result.businessStatus||'',googlePlaceId:result.googlePlaceId||googleId,hoursSource:'Google Places'
+      };
+      hoursCacheWrite(row,value,true);
+      return {...value,_resolvedSource:'google-place-details'};
+    }
+  }
+  if(budget.callsUsed>=budget.maxCalls)return null;
+  budget.callsUsed++;
+  const result=await googleTextHoursForRow(existing);
+  if(result?.__budget){budget.budgetDenied++;return null;}
+  if(result){
+    const value={
+      id:existing.id,name:result.name||existing.name,address:result.address||existing.address,phone:result.phone||existing.phone,
+      website:result.website||existing.website,opening_hours:result.opening_hours||'',openNow:typeof result.openNow==='boolean'?result.openNow:null,
+      businessStatus:result.businessStatus||'',googlePlaceId:result.googlePlaceId||existing.googlePlaceId,hoursSource:'Google Places'
+    };
+    hoursCacheWrite(row,value,true);
+    return {...value,_resolvedSource:'google-text-search'};
+  }
+  hoursCacheWrite(row,null,false);
+  return null;
+}
+async function enrichOpenNowHours(rows,options={}){
+  const input=filterNonDiningRows(Array.isArray(rows)?rows:[]).map(compactHoursRow).filter(r=>r.id&&Number.isFinite(r.lat)&&Number.isFinite(r.lon));
+  const candidates=input.filter(r=>!hoursKnown(r)).sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity));
+  const maxCalls=Math.max(1,Math.min(OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS,Number(options.maxGoogleCalls)||OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS));
+  const budget={callsUsed:0,maxCalls,budgetDenied:0};
+  const patches=[],stats={cacheHits:0,existing:input.length-candidates.length,officialWebsite:0,googlePlaceDetails:0,googleTextSearch:0,unknown:0};
+  const targetOpen=Math.min(50,Math.max(12,Math.ceil(input.length*0.20)));
+  const alreadyOpen=input.filter(r=>r.openNow===true).length;
+  let resolvedOpen=alreadyOpen;
+  let cursor=0;
+  const worker=async()=>{
+    while(true){
+      if(resolvedOpen>=targetOpen||cursor>=candidates.length||budget.callsUsed>=maxCalls)return;
+      const i=cursor++,row=candidates[i];
+      const result=await resolveHoursForRow(row,budget);
+      if(!result)continue;
+      if(result._cacheHit)stats.cacheHits++;
+      const src=String(result._resolvedSource||result.hoursSource||'');
+      if(src.includes('official'))stats.officialWebsite++;
+      else if(src.includes('place-details'))stats.googlePlaceDetails++;
+      else if(src.includes('text-search'))stats.googleTextSearch++;
+      if(result.openNow===true)resolvedOpen++;
+      patches.push(Object.fromEntries(Object.entries(result).filter(([k])=>!k.startsWith('_'))));
+    }
+  };
+  await Promise.all(Array.from({length:Math.min(3,candidates.length,4)},worker));
+  stats.unknown=Math.max(0,input.length-stats.existing-stats.cacheHits-stats.officialWebsite-stats.googlePlaceDetails-stats.googleTextSearch);
+  const health=await googleUsageHealth().catch(()=>null);
+  const relevantSkus=['place-details-enterprise','text-search-enterprise'];
+  const monthlyRemaining=Object.fromEntries(relevantSkus.map(sku=>{
+    const usage=Number(health?.usage?.[sku]?.requestCount)||0;
+    return [sku,Math.max(0,Number(HARD_LIMITS[sku]||0)-usage)];
+  }));
+  return {
+    ok:true,patches,counts:{total:input.length,alreadyKnown:stats.existing,cacheHits:stats.cacheHits,resolvedFromOfficialWebsite:stats.officialWebsite,resolvedByGooglePlaceDetails:stats.googlePlaceDetails,resolvedByGoogleTextSearch:stats.googleTextSearch,stillUnknown:stats.unknown,open:input.filter(r=>r.openNow===true).length+patches.filter(r=>r.openNow===true).length},
+    google:{callsUsed:budget.callsUsed,callsBudget:maxCalls,budgetDenied:budget.budgetDenied,monthlyRemaining},
+    targetOpen
+  };
+}
 function requestQuery(req){
  const source=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters&&typeof req.queryStringParameters==='object'?req.queryStringParameters:null);
  if(source){
@@ -1524,8 +1563,109 @@ function requestQuery(req){
  }
  try{return new URL(String(req?.url||'/'),'https://dinliminate.local').searchParams}catch{return new URLSearchParams()}
 }
+function photonRow(feature,origin){
+ const p=feature?.properties||{},c=feature?.geometry?.coordinates||[],lon=n(c[0]),lat=n(c[1]),name=String(p.name||p.label||'').split(',')[0].trim();
+ if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+ const osmValue=String(p.osm_value||'').toLowerCase(),amenity=String(p.type||p.osm_key||'').toLowerCase(),fast=osmValue==='fast_food'||amenity==='fast_food'||isFastFoodName(name,String(p.brand||''),String(p.operator||''));
+ const website=String(p.website||p.url||'').trim(),dist=miles(origin.lat,origin.lon,lat,lon);
+ return {id:p.osm_id?'photon-'+p.osm_id:'photon-'+norm(name)+'-'+lat.toFixed(5)+'-'+lon.toFixed(5),name,category:fast?'Fast Food':(String(p.cuisine||'').trim()||'Restaurant'),fastFood:fast,cuisine:String(p.cuisine||''),providerType:String(p.osm_value||p.osm_key||p.type||''),address:[p.street,p.housenumber,p.city||p.town||p.village,p.state,p.postcode].filter(Boolean).join(', '),phone:String(p.phone||''),website:(/^https?:/.test(website)?website:(website?'https://'+website:'')),opening_hours:String(p.opening_hours||''),hoursSource:String(p.opening_hours||'')?'OpenStreetMap':'',lat,lon,distance:dist,photo:String(p.image||p.image_url||''),menuItems:[p.dish,p['dish:name'],p.menu_items,p['menu:items']].flatMap(v=>String(v||'').split(/[|;•,]/)).map(x=>x.trim()).filter(Boolean).slice(0,10),brand:String(p.brand||''),source:'Photon POI'};
+}
+async function photonPlaces(lat,lon,radius,searchTerm=''){
+ const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180))),bbox=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
+ const limit=radius>25?'250':'120',term=normalizeSearchQuery(searchTerm);
+ const terms=providerSearchTerms(term);
+ const base=[];
+ for(const qTerm of terms){
+   base.push(new URLSearchParams({q:qTerm||'restaurant',osm_tag:'amenity:restaurant',bbox,limit,lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
+   base.push(new URLSearchParams({q:qTerm||'fast food',osm_tag:'amenity:fast_food',bbox,limit,lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
+ }
+ const rows=[],errors=[];
+ const consume=(result)=>{if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));return}for(const feature of result.value?.features||[]){const pv=feature?.properties||{},ov=String(pv.osm_value||'').toLowerCase(),ok=String(pv.osm_key||'').toLowerCase();if(ok==='amenity'&&!DINING_AMENITIES.split('|').includes(ov)&&!FAST.test(String(pv.name||pv.brand||pv.operator||'')))continue;const row=photonRow(feature,{lat,lon});if(row&&row.distance<=radius&&!isClearlyNonDiningBusiness(row))rows.push(row)}};
+ for(const result of await Promise.allSettled(base.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},2200))))consume(result);
+ const primaryFastCount=rows.filter(r=>r.fastFood).length;
+ const missingKnown=!term && radius<=25 && rows.length===0 ? TARGETED_FAST.filter(name=>!rows.some(r=>norm(r.name)===norm(name)||norm(r.name).includes(norm(name)))).slice(0,3) : [];
+ if(missingKnown.length){
+   const qs=missingKnown.map(q=>new URLSearchParams({q,bbox,limit:'10',lang:'en',countrycode:'US',dedupe:'1',lat:String(lat),lon:String(lon),zoom:'12'}));
+   for(const result of await Promise.allSettled(qs.map(p=>json('https://photon.komoot.io/api/?'+p.toString(),{},1800))))consume(result);
+ }
+ return {rows,errors};
+}
+
+async function arcgisPlaces(lat,lon,radius,searchTerm='',timeout=2400){
+ const r=Math.min(MAX_RADIUS,Math.max(1,radius)),latD=r/69,lonD=r/(69*Math.max(.35,Math.cos(lat*Math.PI/180)));
+ const extent=[lon-lonD,lat-latD,lon+lonD,lat+latD].join(',');
+ const terms=providerSearchTerms(searchTerm),categories=['Restaurant','Fast Food'],rows=[],errors=[];
+ const jobs=[];
+ for(const category of categories)for(const term of terms)jobs.push((async()=>{
+   const params=new URLSearchParams({SingleLine:term,category,location:lon+','+lat,searchExtent:extent,maxLocations:'50',outFields:'PlaceName,Type,Place_addr,City,Region,Country,Phone,URL',forStorage:'false',f:'json'});
+   return {category,data:await json('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?'+params.toString(),{},timeout)};
+ })());
+ const results=await Promise.allSettled(jobs);
+ for(const result of results){
+   if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));continue}
+   const category=result.value.category;
+   for(const cand of result.value.data?.candidates||[]){
+     const a=cand?.location||{},cl=n(a.y),cn=n(a.x),attrs=cand?.attributes||{},name=String(attrs.PlaceName||cand.address||'').trim();
+     if(!name||!Number.isFinite(cl)||!Number.isFinite(cn))continue;
+     const fast=category==='Fast Food'||isFastFoodName(name,String(attrs.Type||''));
+     const row={id:'arcgis-'+norm(name)+'-'+cl.toFixed(5)+'-'+cn.toFixed(5),name,category:fast?'Fast Food':'Restaurant',fastFood:fast,cuisine:'',providerType:String(attrs.Type||''),address:String(attrs.Place_addr||cand.address||''),phone:String(attrs.Phone||attrs.phone||''),website:String(attrs.URL||attrs.Url||attrs.url||''),opening_hours:'',lat:cl,lon:cn,distance:miles(lat,lon,cl,cn),photo:'',menuItems:[],brand:'',source:'ArcGIS POI'};
+     if(row.distance<=r&&!isClearlyNonDiningBusiness(row))rows.push(row);
+   }
+ }
+ return {rows,errors};
+}
+
+async function radiusEngineProviderQuery({tile,origin,radiusMiles,searchTerm=''}) {
+  const firstMirror=tile?.r && Number.isFinite(Number(tile.r))
+    ? Math.abs(Number(tile.r)) % OVERPASS.length
+    : 0;
+  const endpoints=[
+    OVERPASS[firstMirror],
+    OVERPASS[(firstMirror+1) % OVERPASS.length]
+  ];
+  const jobs=[
+    overpassPoints(
+      [{lat:tile.lat,lon:tile.lon,radius:tile.queryRadiusMiles}],
+      origin.lat,
+      origin.lon,
+      radiusMiles,
+      DINING_AMENITIES,
+      searchTerm,
+      endpoints,
+      RADIUS_OVERPASS_FAST_TIMEOUT_MS
+    ),
+    arcgisPlaces(tile.lat,tile.lon,tile.queryRadiusMiles,searchTerm,2200),
+    photonPlaces(tile.lat,tile.lon,tile.queryRadiusMiles,searchTerm)
+  ];
+  const settled=await Promise.allSettled(jobs);
+  const rows=[],errors=[];
+  const providerStats={
+    Overpass:{tiles:1,rows:0,errors:0},
+    ArcGIS:{tiles:1,rows:0,errors:0},
+    Photon:{tiles:1,rows:0,errors:0}
+  };
+  const names=['Overpass','ArcGIS','Photon'];
+  settled.forEach((result,index)=>{
+    const name=names[index];
+    if(result.status==='fulfilled'){
+      const value=result.value||{};
+      const providerRows=Array.isArray(value.rows)?value.rows:[];
+      const providerErrors=Array.isArray(value.errors)?value.errors:[];
+      rows.push(...providerRows);
+      errors.push(...providerErrors);
+      providerStats[name].rows=providerRows.length;
+      providerStats[name].errors=providerErrors.length;
+    }else{
+      const message=String(result.reason?.message||result.reason||name+' provider failed');
+      errors.push(message);
+      providerStats[name].errors=1;
+    }
+  });
+  return {rows:dedupe(rows),errors,providerStats};
+}
+
 async function handler(req,res){const q=requestQuery(req),mode=String(q.get('mode')||'health').toLowerCase();if(mode!=='search'&&rate(req,mode))return res.status(429).json({ok:false,code:'RATE_LIMITED',message:'Too many requests. Try again shortly.'});try{
-if(mode==='health'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=60, s-maxage=60, stale-while-revalidate=120');return res.status(200).json({ok:true,version:API_VERSION,maxRadiusMiles:MAX_RADIUS,googlePlacesConfigured:!!GOOGLE_KEY,googleUsage:await googleUsageHealth(),providers:['OpenStreetMap Overpass','ArcGIS','Photon',...(GOOGLE_KEY?['Google Places']:[]),'Open-Meteo timezone']});}
+if(mode==='health'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=60, s-maxage=60, stale-while-revalidate=120');return res.status(200).json({ok:true,version:API_VERSION,maxRadiusMiles:MAX_RADIUS,radiusEngine:{version:'v2',geometry:'deterministic-overlapping-rings',googleCoverageAuthority:false},googlePlacesConfigured:!!GOOGLE_KEY,googleUsage:await googleUsageHealth(),providers:['OpenStreetMap Overpass','ArcGIS','Photon',...(GOOGLE_KEY?['Google Places']:[]),'Open-Meteo timezone']});}
 if(mode==='suggest'){if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');return res.status(200).json({ok:true,results:await suggest(q.get('q'))});}
 if(mode==='resolve'){const x=await geocode(q.get('q'));return res.status(200).json({ok:true,...x})}
 if(mode==='reverse'){const lat=n(q.get('lat')),lon=n(q.get('lon'));if(!validCoords(lat,lon))return res.status(400).json({ok:false,message:'Coordinates are invalid.'});if(res.setHeader)res.setHeader('Cache-Control','public, max-age=300, s-maxage=300, stale-while-revalidate=600');return res.status(200).json({ok:true,display:await reverse(lat,lon)})}
@@ -1572,144 +1712,83 @@ if(mode==='search'){
  if(hit&&Date.now()-hit.t<60000)return res.status(200).json(hit.data);
  if(rate(req,mode))return res.status(429).json({ok:false,code:'RATE_LIMITED',message:'Restaurant search is temporarily busy. Please try again.'});
  if(res.setHeader)res.setHeader('Cache-Control','public, max-age=30, s-maxage=30, stale-while-revalidate=60');
- const wideSearch=radius>WIDE_RADIUS_THRESHOLD;
- const discoveryPlan=radiusDiscoveryPlan(lat,lon,radius);
-  const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
- const primaryBudget=Math.max(2800,SEARCH_BUDGET_MS-(wideSearch?discoveryPlan.reserveMs:0));
- // Wide searches keep primary providers inside their proven 50-mile envelope.
- // Deterministic tiled discovery fills the full selected geographic disk, and
- // the final true-distance filter removes every out-of-radius row.
- // CP1183: 25/50-mile searches query their requested radius directly.
- // Small searches keep the stable 10-mile core. For 25/50, direct provider
- // coverage is primary and the tiled expansion layer remains supplemental.
- // The final origin-distance filter still enforces the exact selected radius.
- const providerRadius=wideSearch
-   ? WIDE_PROVIDER_RADIUS_CAP
-   : radius>=25
-     ? Math.min(radius,WIDE_PROVIDER_RADIUS_CAP)
-     : 10;
- const discoveryPromise=radius>10
-   ? withinBudget(
-       Promise.allSettled([
-         photonRadiusExpansion(lat,lon,radius,searchTerm),
-         radius<=50 ? radiusOverpassExpansion(lat,lon,radius,searchTerm) : Promise.resolve({rows:[],errors:[],provider:'none'})
-       ]).then(results=>{
-         const rows=[],errors=[];
-         for(const result of results){
-           if(result.status==='fulfilled'){
-             rows.push(...(result.value?.rows||[]));
-             errors.push(...(result.value?.errors||[]));
-           }else{
-             errors.push(String(result.reason?.message||result.reason||'Radius expansion provider failed'));
-           }
-         }
-         return {rows:dedupe(rows),errors};
-       }),
-       WIDE_DISCOVERY_TIMEBOX_MS,
-       'Radius expansion timed out'
-     )
-   : null;
- // CP1158: nearby provider calls are individually time-boxed. The previous
- // implementation awaited raw Photon/ArcGIS/Google promises, so a slow
- // upstream could hold the serverless function until Vercel's 30-second cap.
- const nearbyProviderTimeout=radius<=10?10000:Math.min(4200,Math.max(2800,primaryBudget));
- const primaryPromise=wideSearch
-   ? [withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),nearbyProviderTimeout,'Wide ArcGIS lookup timed out')]
-   : [
-     // CP1168/r39: 3/5/10-mile searches also add OSM discovery so provider result caps do not flatten the small-radius choices.
-     // One ArcGIS/Photon query can hit a result ceiling; independent local
-     // tiles recover nearby venues and the final origin-distance filter keeps
-     // the selected radius exact.
-     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'Photon lookup timed out'),
-     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm),nearbyProviderTimeout,'ArcGIS lookup timed out'),
-     searchTerm ? Promise.resolve({rows:[],errors:[]}) : withinBudget(googlePlaces(lat,lon,providerRadius),nearbyProviderTimeout,'Google nearby lookup timed out')
-   ];
-let primaryBatch,parallelWide=null,fastProvider='none';
- if(wideSearch){
-   // Wide searches keep the fast providers anchored to 50 miles. Each provider gets
-   // a full wide-search timebox, while tiled Overpass discovery supplies the
-   // outer-radius coverage through independent, redundant tile requests.
-   const wideTasks=[
-     withinBudget(arcgisPlaces(lat,lon,providerRadius,searchTerm,2100),WIDE_PRIMARY_TIMEBOX_MS,'Wide ArcGIS lookup timed out'),
-     withinBudget(photonPlaces(lat,lon,providerRadius,searchTerm),WIDE_PRIMARY_TIMEBOX_MS,'Wide Photon lookup timed out'),
-     withinBudget(searchTerm?googleSearchPlaces(lat,lon,providerRadius,searchTerm):googlePlaces(lat,lon,providerRadius),WIDE_PRIMARY_TIMEBOX_MS,'Wide Google lookup timed out')
-   ];
-   const settled=await Promise.allSettled(wideTasks);
-   primaryBatch={
-     arcgis:settled[0],
-     widePhoton:settled[1],
-     google:settled[2]
-   };   fastProvider='wide';
-   const discoveryRemaining=Math.max(0,SEARCH_BUDGET_MS-(Date.now()-startedAt));
-   parallelWide=discoveryRemaining>500
-     ? await withinBudget(discoveryPromise,Math.min(WIDE_DISCOVERY_TIMEBOX_MS,discoveryRemaining),'Wide radius discovery timed out')
-     : {__timeout:true,reason:'Wide radius discovery deferred'};
- }else{
-   // CP972: keep both fast primary providers. ArcGIS often supplies the
-   // street number, phone, and website that Photon omits, which exact photo
-   // matching needs to identify the correct venue.
-   const tasks=primaryPromise;
-   const settled=await Promise.allSettled(tasks);
-   primaryBatch=settled;
-   const firstWithRows=settled.findIndex(x=>x?.status==='fulfilled'&&Array.isArray(x.value?.rows)&&x.value.rows.length);
-   fastProvider=firstWithRows>=0?firstWithRows:'none';
- }
- let photonResult={status:'rejected',reason:new Error('Photon not selected')};
- let arcgisResult={status:'rejected',reason:new Error('ArcGIS not selected')};
- let googleResult={status:'rejected',reason:new Error('Google not selected')};
- let widePhotonResult={status:'rejected',reason:new Error('Wide Photon provider not used')};
- if(wideSearch){
-   if(primaryBatch?.arcgis?.status==='fulfilled')arcgisResult=primaryBatch.arcgis;
-   else if(primaryBatch?.arcgis?.reason)arcgisResult={status:'rejected',reason:primaryBatch.arcgis.reason};
-   if(primaryBatch?.widePhoton?.status==='fulfilled'){
-     widePhotonResult=primaryBatch.widePhoton;
-   }else if(primaryBatch?.widePhoton?.reason){
-     widePhotonResult={status:'rejected',reason:primaryBatch.widePhoton.reason};
-   }
-   if(primaryBatch?.google?.status==='fulfilled'){
-     googleResult=primaryBatch.google;
-   }else if(primaryBatch?.google?.reason){
-     googleResult={status:'rejected',reason:primaryBatch.google.reason};
-   }
- }else if(Array.isArray(primaryBatch)){
-   photonResult=primaryBatch[0]||photonResult;
-   arcgisResult=primaryBatch[1]||arcgisResult;
-   googleResult=primaryBatch[2]||googleResult;
-   widePhotonResult=primaryBatch[3]||widePhotonResult;
- }else if(primaryBatch?.rows){
-   const v={status:'fulfilled',value:primaryBatch};
-   if(fastProvider===0)photonResult=v;
-   else if(fastProvider===1)arcgisResult=v;
-   else if(fastProvider===2)googleResult=v;
- }
- const photonOut=photonResult.status==='fulfilled'?photonResult.value:{rows:[],errors:[String(photonResult.reason?.message||photonResult.reason||'Photon unavailable')]};
- const widePhotonOut=widePhotonResult.status==='fulfilled'?widePhotonResult.value:{rows:[],errors:wideSearch?[String(widePhotonResult.reason?.message||widePhotonResult.reason||'Wide Photon unavailable')]:[]};
- if(wideSearch)photonOut.rows=[...(photonOut.rows||[]),...(widePhotonOut.rows||[])];
- if(wideSearch)photonOut.errors=[...(photonOut.errors||[]),...(widePhotonOut.errors||[])];
- const arcgisOut=arcgisResult.status==='fulfilled'?arcgisResult.value:{rows:[],errors:[String(arcgisResult.reason?.message||arcgisResult.reason||'ArcGIS unavailable')]};
- let googleOut=googleResult.status==='fulfilled'?googleResult.value:{rows:[],errors:[String(googleResult.reason?.message||googleResult.reason||'Google Places unavailable')]};
+ const hoursTimezonePromise=hoursTimezoneForCoordinates(lat,lon);
+ const wideSearch=radius>=50;
+let radiusEngineResult={coverageVerified:false},engineTimedOut=false,engineRows=[],engineErrors=[],engineProviderStats={},radiusEngineElapsedMs=0,wideGoogleOut={rows:[],errors:[]};
+if(wideSearch){
+  const wideStarted=Date.now();
+  const wide100=radius>50;
+  const wideArcgisPromise=withinBudget(
+    wideRadiusArcgis(lat,lon,radius,searchTerm),
+    wide100?7500:8500,
+    wide100?'Wide tiled ArcGIS coverage timed out':'50-mile tiled ArcGIS coverage timed out'
+  );
+  const wideGooglePromise=withinBudget(
+    searchTerm?googleSearchPlaces(lat,lon,Math.min(radius,50),searchTerm):googlePlaces(lat,lon,Math.min(radius,50)),
+    5000,
+    'Wide Google lookup timed out'
+  );
+  const settled=await Promise.allSettled([wideArcgisPromise,wideGooglePromise]);
+  const arc=settled[0]?.status==='fulfilled'&&!settled[0].value?.__timeout
+    ?settled[0].value:{rows:[],errors:['Wide ArcGIS coverage timed out'],tileCount:wide100?wideRadiusCenters(lat,lon,radius).length:1,tileRadiusMiles:50,ringMiles:wide100?65:0};
+  const goo=settled[1]?.status==='fulfilled'&&!settled[1].value?.__timeout
+    ?settled[1].value:{rows:[],errors:['Wide Google unavailable']};
+  wideGoogleOut=goo;
+  engineRows=filterNonDiningRows(dedupe([...(arc.rows||[]),...(goo.rows||[])]));
+  engineErrors=[...(arc.errors||[]),...(goo.errors||[])];
+  engineProviderStats={
+    ArcGIS:{tiles:arc.tileCount||1,rows:(arc.rows||[]).length,errors:(arc.errors||[]).length},
+    Google:{tiles:1,rows:(goo.rows||[]).length,errors:(goo.errors||[]).length},
+    Photon:{tiles:0,rows:0,errors:0},
+    Overpass:{tiles:0,rows:0,errors:0}
+  };
+  radiusEngineElapsedMs=Date.now()-wideStarted;
+  radiusEngineResult={
+    coverageVerified:true,
+    tileCount:arc.tileCount||1,
+    tileRadiusMiles:arc.tileRadiusMiles||50,
+    ringMiles:arc.ringMiles||0
+  };
+}else{
+  const radiusEngineStarted=Date.now();
+  const radiusEnginePromise=runRadiusEngine({lat,lon,radiusMiles:radius,searchTerm,providers:[{name:'radius-discovery',query:radiusEngineProviderQuery}],dedupe,concurrency:RADIUS_ENGINE_CONCURRENCY});
+  radiusEngineResult=await withinBudget(radiusEnginePromise,Math.min(13000,SEARCH_BUDGET_MS-500),'Radius Engine v2 timed out');
+  engineTimedOut=!!radiusEngineResult?.__timeout;
+  engineRows=engineTimedOut?[]:(radiusEngineResult?.rows||[]);
+  engineErrors=engineTimedOut?['Radius Engine v2 timed out']:(radiusEngineResult?.errors||[]);
+  engineProviderStats=engineTimedOut?{}:(radiusEngineResult?.providerStats||{});
+  radiusEngineElapsedMs=Date.now()-radiusEngineStarted;
+}
+let recoveredEngineRows=[...(engineRows||[])];
+const recoveryErrors=[];
+if(!wideSearch&&recoveredEngineRows.length<5){
+  const recoveryRadius=Math.min(radius,50);
+  const recoveryTasks=[
+    withinBudget(arcgisPlaces(lat,lon,recoveryRadius,searchTerm,3000),4500,'Radius ArcGIS recovery timed out'),
+    withinBudget(photonPlaces(lat,lon,recoveryRadius,searchTerm),4500,'Radius Photon recovery timed out')
+  ];
+  if(!searchTerm)recoveryTasks.push(withinBudget(googlePlaces(lat,lon,recoveryRadius),4500,'Radius Google recovery timed out'));
+  const recovery=await Promise.allSettled(recoveryTasks);
+  for(const result of recovery){
+    if(result.status==='fulfilled'&&!result.value?.__timeout){
+      recoveredEngineRows.push(...(result.value?.rows||[]));
+      recoveryErrors.push(...(result.value?.errors||[]));
+    }else if(result.status==='rejected')recoveryErrors.push(String(result.reason?.message||result.reason||'Radius recovery failed'));
+  }
+  recoveredEngineRows=filterNonDiningRows(dedupe(recoveredEngineRows));
+}
+if(recoveryErrors.length)engineErrors.push(...recoveryErrors);
+const googleSearchRadius=Math.min(radius,50);
+const googleResultSettled=wideSearch?wideGoogleOut:await withinBudget((searchTerm?googleSearchPlaces(lat,lon,googleSearchRadius,searchTerm):googlePlaces(lat,lon,googleSearchRadius)),radius<=10?4200:3200,'Google radius enrichment timed out');
+const googleOut=googleResultSettled?.__timeout?{rows:[],errors:['Google radius enrichment timed out']}:(googleResultSettled||{rows:[],errors:[]});
 
- let preliminary=filterNonDiningRows(dedupe([...(googleOut.rows||[]),...(photonOut.rows||[]),...(arcgisOut.rows||[])]));
- let osmOut={rows:[],errors:[]};
-
- // CP1168: deterministic tiled radius discovery runs alongside the fast provider pass and is merged
- // before final matching. 10/25/50 mile searches therefore get an actual
- // geographic discovery layer instead of inheriting a 100-result provider cap.
- // CP1168/r38 also tiles the primary providers for 1/3/5/10 miles so the
- // smallest radius choices no longer collapse onto the same capped result set.
- if(discoveryPromise){
-   const got=wideSearch ? parallelWide : await discoveryPromise;
-   if(got&&!got.__timeout){
-     osmOut.rows.push(...(got.rows||[]));
-     osmOut.errors.push(...(got.errors||[]));
-   }else{
-     osmOut.errors.push(wideSearch?'Wide radius discovery timed out':'Radius discovery timed out');
-   }
-   preliminary=filterNonDiningRows(dedupe([
-     ...(preliminary||[]),
-     ...(osmOut.rows||[])
-   ]));
- }
+let preliminary=filterNonDiningRows(dedupe([
+   ...(recoveredEngineRows||[]),
+   ...(googleOut.rows||[])
+ ]));
+ let osmOut={rows:[...(recoveredEngineRows||[])],errors:[...(engineErrors||[])]};
+ let primaryBatch=engineProviderStats;
+ let fastProvider=wideSearch?'wide-radius':'radius-engine-v2';
 
  const preliminarySearchMatches=searchTerm
    ? preliminary.filter(row=>restaurantSearchMatches(row,searchTerm)).length
@@ -1720,26 +1799,30 @@ let primaryBatch,parallelWide=null,fastProvider='none';
    const fallbackBudget=Math.min(3200,remaining);
    if(fallbackBudget>600){
      const fallbackTasks=[
-       withinBudget(googleSearchPlaces(lat,lon,providerRadius,searchTerm),fallbackBudget,'Google named search fallback timed out'),
-       (radius<=25 && (!discoveryPromise || !osmOut.rows.length))
-         ? withinBudget(overpass(lat,lon,radius,'restaurant|fast_food',searchTerm),Math.min(1800,fallbackBudget),'OSM named search fallback timed out')
-         : Promise.resolve({rows:[],errors:[]})
+       withinBudget(googleSearchPlaces(lat,lon,googleSearchRadius,searchTerm),fallbackBudget,'Google named search fallback timed out'),
+       withinBudget(overpass(lat,lon,Math.min(radius,25),DINING_AMENITIES,searchTerm),Math.min(2400,fallbackBudget),'OSM named search fallback timed out')
      ];
      const fallback=await Promise.allSettled(fallbackTasks);
-     if(fallback[0]?.status==='fulfilled')googleOut=fallback[0].value||googleOut;
-     if(fallback[1]?.status==='fulfilled')osmOut.rows.push(...(fallback[1].value?.rows||[]));
-     if(fallback[1]?.status==='fulfilled')osmOut.errors.push(...(fallback[1].value?.errors||[]));
+     if(fallback[0]?.status==='fulfilled'&&!fallback[0].value?.__timeout){
+       googleOut.rows.push(...(fallback[0].value?.rows||[]));
+       googleOut.errors.push(...(fallback[0].value?.errors||[]));
+     }
+     if(fallback[1]?.status==='fulfilled'&&!fallback[1].value?.__timeout){
+       const fallbackRows=fallback[1].value?.rows||[];
+       osmOut.rows.push(...fallbackRows);
+       osmOut.errors.push(...(fallback[1].value?.errors||[]));
+     }
      preliminary=filterNonDiningRows(dedupe([
+       ...(engineRows||[]),
        ...(googleOut.rows||[]),
-       ...(photonOut.rows||[]),
-       ...(arcgisOut.rows||[]),
        ...(osmOut.rows||[])
      ]));
    }
  }
+
  let contactOut={rows:[],errors:[]};
  const contactCandidates=filterNonDiningRows(dedupe([...preliminary,...osmOut.rows]));
- const contactAllowed=!wideSearch;
+ const contactAllowed=radius<=25;
  const missingContactNames=contactCandidates
    .filter(r=>!r.phone)
    .sort((a,b)=>Number(b.fastFood)-Number(a.fastFood)||Number(a.distance||0)-Number(b.distance||0))
@@ -1752,25 +1835,25 @@ let primaryBatch,parallelWide=null,fastProvider='none';
    const expandedNames=[...new Set(contactCandidates.filter(r=>missingContactNames.some(n=>norm(n)===norm(r.name))).flatMap(r=>[r.name,r.brand,r.operator]).filter(Boolean))].slice(0,12);
    const got=await withinBudget(contactEnrichment(lat,lon,Math.min(radius,25),expandedNames),Math.min(1900,contactRemaining),'Restaurant contact enrichment timed out');
    if(got&&!got.__timeout)contactOut=got; else contactOut.errors.push('Contact enrichment timed out');
-  }
-  // CP1053: keep Enterprise Google enrichment on demand. Regular searches
-  // remain in the lower-cost discovery tier; Details requests the Enterprise
-  // fields only when the user actually opens a restaurant.
-  const googleContactOut={rows:[],errors:[]};
-  const hoursTimeZone=await Promise.race([hoursTimezonePromise,new Promise(resolve=>setTimeout(()=>resolve(''),650))]).catch(()=>'');
-  const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
+ }
+ // CP1053: keep Enterprise Google enrichment on demand. Regular searches
+ // remain in the lower-cost discovery tier; Details requests the Enterprise
+ // fields only when the user actually opens a restaurant.
+ const googleContactOut={rows:[],errors:[]};
+ const hoursTimeZone=await Promise.race([hoursTimezonePromise,new Promise(resolve=>setTimeout(()=>resolve(''),650))]).catch(()=>'');
+ const rows=filterNonDiningRows(dedupe([...contactCandidates,...contactOut.rows])).map(r=>{
    const distance=miles(lat,lon,n(r.lat),n(r.lon));
    return {...r,distance};
  }).filter(r=>Number.isFinite(r.distance)&&r.distance<=radius+0.001).filter(r=>restaurantSearchMatches(r,searchTerm)).map(r=>{
    const direct=safeWebsiteUrl(r.website); const known=knownRestaurantWebsite(r); const cachedKey=normalizeSearchQuery([r.name,r.address,r.brand].filter(Boolean).join('|')); const cachedEntry=officialWebsiteCache.get(cachedKey); const cached=(cachedEntry&&Date.now()-cachedEntry.t<OFFICIAL_WEBSITE_CACHE_TTL)?cachedEntry.url:''; const website=direct||known||cached;
    const phone=String(r.phone||'').trim();
    const classification=RESTAURANT_TAXONOMY.classifyRestaurant({...r,website,phone}); const canonicalCategory=classification.primary||r.category||'American'; const classifiedFastFood=classification.tags.includes('Fast Food'); const photo=restaurantPhotoMeta(r); return {...r,category:canonicalCategory,fastFood:classifiedFastFood,quickCutTags:classification.tags,quickCutEvidence:classification.evidence,...photo,website,phone,websiteSource:r.website?'provider':(known?'known-brand':(cached?'official-search':'google-search-fallback')),phoneSource:phone?'provider':'google-search-fallback',hoursTimeZone:String(hoursTimeZone||r.hoursTimeZone||''),hoursSource:r.hoursSource||(r.opening_hours?(String(r.source||'').startsWith('OpenStreetMap')||String(r.source||'').startsWith('Photon')?'OpenStreetMap':'provider'):'')};
-  });
+   }); 
  const hoursCoverage={knownOpenNow:rows.filter(r=>typeof r.openNow==='boolean').length,openingHours:rows.filter(r=>!!String(r.opening_hours||'').trim()).length,unknown:rows.filter(r=>!restaurantHasAnyHoursData(r)).length,hoursSourceBreakdown:rows.reduce((acc,r)=>{const k=String(r.hoursSource||'unknown');acc[k]=(acc[k]||0)+1;return acc;}, {})};
-const data={ok:true,version:API_VERSION,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:discoveryPlan.mode,discoveryReserveMs:discoveryPlan.reserveMs,discoveryGroups:discoveryPlan.groups.length,discoveryCoveragePoints:discoveryPlan.coveragePoints,providerSearchRadiusMiles:providerRadius,providerExpansionPoints:discoveryPlan.coveragePoints,hoursCoverage, primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:(photonOut.rows||[]).length,arcgis:(arcgisOut.rows||[]).length,overpass:(osmOut.rows||[]).length,contact:(contactOut.rows||[]).length},providerErrors:[...googleOut.errors,...photonOut.errors,...arcgisOut.errors,...osmOut.errors,...contactOut.errors,...googleContactOut.errors].slice(0,8),results:rows};
+const data={ok:true,version:API_VERSION,radiusEngine:'v2',coverageVerified:!engineTimedOut&&radiusEngineResult?.coverageVerified===true,googlePlacesConfigured:!!GOOGLE_KEY,radiusMiles:radius,searchQuery:searchTerm,total:rows.length,fastFoodCount:rows.filter(r=>RESTAURANT_TAXONOMY.classifyRestaurant(r).tags.includes('Fast Food')).length,lat,lon,searchLatencyMs:Date.now()-startedAt,searchBudgetMs:SEARCH_BUDGET_MS,discoveryMode:'radius-engine-v2',discoveryReserveMs:0,discoveryGroups:radiusEngineResult?.tileCount||0,discoveryCoveragePoints:radiusEngineResult?.tileCount||0,providerSearchRadiusMiles:radius,providerExpansionPoints:radiusEngineResult?.tileCount||0,radiusEngine:{tileCount:radiusEngineResult?.tileCount||0,tileRadiusMiles:radiusEngineResult?.tileRadiusMiles||0,ringMiles:radiusEngineResult?.ringMiles||0,elapsedMs:radiusEngineElapsedMs,coverageVerified:!engineTimedOut&&radiusEngineResult?.coverageVerified===true},hoursCoverage,primaryWinner:fastProvider,providers:{google:(googleOut.rows||[]).length,googleContact:(googleContactOut.rows||[]).length,photon:Number(primaryBatch?.Photon?.rows||0),arcgis:Number(primaryBatch?.ArcGIS?.rows||0),overpass:Number(primaryBatch?.Overpass?.rows||0),contact:(contactOut.rows||[]).length},providerStats:primaryBatch,providerErrors:[...(engineErrors||[]),...(googleOut.errors||[]),...(contactOut.errors||[]),...(googleContactOut.errors||[])].slice(0,12),results:rows};
  cache.set(key,{t:Date.now(),data});return res.status(200).json(data)}
 return res.status(400).json({ok:false,message:'Unknown mode.'})
 }catch(e){console.error('dinliminate-'+API_VERSION,e);return res.status(502).json({ok:false,code:String(e?.code||'SERVICE'),message:String(e?.message||'Restaurant service unavailable.')})}}
-handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,centers,radiusDiscoveryPlan,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
+handler._test={directWebsiteDomainCandidates,fetchPublicSearchPage,fetchDuckDuckGoSearchPage,fetchGoogleWebSearchPage,fetchDiscoveryPage,officialPageSearchScore,verifiedWebsiteSearchHit,websiteSearchHitScore,extractExternalWebsiteLinks,extractBingDiscoveryResults,isDiscoveryHost,isFastFoodName,dedupe,isClearlyNonDiningBusiness,filterNonDiningRows,restaurantNameTokens,nameVariantMatch,sameRestaurant,restaurantStreetKey,addressHasStreetNumber,normAddress,phoneKey,websiteKey,requestQuery,normalizeSearchQuery,searchRegex,searchRegexAlternatives,searchQueryClause,providerSearchTerms,classifySearchTerm,rate,restaurantPhotoMeta,restaurantSearchMatches,image,knownRestaurantWebsite,isBlockedWebsite,fetchWebPage,fetchBingSearchPage,extractBingWebsiteResults,websitePageScore,verifiedWebsiteCandidate,discoverOfficialWebsite,resolveOfficialWebsite,googleContactEnrichment,googlePlaceDetails,officialRestaurantDetails,extractOfficialRestaurantData,applyGoogleContactPatches,hoursTimezoneForCoordinates,enrichOpenNowHours,googleTextHoursForRow,officialHoursForRow,radiusEngineProviderQuery,restaurantIdentityKey:RESTAURANT_TAXONOMY.restaurantIdentityKey,restaurantNameSimilarity,restaurantAddressSimilarity,classifyRestaurant:RESTAURANT_TAXONOMY.classifyRestaurant};
 module.exports=handler;
 // CP790 deployment trigger: corrected hours cleanup + locality geocoding.
