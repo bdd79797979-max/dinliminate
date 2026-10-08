@@ -18,9 +18,12 @@ assert.equal(isAllowedImageHost('evil.example'),false);
 assert.ok(HOSTS.length>=40);
 
 const root=path.resolve(__dirname,'../..');
-const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
-const inner=app.split(/\r?\n/).filter(line=>line.includes('innerHTML'));
-const unsafe=inner.filter(line=>/\+\s*(?:String\()?\s*(?:row|item|x|m)\.(?:name|notes|message)\b/.test(line)&&!line.includes('esc('));
+const productionFiles=[];
+const walk=(dir)=>{for(const name of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,name.name);if(name.isDirectory())walk(full);else if(/\\.(?:js|mjs)$/.test(name.name))productionFiles.push(full);}};
+walk(path.join(root,'src'));
+const inner=productionFiles.flatMap(file=>fs.readFileSync(file,'utf8').split(/\\r?\\n/).filter(line=>line.includes('innerHTML')).map(line=>({file,line})));
+const unsafe=inner.filter(({line})=>/\\+\\s*(?:String\\()?\\s*(?:row|item|x|m)\\.(?:name|notes|message)\\b/.test(line)&&!line.includes('esc('));
 assert.equal(unsafe.length,0,'user-controlled innerHTML interpolation must use esc()');
-assert.ok(app.includes(".querySelector('.family-member-copy b').textContent=String(m.name||'Family member')"));
+const familyMain=fs.readFileSync(path.join(root,'src/main.js'),'utf8');
+assert.ok(familyMain.includes(".querySelector('.family-member-copy b').textContent=String(m.name||'Family member')"));
 console.log('API/UI security audit: PASS');
