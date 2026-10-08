@@ -24,7 +24,7 @@ const thresholdFor = card => clamp(
   SWIPE_CONFIG.thresholdMaxPx
 );
 
-function triggerSwipeHaptic(){
+export function triggerSwipeHaptic(){
   try{
     const nativeHandler=window?.webkit?.messageHandlers?.haptic;
     if(nativeHandler?.postMessage){nativeHandler.postMessage('light');return true;}
