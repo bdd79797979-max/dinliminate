@@ -3,8 +3,6 @@ import { $ } from '../../ui/dom.js';
 import { show, startFood, openRestaurant, winner, closeDrawer } from '../../main.js';
 
 const tutorialState=S.tutorialState;
-
-const tutorialState=S.tutorialState;
  closeDrawer?.(true);
  window.requestAnimationFrame(begin);
 }
