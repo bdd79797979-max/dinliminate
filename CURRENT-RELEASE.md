@@ -145,3 +145,7 @@ CP1249 moves visual next-card promotion to the swipe commit point. The prepared 
 ## CP1250 — never hide the real waiting card
 
 CP1250 removes the last known visual-gap path in the overlap handoff. When the optional interactive overlap clone is created, the real prepared waiting card stays visible underneath it instead of being hidden. This means an overlap clone that has not painted yet can never expose the black decision stage.
+
+## CP1263 — Biscuits & Gravy Pixabay photo
+
+The built-in Biscuits & Gravy meal now uses the exact Pixabay image selected by the user: `https://cdn.pixabay.com/photo/2014/10/04/03/11/biscuits-472409_1280.jpg`. `cdn.pixabay.com` is included in the built-in meal-photo allowlist so the catalog can display the selected source.
