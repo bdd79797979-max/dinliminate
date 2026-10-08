@@ -22,7 +22,7 @@ for (const file of requiredFiles) {
 }
 
 const syntaxFiles = [
-  'boot.js','scripts/stamp.mjs','src/main.js','viewport.js','sw.js','api/restaurants.js',
+  'boot.js','scripts/stamp.mjs','src/main.js','src/data/restaurant-taxonomy.js','viewport.js','sw.js','api/restaurants.js',
   'api/restaurant-photo.js','api/google-restaurant-photo.js',
   'api/google-usage.js','api/family.js','api/family-store.js','api/image.js'
 ];
@@ -52,7 +52,7 @@ assert.equal((index.match(/<script(?![^>]*src)[^>]*>/g)||[]).length,0,'index.htm
 assert.ok(index.includes('./boot.js?v='+build),'index.html must load boot.js');
 assert.match(index, /<script type="module" src="\.\/src\/main\.js\?v=\d+"><\/script>/, 'index.html must load native ESM entry');
 assert.ok(main.includes("import { FOODS } from '../data/foods.js';"),'main must import foods as ESM');
-assert.ok(main.includes("import RESTAURANT_TAXONOMY from '../data/restaurant-taxonomy.js';"),'main must import taxonomy as ESM');
+assert.ok(main.includes("import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';"),'main must import taxonomy as ESM');
 assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
 assert.equal(main.includes('function diagnosisMiles'),false,'production main must not contain diagnostics');
 assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production main must not contain empty catches');
