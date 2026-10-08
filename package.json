@@ -18,6 +18,6 @@
     "test:decision": "node qa/cp1244-decision-transaction-smoke.cjs",
     "test:meal-catalog": "node qa/cp1245-meal-catalog-smoke.cjs",
     "test:swipe-handoff": "node qa/cp1249-commit-time-card-handoff-smoke.cjs",
-    "test:swipe-gap": "node qa/cp1248-no-swipe-gap-smoke.cjs"
+    "test:swipe-gap": "node qa/cp1250-never-hide-waiting-card-smoke.cjs"
   }
 }
