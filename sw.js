@@ -1,4 +1,4 @@
-const CACHE='dinliminate-shell-v1247';
+const CACHE='dinliminate-shell-v1248';
 const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
