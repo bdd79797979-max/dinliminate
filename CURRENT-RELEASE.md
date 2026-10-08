@@ -141,3 +141,7 @@ CP1248 keeps the actual prepared waiting card visible throughout the outgoing-ca
 ## CP1249 — commit-time next-card paint
 
 CP1249 moves visual next-card promotion to the swipe commit point. The prepared waiting card is made visible and composited before the outgoing card begins its off-screen animation, closing the remaining paint window that could expose the black stage for a split second. CP1248's always-visible waiting-card safeguard remains in place.
+
+## CP1250 — never hide the real waiting card
+
+CP1250 removes the last known visual-gap path in the overlap handoff. When the optional interactive overlap clone is created, the real prepared waiting card stays visible underneath it instead of being hidden. This means an overlap clone that has not painted yet can never expose the black decision stage.
