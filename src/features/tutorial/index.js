@@ -1,8 +1,9 @@
-import { state as S } from '../../state/store.js';
+import { store } from '../../state/store.js';
+const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { show, startFood, openRestaurant, winner, closeDrawer, home } from '../../main.js';
 
-const tutorialState=S.tutorialState;
+const tutorialState=store.get('tutorialState');
 function ensureTutorialUI(){
  if(document.querySelector('#tutorialLayer'))return;
  const layer=document.createElement('div');layer.id='tutorialLayer';layer.className='tutorial-layer hidden';layer.setAttribute('aria-hidden','true');
