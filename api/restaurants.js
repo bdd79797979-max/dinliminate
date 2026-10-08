@@ -65,7 +65,7 @@ function isClearlyNonDiningBusiness(row){
 }
 function filterNonDiningRows(rows){return (rows||[]).filter(row=>!isClearlyNonDiningBusiness(row))}
 function miles(a,b,c,d){const R=3958.7613,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,z=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(z))}
-async function json(url,opt={},timeout=9000){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);try{const r=await fetch(url,{...opt,signal:ctl.signal,headers:{Accept:'application/json','User-Agent':'Dinliminate/1.0',...(opt.headers||{})}});const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{}if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;e.body=data;throw e}return data}finally{clearTimeout(t)}}
+async function json(url,opt={},timeout=9000){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);try{const r=await fetch(url,{...opt,signal:ctl.signal,headers:{Accept:'application/json','User-Agent':'Dinliminate/1.0',...(opt.headers||{})}});const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch(error){console.error('Dinliminate error',error)}if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;e.body=data;throw e}return data}finally{clearTimeout(t)}}
 const HOURS_TIMEZONE_CACHE_TTL=6*60*60*1000;
 const hoursTimezoneCache=new Map();
 async function hoursTimezoneForCoordinates(lat,lon){
@@ -475,7 +475,7 @@ function parseJsonLdObjects(html){
         if(Array.isArray(value['@graph']))value['@graph'].forEach(visit);
       };
       visit(parsed);
-    }catch{}
+    }catch(error){console.error('Dinliminate error',error)}
   }
   return out;
 }
@@ -1331,7 +1331,7 @@ async function requestJsonBody(req,maxBytes=260000){
       if(done)return;
       raw+=String(chunk);
       size+=Buffer.byteLength(String(chunk),'utf8');
-      if(size>maxBytes){finish(reject,new Error('Hours request is too large.'));try{req.destroy?.();}catch{}}
+      if(size>maxBytes){finish(reject,new Error('Hours request is too large.'));try{req.destroy?.();}catch(error){console.error('Dinliminate error',error)}}
     });
     req?.on?.('end',()=>{
       if(done)return;
