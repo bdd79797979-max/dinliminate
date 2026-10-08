@@ -1405,31 +1405,12 @@ return true;
 } catch { return false; }
 }
 function show(screen) {
+if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&tutorialState.active&&tutorialState.screen&&tutorialState.screen!==screen){
+ tutorialInvalidateTransition('screen-change');
+}
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 S.screen = screen;
-if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&tutorialState.active){
-  const tourScreen=['home','food','restaurant','winner'].includes(screen);
-  if(tourScreen){
-    const steps=tutorialStepsForScreen(screen);
-    if(steps.length){
-      tutorialState.token++;
-      tutorialState.screen=screen;
-      tutorialState.steps=steps;
-      tutorialState.index=0;
-      tutorialState.awaitingAction=!!steps[0]?.action;
-      document.body.classList.add('tutorial-mode-on');
-      ensureTutorialUI();
-      window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{
-        if(tutorialState.active&&tutorialState.screen===screen&&S.screen===screen)renderTutorialStep();
-      }));
-    }
-  }else{
-    tutorialHideOverlay();
-  }
-}
-try{localStorage.setItem('dinliminate.start-screen',String(screen));}catch{}
-document.documentElement.classList.remove('dinliminate-start-food','dinliminate-start-restaurant','dinliminate-start-winner','dinliminate-start-family');
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
 $('globalBack')?.classList.add('hidden');
 $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
@@ -1517,9 +1498,9 @@ function tutorialStepsForScreen(screen){
   {targets:['#foodStart .home-choice-content','#restStart .home-choice-content'],title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#foodStart','#restStart','#menu']}
  ];
  if(screen==='food')return[
-  {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.',action:'perform'},
-  {target:'#foodCut',title:'CUT',body:'Remove this meal.',action:'perform'},
-  {target:'#foodBack',title:'BACK',body:'Return to the previous meal.',action:'perform'},
+  {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},
+  {target:'#foodCut',title:'CUT',body:'Remove this meal.'},
+  {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
   {target:'#foodChoose',title:'CHOOSE',body:'Make your decision early.',action:'choose'},
   {target:'#foodDetails',title:'DETAILS',body:'See more about this meal.'},
   {target:'#foodMealTimeToggle',title:'MEAL TIMES',body:'Narrow down by meal time.',avoid:['#foodQuickToggle','#mealTimeQuick','#foodQuick']},
@@ -1533,9 +1514,9 @@ function tutorialStepsForScreen(screen){
   {target:'#address',title:'ADDRESS SEARCH',body:'Search from an address.'},
   {target:'#find',title:'REFRESH',body:'Refresh your restaurant results.'},
   {target:'#radius',title:'RADIUS',body:'Choose how far to search.'},
-  {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.',action:'perform'},
-  {target:'#restCut',title:'CUT',body:'Remove this restaurant.',action:'perform'},
-  {target:'#restBack',title:'BACK',body:'Return to the previous restaurant.',action:'perform'},
+  {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.'},
+  {target:'#restCut',title:'CUT',body:'Remove this restaurant.'},
+  {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
   {target:'#restChoose',title:'CHOOSE',body:'Make your decision early.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'RESTAURANT SEARCH',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},
   {target:'#restaurantQuickToggle',title:'CUISINE',body:'Narrow down by cuisine type.',avoid:['#restQuick','#restaurantSearchToggle','#restaurantHoursToggle']},
@@ -1635,7 +1616,7 @@ function renderTutorialStep(){
  const title=document.querySelector('#tutorialBubbleTitle'),body=document.querySelector('#tutorialBubbleBody');
  if(title)title.textContent=step.title;if(body)body.textContent=step.body;
  if(!bubble){ensureTutorialUI();return renderTutorialStep();}
- bubble.classList.remove('is-action-step');
+ bubble.classList.toggle('is-action-step',!!step.action);
  bubble.disabled=false;
  bubble.setAttribute('aria-disabled','false');
  bubble.dataset.action=step.action||'';
@@ -1736,27 +1717,102 @@ let tutorialSuppressClick=null;
 function tutorialTargetHit(event,selector){
  try{return !!event.target?.closest?.(selector);}catch{return false;}
 }
-
-// CP1283 — Tour is non-blocking. These helpers are retained for compatibility
-// with older Tour state, but they never prevent or replace app interactions.
-function tutorialAdvanceFromTarget(){ return false; }
-function tutorialCurrentTargetForEvent(){ return null; }
+function tutorialAdvanceFromTarget(event,step){
+ if(step?.action==='home-choice'){
+  const choice=event.target?.closest?.('#foodStart,#restStart');
+  if(!choice)return false;
+  const nextScreen=choice.id==='restStart'?'restaurant':'food';
+  tutorialMarkHomeChoice(nextScreen);
+  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+  else startFood({tutorialResumeIndex:0});
+  return true;
+ }
+ if(step?.action==='enter-restaurant'||step?.action==='enter-food'){
+  advanceTutorial();
+  return true;
+ }
+ if(step?.action==='winner-restart'){
+  handleWinnerRestart();
+  return true;
+ }
+ advanceTutorial();
+ return true;
+}
+function tutorialCurrentTargetForEvent(event,step){
+ if(!step?.target)return null;
+ if(step.action==='home-choice')return event.target?.closest?.('#foodStart,#restStart')||null;
+ return tutorialTargetHit(event,String(step.target)) ? event.target?.closest?.(String(step.target)) : null;
+}
 function tutorialBlockPointer(){ return false; }
 function tutorialHandlePointerUp(){ return false; }
 function tutorialHandlePointerCancel(){ return false; }
-function tutorialHighlightedTargetClick(){ return false; }
-
+let tutorialDispatchingAction=false;
+function tutorialHighlightedTargetClick(event){
+ if(!tutorialModeEnabled()||!tutorialState.active)return;
+ const step=tutorialState.steps[tutorialState.index];
+ if(step?.action==='home-choice'){
+  const target=event.target?.closest?.('#foodStart,#restStart');
+  if(!target)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const nextScreen=target.id==='restStart'?'restaurant':'food';
+  tutorialMarkHomeChoice(nextScreen);
+  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+  else startFood({tutorialResumeIndex:0});
+  return;
+ }
+ if(step?.action==='choose'){
+  const target=event.target?.closest?.('#foodChoose,#restChoose');
+  if(!target)return;
+  tutorialMarkChoose(target.id==='restChoose'?'restaurant':'food');
+ }
+}
 function bindTutorialUI(){
  ensureTutorialUI();
  const bubble=document.querySelector('#tutorialBubble');
- if(bubble&&!bubble.dataset.bound){
-  bubble.dataset.bound='1';
-  bubble.addEventListener('click',advanceTutorial);
+ if(bubble&&!bubble.dataset.bound){bubble.dataset.bound='1';bubble.addEventListener('click',advanceTutorial);}
+ const toggle=document.querySelector('#tutorialModeToggle');
+ if(toggle&&!toggle.dataset.bound){
+  toggle.dataset.bound='1';
+  toggle.addEventListener('click',event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   if(tutorialModeEnabled()&&tutorialState.active) stopTutorialMode();
+   else startTutorialFromHome();
+  });
  }
- window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
- window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
+ const toggleSettings=document.querySelector('#tutorialModeSettings');
+ if(toggleSettings&&!toggleSettings.dataset.bound){
+  toggleSettings.dataset.bound='1';
+  toggleSettings.addEventListener('click',event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   startTutorialFromHome();
+  });
+ }
+ document.addEventListener('click',event=>{
+  if(!tutorialModeEnabled()||!tutorialState.active)return;
+  const target=event.target?.closest?.('#foodStart,#restStart');
+  const step=tutorialState.steps[tutorialState.index];
+  if(target&&step?.action==='home-choice'){
+   event.preventDefault();
+   event.stopPropagation();
+   const nextScreen=target.id==='restStart'?'restaurant':'food';
+   tutorialMarkHomeChoice(nextScreen);
+   if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+   else startFood({tutorialResumeIndex:0});
+  }
+ },true);
+ document.addEventListener('click',event=>{
+  if(!tutorialModeEnabled()||!tutorialState.active)return;
+  const target=event.target?.closest?.('#foodChoose,#restChoose');
+  if(target){
+   tutorialMarkChoose(target.id==='restChoose'?'restaurant':'food');
+  }
+ },true);
+ window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
+ window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
 }
-
 bindTutorialUI();
 
 function closeOverlays() {
