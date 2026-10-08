@@ -1426,7 +1426,8 @@ const tutorialState={
  token:0,
  awaitingAction:false,
  pendingDecisionScreen:'',
- returnContext:null
+ returnContext:null,
+ firstDecisionScreen:''
 };
 function ensureTutorialUI(){
  if(document.querySelector('#tutorialLayer'))return;
@@ -1461,6 +1462,7 @@ function stopTutorialMode(){
  tutorialState.awaitingAction=false;
  tutorialState.pendingDecisionScreen='';
  tutorialState.returnContext=null;
+ tutorialState.firstDecisionScreen='';
  S.tutorialMode=false;
  const layer=document.querySelector('#tutorialLayer');if(layer){layer.classList.add('hidden');layer.setAttribute('aria-hidden','true');}
  document.querySelector('#tutorialBubble')?.classList.remove('is-visible');
@@ -1486,6 +1488,7 @@ function startTutorialFromHome(){
   tutorialState.awaitingAction=false;
   tutorialState.pendingDecisionScreen='';
   tutorialState.returnContext=null;
+  tutorialState.firstDecisionScreen='';
   show('home');
   startTutorialForScreen('home',true,{index:0});
  };
@@ -1508,7 +1511,9 @@ function tutorialStepsForScreen(screen){
   {target:'#foodQuickToggle',title:'CUISINE',body:'Narrow down by cuisine type.',avoid:['#foodMealTimeToggle','#mealTimeQuick','#foodQuick']},
   {target:'#foodMaybeDeck',title:'ALL / MAYBES / COUNT',body:'Switch between all remaining meals and Maybes. See how many choices remain.'},
   {target:'#foodMenu',title:'MENU',body:'This opens the app menu.',avoid:['#drawer']},
-  {target:'#foodMenu',title:'ENTER RESTAURANT',body:'Tap this Tour message to continue through the Restaurant side of Dinliminate.',action:'enter-restaurant'}
+  tutorialState.firstDecisionScreen==='restaurant'
+   ? {target:'#foodMenu',title:'FINISH TOUR',body:'You started with Restaurant. You are done — return to Home to finish the Tour.',action:'finish-tour'}
+   : {target:'#foodMenu',title:'ENTER RESTAURANT',body:'Continue the Tour through the Restaurant side of Dinliminate.',action:'enter-restaurant'}
  ];
  if(screen==='restaurant')return[
   {target:'#locate',title:'CURRENT LOCATION',body:'Use your current location.'},
@@ -1525,7 +1530,9 @@ function tutorialStepsForScreen(screen){
   {target:'#restaurantHoursToggle',title:'OPEN',body:'Show only restaurants that are open now. Tap again to show all.',avoid:['#restaurantHoursQuick','#restQuick','#restaurantSearchToggle']},
   {target:'#restaurantMaybeDeck',title:'ALL / MAYBES / COUNT',body:'Switch between all remaining restaurants and Maybes. See how many choices remain.'},
   {target:'#restaurantMenu',title:'MENU',body:'This opens the app menu.',avoid:['#drawer']},
-  {target:'#restaurantMenu',title:'ENTER MEALS',body:'Tap this Tour message to continue through the Meals side of Dinliminate.',action:'enter-food'}
+  tutorialState.firstDecisionScreen==='food'
+   ? {target:'#restaurantMenu',title:'FINISH TOUR',body:'You started with Meals. You are done — return to Home to finish the Tour.',action:'finish-tour'}
+   : {target:'#restaurantMenu',title:'ENTER MEALS',body:'Continue the Tour through the Meals side of Dinliminate.',action:'enter-food'}
  ];
  if(screen==='winner')return[
   {target:'#restart',title:'START OVER',body:'Tap Start Over to return to this decision path and continue the Tour.',action:'winner-restart'}
@@ -1704,6 +1711,7 @@ function tutorialMarkHomeChoice(screen){
  if(step?.action!=='home-choice')return;
  tutorialState.awaitingAction=false;
  tutorialState.pendingDecisionScreen=screen;
+ if(!tutorialState.firstDecisionScreen)tutorialState.firstDecisionScreen=screen;
 }
 function tutorialMarkChoose(screen){
  if(!tutorialModeEnabled()||!tutorialState.active)return;
@@ -1741,9 +1749,14 @@ function advanceTutorial(){
  }
  if(step?.action==='enter-food'){
   tutorialState.awaitingAction=false;
+  startFood({tutorialResumeIndex:0});
+  return;
+ }
+ if(step?.action==='finish-tour'){
+  tutorialState.awaitingAction=false;
   stopTutorialMode();
   home();
-  tutorialToast('Tutorial complete');
+  tutorialToast('Tour complete');
   return;
  }
  if(step?.action==='winner-restart'){
@@ -1821,8 +1834,11 @@ function bindTutorialUI(){
   toggle.addEventListener('click',event=>{
    event.preventDefault();
    event.stopPropagation();
-   if(tutorialModeEnabled()&&tutorialState.active) stopTutorialMode();
-   else startTutorialFromHome();
+   if(tutorialModeEnabled()&&tutorialState.active){
+    stopTutorialMode();
+    tutorialHideOverlay();
+    closeDrawer?.(true);
+   }else startTutorialFromHome();
   });
  }
  const toggleSettings=document.querySelector('#tutorialModeSettings');
