@@ -2668,6 +2668,7 @@ async function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
   clearCompletionTimer();
   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
   card.classList.remove('swipe-active');
+  card.style.willChange='';
   card.style.transition='';
   card.style.transform='';
   card.style.opacity='1';
@@ -2694,7 +2695,9 @@ async function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
   if(phase!=='dragging'&&phase!=='idle')return;
   phase='idle';
   card.classList.remove('swipe-active');
-  card.style.transition='transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease';
+  // CP1258: slightly longer, softer spring-back so an uncommitted drag returns
+  // from the exact release point instead of feeling like a snap.
+  card.style.transition='transform .22s cubic-bezier(.22,1,.36,1),opacity .22s ease';
   card.style.transform='translate3d(0,0,0) rotate(0deg)';
   card.style.opacity='1';
   card.style.visibility='visible';
@@ -2850,6 +2853,7 @@ const completeAfterExit=async ()=>{
   card.dataset.swipePhase='committing';
   card.dataset.swipeTransaction='active';
   card.style.pointerEvents='none';
+  card.style.willChange='transform';
   hapticTriggered=false;
   suppressClickUntil=Date.now()+700;
   releasePointer();
@@ -2890,7 +2894,9 @@ const completeAfterExit=async ()=>{
   const targetX=direction<0 ? (dx-remaining) : (dx+remaining);
   const targetTransform='translate3d('+targetX.toFixed(1)+'px,0,0) rotate('+((direction*11).toFixed(2))+'deg)';
   const magnitude=clamp(Math.abs(speed),0,2.4);
-  const duration=Math.round(clamp(285-(magnitude*28),225,285));
+  // CP1258: keep the same decisive flight, but give slower releases a little
+  // more travel time and fast flicks a slightly quicker finish.
+  const duration=Math.round(clamp(300-(magnitude*30),240,300));
 
   if(next&&!staticWaitingCard&&!isOverlapCard){
    const revealPromotedNext=()=>{
