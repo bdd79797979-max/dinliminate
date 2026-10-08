@@ -1,4 +1,5 @@
-import { state as S } from '../../state/store.js';
+import { store } from '../../state/store.js';
+const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
 import RESTAURANT_TAXONOMY from '../../data/restaurant-taxonomy.js';
