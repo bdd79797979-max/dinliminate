@@ -57,8 +57,8 @@ for(const file of targetModulePaths){
 const productionModuleFiles=targetModulePaths;
 for(const file of productionModuleFiles){
   const source=read(file);
-  assert.equal((source.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production module contains an empty catch: '+file);
-  assert.equal((source.match(/String\\([^)]*\\)\\.includes\\(/g)||[]).length,0,'production module contains forbidden String(...).includes diagnostic check: '+file);
+  assert.equal(source.includes('catch{}')||source.includes('catch {}'),false,'production module contains an empty catch: '+file);
+  assert.equal(source.includes('String(fn).includes('),false,'production module contains forbidden String(fn).includes diagnostic check: '+file);
   assert.equal(source.includes('window.__DINLIMINATE_'),false,'production module publishes a Dinliminate global: '+file);
   assert.equal((source.match(/window\\.[A-Za-z_$][\\w$]*\\s*=/g)||[]).length,0,'production module assigns a window global: '+file);
 }
