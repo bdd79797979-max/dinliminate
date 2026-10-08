@@ -133,3 +133,7 @@ CP1246 keeps the already-prepared overlap next-card visible as a visual bridge w
 ## CP1247 — Tutorial Home target repair
 
 CP1247 fixes the first Home Tour transition by giving the Home slogan the stable `#home-slogan` target referenced by the tutorial. The tutorial target-positioning fallback now retries for 24 animation frames and shows an explicit failure message before stopping instead of silently disappearing.
+
+## CP1248 — eliminate swipe handoff gap
+
+CP1248 keeps the actual prepared waiting card visible throughout the outgoing-card handoff. The optional overlap clone remains available for early next-card input, but it is no longer the sole visual bridge. This guarantees that a prepared next card remains underneath the outgoing card instead of allowing the stack to become visually empty for a frame.
