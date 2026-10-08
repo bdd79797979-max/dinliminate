@@ -27,7 +27,7 @@ let swipeOverlapSerial=0;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1274';
+let APP_BUILD = '1275';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -1420,6 +1420,8 @@ if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&
 document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 S.screen = screen;
+try{localStorage.setItem('dinliminate.start-screen',String(screen));}catch{}
+document.documentElement.classList.remove('dinliminate-start-food','dinliminate-start-restaurant','dinliminate-start-winner','dinliminate-start-family');
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
 $('globalBack')?.classList.add('hidden');
 $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
@@ -2273,31 +2275,19 @@ S.index = 0;
 S.winnerItem = null;
 buildFood();
 
-/* CP1273: give the browser a real first-paint opportunity before the heavier
-   meal image/deck preparation runs. Populate only the visible card shell here. */
+/* CP1275: render the complete first card before revealing Meals.
+   The first image is also kicked into the browser cache before the screen
+   transition so the card can appear without a one-frame image flash. */
 const firstItem=S.pool[S.index];
-if(firstItem){
- const firstCard=$('foodCard');
- const firstImg=$('foodImg');
- if(firstCard)firstCard.dataset.mealId=firstItem.id;
- if(firstImg){
-  const firstSrc=foodPhoto(firstItem)||foodPhotoFallback(firstItem)||FINAL_FOOD_IMAGE;
-  firstImg.alt=firstItem.name;
-  firstImg.referrerPolicy='no-referrer';
-  firstImg.loading='eager';
-  firstImg.decoding='async';
-  firstImg.style.visibility='visible';
-  firstImg.src=firstSrc;
- }
- $('foodName').textContent=firstItem.name;
- $('foodCat').textContent=firstItem.category;
-}
+const firstSrc=firstItem ? (foodPhoto(firstItem)||foodPhotoFallback(firstItem)||FINAL_FOOD_IMAGE) : FINAL_FOOD_IMAGE;
+if(firstSrc)preloadSwipeImage(firstSrc);
+foodQuick();
+drawFood({deferPrime:true});
 show('food');
+save();
+maybeShowInCardSwipeCoach();
 requestAnimationFrame(()=>{
-  foodQuick();
-  drawFood();
-  save();
-  maybeShowInCardSwipeCoach();
+  primeFoodSwipeMedia();
   if(tutorialModeEnabled()&&tutorialState.active){
    const resumeIndex=Number.isInteger(options?.tutorialResumeIndex)?options.tutorialResumeIndex:0;
    tutorialEnterDecisionScreen('food',resumeIndex);
@@ -2320,7 +2310,7 @@ function foodChoiceIndex(rows,start,keepState=false){
  for(let step=0;step<len;step++){const i=(start+step)%len;if(keepState?S.maybe.has(rows[i].id):!S.maybe.has(rows[i].id))return i;}
  return -1;
 }
-function drawFood(){
+function drawFood(options={}){
  // CP1197: restore the visual waiting card, but never promote it into the live card.
  // The live meal card remains the only swipeable/committed card; the waiting card is
  // a separate, pointer-inert preview that is refreshed independently.
@@ -2404,7 +2394,7 @@ function drawFood(){
  updateDecisionBackButtons();
  renderMaybeDeckToggle('food');
  // CP1197: prepare the visual waiting card independently. It is never promoted.
- if(!foodSwipeHandoff)primeFoodSwipeMedia();
+ if(!foodSwipeHandoff&&!options.deferPrime)primeFoodSwipeMedia();
  maybeShowInCardSwipeCoach();if(!foodSwipeHandoff)bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){pushDecisionHistory('food',captureFoodDecisionState());const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
@@ -5229,7 +5219,6 @@ function visibleCardDetailImage(item,type){
   const currentKey=String(img.dataset.restaurantPhotoKey||'').trim();
   if(!key||!currentKey||key!==currentKey)return '';
  }
- if(!img.complete||!(Number(img.naturalWidth)>0))return '';
  const src=String(img.currentSrc||img.src||'').trim();
  if(!src||src.startsWith('data:image/svg'))return '';
  return src;
@@ -7048,8 +7037,9 @@ renderLocationSource();
 renderFindButton();
 updateStorageIndicator();
 hydrateCustomPhotos().then(()=>migrateCustomPhotos()).catch(()=>{});
-// CP1138 — reveal only after the correct persisted screen has been painted.
-requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
+// CP1275 — restore and render the persisted screen while the boot mask is still
+// covering the page, then reveal it on the next paint. This prevents Safari from
+// exposing the stale Home/previous-screen snapshot during refresh.
 if (S.saved && S.screen === 'food' && S.pool.length) {
 show('food'); foodQuick(); drawFood();
 } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
@@ -7057,6 +7047,7 @@ show('restaurant'); restaurantQuick(); drawRestaurants();
 } else {
 home();
 }
+requestAnimationFrame(()=>document.documentElement.classList.remove('dinliminate-booting'));
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
 snapshot: () => ({

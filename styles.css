@@ -10672,3 +10672,40 @@ html.dinliminate-standalone #restaurant .restaurant-card-stack>.next-card:not([d
     border-radius:6px!important;
   }
 }
+
+
+/* CP1275 — Home copy refinement and no-pill readability backing.
+   The translucent backing now covers each label + arrow as one compact,
+   squared plaque rather than a pill around the word alone. */
+.app.home-active #home .home-choice-content{
+  padding:7px 11px 8px!important;
+  gap:8px!important;
+  border-radius:4px!important;
+  background:rgba(9,7,5,.40)!important;
+  border:1px solid rgba(231,204,145,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,248,225,.07),0 4px 12px rgba(0,0,0,.18)!important;
+}
+.app.home-active #home .home-choice-content strong{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.app.home-active #home .home-choice-arrow{
+  color:#e7cc91!important;
+}
+.app.home-active #home .home-slogan{
+  bottom:calc(env(safe-area-inset-bottom) + 235px)!important;
+  color:#e7cc91!important;
+}
+@media(max-width:390px){
+  .app.home-active #home .home-choice-content{
+    padding:6px 10px 7px!important;
+    gap:7px!important;
+    border-radius:4px!important;
+  }
+  .app.home-active #home .home-slogan{
+    bottom:calc(env(safe-area-inset-bottom) + 215px)!important;
+  }
+}
