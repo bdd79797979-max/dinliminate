@@ -484,7 +484,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.pexels.com/photos/6969266/pexels-photo-6969266.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.unsplash.com/photo-1566740933449-11e38b77e6e5?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "corn",
       "green beans",
@@ -513,7 +513,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.unsplash.com/photo-1764756994472-e39e36c43ffe?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.unsplash.com/photo-1705945021699-7374c3fd34cb?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "ground beef",
       "breadcrumbs",
@@ -824,7 +824,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.unsplash.com/photo-1572171579626-e79450374587?auto=format&fit=crop&w=1800&q=85",
+    "image": "https://images.unsplash.com/photo-1600441397207-1913d3c09b2a?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "beef",
       "tomatoes",
@@ -947,11 +947,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.pexels.com/photos/19252757/pexels-photo-19252757.jpeg?auto=compress&cs=tinysrgb&w=1800",
-    "photoAttribution": "Photo by Amadscientist",
-    "photoAttributionUrl": "https://commons.wikimedia.org/wiki/File:Chicken_and_dumplings.JPG",
-    "photoLicense": "CC BY-SA 3.0",
-    "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "image": "https://images.unsplash.com/photo-1600041974426-c62f5a7eddb3?auto=format&fit=crop&w=1800&q=85",
     "ingredients": [
       "chicken",
       "broth",
@@ -3400,36 +3396,6 @@ window.DINLIMINATE_FOODS = [
     ]
   },
   {
-    "id": "fish-sticks",
-    "name": "Fish Sticks",
-    "primary": "fish",
-    "category": "American",
-    "quickCuts": [
-      "American",
-      "Seafood"
-    ],
-    "image": "https://images.pexels.com/photos/5639413/pexels-photo-5639413.jpeg?auto=compress&cs=tinysrgb&w=1400",
-    "ingredients": [
-      "breaded white fish",
-      "flour",
-      "breadcrumbs",
-      "oil",
-      "tartar sauce"
-    ],
-    "nutrition": {
-      "calories": 420,
-      "protein": 22,
-      "carbs": 34,
-      "fat": 23,
-      "sodium": 840
-    },
-    "nutritionNote": "Typical estimate per serving; preparation, portion size, and brand can change these values.",
-    "recipe": "Bake or air-fry frozen fish sticks until crisp and hot. Serve with tartar sauce and a side.",
-    "mealTimes": [
-      "Lunch / Dinner"
-    ]
-  },
-  {
     "id": "honey-buns-little-debbie",
     "name": "Honey Buns",
     "primary": "honey-buns",
@@ -3461,6 +3427,63 @@ window.DINLIMINATE_FOODS = [
     "mealTimes": [
       "Breakfast",
       "Snacks / Desserts"
+    ]
+  },
+  {
+    "id": "chocolate-covered-peanuts",
+    "name": "Chocolate Covered Peanuts",
+    "primary": "chocolate-covered-peanuts",
+    "category": "Snack",
+    "quickCuts": [
+      "American"
+    ],
+    "image": "https://images.unsplash.com/photo-1772985810405-b63c1fb3afa6?auto=format&fit=crop&w=1800&q=85",
+    "ingredients": [
+      "peanuts",
+      "chocolate",
+      "salt"
+    ],
+    "nutrition": {
+      "calories": 220,
+      "protein": 6,
+      "carbs": 18,
+      "fat": 15,
+      "sodium": 120
+    },
+    "nutritionNote": "Typical estimate per serving; exact calories and nutrients vary by portion size and preparation.",
+    "recipe": "Coat roasted peanuts in melted chocolate, then let them cool until the chocolate is firm.",
+    "mealTimes": [
+      "Snacks / Desserts"
+    ]
+  },
+  {
+    "id": "fish-sticks",
+    "name": "Fish Sticks",
+    "primary": "fish",
+    "category": "American",
+    "quickCuts": [
+      "American",
+      "Seafood"
+    ],
+    "image": "https://images.pexels.com/photos/5639413/pexels-photo-5639413.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    "ingredients": [
+      "breaded white fish",
+      "flour",
+      "breadcrumbs",
+      "oil",
+      "tartar sauce"
+    ],
+    "nutrition": {
+      "calories": 420,
+      "protein": 22,
+      "carbs": 34,
+      "fat": 23,
+      "sodium": 840
+    },
+    "nutritionNote": "Typical estimate per serving; preparation, portion size, and brand can change these values.",
+    "recipe": "Bake or air-fry frozen fish sticks until crisp and hot. Serve with tartar sauce and a side.",
+    "mealTimes": [
+      "Lunch / Dinner"
     ]
   }
 ];
