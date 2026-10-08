@@ -109,3 +109,9 @@ The exit duration and full-card clearance from CP1239 are unchanged; CP1241 chan
 CP1242 fixes the Home Tour first-step failure and hardens the full Tutorial/Tour interaction model. While the Tour is active, the currently highlighted control is owned by the Tour: its normal application handler is prevented from firing and the tutorial action runs instead. This prevents the first highlighted Tour button from toggling Tutorial Mode off, prevents instructional steps from accidentally cutting/keeping/choosing/opening controls, and keeps the action steps (Home choice, Choose, cross-screen continuation, and Winner Start Over) intentional.
 
 The obsolete tutorial target/menu and scheduling stubs were removed. Target rendering now retries longer and ends cleanly with an explanatory message rather than silently hiding the overlay when a control is late to render. A dedicated CP1242 tutorial smoke test was added.
+
+## CP1243 — tutorial pointer safety
+
+CP1243 closes the remaining Tutorial/Tour interaction hole caused by decision controls using pointerup handlers. The Tour now guards pointerdown, pointerup, pointercancel, and click for the highlighted target, suppressing the underlying control event and consuming the tutorial action instead. The guard also suppresses the trailing synthetic click after a pointerup action, so Cut/Maybe/Choose cannot perform a real decision while being demonstrated.
+
+CP1243 retains the CP1242 centralized target ownership and removes no useful app interaction outside the active highlighted tutorial target. The dedicated tutorial regression test now covers the pointer-level guard.
