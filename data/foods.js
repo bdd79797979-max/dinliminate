@@ -1222,7 +1222,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://cdn.pixabay.com/photo/2014/10/04/03/11/biscuits-472409_1280.jpg",
+    "image": "https://images.pexels.com/photos/6858694/pexels-photo-6858694.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "backupImage": "https://images.pexels.com/photos/36903815/pexels-photo-36903815.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "biscuits",
