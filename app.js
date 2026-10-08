@@ -22,7 +22,7 @@ let restaurantBackBusy=false;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1302';
+let APP_BUILD = '1304';
 const MEAL_AUTOFILL_ENABLED = false;
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -2367,9 +2367,20 @@ function drawFood(options={}){
   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
  }
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
- const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1,photoIndex=0;item._mealPhotoIndex=0;
- const foodCard=$('foodCard');if(foodCard)foodCard.dataset.mealId=item.id;
+ const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1;
+ const foodCard=$('foodCard');
+ const previousMealId=String(foodCard?.dataset?.mealId||'');
+ const previousImageReady=String(img.dataset.mealPhotoLoaded||'false')==='true'
+  &&img.complete&&img.naturalWidth>0;
+ const previousSrc=String(img.currentSrc||img.src||'').trim();
+ const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
+ const sameMealReady=previousMealId===String(item.id||'')&&previousImageReady
+  &&(!primaryPhoto||previousSrc===primaryPhoto||previousSrc===backupPhoto);
+ const photoIndex=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),Math.max(0,photoCount-1)));
+ item._mealPhotoIndex=photoIndex;
+ if(foodCard)foodCard.dataset.mealId=item.id;
  const handoffRendering=!!options.swipeHandoff;
+ const holdCardForMedia=!!foodCard&&!sameMealReady;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;
  let mealReadyResolve=()=>{};
@@ -2390,7 +2401,8 @@ function drawFood(options={}){
  const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
  // Never expose the previous decoded bitmap while this DOM node is rebound.
  img.style.visibility='hidden';
- if(handoffRendering&&foodCard){
+ if(holdCardForMedia){
+   foodCard.style.transition='none';
    foodCard.style.opacity='0';
    foodCard.style.visibility='hidden';
    foodCard.style.pointerEvents='none';
@@ -2404,12 +2416,13 @@ function drawFood(options={}){
    if(!ok)markMealImageUnavailable(img);
    if(ok)img.dataset.mealPhotoLoaded='true';
    mealReadyResolve(!!ok);
-   if(handoffRendering){
+   if(holdCardForMedia){
     foodCard.style.transition='none';
     foodCard.style.transform='none';
     foodCard.style.opacity='1';
     foodCard.style.visibility='visible';
     foodCard.style.pointerEvents='auto';
+   }
    }
   }else{
    mealReadyResolve(false);
@@ -2945,7 +2958,10 @@ function bindSwipeCard(cardId,onCut,onMaybe){
  };
  const finishFlight=decisionId=>{
   if(phase!=='committing'||!bindingStillCurrent())return;
-  clearExitAnimation();
+  // The Web Animation is already finished here. Cancelling it would roll the
+  // card back to its pre-flight transform for a frame before the next card
+  // binds, which is the exact outgoing-card reappearance glitch.
+  exitAnimation=null;
   void completeAfterExit(decisionId);
  };
  const commit=(dx,speed=0)=>{
@@ -5108,7 +5124,8 @@ const body='<div class="detail-unified detail-meal">'+detailHero+photoCredit+'<d
    }
    bindImageFallback('#detailsModal img',foodPhotoFallback(item),FINAL_FOOD_IMAGE);
    if(detailPhotos.length>1){
-    const gallery=modal.querySelector('.detail-photo-gallery'),gimg=gallery?.querySelector('.history-detail-photo'),gcount=gallery?.querySelector('[data-detail-photo-count]');let gidx=0;
+     let gidx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),detailPhotos.length-1));
+     if(gcount)gcount.textContent=(gidx+1)+' / '+detailPhotos.length;
     const renderGallery=()=>hydrateMealPhotoGallery({...item,images:detailPhotos}).then(photos=>{const total=photos.length||detailPhotos.length;gidx=((gidx%total)+total)%total;if(gimg)swapImageWhenReady(gimg,photos[gidx]||image);if(gcount)gcount.textContent=(gidx+1)+' / '+total;});
     gcount?.addEventListener('click',e=>{e.preventDefault();gidx++;renderGallery();});
    }
