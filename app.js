@@ -2499,8 +2499,6 @@ async function populateFoodDeckCard(card,view,depth=1){
  card.dataset.foodImageReady='0';
  card.dataset.swipePromoted='';
  if(!visible)return false;
- const parts=ensurePreparedFoodCard(view);
- if(parts===null)return false;
  const primary=String(view.primary||'').trim(),backup=String(view.backup||'').trim();
  card.innerHTML='<img class="deck-food-img" alt=""><div class="shade"></div><div class="card-copy deck-food-copy"><div class="card-info-row card-cuisine-row food-cuisine-row"><small class="deck-food-cat card-cuisine-text"></small><span class="card-details-inline card-details-visual" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><h3 class="deck-food-name"></h3></div>';
  const img=card.querySelector('.deck-food-img'),cat=card.querySelector('.deck-food-cat'),name=card.querySelector('.deck-food-name');
@@ -2734,7 +2732,10 @@ async function primeRestaurantSwipeDeck(rows,startIndex=0){
 
 function unifiedDeckDecisionReady(cardId,nextId){
  const next=$(nextId);
- return !!next&&next.dataset.deckReady==='1';
+ if(next?.dataset.deckReady==='1')return true;
+ if(cardId==='foodCard')return Array.isArray(S.pool)&&S.pool.length<=1;
+ if(cardId==='restaurantCard')return restaurantPoolFiltered().length<=1;
+ return false;
 }
 
 function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
