@@ -2858,11 +2858,20 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
    else if(cardId==='restaurantCard')refreshed=await refreshRestaurantSwipeDeckAfterDecision(promotedPreview);
 
    if(!refreshed){
-    const active=$(cardId);
-    if(active&&!active.classList.contains('hidden')){
-     await waitForPaint();
-     active.style.transition='none';active.style.transform='none';active.style.opacity='1';active.style.visibility='visible';active.style.pointerEvents='auto';active.style.zIndex='2';
-     active.dataset.swipe='';active.dataset.swipePhase='idle';active.dataset.swipeTransaction='';
+    // CP1254: never restore the card that just committed. Re-render the new
+    // current item through the normal draw path so a late next-card photo
+    // cannot strand the deck on the previous meal/restaurant.
+    if(cardId==='foodCard'){
+     drawFood();
+    }else if(cardId==='restaurantCard'){
+     await drawRestaurants();
+    }else{
+     const active=$(cardId);
+     if(active&&!active.classList.contains('hidden')){
+      await waitForPaint();
+      active.style.transition='none';active.style.transform='none';active.style.opacity='1';active.style.visibility='visible';active.style.pointerEvents='auto';active.style.zIndex='2';
+      active.dataset.swipe='';active.dataset.swipePhase='idle';active.dataset.swipeTransaction='';
+     }
     }
    }
    phase='idle';
@@ -2883,12 +2892,10 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}){
   card.dataset.swipePhase='committing';card.dataset.swipeTransaction='active';card.style.pointerEvents='none';
   hapticTriggered=false;suppressClickUntil=Date.now()+900;
 
-  const ready=await Promise.race([waitForNextReady(),new Promise(resolve=>setTimeout(()=>resolve(false),1800))]);
+  // CP1254: the active card must never be blocked by waiting for the next photo.
+  // The next card is already painted/queued; if its remote photo is late, the
+  // post-flight handoff falls back to the normal immediate draw path.
   if(phase!=='committing')return;
-  if(!ready){
-   phase='idle';card.dataset.swipePhase='idle';card.dataset.swipeTransaction='';
-   settleBack();return;
-  }
   await waitForPaint();
 
   const width=cardWidth(),direction=dx<0?-1:1;
