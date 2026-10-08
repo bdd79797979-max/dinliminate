@@ -1493,9 +1493,9 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#tutorialModeToggle',title:'TUTORIAL',body:'Tap this bubble to move to the next step.'},
-  {target:'#home-slogan',title:'DINLIMINATE',body:'Swipe meals or restaurants to narrow your choices until you have a decision.'},
-  {targets:['#foodStart .home-choice-content','#restStart .home-choice-content'],title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#foodStart','#restStart','#menu']}
+  {target:'#tutorialModeToggle',title:'TUTORIAL',body:'Tap this bubble to move to the next step.',avoid:['#home .home-foot']},
+  {target:'#home-slogan',title:'DINLIMINATE',body:'Swipe meals or restaurants to narrow down your choices until you have a decision.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
+  {targets:['#foodStart .home-choice-content','#restStart .home-choice-content'],title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#menu']}
  ];
  if(screen==='food')return[
   {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},
@@ -1573,35 +1573,66 @@ function tutorialPosition(expectedToken=tutorialState.token,retry=0){
   }
   return;
  }
- spot.style.left=(rect.left-6)+'px';spot.style.top=(rect.top-6)+'px';spot.style.width=(rect.width+12)+'px';spot.style.height=(rect.height+12)+'px';
- bubble.classList.remove('is-visible');bubble.style.visibility='hidden';bubble.dataset.side='';bubble.style.left='0px';bubble.style.top='0px';
+ spot.style.left=(rect.left-6)+'px';
+ spot.style.top=(rect.top-6)+'px';
+ spot.style.width=(rect.width+12)+'px';
+ spot.style.height=(rect.height+12)+'px';
+ bubble.classList.remove('is-visible');
+ bubble.style.visibility='hidden';
+ bubble.dataset.side='';
+ bubble.style.left='0px';
+ bubble.style.top='0px';
  requestAnimationFrame(()=>{
   if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
-  const bw=bubble.offsetWidth||280,bh=bubble.offsetHeight||96,vw=window.innerWidth,vh=window.innerHeight,gap=14,margin=12;
+  const vv=window.visualViewport;
+  const vw=Math.max(1,Math.round(vv?.width||window.innerWidth));
+  const vh=Math.max(1,Math.round(vv?.height||window.innerHeight));
+  const bw=bubble.offsetWidth||280;
+  const bh=bubble.offsetHeight||96;
+  const gap=14;
+  const margin=12;
   const blockers=[rect,...tutorialBlockerRects(step)];
-  const overlaps=(x,y)=>{
+  const overlapScore=(x,y)=>{
    const b={left:x,top:y,right:x+bw,bottom:y+bh};
-   return blockers.some(r=>b.left<r.right+gap&&b.right>r.left-gap&&b.top<r.bottom+gap&&b.bottom>r.top-gap);
+   return blockers.reduce((score,r)=>{
+    const horizontal=Math.max(0,Math.min(b.right,r.right)-Math.max(b.left,r.left));
+    const vertical=Math.max(0,Math.min(b.bottom,r.bottom)-Math.max(b.top,r.top));
+    return score+(horizontal*vertical);
+   },0);
   };
-  const inside=(x,y)=>x>=margin&&y>=margin&&x+bw<=vw-margin&&y+bh<=vh-margin&&!overlaps(x,y);
-  const raw=[
-   {side:'top',x:rect.left+rect.width/2-bw/2,y:rect.top-bh-gap},
-   {side:'bottom',x:rect.left+rect.width/2-bw/2,y:rect.bottom+gap},
-   {side:'left',x:rect.left-bw-gap,y:rect.top+rect.height/2-bh/2},
-   {side:'right',x:rect.right+gap,y:rect.top+rect.height/2-bh/2},
-   {side:'top-left',x:rect.left-bw-gap,y:rect.top-bh-gap},
-   {side:'top-right',x:rect.right+gap,y:rect.top-bh-gap},
-   {side:'bottom-left',x:rect.left-bw-gap,y:rect.bottom+gap},
-   {side:'bottom-right',x:rect.right+gap,y:rect.bottom+gap},
-   {side:'bottom-safe',x:vw/2-bw/2,y:vh-bh-margin}
+  const distanceToRect=(x,y)=>{
+   const cx=x+bw/2,cy=y+bh/2;
+   const tx=(rect.left+rect.right)/2,ty=(rect.top+rect.bottom)/2;
+   return Math.hypot(cx-tx,cy-ty);
+  };
+  const clamp=(value,min,max)=>Math.max(min,Math.min(value,max));
+  const insideViewport=(x,y)=>x>=margin&&y>=margin&&x+bw<=vw-margin&&y+bh<=vh-margin;
+  const candidates=[
+   {side:'top',x:rect.left+rect.width/2-bw/2,y:rect.top-bh-gap,priority:0},
+   {side:'bottom',x:rect.left+rect.width/2-bw/2,y:rect.bottom+gap,priority:0},
+   {side:'left',x:rect.left-bw-gap,y:rect.top+rect.height/2-bh/2,priority:1},
+   {side:'right',x:rect.right+gap,y:rect.top+rect.height/2-bh/2,priority:1},
+   {side:'top-left',x:rect.left-bw-gap,y:rect.top-bh-gap,priority:2},
+   {side:'top-right',x:rect.right+gap,y:rect.top-bh-gap,priority:2},
+   {side:'bottom-left',x:rect.left-bw-gap,y:rect.bottom+gap,priority:2},
+   {side:'bottom-right',x:rect.right+gap,y:rect.bottom+gap,priority:2}
   ];
-  let picked=raw.find(c=>inside(c.x,c.y));
-  if(!picked){
-   const safe=raw.map(c=>({...c,x:Math.max(margin,Math.min(c.x,vw-bw-margin)),y:Math.max(margin,Math.min(c.y,vh-bh-margin))}));
-   picked=safe.find(c=>!overlaps(c.x,c.y))||safe[safe.length-1];
-  }
+  const scored=candidates.map(candidate=>{
+   const x=clamp(candidate.x,margin,vw-bw-margin);
+   const y=clamp(candidate.y,margin,vh-bh-margin);
+   const overflow=Math.abs(x-candidate.x)+Math.abs(y-candidate.y);
+   const overlap=overlapScore(x,y);
+   const valid=insideViewport(x,y)&&overlap===0;
+   const score=(valid?0:100000000)+(overlap*1000)+(overflow*25)+(distanceToRect(x,y)*1)+(candidate.priority*2);
+   return {...candidate,x,y,valid,score};
+  });
+  let picked=scored.filter(item=>item.valid).sort((a,b)=>a.score-b.score)[0];
+  if(!picked)picked=scored.sort((a,b)=>a.score-b.score)[0]||scored[0];
   if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
-  bubble.dataset.side=picked.side;bubble.style.left=picked.x+'px';bubble.style.top=picked.y+'px';bubble.style.visibility='visible';
+  bubble.dataset.side=picked.side;
+  bubble.style.left=picked.x+'px';
+  bubble.style.top=picked.y+'px';
+  bubble.style.visibility='visible';
   requestAnimationFrame(()=>{
    if(expectedToken!==tutorialState.token||!tutorialState.active||tutorialState.screen!==S.screen)return;
    bubble.classList.add('is-visible');
@@ -1811,8 +1842,22 @@ function bindTutorialUI(){
    tutorialMarkChoose(target.id==='restChoose'?'restaurant':'food');
   }
  },true);
- window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
- window.addEventListener('scroll',()=>{if(tutorialState.active)window.requestAnimationFrame(tutorialPosition)},{passive:true});
+ let tutorialPositionScheduled=false;
+ const scheduleTutorialPosition=()=>{
+  if(!tutorialState.active||tutorialPositionScheduled)return;
+  tutorialPositionScheduled=true;
+  window.requestAnimationFrame(()=>{
+   tutorialPositionScheduled=false;
+   if(tutorialState.active)tutorialPosition(tutorialState.token);
+  });
+ };
+ window.addEventListener('resize',scheduleTutorialPosition,{passive:true});
+ window.addEventListener('scroll',scheduleTutorialPosition,{passive:true,capture:true});
+ document.addEventListener('scroll',scheduleTutorialPosition,{passive:true,capture:true});
+ if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',scheduleTutorialPosition,{passive:true});
+  window.visualViewport.addEventListener('scroll',scheduleTutorialPosition,{passive:true});
+ }
 }
 bindTutorialUI();
 
