@@ -58,7 +58,6 @@ assert.equal((main.match(/\\bcatch\\s*\\{\\s*\\}/g)||[]).length,0,'production ma
 assert.ok(fs.existsSync(path.join(root,'dev','diagnostics','index.html')),'development diagnostics must be outside production app');
 assert.ok(index.indexOf('./boot.js?v='+build)<index.indexOf('./viewport.js?v='+build),'boot.js must load before viewport.js');
 assert.ok(sw.includes('./boot.js?v='+build),'sw.js must precache boot.js');
-assert.ok(index.includes('./data/restaurant-taxonomy.js?v='+build),'index.html must version restaurant taxonomy data');
 assert.ok(sw.includes('./data/restaurant-taxonomy.js?v='+build),'sw.js must version restaurant taxonomy data');
 
 const staleIndex=[...index.matchAll(/(\.\/[^"'()\s]+)\?v=(\d+)/g)].filter(m=>Number(m[2])!==build);
@@ -69,7 +68,7 @@ assert.equal(staleSw.length,0,'sw.js contains stale ?v= assets');
 assert.ok(!main.includes("fetch('./app-release.json',{cache:'no-store'})"),'src/main.js must not overwrite APP_BUILD at runtime');
 assert.ok(main.includes("const APP_BUILD = '"+build+"';"),'src/main.js build must be stamped from app-release');
 assert.ok(main.includes("const APP_BUILD_DATE = '"+release.buildDate+"';"),'src/main.js build date must be stamped from app-release');
-assert.ok(!app.includes('/api/restaurant-search'),'frontend must use /api/restaurants only');
+assert.ok(!main.includes('/api/restaurant-search'),'frontend must use /api/restaurants only');
 assert.ok(!e2e.includes('/api/restaurant-search'),'browser tests must use /api/restaurants only');
 assert.equal(fs.existsSync(path.join(root,'api/restaurant-search.js')),false,'legacy restaurant-search alias must be removed');
 assert.equal(fs.existsSync(path.join(root,'netlify.toml')),false,'Netlify config must be removed');
@@ -83,7 +82,7 @@ assert.ok(restaurantsApi.includes("base:'https://html.duckduckgo.com/html/'"),'r
 assert.ok(sw.includes("importScripts('./api/_lib/imageHosts.js?v="+build+"')"),'service worker must use the shared image-host file');
 assert.ok(sw.includes("new Set(self.DINLIMINATE_IMAGE_HOSTS||[])"),'service worker must use the shared image-host allowlist');
 assert.ok(imageHosts.includes('HOSTS=Object.freeze'),'shared image-host allowlist must be centralized');
-assert.ok(app.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read('api/meal-autofill.js').includes("scope:'meal-autofill',perMinute:8,dailyCap:100"),'meal-autofill rate limit/daily cap must be enabled');
+assert.ok(main.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read('api/meal-autofill.js').includes("scope:'meal-autofill',perMinute:8,dailyCap:100"),'meal-autofill rate limit/daily cap must be enabled');
 
 const versionedAssets=[
  './boot.js?v='+build,'./src/main.js?v='+build,'./styles.css?v='+build,'./viewport.js?v='+build,

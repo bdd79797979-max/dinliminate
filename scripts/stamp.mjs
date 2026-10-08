@@ -39,14 +39,6 @@ const transforms = new Map([
     return out;
   }],
   ['manifest.webmanifest', stampLocalVersions],
-  ['app.js', value => {
-    let out = value.replace(/let APP_BUILD = '\d+';\s*\nconst MEAL_AUTOFILL_ENABLED = false;\s*\nfetch\('\.\/app-release\.json',\{cache:'no-store'\}\)[\s\S]*?\.catch\(\(\)=>\{\}\);\s*\n/, "const APP_BUILD = '" + build + "';\nconst APP_BUILD_DATE = '" + buildDate + "';\nconst MEAL_AUTOFILL_ENABLED = false;\n");
-    out = out.replace(/(?:const|let) APP_BUILD = '\d+';\s*\n(?:const APP_BUILD_DATE = '\d{4}-\d{2}-\d{2}';\s*\n)?/, "const APP_BUILD = '" + build + "';\nconst APP_BUILD_DATE = '" + buildDate + "';\n");
-    out = out.replace("String(APP_BUILD || '1054')", 'String(APP_BUILD)');
-    out = out.replace("format(new Date()))+'</b></p>", "format(new Date(APP_BUILD_DATE+'T12:00:00')))+'</b></p>");
-    if (out.includes("fetch('./app-release.json',{cache:'no-store'})")) throw new Error('app.js still contains runtime APP_BUILD overwrite');
-    return out;
-  }],
   ['release-manifest.json', value => {
     const manifest = JSON.parse(value);
     manifest.build = release.build;
