@@ -38,6 +38,7 @@ const manifest=JSON.parse(read('manifest.webmanifest'));
 const index=read('index.html');
 const sw=read('sw.js');
 const main=read('src/main.js');
+const imageHosts=read('api/_lib/imageHosts.js');
 const e2e=read('tests/e2e/behavior.spec.mjs');
 const vercel=read('vercel.json');
 const build=Number(release.build);
