@@ -115,3 +115,9 @@ The obsolete tutorial target/menu and scheduling stubs were removed. Target rend
 CP1243 closes the remaining Tutorial/Tour interaction hole caused by decision controls using pointerup handlers. The Tour now guards pointerdown, pointerup, pointercancel, and click for the highlighted target, suppressing the underlying control event and consuming the tutorial action instead. The guard also suppresses the trailing synthetic click after a pointerup action, so Cut/Maybe/Choose cannot perform a real decision while being demonstrated.
 
 CP1243 retains the CP1242 centralized target ownership and removes no useful app interaction outside the active highlighted tutorial target. The dedicated tutorial regression test now covers the pointer-level guard.
+
+## CP1244 — one decision transaction for Cut/Maybe
+
+CP1244 fixes a race where a second Cut/Maybe press during an active off-screen flight could bypass the swipe trigger and fall through to the raw decision function, mutating state while the first card was still completing. The decision buttons now use one authoritative click activation path. Their swipe trigger returns explicit transaction outcomes: accepted or busy. A busy active card consumes the later command instead of running the underlying Cut/Maybe handler.
+
+This keeps the CP1241 early next-card input handoff intact: the outgoing card remains visually committed, the next promoted card owns the next transaction, and the old transaction cannot accept or leak a second decision.
