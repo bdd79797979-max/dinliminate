@@ -29,7 +29,6 @@ const transforms = new Map([
   ['index.html', value => {
     let out = value.replace(/<script>\s*\/\* CP1186[\s\S]*?<\/script>\s*<script>\s*\/\* CP1277[\s\S]*?<\/script>\s*/g, '\n');
     out = out.replace(/\s*<script src="\.\/boot\.js\?v=\d+"><\/script>\s*/g, '\n');
-    out = out.replace(/<script src="\.\/viewport\.js[^"]*"><\/script>/, '<script src="./boot.js?v=' + build + '"></script>\n<script src="./viewport.js?v=' + build + '"></script>');
     return stampLocalVersions(out);
   }],
   ['sw.js', value => {
