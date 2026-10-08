@@ -19,12 +19,6 @@ const KEY = 'dinliminate.clean.cp1';
 const HISTORY_KEY = 'dinliminate.clean.history';
 const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
-let foodSwipeHandoff=false;
-let restaurantSwipeHandoff=false;
-// CP1241: let the next card begin a real swipe during the tail of the previous card's flight.
-const SWIPE_OVERLAP_DELAY=95;
-let swipeOverlapContext=null;
-let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
 let APP_BUILD = '1251';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
