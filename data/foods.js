@@ -949,7 +949,7 @@ window.DINLIMINATE_FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://cdn.pixabay.com/photo/2023/12/15/05/31/food-8450085_1280.jpg",
+    "image": "https://images.pexels.com/photos/33671581/pexels-photo-33671581.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "chicken",
       "broth",
@@ -1253,7 +1253,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://cdn.pixabay.com/photo/2017/03/12/03/07/baking-2136359_1280.jpg",
+    "image": "https://images.pexels.com/photos/36863862/pexels-photo-36863862.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "buttermilk",
       "cornmeal",
@@ -1430,7 +1430,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://cdn.pixabay.com/photo/2014/10/18/12/53/stew-493281_1280.jpg",
+    "image": "https://images.pexels.com/photos/37271311/pexels-photo-37271311.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "cabbage",
       "smoked sausage",
@@ -3441,7 +3441,7 @@ window.DINLIMINATE_FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://cdn.pixabay.com/photo/2010/12/13/10/13/chocolate-2554_1280.jpg",
+    "image": "https://images.pexels.com/photos/5604808/pexels-photo-5604808.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "backupImage": "https://images.unsplash.com/photo-1664350454685-a3298c47fb58?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
     "ingredients": [
       "peanuts",
