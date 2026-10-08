@@ -1742,7 +1742,8 @@ function tutorialAdvanceFromTarget(event,step){
   return true;
  }
  if(step?.action==='choose'){
-  advanceTutorial();
+  // The real Choose button calls tutorialMarkChoose() and winner(), which
+  // transfers the Tour to the Winner screen at its first lesson.
   return true;
  }
  if(step?.action==='enter-restaurant'||step?.action==='enter-food'){
@@ -1816,13 +1817,13 @@ function tutorialHighlightedTargetClick(event){
  const step=tutorialState.steps[tutorialState.index];
  const target=tutorialCurrentTargetForEvent(event,step);
  if(!target)return;
- if(step?.action==='perform'){
+ if(step?.action==='perform'||step?.action==='choose'){
   event.preventDefault();
   event.stopImmediatePropagation();
   tutorialDispatchingAction=true;
   try{ target.click(); }catch{}
   tutorialDispatchingAction=false;
-  tutorialAdvanceFromTarget(event,step);
+  if(step?.action==='perform')tutorialAdvanceFromTarget(event,step);
   return;
  }
  event.preventDefault();
