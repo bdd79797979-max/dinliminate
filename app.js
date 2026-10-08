@@ -6902,6 +6902,7 @@ try{
  }
  await waitForNextPaints(2);
  document.documentElement.classList.remove('dinliminate-booting');
+ document.documentElement.classList.add('dinliminate-ready');
 })();
 if (new URLSearchParams(location.search).get('qa') === '1') {
 window.__DINLIMINATE_QA__ = {
