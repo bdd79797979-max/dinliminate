@@ -40,19 +40,19 @@ const backMeal=app.indexOf('function foodBack(){');
 const backRest=app.indexOf('function restaurantBack(){');
 assert(app.slice(backMeal,backMeal+500).includes("dataset.swipeTransaction==='active'"));
 assert(app.slice(backRest,backRest+500).includes("dataset.swipeTransaction==='active'"));
-assert.equal(Number(release.build),1305);
-assert.equal(Number(releaseManifest.build),1305);
-assert.equal(release.checkpoint,'CP1305');
-assert.equal(releaseManifest.checkpoint,'CP1305');
+assert(Number(release.build)>=1305,'CP1305+ build retains swipe stability gate');
+assert.equal(Number(releaseManifest.build),Number(release.build));
+assert(/^CP130(5|6)$/.test(release.checkpoint));
+assert.equal(releaseManifest.checkpoint,release.checkpoint);
 assert.equal(release.sourceBranch,'main');
 assert.equal(releaseManifest.sourceBranch,'main');
 assert.equal(release.vercelProductionVerified,false);
 assert.equal(releaseManifest.vercelProductionVerified,false);
-assert.equal(pkg.scripts['test:rc'],'node qa/launch-rc.cjs && node qa/cp1303-swipe-cleanup-smoke.cjs && node qa/cp1304-transition-visual-smoke.cjs && node qa/cp1305-swipe-stability-smoke.cjs');
-for(const asset of ['./app.js?v=1305','./styles.css?v=1305','./viewport.js?v=1305','./logo.svg?v=1305','./icon.svg?v=1305']){
+assert(pkg.scripts['test:rc'].includes('qa/cp1305-swipe-stability-smoke.cjs'));
+for(const asset of ['./app.js?v='+release.build,'./styles.css?v='+release.build,'./viewport.js?v='+release.build,'./logo.svg?v='+release.build,'./icon.svg?v='+release.build]){
  assert(index.includes(asset),'index missing '+asset);
  assert(sw.includes(asset),'sw missing '+asset);
 }
-assert(sw.includes("const CACHE='dinliminate-shell-v1305'"));
-assert(index.includes('./data/foods.js?v=1305'));
+assert(sw.includes("const CACHE='dinliminate-shell-v"+release.build+"'"));
+assert(index.includes('./data/foods.js?v='+release.build));
 console.log('CP1305 swipe stability smoke: PASS');

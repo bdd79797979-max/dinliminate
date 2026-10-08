@@ -22,7 +22,7 @@ let restaurantBackBusy=false;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1305';
+let APP_BUILD = '1306';
 const MEAL_AUTOFILL_ENABLED = false;
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -2344,27 +2344,39 @@ function setChoiceCount(el,count){
  el.__countPulseTimer=window.setTimeout(()=>el.classList.remove('count-updated'),380);
 }
 function foodChoiceIndex(rows,start,keepState=false){
- const len=rows.length;if(!len)return -1;
- for(let step=0;step<len;step++){const i=(start+step)%len;if(keepState?S.maybe.has(rows[i].id):!S.maybe.has(rows[i].id))return i;}
+ const list=Array.isArray(rows)?rows:[];
+ const len=list.length;if(!len)return -1;
+ const from=Math.max(0,Math.floor(Number(start)||0));
+ for(let step=0;step<len;step++){
+  const i=(from+step)%len;
+  const row=list[i],id=row?.id;
+  if(id==null)continue;
+  const cut=S.foodCuts?.has(id);
+  const maybe=S.maybe.has(id);
+  if(cut)continue;
+  if(keepState?maybe:!maybe)return i;
+ }
  return -1;
 }
 function drawFood(options={}){
- // CP1197: restore the visual waiting card, but never promote it into the live card.
- // The live meal card remains the only swipeable/committed card; the waiting card is
- // a separate, pointer-inert preview that is refreshed independently.
+ // The live Meal card is the only authoritative decision card. The waiting card
+ // is pointer-inert and must never be used as a source for active-card selection.
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
  const restoreExact=!!S.foodRestoreExact;
  S.foodRestoreExact=false;
- if(!restoreExact){
-  if(S.maybeDeck){
-   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
-  }else if(!S.foodMaybeRound){
-   const ni=foodChoiceIndex(S.pool,S.index,false);
-   if(ni>=0)S.index=ni;
-   else if(S.maybe.size)S.foodMaybeRound=true;
-  }
- }else{
+ if(S.maybeDeck){
+  const ni=foodChoiceIndex(S.pool,S.index,true);
+  if(ni>=0)S.index=ni;
+ }else if(restoreExact){
   S.index=Math.max(0,Math.min(S.index,S.pool.length-1));
+ }else{
+  const ni=foodChoiceIndex(S.pool,S.index,S.foodMaybeRound);
+  if(ni>=0)S.index=ni;
+  else if(!S.foodMaybeRound&&S.maybe.size){
+   S.foodMaybeRound=true;
+   const maybeIndex=foodChoiceIndex(S.pool,0,true);
+   if(maybeIndex>=0)S.index=maybeIndex;
+  }
  }
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1;
@@ -2468,16 +2480,33 @@ function foodMaybe(item=S.pool[S.index],options={}){
  if(!item)return;
  if(S.pool.length===1){foodCommit('maybe',item);winner(item);return;}
  foodCommit('maybe',item);S.maybe.add(item.id);
- if(!S.foodMaybeRound){
-  const ni=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,false);
-  if(ni>=0)S.index=ni;else{S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true);}
- }else S.index=foodChoiceIndex(S.pool,(S.index+1)%S.pool.length,true);
+ // drawFood() owns the single post-decision selection step. Do not advance
+ // S.index here as well, or the active deck can skip/re-enter cards.
  drawFood({swipeHandoff:!!options.fromSwipe});save();
 }
 function resolveFoodAfterDecision(options={}){
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
- if(!S.foodMaybeRound){const ni=foodChoiceIndex(S.pool,S.index,false);if(ni>=0)S.index=ni;else if(S.maybe.size){S.foodMaybeRound=true;S.index=foodChoiceIndex(S.pool,0,true);}}
- S.index=Math.max(0,Math.min(S.index,Math.max(0,S.pool.length-1)));drawFood(options);save();
+ if(!S.foodMaybeRound){
+  const ni=foodChoiceIndex(S.pool,S.index,false);
+  if(ni>=0)S.index=ni;
+  else if(S.maybe.size){
+   S.foodMaybeRound=true;
+   S.index=foodChoiceIndex(S.pool,0,true);
+  }else{
+   winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});
+   return;
+  }
+ }
+ if(S.foodMaybeRound){
+  const ni=foodChoiceIndex(S.pool,S.index,true);
+  if(ni>=0)S.index=ni;
+  else{
+   winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});
+   return;
+  }
+ }
+ S.index=Math.max(0,Math.min(S.index,Math.max(0,S.pool.length-1)));
+ drawFood(options);save();
 }
 function foodBack(){
  if(familyIsBrowseStage('meal')){familyBrowseBack('meal');return;}
@@ -2601,15 +2630,11 @@ function nextFoodIndexList(count=FOOD_SWIPE_PRELOAD_DEPTH){
  const out=[],seen=new Set([currentIndex]);
  let cursor=currentIndex;
  for(let step=0;step<count;step++){
-  let ni;
-  if(S.maybeDeck){
-   ni=(cursor+1)%pool.length;
-  }else{
-   ni=S.foodMaybeRound
-    ?foodChoiceIndex(pool,(cursor+1)%pool.length,true)
-    :foodChoiceIndex(pool,(cursor+1)%pool.length,false);
-   if(ni<0&&pool.length>1)ni=(cursor+1)%pool.length;
-  }
+  const ni=foodChoiceIndex(
+   pool,
+   (cursor+1)%Math.max(1,pool.length),
+   !!S.maybeDeck || !!S.foodMaybeRound
+  );
   if(ni<0||!pool[ni]||seen.has(ni))break;
   out.push(ni);
   seen.add(ni);
