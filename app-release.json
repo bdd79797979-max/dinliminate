@@ -1,9 +1,9 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1273,
-  "sourceBranch": "fix/cp1273-instant-meals-paint",
-  "checkpoint": "CP1273",
+  "build": 1274,
+  "sourceBranch": "fix/cp1274-instant-details-photo",
+  "checkpoint": "CP1274",
   "deploymentTrigger": "fix/cp1266-meal-autofill",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
