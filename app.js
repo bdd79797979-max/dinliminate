@@ -27,7 +27,7 @@ let swipeOverlapSerial=0;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1273';
+let APP_BUILD = '1274';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -5239,7 +5239,8 @@ function warmDetailImage(src){
  if(!url||url.startsWith('data:')||url.startsWith('blob:'))return;
  try{
   const img=new Image();
-  img.decoding='async';
+  img.decoding='sync';
+  img.fetchPriority='high';
   img.referrerPolicy='no-referrer';
   img.src=url;
   if(typeof img.decode==='function')img.decode().catch(()=>{});
@@ -5285,6 +5286,16 @@ function detailsSheet(item,type){
      :'';
 const body='<div class="detail-unified detail-meal">'+detailHero+photoCredit+'<div class="detail-title-block detail-unified-title"><span class="detail-kicker">MEAL</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+' · Meal</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+detailRows+'</section>'+nutrition+notesSection+hide+'</div>';
    const modal=openModal('detailsModal','Details',body);
+   const detailImg=modal.querySelector('.history-detail-photo');
+   if(detailImg){
+    detailImg.loading='eager';
+    detailImg.fetchPriority='high';
+    detailImg.decoding='sync';
+    /* The visible card is already the authoritative rendered image. Keep the
+       same resolved URL so the Details image can reuse the browser's decoded
+       resource instead of starting a second photo resolution path. */
+    if(cardImage && detailImg.src!==cardImage)detailImg.src=cardImage;
+   }
    bindImageFallback('#detailsModal img',foodPhotoFallback(item),FINAL_FOOD_IMAGE);
    if(detailPhotos.length>1){
     const gallery=modal.querySelector('.detail-photo-gallery'),gimg=gallery?.querySelector('.history-detail-photo'),gcount=gallery?.querySelector('[data-detail-photo-count]');let gidx=0;
@@ -5324,6 +5335,13 @@ const body='<div class="detail-unified detail-meal">'+detailHero+photoCredit+'<d
  const hide='<div class="detail-secondary-actions"><button class="detail-hide-action" id="detailHideRestaurant" type="button" aria-label="Hide this restaurant"><span class="detail-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5 19 19M8.7 8.7A5 5 0 0 0 7 12c1.4 2.8 3.3 4.2 5 4.2 1 0 2-.3 2.8-.9M10.2 5.9C10.8 5.7 11.4 5.7 12 5.7c1.7 0 3.6 1.4 5 4.2.4.8.7 1.5.8 2.1M14.1 14.1A3 3 0 0 1 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Hide Restaurant</span></button></div>';
  const body='<div class="detail-unified detail-restaurant"><div class="detail-hero detail-restaurant-hero"><img class="history-detail-photo" data-no-generic-fallback="1" src="'+esc(image)+'" data-restaurant-photo-key="'+esc(item.id||item.canonicalId||'')+'" data-final-fallback="'+esc(restaurantFallbackImage(item))+'" alt="'+esc(item.name)+'"><div class="restaurant-photo-credit" aria-live="polite"></div></div><div class="detail-title-block detail-unified-title"><span class="detail-kicker">RESTAURANT</span><h2>'+esc(item.name)+'</h2><p class="detail-subline">'+esc(cat)+'</p></div>'+aboutSection+'<section class="detail-section"><div class="detail-section-title">Details</div>'+infoRows+'</section>'+hoursSection+'<section class="detail-section"><div class="detail-section-title">Contact</div>'+contactRows+'</section>'+notesSection+'<section class="detail-utility-actions"><a class="detail-utility-action" id="restaurantDetailWebsite" data-restaurant-detail-website="1" href="'+esc(detailWebsitePresentation.url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(detailWebsiteLabel+' for '+item.name)+'" title="'+esc(detailWebsiteLabel)+'">Website</a>'+callAction+directionsAction+'</section>'+hide+'</div>';
  const modal=openModal('detailsModal','Restaurant Details',body);
+ const detailImg=modal.querySelector('.detail-restaurant-hero .history-detail-photo');
+ if(detailImg){
+  detailImg.loading='eager';
+  detailImg.fetchPriority='high';
+  detailImg.decoding='sync';
+  if(cardImage && detailImg.src!==cardImage)detailImg.src=cardImage;
+ }
  bindRestaurantPhotoPinch(modal.querySelector('.detail-restaurant-hero img'));
  bindImageFallback('#detailsModal img',image,restaurantFallbackImage(item));
  bindDetailNotes(modal,item,'restaurant');
