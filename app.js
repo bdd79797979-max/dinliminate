@@ -6396,10 +6396,10 @@ function settingsView(){
  '</div></section>'+
  '<section class="settings-section"><div class="settings-section-kicker">APP</div><div class="settings-actions">'+
  settingsActionButton('updateApp','↻','Update','Check for and load the latest Dinliminate build.','update-action')+
- settingsActionButton('resetApp','×','Reset','Erase all Dinliminate data stored on this device.','reset-action')+
- settingsActionButton('restoreApp','↺','Restore','Return built-in meals to their original catalog state.','restore-action')+
  settingsActionButton('privacySettings','◇','Privacy','How location, history, notes, images, and third-party services are handled.','privacy-action')+
+ settingsActionButton('restoreApp','↺','Restore','Return built-in meals to their original catalog state.','restore-action')+
  settingsActionButton('appDiagnosis','⌁','Diagnosis','Run live checks for the current build and app systems.','diagnosis-action')+
+ settingsActionButton('resetApp','×','Reset','Erase all Dinliminate data stored on this device.','reset-action danger-action')+
  '</div></section>'+
  '<section class="settings-section settings-about-section"><div class="settings-section-kicker">ABOUT DINLIMINATE</div><div class="settings-about-copy"><p>Cut the dinner choices until one survives.</p></div><div class="about-meta"><p><span>Version</span><b>'+esc(APP_VERSION)+'</b></p><p><span>Build</span><b>'+esc(APP_BUILD)+'</b></p><p><span>Date</span><b>'+esc(new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(new Date()))+'</b></p></div><p class="about-credit">Made by Brian Dunn for Devona Dunn</p></section>'+
  '</div>';
