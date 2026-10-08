@@ -176,7 +176,8 @@ function cleanSearchText(value) {
   return cleanString(value, 180).replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function providerImageUrls(html, provider, query) {
+function providerImageUrls(html, provider, query, excludedUrls=[]) {
+  const excluded=new Set(cleanList(excludedUrls, 20).map(value=>{try{return new URL(value).origin+new URL(value).pathname}catch{return String(value).split('?')[0]}}));
   const source = String(html || '')
     .replace(/\\u002F/gi, '/')
     .replace(/\\\//g, '/')
@@ -192,7 +193,7 @@ function providerImageUrls(html, provider, query) {
     let url = match[0];
     try { url = decodeURIComponent(url); } catch {}
     const base = url.split('?')[0];
-    if (seen.has(base)) continue;
+    if (seen.has(base)||excluded.has(base)||excluded.has((()=>{try{const u=new URL(base);return u.origin+u.pathname}catch{return base}})())) continue;
     seen.add(base);
     const index = match.index || 0;
     const context = source.slice(Math.max(0, index - 420), Math.min(source.length, index + 420)).toLowerCase();
@@ -249,7 +250,7 @@ async function fetchText(url) {
   }
 }
 
-async function findMealPhoto(mealName, photoQueries) {
+async function findMealPhoto(mealName, photoQueries, excludedUrls=[]) {
   const queries = [];
   const add = value => {
     const cleaned = cleanSearchText(value);
@@ -268,7 +269,7 @@ async function findMealPhoto(mealName, photoQueries) {
     for (let i = 0; i < providers.length; i++) {
       const html = await fetchText(providers[i](query));
       if (!html) continue;
-      const candidates = providerImageUrls(html, i === 0 ? 'pexels' : 'unsplash', query);
+      const candidates = providerImageUrls(html, i === 0 ? 'pexels' : 'unsplash', query, excludedUrls);
       if (candidates.length) {
         const best = candidates[0];
         return {
@@ -323,7 +324,8 @@ async function handleMealAutofill(req, res) {
     let photo = null;
     if (section === 'all' || section === 'photo') {
       const queries = section === 'photo' ? [name] : draft.photoQueries;
-      photo = await findMealPhoto(name, queries);
+      const excludedPhotos = Array.isArray(body.current?.photos) ? body.current.photos : [body.current?.photo].filter(Boolean);
+      photo = await findMealPhoto(name, queries, excludedPhotos);
       draft.photoQueries = section === 'all' ? draft.photoQueries : queries;
     }
 
