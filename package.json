@@ -13,6 +13,7 @@
     "test:rc": "node qa/launch-rc.cjs",
     "audit:meal-images": "node qa/verify-meal-images.mjs",
     "audit:meal-images:two": "node qa/verify-meal-images.mjs --require-two",
-    "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs"
+    "audit:meal-image-sources": "node qa/verify-meal-image-sources.mjs",
+    "test:tutorial": "node qa/cp1242-tutorial-tour-smoke.cjs"
   }
 }
