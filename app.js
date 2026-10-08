@@ -27,7 +27,7 @@ let swipeOverlapSerial=0;
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-let APP_BUILD = '1272';
+let APP_BUILD = '1273';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
 const RESTAURANT_TAXONOMY = window.DINLIMINATE_RESTAURANT_TAXONOMY;
@@ -2272,15 +2272,37 @@ S.mealTimeFilters = new Set(mealTimeNames());
 S.index = 0;
 S.winnerItem = null;
 buildFood();
-foodQuick();
-show('food');
-drawFood();
-save();
-maybeShowInCardSwipeCoach();
-if(tutorialModeEnabled()&&tutorialState.active){
- const resumeIndex=Number.isInteger(options?.tutorialResumeIndex)?options.tutorialResumeIndex:0;
- tutorialEnterDecisionScreen('food',resumeIndex);
+
+/* CP1273: give the browser a real first-paint opportunity before the heavier
+   meal image/deck preparation runs. Populate only the visible card shell here. */
+const firstItem=S.pool[S.index];
+if(firstItem){
+ const firstCard=$('foodCard');
+ const firstImg=$('foodImg');
+ if(firstCard)firstCard.dataset.mealId=firstItem.id;
+ if(firstImg){
+  const firstSrc=foodPhoto(firstItem)||foodPhotoFallback(firstItem)||FINAL_FOOD_IMAGE;
+  firstImg.alt=firstItem.name;
+  firstImg.referrerPolicy='no-referrer';
+  firstImg.loading='eager';
+  firstImg.decoding='async';
+  firstImg.style.visibility='visible';
+  firstImg.src=firstSrc;
+ }
+ $('foodName').textContent=firstItem.name;
+ $('foodCat').textContent=firstItem.category;
 }
+show('food');
+requestAnimationFrame(()=>{
+  foodQuick();
+  drawFood();
+  save();
+  maybeShowInCardSwipeCoach();
+  if(tutorialModeEnabled()&&tutorialState.active){
+   const resumeIndex=Number.isInteger(options?.tutorialResumeIndex)?options.tutorialResumeIndex:0;
+   tutorialEnterDecisionScreen('food',resumeIndex);
+  }
+});
 }
 function setChoiceCount(el,count){
  const value=Number(count)||0;
