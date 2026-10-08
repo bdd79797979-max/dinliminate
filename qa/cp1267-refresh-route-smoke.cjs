@@ -13,8 +13,11 @@ assert.match(index, /dinliminate-start-(?:food|restaurant|winner|family) #home[\
 assert.match(index, /dinliminate-start-food #food[\s\S]*?\{display:block!important\}/, 'saved Meals route must be visible before paint');
 
 assert.match(app, /localStorage\.setItem\('dinliminate\.start-screen', String\(screen\)\)/, 'show() must keep the startup route marker current');
+assert.match(app, /const MEAL_AUTOFILL_ENABLED = false;/, 'Meal Auto-Fill must remain disabled until AI is intentionally connected');
+assert.match(app, /if\(!MEAL_AUTOFILL_ENABLED\)return;/, 'disabled Meal Auto-Fill must be execution-gated');
 assert.match(app, /requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>\{/, 'app reveal must wait for two paint frames');
 assert.match(app, /remove\('dinliminate-booting','dinliminate-page-unloading'\)/, 'boot classes must be removed only after the target screen is prepared');
+assert.match(fs.readFileSync(path.join(root, 'styles.css'), 'utf8'), /\.meal-autofill-action[\s\S]*display:none!important/, 'Meal Auto-Fill UI controls must be hidden');
 assert.doesNotMatch(app, /CP1138 — reveal only after the correct persisted screen has been painted\.\nrequestAnimationFrame\(\(\)=>document\.documentElement\.classList\.remove\('dinliminate-booting'\)\)/, 'old single-frame reveal must be gone');
 
 console.log('CP1267 refresh-route smoke: PASS');
