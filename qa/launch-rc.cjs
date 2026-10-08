@@ -86,7 +86,7 @@ assert('Family snapshot URLs are safe',familyStore.includes('function safeHttpUr
 assert('image proxy validates redirects',image.includes("redirect:'manual'")&&image.includes('Redirected image host not allowed')&&image.includes('redirectCount<=3'));
 assert('photo endpoints are throttled',gphoto.includes('photoRateLimited(req')&&rphoto.includes('restaurantPhotoRateLimited(req'));
 assert('swipe card does not resize',app.includes("translate3d('+dx.toFixed(1)+'px,0,0) rotate(")&&!app.slice(app.indexOf('function bindSwipeCard'),app.indexOf('function bindRestaurantSwipe')).includes("card.style.transform='scale("));
-const swipeStart=app.indexOf('function bindSwipeCard(cardId,nextId,onCut,onMaybe){');
+const swipeStart=app.indexOf('function bindSwipeCard(cardId,onCut,onMaybe){');
 const swipeEnd=app.indexOf('\\nfunction bindMealPhotoCountControls',swipeStart);
 assert('CP1303 swipe cleanup',swipeStart>=0&&swipeEnd>swipeStart&&!app.includes('SWIPE_OVERLAP_DELAY')&&!app.includes('swipeOverlapContext')&&!app.includes('foodSwipeHandoff')&&!app.includes('restaurantSwipeHandoff')&&!app.includes('setDeckPreviewDepth('),'Retired overlap/handoff machinery remains in app.js.');
 const swipeSource=app.slice(swipeStart,swipeEnd);
