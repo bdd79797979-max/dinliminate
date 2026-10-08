@@ -2211,7 +2211,15 @@ function drawFood(){
  if(!foodSwipeHandoff)primeFoodSwipeMedia();
  maybeShowInCardSwipeCoach();if(!foodSwipeHandoff)bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
-function foodCommit(type,item){const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
+function foodCommit(type,item){
+ const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;
+ S.foodActions.push({
+  type,id:item.id,primary:item.primary,index:S.index,
+  maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),hadCut:S.foodCuts.has(item.id),
+  before:{index:S.index,maybeRound:!!S.foodMaybeRound,maybeDeck:!!S.maybeDeck,hadMaybe:S.maybe.has(item.id),hadCut:S.foodCuts.has(item.id)},
+  recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1
+ });
+}
 function foodCut(item=S.pool[S.index]){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'&&familyRoundStage()!==1){familyBrowsePrevious('meal');return;}
@@ -2242,10 +2250,26 @@ function resolveFoodAfterDecision(){
 function foodBack(){
  if(familyIsBrowseStage('meal')){familyBrowseBack('meal');return;}
  const action=S.foodActions.pop();if(!action)return;
- if(action.type==='cut')S.foodCuts.delete(action.id);
- if(action.type==='maybe'){if(action.hadMaybe)S.maybe.add(action.id);else S.maybe.delete(action.id);}
- S.foodMaybeRound=!!action.maybeRound||!!action.recycleOnUndo||!!action.roundAfter;buildFood();
- const restored=S.pool.findIndex(x=>x.id===action.id);S.index=restored>=0?restored:Math.max(0,Math.min(action.index||0,Math.max(0,S.pool.length-1)));drawFood();save();
+ const before=action.before;
+ const rowId=String(action.id||'');
+ if(before){
+  if(before.hadCut)S.foodCuts.add(rowId);else S.foodCuts.delete(rowId);
+  if(before.hadMaybe)S.maybe.add(rowId);else S.maybe.delete(rowId);
+  S.foodMaybeRound=!!before.maybeRound;
+  S.maybeDeck=!!before.maybeDeck;
+  S.index=Number.isFinite(Number(before.index))?Number(before.index):0;
+ }else{
+  // Legacy action records created before CP1263.
+  if(action.type==='cut')S.foodCuts.delete(rowId);
+  if(action.type==='maybe'){if(action.hadMaybe)S.maybe.add(rowId);else S.maybe.delete(rowId);}
+  S.foodMaybeRound=!!action.maybeRound||!!action.recycleOnUndo||!!action.roundAfter;
+  S.index=Number.isFinite(Number(action.index))?Number(action.index):0;
+ }
+ buildFood();
+ const restored=S.pool.findIndex(x=>x.id===rowId);
+ if(restored>=0)S.index=restored;
+ else S.index=Math.max(0,Math.min(Number(S.index)||0,Math.max(0,S.pool.length-1)));
+ drawFood();save();
 }
 
 function triggerSwipeHaptic(){
@@ -4289,7 +4313,7 @@ async function restaurantCut(row){
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowsePrevious('restaurant');return;}
  if(!row)return;
  const unkept=restaurantPoolFiltered().filter(x=>!x._maybe).length;
- S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
+ S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,hadCut:!!row._cut,before:{index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,maybeDeck:!!S.maybeDeck,hadMaybe:!!row._maybe,hadCut:!!row._cut},roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
  row._cut=true;
  const remaining=restaurantPoolFiltered();
  if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);await drawRestaurants();}
@@ -4300,7 +4324,7 @@ async function restaurantMaybe(row){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowseNext('restaurant');return;}
  if(!row)return;const rows=restaurantPoolFiltered();if(rows.length===1){winner(row);return;}
- const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
+ const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe,hadCut:!!row._cut,before:{index:S.restaurantIndex,maybeRound:wasRecycle,maybeDeck:!!S.maybeDeck,hadMaybe:!!row._maybe,hadCut:!!row._cut}});row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
  if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
  await drawRestaurants();save();
@@ -4309,9 +4333,27 @@ async function restaurantMaybe(row){
 function restaurantBack(){
  if(familyIsBrowseStage('restaurant')){familyBrowseBack('restaurant');return;}
  const action=S.restaurantActions.pop();if(!action)return;
- const row=S.restaurantPool.find(x=>x.id===action.id);if(row){if(action.type==='cut')row._cut=false;if(action.type==='maybe')row._maybe=!!action.hadMaybe;}
- S.restaurantMaybeRound=!!action.maybeRound||!!action.roundAfter;const rows=restaurantPoolFiltered(),restored=rows.findIndex(x=>x.id===action.id);
- S.restaurantIndex=restored>=0?restored:Math.max(0,Math.min(action.index||0,Math.max(0,rows.length-1)));drawRestaurants();save();
+ const row=S.restaurantPool.find(x=>x.id===action.id);
+ const before=action.before;
+ if(row){
+  if(before){
+   row._cut=!!before.hadCut;
+   row._maybe=!!before.hadMaybe;
+  }else{
+   if(action.type==='cut')row._cut=false;
+   if(action.type==='maybe')row._maybe=!!action.hadMaybe;
+  }
+ }
+ if(before){
+  S.restaurantMaybeRound=!!before.maybeRound;
+  S.maybeDeck=!!before.maybeDeck;
+ }else{
+  S.restaurantMaybeRound=!!action.maybeRound||!!action.roundAfter;
+ }
+ const rows=restaurantPoolFiltered();
+ const restored=rows.findIndex(x=>x.id===action.id);
+ S.restaurantIndex=restored>=0?restored:Math.max(0,Math.min(Number(before?.index??action.index)||0,Math.max(0,rows.length-1)));
+ drawRestaurants();save();
 }
 
 async function restaurantHide(row) {
