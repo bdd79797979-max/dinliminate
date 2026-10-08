@@ -1662,7 +1662,6 @@ function bindTutorialUI(){
   // CP1251: use the CP1076-style click capture as the tutorial's single
   // interaction gate. The previous pointerdown/up interception could lose
   // the Home/Restaurant choice when the release landed a few pixels away.
-  document.documentElement.dataset.tutorialTargetBound='1';
   document.addEventListener('click',tutorialHighlightedTargetClick,true);
  }
  window.addEventListener('resize',()=>{if(tutorialState.active)window.requestAnimationFrame(()=>tutorialPosition(tutorialState.token))},{passive:true});
