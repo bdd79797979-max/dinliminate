@@ -1,10 +1,72 @@
 import { state as S } from '../../state/store.js';
 import { $ } from '../../ui/dom.js';
-const navigation={};
-export function configureTutorial(next={}){Object.assign(navigation,next);}
+import { show, startFood, openRestaurant, winner, closeDrawer, home } from '../../main.js';
 
 const tutorialState=S.tutorialState;
- navigation.closeDrawer?.(true);
+function ensureTutorialUI(){
+ if(document.querySelector('#tutorialLayer'))return;
+ const layer=document.createElement('div');layer.id='tutorialLayer';layer.className='tutorial-layer hidden';layer.setAttribute('aria-hidden','true');
+ layer.innerHTML='<div class="tutorial-spotlight" id="tutorialSpotlight" aria-hidden="true"></div><button class="tutorial-bubble" id="tutorialBubble" type="button"><span class="tutorial-bubble-title" id="tutorialBubbleTitle"></span><span class="tutorial-bubble-body" id="tutorialBubbleBody"></span></button>';
+ document.body.appendChild(layer);
+}
+function tutorialModeEnabled(){return !!S.tutorialMode}
+function tutorialHideOverlay(){
+ const layer=document.querySelector('#tutorialLayer');
+ if(layer){layer.classList.add('hidden');layer.setAttribute('aria-hidden','true');}
+ const bubble=document.querySelector('#tutorialBubble');
+ if(bubble){bubble.classList.remove('is-visible');bubble.style.visibility='hidden';}
+}
+function tutorialInvalidateTransition(reason=''){
+ tutorialState.token++;
+ tutorialHideOverlay();
+ tutorialState.awaitingAction=false;
+}
+function tutorialToast(message){
+ const old=document.querySelector('#tutorialModeToast');old?.remove();
+ const toast=document.createElement('div');toast.id='tutorialModeToast';toast.className='tutorial-mode-toast';toast.textContent=message;document.body.appendChild(toast);
+ requestAnimationFrame(()=>toast.classList.add('is-visible'));
+ window.setTimeout(()=>{toast.classList.remove('is-visible');window.setTimeout(()=>toast.remove(),180)},1200);
+}
+function stopTutorialMode(){
+ tutorialState.token++;
+ tutorialState.active=false;
+ tutorialState.screen='';
+ tutorialState.index=0;
+ tutorialState.steps=[];
+ tutorialState.awaitingAction=false;
+ tutorialState.pendingDecisionScreen='';
+ tutorialState.returnContext=null;
+ tutorialState.firstDecisionScreen='';
+ S.tutorialMode=false;
+ const layer=document.querySelector('#tutorialLayer');if(layer){layer.classList.add('hidden');layer.setAttribute('aria-hidden','true');}
+ document.querySelector('#tutorialBubble')?.classList.remove('is-visible');
+ document.body.classList.remove('tutorial-mode-on');
+}
+function setTutorialMode(enabled,showNotice=true){
+ const on=!!enabled;
+ S.tutorialMode=on;
+ if(!on){stopTutorialMode();if(showNotice)tutorialToast('Tutorial Mode OFF');return;}
+ ensureTutorialUI();
+ if(showNotice)tutorialToast('Tutorial Mode ON');
+ startTutorialFromHome();
+}
+function startTutorialFromHome(){
+ const begin=()=>{
+  S.tutorialMode=true;
+  document.body.classList.add('tutorial-mode-on');
+  tutorialState.token++;
+  tutorialState.active=true;
+  tutorialState.screen='home';
+  tutorialState.index=0;
+  tutorialState.steps=[];
+  tutorialState.awaitingAction=false;
+  tutorialState.pendingDecisionScreen='';
+  tutorialState.returnContext=null;
+  tutorialState.firstDecisionScreen='';
+  show('home');
+  startTutorialForScreen('home',true,{index:0});
+ };
+ closeDrawer?.(true);
  window.requestAnimationFrame(begin);
 }
 function tutorialStepsForScreen(screen){
@@ -237,8 +299,8 @@ function tutorialWinnerRestart(){
  const context={...tutorialState.returnContext};
  tutorialState.returnContext=null;
  const resumeIndex=context.index+1;
- if(context.screen==='food')navigation.startFood({tutorialResumeIndex:resumeIndex});
- else if(context.screen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:resumeIndex});
+ if(context.screen==='food')startFood({tutorialResumeIndex:resumeIndex});
+ else if(context.screen==='restaurant')openRestaurant({tutorialResumeIndex:resumeIndex});
  else return false;
  return true;
 }
@@ -250,18 +312,18 @@ function advanceTutorial(){
   if(item){
    tutorialState.awaitingAction=false;
    tutorialState.returnContext={screen:sourceScreen,index:tutorialState.index};
-   navigation.winner(item,sourceScreen==='restaurant'?'restaurant':'food',{tutorial:true});
+   winner(item,sourceScreen==='restaurant'?'restaurant':'food',{tutorial:true});
   }
   return;
  }
  if(step?.action==='enter-restaurant'){
   tutorialState.awaitingAction=false;
-  navigation.openRestaurant({tutorialResumeIndex:0});
+  openRestaurant({tutorialResumeIndex:0});
   return;
  }
  if(step?.action==='enter-food'){
   tutorialState.awaitingAction=false;
-  navigation.startFood({tutorialResumeIndex:0});
+  startFood({tutorialResumeIndex:0});
   return;
  }
  if(step?.action==='finish-tour'){
@@ -292,8 +354,8 @@ function tutorialAdvanceFromTarget(event,step){
   if(!choice)return false;
   const nextScreen=choice.id==='restStart'?'restaurant':'food';
   tutorialMarkHomeChoice(nextScreen);
-  if(nextScreen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:0});
-  else navigation.startFood({tutorialResumeIndex:0});
+  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+  else startFood({tutorialResumeIndex:0});
   return true;
  }
  if(step?.action==='enter-restaurant'||step?.action==='enter-food'){
@@ -326,8 +388,8 @@ function tutorialHighlightedTargetClick(event){
   event.stopImmediatePropagation();
   const nextScreen=target.id==='restStart'?'restaurant':'food';
   tutorialMarkHomeChoice(nextScreen);
-  if(nextScreen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:0});
-  else navigation.startFood({tutorialResumeIndex:0});
+  if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+  else startFood({tutorialResumeIndex:0});
   return;
  }
  if(step?.action==='choose'){
@@ -349,7 +411,7 @@ function bindTutorialUI(){
    if(tutorialModeEnabled()&&tutorialState.active){
     stopTutorialMode();
     tutorialHideOverlay();
-    navigation.closeDrawer?.(true);
+    closeDrawer?.(true);
    }else startTutorialFromHome();
   });
  }
@@ -371,8 +433,8 @@ function bindTutorialUI(){
    event.stopPropagation();
    const nextScreen=target.id==='restStart'?'restaurant':'food';
    tutorialMarkHomeChoice(nextScreen);
-   if(nextScreen==='restaurant')navigation.openRestaurant({tutorialResumeIndex:0});
-   else navigation.startFood({tutorialResumeIndex:0});
+   if(nextScreen==='restaurant')openRestaurant({tutorialResumeIndex:0});
+   else startFood({tutorialResumeIndex:0});
   }
  },true);
  document.addEventListener('click',event=>{
@@ -399,5 +461,8 @@ function bindTutorialUI(){
   window.visualViewport.addEventListener('scroll',scheduleTutorialPosition,{passive:true});
  }
 }
+bindTutorialUI();
 
-export { configureTutorial, tutorialState, tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI };
+
+
+export { tutorialState, tutorialModeEnabled, tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorialBlockerRects, tutorialPosition, renderTutorialStep, tutorialNavigateTo, startTutorialForScreen, tutorialEnterDecisionScreen, tutorialMarkHomeChoice, tutorialMarkChoose, tutorialWinnerRestart, advanceTutorial, tutorialTargetHit, tutorialAdvanceFromTarget, tutorialCurrentTargetForEvent, tutorialBlockPointer, tutorialHandlePointerUp, tutorialHandlePointerCancel, tutorialHighlightedTargetClick, bindTutorialUI };
