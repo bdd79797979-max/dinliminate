@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1263,
-  "sourceBranch": "fix/cp1263-biscuits-gravy-pixabay",
-  "checkpoint": "CP1263",
-  "deploymentTrigger": "fix/cp1263-biscuits-gravy-pixabay",
+  "build": 1264,
+  "sourceBranch": "fix/cp1264-five-meal-photos",
+  "checkpoint": "CP1264",
+  "deploymentTrigger": "fix/cp1264-five-meal-photos",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1243-single-live-card-swipe-engine-restored; CP1257-stable-waiting-preview; CP1258-touch-feel-refinement",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1263 adds the user-selected Pixabay Biscuits & Gravy photo while preserving CP1262 true previous-decision history and all existing swipe/search/radius/Family/UI/catalog work",
+  "currentBaseline": "CP1264 refreshes five requested built-in meal photos (Buttermilk & Cornbread, Cabbage & Sausage, Chocolate Covered Peanuts, Peanut Butter & Jelly Sandwich & Chips, Chicken & Dumplings) while preserving CP1262 history and CP1263 Biscuits & Gravy",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1229-home-tour-single-handler",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -45,5 +45,5 @@
   "swipeFeel": "CP1258 softer uncommitted release-back, compositor will-change during committed flight, adaptive 240-300ms off-screen flight",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained as backups or primary when Pexels was not better",
   "detailPhotoUX": "CP1260 reuse the already decoded visible card image in Details and warm the selected image before opening; no loading UI added",
-  "mealPhotoUpdate": "Biscuits & Gravy image set to https://cdn.pixabay.com/photo/2014/10/04/03/11/biscuits-472409_1280.jpg from the user-provided Pixabay page."
+  "mealPhotoUpdate": "User-selected sources: Pixabay 2136359, 493281, 2554, and 8450085; Unsplash 5XJZC1h53as for Peanut Butter & Jelly."
 }
