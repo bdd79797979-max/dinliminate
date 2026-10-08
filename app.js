@@ -21,6 +21,10 @@ const APP_VERSION = '1.0';
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 let foodSwipeHandoff=false;
 let restaurantSwipeHandoff=false;
+// CP1241: let the next card begin a real swipe during the tail of the previous card's flight.
+const SWIPE_OVERLAP_DELAY=95;
+let swipeOverlapContext=null;
+let swipeOverlapSerial=0;
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
 let APP_BUILD = '1187';
 fetch('./app-release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(meta=>{if(meta?.build)APP_BUILD=String(meta.build)}).catch(()=>{});
@@ -2529,8 +2533,9 @@ function bindRestaurantPhotoPinch(target){
   surface.addEventListener('pointerup',finishPointer,{passive:true});
   surface.addEventListener('pointercancel',finishPointer,{passive:true});
 }
-function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
+function bindSwipeCard(cardId,nextId,onCut,onMaybe,options={}) {
  const card=$(cardId);if(!card)return;
+ const isOverlapCard=options?.overlap===true;
  const next=$(nextId);
  const staticWaitingCard=cardId==='foodCard';
  const swipeBindingToken=String((Number(card.dataset.swipeBindingToken||0)+1));
@@ -2614,6 +2619,24 @@ function bindSwipeCard(cardId,nextId,onCut,onMaybe) {
    if(phase==='idle'){
     card.style.transition='';
     card.style.transform='';
+    if(isOverlapCard){
+     const ctx=swipeOverlapContext;
+     if(ctx?.clone===card){
+      ctx.nextSettled=true;
+      try{card.remove();}catch{}
+      if(ctx.previewCard?.isConnected){
+       ctx.previewCard.style.visibility='visible';
+       ctx.previewCard.style.pointerEvents='none';
+       ctx.previewCard.dataset.swipePromoted='';
+      }
+      if(ctx.sourceFlightDone&&ctx.sourceComplete&&!ctx.flushing){
+       ctx.flushing=true;
+       const sourceComplete=ctx.sourceComplete;
+       swipeOverlapContext=null;
+       Promise.resolve(sourceComplete()).catch(()=>{});
+      }
+     }
+    }
    }
   },185);
  };
@@ -2719,7 +2742,10 @@ const completeAfterExit=async ()=>{
       freshRestaurantCard.style.pointerEvents='auto';
      }
     }else if(card.isConnected){
-     resetCard();
+     if(isOverlapCard)card.remove();
+     else resetCard();
+    }else if(isOverlapCard){
+     try{card.remove();}catch{}
     }
    }
   }
@@ -2758,6 +2784,7 @@ const completeAfterExit=async ()=>{
   card.dataset.swipeTransaction='active';
 
   // CP1239 — make the committed exit one atomic browser animation.
+  // CP1241 — the outgoing flight remains unchanged; only the input handoff overlaps.
   // Start at the exact finger-release position, keep the card fully opaque,
   // and do not let transitionend/rebind lifecycle events control completion.
   const releaseAbs=Math.abs(dx);
@@ -2778,7 +2805,7 @@ const completeAfterExit=async ()=>{
   const magnitude=clamp(Math.abs(speed),0,2.4);
   const duration=Math.round(clamp(285-(magnitude*28),225,285));
 
-  if(next&&!staticWaitingCard){
+  if(next&&!staticWaitingCard&&!isOverlapCard){
    const revealPromotedNext=()=>{
     if(!next.isConnected)return;
     const nextMealId=String(next.dataset.mealId||'');
@@ -2796,6 +2823,54 @@ const completeAfterExit=async ()=>{
    revealPromotedNext();
   }
 
+  // CP1241: after a short overlap window, clone the already-prepared next card
+  // into the active stack so a user can begin the next swipe before this card's
+  // full flight has finished. The original preview stays intact underneath.
+  if(!isOverlapCard&&next?.isConnected){
+   const overlapToken=String(++swipeOverlapSerial);
+   const kind=cardId==='foodCard'?'food':'restaurant';
+   const nextIdValue=kind==='food'
+     ?String(next.dataset.mealId||'')
+     :String(next.querySelector('img[data-restaurant-photo-key]')?.dataset.restaurantPhotoKey||'');
+   const nextItem=kind==='food'
+     ?S.pool.find(item=>String(item?.id||'')===nextIdValue)
+     :S.restaurantPool.find(row=>String(row?.id||'')===nextIdValue);
+   const ctx={
+    sourceCard:card,previewCard:next,token:overlapToken,clone:null,nextItem,
+    nextGestureStarted:false,nextCommitted:false,nextSettled:false,
+    sourceFlightDone:false,nextFlightDone:false,sourceComplete:null,nextComplete:null,flushing:false
+   };
+   swipeOverlapContext=ctx;
+   window.setTimeout(()=>{
+    if(swipeOverlapContext!==ctx||phase!=='committing'||ctx.nextGestureStarted||ctx.sourceFlightDone)return;
+    if(!next.isConnected||!nextItem)return;
+    const clone=next.cloneNode(true);
+    clone.id='swipeOverlapCard-'+overlapToken;
+    clone.classList.remove('next-card','hidden');
+    clone.setAttribute('aria-hidden','false');
+    clone.dataset.swipeOverlapToken=overlapToken;
+    clone.dataset.swipePhase='idle';
+    clone.dataset.swipeTransaction='';
+    clone.style.visibility='visible';
+    clone.style.opacity='1';
+    clone.style.filter='none';
+    clone.style.transform='none';
+    clone.style.transition='none';
+    clone.style.pointerEvents='auto';
+    clone.style.zIndex='4';
+    next.style.visibility='hidden';
+    next.parentElement?.appendChild(clone);
+    ctx.clone=clone;
+    const cut=kind==='food'
+      ?()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(nextItem)
+      :()=>familyIsBrowseStage('restaurant')?familyBrowseNext('restaurant'):restaurantCut(nextItem);
+    const maybe=kind==='food'
+      ?()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(nextItem)
+      :()=>familyIsBrowseStage('restaurant')?familyBrowsePrevious('restaurant'):restaurantMaybe(nextItem);
+    bindSwipeCard(clone.id,'',cut,maybe,{overlap:true});
+   },SWIPE_OVERLAP_DELAY);
+  }
+
   dismissSwipeHint();
   if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
 
@@ -2803,6 +2878,54 @@ const completeAfterExit=async ()=>{
    if(phase!=='committing')return;
    if(exitAnimation){try{exitAnimation.cancel();}catch{}exitAnimation=null;}
    clearCompletionTimer();
+
+   const ctx=swipeOverlapContext;
+   if(!isOverlapCard&&ctx?.sourceCard===card){
+    ctx.sourceFlightDone=true;
+    ctx.sourceComplete=completeAfterExit;
+    if(ctx.nextGestureStarted&&!ctx.nextSettled){
+     // The first flight is visually finished, but hold its state redraw so it
+     // cannot interrupt the user's in-progress next-card gesture.
+     if(ctx.nextCommitted&&ctx.nextFlightDone&&!ctx.flushing){
+      ctx.flushing=true;
+      const sourceComplete=ctx.sourceComplete;
+      const nextComplete=ctx.nextComplete;
+      swipeOverlapContext=null;
+      (async()=>{
+       try{await sourceComplete();if(nextComplete)await nextComplete();}catch{}
+      })();
+     }
+     return;
+    }
+    if(ctx.clone){try{ctx.clone.remove();}catch{}}
+    if(ctx.previewCard?.isConnected){
+     ctx.previewCard.style.visibility='visible';
+     ctx.previewCard.style.pointerEvents='none';
+    }
+    swipeOverlapContext=null;
+    completeAfterExit();
+    return;
+   }
+
+   if(isOverlapCard){
+    const overlapCtx=swipeOverlapContext;
+    if(overlapCtx?.clone===card){
+     overlapCtx.nextFlightDone=true;
+     overlapCtx.nextComplete=completeAfterExit;
+     if(overlapCtx.sourceFlightDone&&!overlapCtx.flushing){
+      overlapCtx.flushing=true;
+      const sourceComplete=overlapCtx.sourceComplete;
+      const nextComplete=overlapCtx.nextComplete;
+      try{card.remove();}catch{}
+      swipeOverlapContext=null;
+      (async()=>{
+       try{if(sourceComplete)await sourceComplete();if(nextComplete)await nextComplete();}catch{}
+      })();
+     }
+     return;
+    }
+   }
+
    completeAfterExit();
   };
 
@@ -2903,6 +3026,10 @@ const completeAfterExit=async ()=>{
   if(card.dataset.swipeTransaction==='active')return;
   if(phase!=='idle'||card.dataset.swipePhase!=='idle')return;
   if(e.target.closest?.('button,a,input,select'))return;
+  if(isOverlapCard){
+   const ctx=swipeOverlapContext;
+   if(ctx?.clone===card)ctx.nextGestureStarted=true;
+  }
   downX=e.clientX;
   lastX=e.clientX;
   lastMoveX=e.clientX;
