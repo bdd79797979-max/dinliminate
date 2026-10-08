@@ -54,6 +54,9 @@
     },
     "api/google-usage.js": {
       "maxDuration": 10
+    },
+    "api/meal-autofill.js": {
+      "maxDuration": 20
     }
   }
 }
