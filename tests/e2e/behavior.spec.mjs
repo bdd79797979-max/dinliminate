@@ -505,7 +505,7 @@ test('Maybe review continuously cycles Restaurants after the last undecided resu
   await expectNoPageErrors(errors);
 });
 
-test('CP1332 phone swipe controls spread across the bottom width on Meals and Restaurants', async ({ page }) => {
+test('CP1336 phone swipe controls retain size with a tighter spread and verify address overlay/card height', async ({ page }) => {
   const errors = await prepare(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await seedMeals(page, 3);
@@ -525,18 +525,93 @@ test('CP1332 phone swipe controls spread across the bottom width on Meals and Re
     });
     expect(layout.buttons).toHaveLength(4);
     expect(layout.row.width).toBeGreaterThanOrEqual(layout.viewportWidth - 24);
-    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(14);
-    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(14);
-    expect(layout.buttons[3].center - layout.buttons[0].center).toBeGreaterThan(layout.row.width * 0.78);
+    expect(layout.buttons[0].left - layout.row.left).toBeGreaterThanOrEqual(18);
+    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(22);
+    expect(layout.row.right - layout.buttons[3].right).toBeGreaterThanOrEqual(18);
+    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(22);
+    const spread = layout.buttons[3].center - layout.buttons[0].center;
+    expect(spread).toBeGreaterThan(layout.row.width * 0.72);
+    expect(spread).toBeLessThan(layout.row.width * 0.84);
     for (let i=1;i<layout.buttons.length;i++) {
       expect(layout.buttons[i].left).toBeGreaterThanOrEqual(layout.buttons[i-1].right - 1);
     }
   }
 
+  async function expectTallerCard(stackSelector, cardSelector) {
+    const metrics = await page.evaluate(({ stackSelector, cardSelector }) => {
+      const stack = document.querySelector(stackSelector);
+      const card = document.querySelector(cardSelector);
+      return {
+        viewportHeight:window.innerHeight,
+        stackMaxHeight:parseFloat(getComputedStyle(stack).maxHeight),
+        cardMaxHeight:parseFloat(getComputedStyle(card).maxHeight)
+      };
+    }, { stackSelector, cardSelector });
+    expect(metrics.stackMaxHeight).toBeGreaterThan(metrics.viewportHeight * 0.70);
+    expect(metrics.cardMaxHeight).toBeGreaterThan(metrics.viewportHeight * 0.70);
+  }
+  async function expectStyledBack(selector) {
+    const style = await page.locator(selector).evaluate(el => {
+      const css=getComputedStyle(el), rect=el.getBoundingClientRect();
+      return {width:rect.width,height:rect.height,color:css.color,backgroundImage:css.backgroundImage,borderColor:css.borderColor,opacity:parseFloat(css.opacity)};
+    });
+    expect(style.width).toBe(42);
+    expect(style.height).toBe(42);
+    expect(style.color).toBe('rgb(232, 200, 126)');
+    expect(style.backgroundImage).toContain('linear-gradient');
+    expect(style.borderColor).toBe('rgb(154, 126, 78)');
+    expect(style.opacity).toBeGreaterThanOrEqual(0.5);
+  }
+
   await expectFullWidthDecisionRow('#food .unified-swipe-actions');
+  await expectStyledBack('#foodBack');
+  await expectTallerCard('#food .swipe-card-stack', '#foodCard');
+
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
+  await expectStyledBack('#restBack');
+  await expectTallerCard('#restaurant .restaurant-card-stack', '#restaurantCard');
+
+  const overlay = await page.evaluate(() => {
+    const dropdown=document.querySelector('#suggestionsBox');
+    const quick=document.querySelector('#restaurant .restaurant-quick-section');
+    dropdown.hidden=false;
+    dropdown.style.display='block';
+    dropdown.replaceChildren();
+    for(let index=0;index<4;index++){
+      const item=document.createElement('button');
+      item.type='button';
+      item.dataset.testSuggestion=String(index);
+      item.textContent='Suggested address '+index;
+      item.style.cssText='display:block;position:relative;width:100%;height:70px;padding:8px;';
+      dropdown.appendChild(item);
+    }
+    const box=dropdown.getBoundingClientRect();
+    const candidates=[...quick.querySelectorAll('button')]
+      .filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')
+      .map(el=>{
+        const r=el.getBoundingClientRect();
+        const left=Math.max(box.left,r.left),right=Math.min(box.right,r.right);
+        const top=Math.max(box.top,r.top),bottom=Math.min(box.bottom,r.bottom);
+        return {area:Math.max(0,right-left)*Math.max(0,bottom-top),left,right,top,bottom};
+      })
+      .filter(row=>row.area>0).sort((a,b)=>b.area-a.area);
+    if(!candidates.length)return {intersects:false};
+    const area=candidates[0];
+    const hit=document.elementFromPoint((area.left+area.right)/2,(area.top+area.bottom)/2);
+    return {
+      intersects:true,
+      targetIsSuggestion:Boolean(hit?.closest('#suggestionsBox [data-test-suggestion]')),
+      stripZ:Number.parseInt(getComputedStyle(document.querySelector('#restaurant .location-strip')).zIndex,10),
+      quickZ:Number.parseInt(getComputedStyle(quick).zIndex,10),
+      suggestionsZ:Number.parseInt(getComputedStyle(dropdown).zIndex,10)
+    };
+  });
+  expect(overlay.intersects).toBe(true);
+  expect(overlay.targetIsSuggestion).toBe(true);
+  expect(overlay.stripZ).toBeGreaterThan(overlay.quickZ);
+  expect(overlay.suggestionsZ).toBeGreaterThan(overlay.quickZ);
   await expectNoPageErrors(errors);
 });
 

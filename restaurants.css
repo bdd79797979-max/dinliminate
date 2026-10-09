@@ -866,3 +866,71 @@ html:root .app #restaurant #restaurantHomeBack.discovery-home-back > span{
   transform:none;
  }
 }
+
+
+/* CP1336: address suggestions must layer over the controls underneath. */
+html:root #restaurant .location-strip{
+  position:relative;
+  z-index:40;
+}
+html:root #restaurant .address-wrap #suggestionsBox{
+  z-index:60;
+}
+
+/* Keep the bottom decision row balanced while reducing its wide-phone spread. */
+@media(max-width:430px){
+  html:root .app #food .unified-swipe-actions,
+  html:root .app #restaurant .unified-swipe-actions{
+    padding-inline:20px;
+  }
+}
+
+/* A clearer Back action, without changing the button's footprint. */
+html:root .app #food .unified-swipe-actions > .round-back,
+html:root .app #restaurant .unified-swipe-actions > .round-back{
+  background:linear-gradient(145deg,#29251d,#17140f);
+  color:#e8c87e;
+  border:1px solid #9a7e4e;
+  box-shadow:inset 0 1px 0 rgba(255,242,205,.14),0 6px 18px rgba(0,0,0,.52),0 0 0 1px rgba(198,164,106,.12);
+}
+html:root .app #food .unified-swipe-actions > .round-back span,
+html:root .app #restaurant .unified-swipe-actions > .round-back span{
+  color:#f0d696;
+  text-shadow:0 1px 5px rgba(0,0,0,.8);
+}
+html:root .app #food .unified-swipe-actions > .round-back:disabled,
+html:root .app #restaurant .unified-swipe-actions > .round-back:disabled{
+  opacity:.58;
+}
+
+/* Increase only the card-height allowance; preserve width, crop, and card styling. */
+html:root #food .swipe-card-stack,
+html:root #food .swipe-card-stack > .card,
+html:root #restaurant .restaurant-card-stack,
+html:root #restaurant .restaurant-card-stack > .card{
+  max-height:71svh;
+}
+@media(max-width:600px){
+  html:root #food .swipe-card-stack,
+  html:root #food .swipe-card-stack > .card,
+  html:root #restaurant .restaurant-card-stack,
+  html:root #restaurant .restaurant-card-stack > .card{
+    max-height:min(71svh,calc(100svh - 245px));
+  }
+}
+@media(max-width:390px){
+  html:root #food .swipe-card-stack,
+  html:root #food .swipe-card-stack > .card,
+  html:root #restaurant .restaurant-card-stack,
+  html:root #restaurant .restaurant-card-stack > .card{
+    max-height:min(71svh,calc(100svh - 200px));
+  }
+}
+@media(max-width:340px){
+  html:root #food .swipe-card-stack,
+  html:root #food .swipe-card-stack > .card,
+  html:root #restaurant .restaurant-card-stack,
+  html:root #restaurant .restaurant-card-stack > .card{
+    max-height:min(71svh,calc(100svh - 265px));
+  }
+}
