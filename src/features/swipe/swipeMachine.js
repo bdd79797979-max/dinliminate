@@ -225,7 +225,11 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     }
     exit.finished.then(async()=>{
       if(!current()||activeTransaction!==localTransaction||phase!=='committing')return;
-      animation=null;
+      // Keep the finished WAAPI animation referenced until the action callback
+      // redraws this shared card. drawFood()/drawRestaurant() destroys this
+      // machine; destroy() must still be able to cancel the fill-forwards effect.
+      // Otherwise the old off-screen transform survives the CSS reset and the
+      // next card looks visible but its hit area remains off-screen.
       setPhase('settled');
       card.style.opacity='0';
       card.style.visibility='hidden';
@@ -236,6 +240,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
         console.error('Dinliminate swipe commit error',error);
       }
       if(!current()||activeTransaction!==localTransaction||phase!=='settled')return;
+      // If the action switched screens without rebinding this machine, clear
+      // the finished animation's fill effect before restoring the card styles.
+      cancelAnimation();
       resetVisuals();
     }).catch(error=>{
       if(!current()||activeTransaction!==localTransaction)return;
