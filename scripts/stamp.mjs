@@ -14,7 +14,7 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(buildDate)) throw new Error('app-release.json bu
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const write = (file, value) => fs.writeFileSync(path.join(root, file), value);
 
-const SHELL_CACHE_NAME = 'dinliminate-shell-v1309';
+const SHELL_CACHE_NAME = 'dinliminate-shell-v' + build;
 const listFiles = directory => fs.readdirSync(directory, { withFileTypes: true })
   .flatMap(entry => {
     const full = path.join(directory, entry.name);
