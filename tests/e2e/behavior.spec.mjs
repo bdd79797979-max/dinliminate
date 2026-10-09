@@ -1576,3 +1576,26 @@ test('CP1339 Maybe keeps waiting-card text hidden until the active meal photo is
     .toBe('visible');
   await expectNoPageErrors(errors);
 });
+
+
+test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.goto('/');
+  await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
+  await expect(page.locator('#home')).toBeVisible();
+
+  const css = await page.evaluate(async () => {
+    const response = await fetch('./home.css?v=1345', { cache:'no-store' });
+    if (!response.ok) throw new Error('could not load the current homepage stylesheet');
+    return response.text();
+  });
+
+  expect(css).not.toContain('dinliminate-home-gold-sweep');
+  expect(css).not.toContain('rgba(255,224,160');
+  expect(css).not.toContain('rgba(255,211,125');
+  expect(css).not.toContain('rgba(255,226,150');
+  expect(css).not.toContain('html:root .app.home-active #home::before{');
+  expect(css).not.toContain('html:root .app.home-active .app-topbar .brand-mark::after{');
+  expect(css).not.toContain('html:root .app.home-active #home .home-choice-zone::before{');
+  expect(errors).toEqual([]);
+});
