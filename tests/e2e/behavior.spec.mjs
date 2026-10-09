@@ -406,6 +406,8 @@ test('meal and restaurant decision controls are visible and touch-sized at mobil
   await seedMeals(page, 2);
   await expectControls(['foodBack', 'foodCut', 'foodMaybe', 'foodChoose']);
 
+  // Clear the persisted Meal route so the next navigation starts on Home.
+  await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await expectControls(['restBack', 'restCut', 'restMaybe', 'restChoose']);
 
