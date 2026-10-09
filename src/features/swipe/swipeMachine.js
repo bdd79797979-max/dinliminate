@@ -75,15 +75,18 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   const resetVisuals=()=>{
     cancelMoveFrame();
     const mediaPending=card.dataset.mediaPending==='true';
+    const preserveSurface=mediaPending&&card.dataset.preserveMediaSurface==='true';
+    const hideForMedia=mediaPending&&!preserveSurface;
     card.classList.remove('swipe-active');
     card.style.willChange='';
     card.style.transition='none';
     card.style.transform='';
-    // Drawing the next meal can deliberately keep this shared card hidden
-    // until the next image is ready. Never let swipe cleanup reveal it early.
-    card.style.opacity=mediaPending?'0':'1';
-    card.style.visibility=mediaPending?'hidden':'visible';
-    card.style.pointerEvents=mediaPending?'none':'auto';
+    // Some decision restores intentionally keep the card surface visible
+    // (its title/details are already current) while the matching image loads.
+    // Machine teardown must preserve that choice instead of hiding the whole card.
+    card.style.opacity=hideForMedia?'0':'1';
+    card.style.visibility=hideForMedia?'hidden':'visible';
+    card.style.pointerEvents=hideForMedia?'none':'auto';
     card.style.removeProperty('--swipe-tint-alpha');
     card.dataset.swipe='';
     card.dataset.swipeDirection='';
@@ -393,7 +396,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   card.style.userSelect='none';
   card.style.webkitUserSelect='none';
   card.style.webkitTouchCallout='none';
-  card.style.pointerEvents=card.dataset.mediaPending==='true'?'none':'auto';
+  card.style.pointerEvents=card.dataset.mediaPending==='true'&&card.dataset.preserveMediaSurface!=='true'?'none':'auto';
   return api;
 }
 

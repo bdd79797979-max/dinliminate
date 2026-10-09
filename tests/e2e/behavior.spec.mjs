@@ -884,6 +884,7 @@ test('CP1328 waiting Meal window advances before a slow active-card photo resolv
     const row = saved.pool?.[1];
     return {
       id: String(row?.id || ''),
+      name: String(row?.name || ''),
       urls: [row?.officialImage, row?.image, row?.backupImage, ...(Array.isArray(row?.images) ? row.images : [])]
         .filter(value => typeof value === 'string' && /^https:\/\//i.test(value))
     };
@@ -1509,7 +1510,7 @@ test('CP1338 keeps the shared menu directly under its hamburger and Family Mode 
 });
 
 
-test('CP1339 Maybe keeps waiting-card text hidden until the active meal photo is ready', async ({ page }) => {
+test('CP1347 pending-photo Maybe keeps card copy visible and Back restores the decoded photo', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   const target = await page.evaluate(() => {
@@ -1558,15 +1559,38 @@ test('CP1339 Maybe keeps waiting-card text hidden until the active meal photo is
       img.dataset.mealPhotoLoaded === 'true' && img.complete && img.naturalWidth > 0
     ), { timeout: 12000 }).toBe(true);
     await expect.poll(() => delayedRequests).toBeGreaterThan(0);
+    const initialName=await page.locator('#foodName').innerText();
+    const initialPhoto=await page.locator('#foodImg').evaluate(img =>
+      new URL(img.currentSrc||img.src,document.baseURI).href
+    );
+    await page.evaluate(src=>{window.__cp1347InitialPhoto=src;},initialPhoto);
 
     await page.locator('#foodMaybe').click();
     const active = page.locator('#foodCard');
     await expect(active).toHaveAttribute('data-meal-id', expectedIds[1]);
     await expect(active).toHaveAttribute('data-media-pending', 'true');
+    await expect(page.locator('#foodName')).toHaveText(target.name);
+    await expect.poll(() => active.evaluate(el => {
+      const css=getComputedStyle(el);
+      return css.visibility==='visible'&&Number(css.opacity)>.99&&css.pointerEvents==='auto';
+    })).toBe(true);
     await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-meal-id'), { timeout: 7000 })
       .toBe(expectedIds[2]);
     await expect.poll(() => page.locator('#foodNextCard').evaluate(el => getComputedStyle(el).visibility))
       .toBe('hidden');
+
+    // Back while the next meal's image request is held must restore the prior
+    // meal and its already-decoded photo without blanking the active card.
+    await page.locator('#foodBack').click();
+    await expect(page.locator('#foodCard')).toHaveAttribute('data-meal-id', expectedIds[0]);
+    await expect(page.locator('#foodName')).toHaveText(initialName);
+    await expect.poll(() => page.locator('#foodImg').evaluate(img => {
+      const card=document.querySelector('#foodCard'),css=getComputedStyle(img);
+      return img.dataset.mealPhotoLoaded==='true'&&img.complete&&img.naturalWidth>0
+        &&css.visibility==='visible'
+        &&new URL(img.currentSrc||img.src,document.baseURI).href===window.__cp1347InitialPhoto
+        &&card?.dataset.mediaPending!=='true';
+    }), { timeout: 3000 }).toBe(true);
   } finally {
     releaseTargetPhoto();
   }
@@ -1585,7 +1609,7 @@ test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
   await expect(page.locator('#home')).toBeVisible();
 
   const css = await page.evaluate(async () => {
-    const response = await fetch('./home.css?v=1346', { cache:'no-store' });
+    const response = await fetch('./home.css?v=1347', { cache:'no-store' });
     if (!response.ok) throw new Error('could not load the current homepage stylesheet');
     return response.text();
   });
@@ -1675,9 +1699,22 @@ test('CP1346 Maybe and Back restore the exact Meal immediately without a card fl
   await expectNoPageErrors(errors);
 });
 
-test('CP1346 Restaurant Maybe and Back restore the exact card without photo-prep delay', async ({ page }) => {
+test('CP1347 Restaurant Maybe and Back reuse the prior photo on restore', async ({ page }) => {
   const errors = await prepare(page);
   await openRestaurants(page);
+  // Seed a decoded, row-matched photo so this test does not depend on live
+  // photo-service availability to verify the exact-photo restore path.
+  await page.evaluate(async dataUrl => {
+    const card=document.querySelector('#restaurantCard');
+    const img=card?.querySelector('img');
+    if(!card||!img)throw new Error('restaurant card did not render');
+    img.dataset.restaurantPhotoKey=String(card.dataset.restaurantId||'');
+    img.dataset.restaurantPhotoLoaded='true';
+    img.src=dataUrl;
+  }, TINY_PNG_DATA);
+  await expect.poll(() => page.locator('#restaurantCard img').evaluate(img =>
+    img.complete&&img.naturalWidth>0
+  ), { timeout: 7000 }).toBe(true);
 
   async function snapshot() {
     return page.evaluate(async () => {
@@ -1692,7 +1729,8 @@ test('CP1346 Restaurant Maybe and Back restore the exact card without photo-prep
         expectedName: String(row?.name || ''),
         visibility: css.visibility,
         opacity: Number(css.opacity),
-        imageKey: String(card?.querySelector('img')?.dataset.restaurantPhotoKey || '')
+        imageKey: String(card?.querySelector('img')?.dataset.restaurantPhotoKey || ''),
+        imageSrc: String(card?.querySelector('img')?.currentSrc || card?.querySelector('img')?.src || '')
       };
     });
   }
@@ -1712,7 +1750,8 @@ test('CP1346 Restaurant Maybe and Back restore the exact card without photo-prep
       return {
         id, name:document.querySelector('#restaurantCard h3')?.textContent?.trim() || '',
         expectedName:String(row?.name || ''), visibility:css.visibility, opacity:Number(css.opacity),
-        imageKey:String(card?.querySelector('img')?.dataset.restaurantPhotoKey || '')
+        imageKey:String(card?.querySelector('img')?.dataset.restaurantPhotoKey || ''),
+        imageSrc:String(card?.querySelector('img')?.currentSrc || card?.querySelector('img')?.src || '')
       };
     });
     expect(afterMaybe.id, 'Maybe must advance immediately at cycle '+i).not.toBe(before.id);
@@ -1740,6 +1779,8 @@ test('CP1346 Restaurant Maybe and Back restore the exact card without photo-prep
     expect(afterBack.visibility).toBe('visible');
     expect(afterBack.opacity).toBeGreaterThan(0.99);
     expect(afterBack.imageKey).toBe(afterBack.id);
+    expect(afterBack.imageSrc, 'Back should restore the prior restaurant photo at cycle '+i)
+      .toBe(before.imageSrc);
   }
   await expectNoPageErrors(errors);
 });

@@ -1036,7 +1036,9 @@ const row = rows[S.restaurantIndex];
 if(!row)return;
 const category = restaurantCategory(row);
 const restaurantFallback = restaurantImmediatePhoto;
-const image = restaurantFallback(row);
+const restoredCardPhoto=options.restoreCard?.id===String(row.id||'')
+ ? String(options.restoreCard?.photoSrc||'').trim():'';
+const image = restoredCardPhoto || restaurantFallback(row);
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
 const nextRow = rows[S.restaurantIndex + 1];
@@ -1153,8 +1155,9 @@ function restaurantBack(){
  S.restaurantActions.pop();
  if(!restoreRestaurantDecisionState(state))return;
  restaurantBackBusy=true;
- // Restore the selected card immediately; photo preparation continues in the background.
- Promise.resolve(drawRestaurants({swipeHandoff:true})).finally(()=>{restaurantBackBusy=false;updateDecisionBackButtons();});
+ // Reuse the exact ready photo for this same restaurant on the restore render.
+ // Hydration can still refresh the image after the card is already visible.
+ Promise.resolve(drawRestaurants({swipeHandoff:true,restoreCard:state.activeCard})).finally(()=>{restaurantBackBusy=false;updateDecisionBackButtons();});
  save();
 }
 

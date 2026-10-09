@@ -135,20 +135,37 @@ function drawFood(options={}){
   }
  }
  const item=S.pool[S.index],img=$('foodImg');if(!img)return;
+ const preserveCardSurface=options.preserveCardSurface===true;
+ const restoredPhotoEntry=preserveCardSurface
+  ? resolvedFoodCardPhotos.get(String(item?.id||''))||null
+  : null;
+ if(restoredPhotoEntry&&Number.isInteger(Number(restoredPhotoEntry.photoIndex))){
+  item._mealPhotoIndex=Math.max(0,Number(restoredPhotoEntry.photoIndex));
+ }
  const photoRefs=mealPhotoList(item),photoCount=photoRefs.length||1;
  const foodCard=$('foodCard');
  const previousMealId=String(foodCard?.dataset?.mealId||'');
  const previousImageReady=String(img.dataset.mealPhotoLoaded||'false')==='true'
   &&img.complete&&img.naturalWidth>0;
  const previousSrc=String(img.currentSrc||img.src||'').trim();
+ if(previousMealId&&previousImageReady&&previousSrc){
+  const previousItem=S.pool.find(row=>String(row?.id||'')===previousMealId);
+  resolvedFoodCardPhotos.set(previousMealId,{
+   src:previousSrc,
+   photoIndex:Math.max(0,Number(previousItem?._mealPhotoIndex||0))
+  });
+  void preloadSwipeImage(previousSrc);
+ }
  const primaryPhoto=foodPhoto(item),backupPhoto=foodPhotoFallback(item);
  const sameMealReady=previousMealId===String(item.id||'')&&previousImageReady
   &&(!primaryPhoto||previousSrc===primaryPhoto||previousSrc===backupPhoto);
+ const restoredPhotoSrc=String(restoredPhotoEntry?.src||'').trim();
+ const restoredPhotoReady=!!restoredPhotoSrc&&!!readyPreloadedSwipeImage(restoredPhotoSrc);
+ const photoReadyImmediately=sameMealReady||restoredPhotoReady;
  const photoIndex=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),Math.max(0,photoCount-1)));
  item._mealPhotoIndex=photoIndex;
  if(foodCard)foodCard.dataset.mealId=item.id;
- const holdCardForMedia=!!foodCard&&!sameMealReady;
- const preserveCardSurface=options.preserveCardSurface===true;
+ const holdCardForMedia=!!foodCard&&!photoReadyImmediately;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;
  let mealReadyResolve=()=>{};
@@ -156,8 +173,14 @@ function drawFood(options={}){
  if(foodCard){
   foodCard.dataset.mealLoadToken=loadToken;
   foodCard.__mealReadyPromise=mealReadyPromise;
-  if(holdCardForMedia)foodCard.dataset.mediaPending='true';
-  else delete foodCard.dataset.mediaPending;
+  if(holdCardForMedia){
+   foodCard.dataset.mediaPending='true';
+   if(preserveCardSurface)foodCard.dataset.preserveMediaSurface='true';
+   else delete foodCard.dataset.preserveMediaSurface;
+  }else{
+   delete foodCard.dataset.mediaPending;
+   delete foodCard.dataset.preserveMediaSurface;
+  }
  }
  img.dataset.fallback=foodPhotoFallback(item);
  img.dataset.finalFallback=FINAL_FOOD_IMAGE;
@@ -168,9 +191,11 @@ function drawFood(options={}){
   if(fb&&current!==fb){this.src=fb;return;}
   markMealImageUnavailable(this);
  };
- // Keep the current card's copy in place while the replacement photo is
- // prepared. Never show the old bitmap with the new meal's title.
- img.style.visibility=sameMealReady?'visible':'hidden';
+ // A previously displayed Meal can return with its own decoded photo.
+ // Swap to that exact cached source before the next paint rather than hiding
+ // the card while the loader goes through another asynchronous decode.
+ if(restoredPhotoReady)img.src=restoredPhotoSrc;
+ img.style.visibility=photoReadyImmediately?'visible':'hidden';
  if(holdCardForMedia){
    foodCard.style.transition='none';
    foodCard.style.transform='none';
@@ -188,10 +213,16 @@ function drawFood(options={}){
  }
  img.dataset.imageFallback='false';
  if(sameMealReady){
-  // A redraw of the same, already decoded photo should be a true no-op.
-  // Reassigning src and hiding it here caused an avoidable one-frame flash.
   img.dataset.mealPhotoLoaded='true';
   img.dataset.foodImageSource=previousSrc;
+  resolvedFoodCardPhotos.set(String(item.id||''),{
+   src:previousSrc,
+   photoIndex:Math.max(0,Number(item._mealPhotoIndex||0))
+  });
+  mealReadyResolve(true);
+ }else if(restoredPhotoReady){
+  img.dataset.mealPhotoLoaded='true';
+  img.dataset.foodImageSource=restoredPhotoSrc;
   mealReadyResolve(true);
  }else{
   img.dataset.mealPhotoLoaded='false';
@@ -200,10 +231,18 @@ function drawFood(options={}){
   if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
    if(String(img.dataset.mealLoadToken||'')===loadToken){
     if(!ok)markMealImageUnavailable(img);
-    if(ok)img.dataset.mealPhotoLoaded='true';
+    if(ok){
+     img.dataset.mealPhotoLoaded='true';
+     const resolvedSrc=String(img.currentSrc||img.src||'').trim();
+     if(resolvedSrc)resolvedFoodCardPhotos.set(String(item.id||''),{
+      src:resolvedSrc,
+      photoIndex:Math.max(0,Number(item._mealPhotoIndex||0))
+     });
+    }
     mealReadyResolve(!!ok);
     if(holdCardForMedia){
      delete foodCard.dataset.mediaPending;
+     delete foodCard.dataset.preserveMediaSurface;
      foodCard.style.transition='none';
      foodCard.style.transform='none';
      foodCard.style.opacity='1';
@@ -231,7 +270,14 @@ function drawFood(options={}){
   const total=usable.length||1;
   const idx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),total-1));
   item._mealPhotoIndex=idx;
-  if(usable[idx])swapImageWhenReady(img,usable[idx]);
+  if(usable[idx])swapImageWhenReady(img,usable[idx]).then(ok=>{
+   if(ok&&String(img.dataset.mealLoadToken||'')===loadToken&&String(foodCard?.dataset?.mealId||'')===String(item.id||'')){
+    resolvedFoodCardPhotos.set(String(item.id||''),{
+     src:String(img.currentSrc||img.src||usable[idx]).trim(),
+     photoIndex:idx
+    });
+   }
+  });
   ensureMealCardPhotoPager(foodCard,usable.length>1?usable.length:1,idx);
  });}
  updateDecisionBackButtons();
@@ -584,10 +630,30 @@ function prepareFoodNextCard(){
 
 
 const swipeImagePreloads=new Map();
+const resolvedFoodCardPhotos=new Map();
+function normalizedSwipeImageUrl(value){
+ try{return new URL(String(value||''),document.baseURI).href;}catch{return String(value||'').trim();}
+}
+function readyPreloadedSwipeImage(src){
+ const target=normalizedSwipeImageUrl(src);
+ if(!target)return null;
+ for(const [key,img] of swipeImagePreloads){
+  if(normalizedSwipeImageUrl(key)!==target)continue;
+  if(img?.__ready===true&&img.complete&&img.naturalWidth>0&&img.naturalHeight>0){
+   swipeImagePreloads.delete(key);
+   swipeImagePreloads.set(key,img);
+   return img;
+  }
+ }
+ return null;
+}
 function preloadSwipeImage(src){
  const url=String(src||'').trim();if(!url)return Promise.resolve(false);
  const cached=swipeImagePreloads.get(url);
  if(cached){
+  swipeImagePreloads.delete(url);
+  swipeImagePreloads.set(url,cached);
+  if(cached.__ready===true&&cached.complete&&cached.naturalWidth>0)return Promise.resolve(true);
   if(cached.__readyPromise)return cached.__readyPromise;
   if(cached.complete&&cached.naturalWidth>0)return Promise.resolve(true);
  }
@@ -597,7 +663,7 @@ function preloadSwipeImage(src){
  img.referrerPolicy='no-referrer';
  let settled=false;
  const readyPromise=new Promise(resolve=>{
-  const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
+  const finish=ok=>{if(settled)return;settled=true;img.__ready=!!ok;resolve(!!ok);};
   img.onload=()=>{
    const decoded=typeof img.decode==='function'?img.decode():Promise.resolve();
    Promise.resolve(decoded).catch(error=>{console.error('Dinliminate async operation failed',error);}).then(()=>finish(img.naturalWidth>0&&img.naturalHeight>0));
