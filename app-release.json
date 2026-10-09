@@ -1,12 +1,12 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1323,
+  "build": 1324,
   "sourceBranch": "main",
-  "checkpoint": "CP1323",
-  "deploymentTrigger": "CP1323-correct-arrow-regression-assertion-and-verify-menu-layout",
+  "checkpoint": "CP1324",
+  "deploymentTrigger": "CP1324-refresh-meal-waiting-card-after-handoff-and-verify-menu-uniformity",
   "vercelProductionVerified": false,
-  "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained. CP1320: Restaurant handoff no longer hides the newly selected card while asynchronous photo enrichment resolves; the active card exposes its stable restaurant ID for repeat detection. CP1320 was validated by 140 passing automated tests, including successive Restaurant swipes without repeated cut results or blank cards; CP1321 preserves the handoff logic unchanged. CP1320 regression run passed 140 tests, including consecutive Restaurant swipes with no repeats or blank cards; CP1322 preserves swipe logic unchanged. CP1320 passed 140 tests including sequential Restaurant swipes; later CP1322 suite had 135 passed and only 5 identical failures caused by an outdated expected SVG path in the visual test, corrected in CP1323. Swipe business logic unchanged.",
+  "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained. CP1320: Restaurant handoff no longer hides the newly selected card while asynchronous photo enrichment resolves; the active card exposes its stable restaurant ID for repeat detection. CP1320 was validated by 140 passing automated tests, including successive Restaurant swipes without repeated cut results or blank cards; CP1321 preserves the handoff logic unchanged. CP1320 regression run passed 140 tests, including consecutive Restaurant swipes with no repeats or blank cards; CP1322 preserves swipe logic unchanged. CP1320 passed 140 tests including sequential Restaurant swipes; later CP1322 suite had 135 passed and only 5 identical failures caused by an outdated expected SVG path in the visual test, corrected in CP1323. Swipe business logic unchanged. CP1324 fixes the stale waiting Meal card: after a swipe handoff, a guarded callback refreshes the waiting preview only once the newly active Meal is ready, fenced by active row identity and image-load token. Consecutive-swipe regression test checks active and waiting IDs.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "official-first-meal-photo > exact meal backup > emergency Dinliminate food image",
   "photoPolicy": "existing verified quality photo > Google Places > official restaurant > exact venue > OSM > no card",
@@ -28,11 +28,11 @@
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
   "securityHardening": "shared HTTP helpers + Neon-backed rate limits + DNS-aware SSRF fetch + centralized image-host policy + escaped/textContent UI sinks",
-  "automatedRC": "CP1318 delayed stale-image race + restored duplicate-Meal-ID normalization + successive Meal swipes never reintroduce a Cut card + restaurant handoff/mobile suite. CP1319 asserts both arrowhead SVGs are 12px square across Meal and Restaurant screens. CP1320 verifies real sequential Restaurant swipes advance unique stable IDs and never leave the active card blank or hidden.",
+  "automatedRC": "CP1324 regression: four consecutive Meal swipes assert active and waiting-card IDs progress through unique catalog entries, and waiting preview image-ready state after each update. CP1323 UI test verifies the four matching menu windows, Family Mode included, sit directly below the top-right close control; both Back arrows match the adjacent Meal Times/Cuisine font size.",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1300 visual baseline with CP1312 swipe/refresh/Details fixes, CP1317/1318 async card repeat safeguards, CP1320 verified consecutive-swipe fixes, and CP1323 corrected release stamps plus uniform menu/arrow parity checks.",
+  "currentBaseline": "CP1300 visual baseline with CP1312 swipe/refresh/Details fixes, CP1317/1318 async card safeguards, CP1320 sequential Restaurant handoff checks, CP1323 menu/arrow parity, and CP1324 stale Meal waiting-card refresh.",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1299 Tour remembers starting side; second decision screen finishes to Home; Tour button cancels and closes cleanly in both direct and capture handlers",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -51,5 +51,5 @@
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action",
   "buildDate": "2026-10-09",
-  "visualCorrections": "CP1321/1323: all four menu entries share the same rounded dark window style, including Family Mode; compact heading and place first menu window directly under the top-right close control. Home arrows use normalized 1em SVG and match adjacent Meals/Rests refinement label size."
+  "visualCorrections": "CP1323 menu parity retained: all four navigation rows share rounded dark window styling; first window sits directly below the top-right close control; Home arrowheads match the adjacent Meal Times/Cuisine label size on Meals and Restaurant screens."
 }

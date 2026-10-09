@@ -218,7 +218,23 @@ function drawFood(options={}){
  updateDecisionBackButtons();
  renderMaybeDeckToggle('food');
  // CP1197: prepare the visual waiting card independently. It is never promoted.
- if(!handoffRendering&&!options.deferPrime)primeFoodSwipeMedia();
+ if(!handoffRendering&&!options.deferPrime){
+  primeFoodSwipeMedia();
+ }else if(handoffRendering){
+  // Swipe handoffs intentionally delay preview work while the active Meal is loading.
+  // Refresh after that exact Meal is ready so the waiting card cannot get stuck on
+  // the former preview (for example, showing B behind the active B, C, and D cards).
+  const handoffMealId=String(item.id||'');
+  const stillCurrentMeal=()=>S.pool[S.index]===item
+   &&String(foodCard?.dataset?.mealId||'')===handoffMealId
+   &&String(img.dataset.mealLoadToken||'')===loadToken;
+  mealReadyPromise.then(()=>{
+   if(!stillCurrentMeal())return;
+   requestAnimationFrame(()=>{
+    if(stillCurrentMeal())primeFoodSwipeMedia();
+   });
+  });
+ }
  maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){pushDecisionHistory('food',captureFoodDecisionState());const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}

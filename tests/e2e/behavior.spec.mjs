@@ -626,9 +626,14 @@ test('Meal and Restaurant decision controls stay aligned, visible, and styled ac
   await expectNoPageErrors(errors);
 });
 
-test('successive Meal swipes never reintroduce a cut card', async ({ page }) => {
+test('CP1324 active and waiting Meal cards advance together without repeating previews', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 5);
+  const expectedIds = await page.evaluate(async () => {
+    const { store } = await import('/src/state/store.js');
+    return store.get().pool.map(row => String(row.id));
+  });
+  expect(expectedIds.length).toBe(5);
   const removedIds = [];
 
   async function expectCardReadyForNextSwipe() {
@@ -650,10 +655,26 @@ test('successive Meal swipes never reintroduce a cut card', async ({ page }) => 
     await waitForDecisionIdle(page, '#foodCard');
     await expectCardReadyForNextSwipe();
     const currentId = await page.locator('#foodCard').getAttribute('data-meal-id');
-    expect(currentId).toBeTruthy();
+    expect(currentId).toBe(expectedIds[index]);
     expect(removedIds).not.toContain(currentId);
     removedIds.push(currentId);
+
+    // The waiting card must advance as well; this catches the stale-preview bug
+    // where B remains beneath later active cards C and D.
+    await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-meal-id'), { timeout: 12000 })
+      .toBe(expectedIds[index + 1]);
+    await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-food-ready'), { timeout: 12000 })
+      .toBe('1');
+
     await swipeMeal(page, 'left');
+    await expect.poll(() => page.locator('#foodCard').getAttribute('data-meal-id'), { timeout: 12000 })
+      .toBe(expectedIds[index + 1]);
+    if (index < 3) {
+      await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-meal-id'), { timeout: 12000 })
+        .toBe(expectedIds[index + 2]);
+      await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-food-ready'), { timeout: 12000 })
+        .toBe('1');
+    }
   }
 
   await waitForDecisionIdle(page, '#foodCard');
