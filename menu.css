@@ -1,0 +1,202 @@
+/* CP1326: single authoritative menu-window and Back-to-Home sizing layer.
+   Loaded after the older screen styles to prevent cascade regressions. */
+html:root .app > #drawer.drawer{
+  padding-top:calc(env(safe-area-inset-top) + 9px);
+  padding-left:17px;
+  padding-right:17px;
+  padding-bottom:calc(env(safe-area-inset-bottom) + 18px);
+  height:100dvh;
+  box-sizing:border-box;
+  overscroll-behavior:contain;
+}
+html:root .app > #drawer .drawer-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  width:100%;
+  height:40px;
+  min-height:40px;
+  margin:0;
+  padding:0;
+  border:0;
+}
+html:root .app > #drawer .drawer-brand{
+  display:grid;
+  gap:2px;
+  min-width:0;
+  max-width:calc(100% - 48px);
+}
+html:root .app > #drawer .drawer-kicker{
+  display:block;
+  margin:0;
+  font-size:7px;
+  line-height:8px;
+}
+html:root .app > #drawer .drawer-brand strong{
+  display:block;
+  margin:0;
+  font-size:16px;
+  line-height:18px;
+  letter-spacing:-.04em;
+  white-space:nowrap;
+}
+html:root .app > #drawer .drawer-brand > span:last-child,
+html:root .app > #drawer .drawer-section-label{
+  display:none;
+}
+html:root .app > #drawer .drawer-close{
+  appearance:none;
+  -webkit-appearance:none;
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  width:40px;
+  min-width:40px;
+  height:40px;
+  min-height:40px;
+  margin:0 -15px 0 0;
+  padding:0;
+  border:1px solid #40392e;
+  border-radius:50%;
+  background:rgba(15,15,15,.24);
+  color:#d6b778;
+  font-size:24px;
+  line-height:1;
+  box-shadow:inset 0 1px 0 rgba(255,248,226,.12),0 4px 12px rgba(0,0,0,.18);
+}
+html:root .app > #drawer .drawer-nav{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:7px;
+  width:100%;
+  margin:3px 0 0;
+  padding:0;
+}
+html:root .app > #drawer .drawer-window{
+  appearance:none;
+  -webkit-appearance:none;
+  position:relative;
+  display:flex;
+  flex:0 0 54px;
+  align-items:center;
+  justify-content:space-between;
+  box-sizing:border-box;
+  width:100%;
+  height:54px;
+  min-height:54px;
+  max-height:54px;
+  margin:0;
+  padding:7px 9px;
+  border:1px solid #403a31;
+  border-radius:10px;
+  background:linear-gradient(145deg,#181715,#121210);
+  color:#eee7dc;
+  box-shadow:0 5px 14px rgba(0,0,0,.24);
+  font:inherit;
+  text-align:left;
+  line-height:normal;
+  transform:none;
+}
+html:root .app > #drawer .drawer-window:hover{
+  border-color:#645640;
+  background:linear-gradient(145deg,#201e1a,#151411);
+  color:#f2e9da;
+}
+html:root .app > #drawer .drawer-window:active{
+  transform:translateY(1px) scale(.997);
+  border-color:#645640;
+  background:linear-gradient(145deg,#201e1a,#151411);
+  box-shadow:0 3px 10px rgba(0,0,0,.24);
+}
+html:root .app > #drawer .drawer-window:focus-visible,
+html:root .app > #drawer .drawer-close:focus-visible{
+  outline:2px solid #d6b778;
+  outline-offset:2px;
+}
+html:root .app > #drawer .drawer-window::after{
+  content:none;
+  display:none;
+}
+html:root .app > #drawer .drawer-row-main{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+html:root .app > #drawer .drawer-row-icon{
+  display:grid;
+  flex:0 0 32px;
+  place-items:center;
+  box-sizing:border-box;
+  width:32px;
+  min-width:32px;
+  height:32px;
+  min-height:32px;
+  margin:0;
+  padding:0;
+  border:1px solid #302e2a;
+  border-radius:50%;
+  background:#171716;
+  color:#c6a46a;
+  box-shadow:none;
+}
+html:root .app > #drawer .drawer-row-icon svg{
+  display:block;
+  width:18px;
+  height:18px;
+}
+html:root .app > #drawer .drawer-row-main > span:last-child{
+  display:grid;
+  gap:3px;
+  min-width:0;
+  color:#eee7dc;
+}
+html:root .app > #drawer .drawer-window b{
+  font-size:15px;
+  line-height:1.05;
+  font-weight:780;
+  letter-spacing:-.02em;
+  color:#eee7dc;
+}
+html:root .app > #drawer .drawer-window small{
+  font-size:9px;
+  line-height:1.2;
+  color:#aaa094;
+}
+html:root .app > #drawer .drawer-window .drawer-row-chevron{
+  display:block;
+  flex:0 0 auto;
+  margin:0;
+  padding:0 0 0 8px;
+  color:#c6a46a;
+  font-size:20px;
+  line-height:1;
+}
+
+/* Match the actual adjacent labels at each supported width, not a fixed oversized icon box. */
+html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack,
+html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack{
+  font-size:11px;
+}
+html:root .app #food #foodHomeBack .home-back-arrowhead,
+html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
+  display:block;
+  width:1em;
+  height:1em;
+  min-width:1em;
+  min-height:1em;
+  max-width:1em;
+  max-height:1em;
+  flex:0 0 1em;
+  overflow:visible;
+}
+@media(max-width:390px){
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:10px}
+  html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack{font-size:11px}
+}
+@media(max-width:360px){
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:10px}
+  html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack{font-size:9.5px}
+}

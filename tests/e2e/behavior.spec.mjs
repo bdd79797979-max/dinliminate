@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1323 decision colors, label-sized gold arrows, and uniform elevated menu windows', async ({ page }) => {
+test('CP1326 decision colors, label-sized gold arrows, and uniform elevated menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -245,7 +245,7 @@ test('CP1323 decision colors, label-sized gold arrows, and uniform elevated menu
   const closeBox = await page.locator('#drawerClose').boundingBox();
   const rows = await page.locator('#drawer .drawer-row').evaluateAll(els => els.map(el => {
     const r=el.getBoundingClientRect(),s=getComputedStyle(el);
-    return {id:el.id,y:r.y,height:r.height,radius:s.borderRadius,border:s.borderWidth+' '+s.borderStyle+' '+s.borderColor,background:s.backgroundColor+'|'+s.backgroundImage,padding:s.padding};
+    return {id:el.id,y:r.y,height:r.height,radius:s.borderRadius,border:s.borderWidth+' '+s.borderStyle+' '+s.borderColor,background:s.backgroundColor+'|'+s.backgroundImage,padding:s.padding,isWindow:el.classList.contains('drawer-window')};
   }));
   const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
   expect(drawerHead).not.toBeNull();
@@ -253,9 +253,12 @@ test('CP1323 decision colors, label-sized gold arrows, and uniform elevated menu
   expect(firstMenuRow).not.toBeNull();
   expect(rows.map(r=>r.id)).toEqual(['familyMode','manage','history','settings']);
   expect(firstMenuRow.y).toBeGreaterThanOrEqual(closeBox.y + closeBox.height - 1);
-  expect(firstMenuRow.y - (closeBox.y + closeBox.height)).toBeLessThan(12);
+  expect(firstMenuRow.y - (closeBox.y + closeBox.height)).toBeGreaterThanOrEqual(2);
+  expect(firstMenuRow.y - (closeBox.y + closeBox.height)).toBeLessThanOrEqual(5);
   expect(firstMenuRow.y).toBeLessThan(60);
-  expect(rows.every(r=>r.height===54 && r.radius==='10px' && r.border===rows[0].border && r.background===rows[0].background && r.padding===rows[0].padding)).toBe(true);
+  expect(closeBox.width).toBe(40);
+  expect(closeBox.height).toBe(40);
+  expect(rows.every(r=>r.isWindow && r.height===54 && r.radius==='10px' && r.border===rows[0].border && r.background===rows[0].background && r.padding===rows[0].padding)).toBe(true);
   await page.locator('#drawerClose').click();
 
   await page.evaluate(() => localStorage.clear());
@@ -683,6 +686,85 @@ test('CP1325 active and waiting Meal cards advance together without repeating pr
   expect(survivorId).toBeTruthy();
   expect(removedIds).not.toContain(survivorId);
   await expect(page.locator('#foodMaybeDeck')).toHaveAttribute('data-all-count', '1');
+  await expectNoPageErrors(errors);
+});
+
+
+test('CP1326 waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 4);
+  const target = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find(value => value.startsWith('dinliminate:v1'));
+    const saved = JSON.parse(localStorage.getItem(key) || '{}');
+    const row = saved.pool?.[1];
+    return {
+      id: String(row?.id || ''),
+      urls: [row?.officialImage, row?.image, row?.backupImage, ...(Array.isArray(row?.images) ? row.images : [])]
+        .filter(value => typeof value === 'string' && /^https:\\/\\//i.test(value))
+    };
+  });
+  expect(target.id).toBeTruthy();
+  const targetPaths = new Set(target.urls.map(value => new URL(value).pathname));
+  expect(targetPaths.size).toBeGreaterThan(0);
+  const expectedIds = await page.evaluate(async () => {
+    const { store } = await import('/src/state/store.js');
+    return store.get().pool.map(row => String(row.id));
+  });
+  expect(expectedIds.length).toBe(4);
+
+  let releaseTargetPhoto;
+  const gate = new Promise(resolve => { releaseTargetPhoto = resolve; });
+  let delayedRequests = 0;
+  await page.route(url => {
+    const remote = url.searchParams.get('url') || '';
+    if (url.pathname !== '/api/image' || url.searchParams.get('meal') !== '1' || !remote) return false;
+    try { return targetPaths.has(new URL(remote).pathname); }
+    catch { return false; }
+  }, async route => {
+    delayedRequests += 1;
+    await gate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      headers: { 'cache-control': 'no-store' },
+      body: TINY_PNG
+    });
+  });
+
+  try {
+    await page.reload();
+    await expect(page.locator('#food')).toBeVisible();
+    await expect(page.locator('#foodCard')).toBeVisible();
+    await expect(page.locator('#foodCard')).toHaveAttribute('data-meal-id', expectedIds[0]);
+    await expect.poll(() => page.locator('#foodImg').evaluate(img =>
+      img.dataset.mealPhotoLoaded === 'true' && img.complete && img.naturalWidth > 0
+    ), { timeout: 12000 }).toBe(true);
+    await expect.poll(() => delayedRequests).toBeGreaterThan(0);
+
+    const card = page.locator('#foodCard');
+    const box = await card.boundingBox();
+    expect(box).toBeTruthy();
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    const delta = Math.max(125, box.width * 0.42);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x - delta, y, { steps: 10 });
+    await page.mouse.up();
+
+    await expect(card).toHaveAttribute('data-meal-id', expectedIds[1]);
+    await expect(card).toHaveAttribute('data-media-pending', 'true');
+    await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-meal-id'), { timeout: 3000 })
+      .toBe(expectedIds[2]);
+    await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-preview-render-sequence'))
+      .not.toBeNull();
+  } finally {
+    releaseTargetPhoto();
+  }
+
+  await expect.poll(() => page.locator('#foodCard').getAttribute('data-media-pending'), { timeout: 12000 }).toBe(null);
+  await expect.poll(() => page.locator('#foodNextCard').getAttribute('data-meal-id'), { timeout: 7000 })
+    .toBe(expectedIds[2]);
   await expectNoPageErrors(errors);
 });
 

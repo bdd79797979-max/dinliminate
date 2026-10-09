@@ -217,24 +217,10 @@ function drawFood(options={}){
  });}
  updateDecisionBackButtons();
  renderMaybeDeckToggle('food');
- // CP1197: prepare the visual waiting card independently. It is never promoted.
- if(!handoffRendering&&!options.deferPrime){
-  primeFoodSwipeMedia();
- }else if(handoffRendering){
-  // Swipe handoffs intentionally delay preview work while the active Meal is loading.
-  // Refresh after that exact Meal is ready so the waiting card cannot get stuck on
-  // the former preview (for example, showing B behind the active B, C, and D cards).
-  const handoffMealId=String(item.id||'');
-  const stillCurrentMeal=()=>S.pool[S.index]===item
-   &&String(foodCard?.dataset?.mealId||'')===handoffMealId
-   &&String(img.dataset.mealLoadToken||'')===loadToken;
-  mealReadyPromise.then(()=>{
-   if(!stillCurrentMeal())return;
-   requestAnimationFrame(()=>{
-    if(stillCurrentMeal())primeFoodSwipeMedia();
-   });
-  });
- }
+ // CP1326: update the waiting card's identity immediately on every active-card
+ // selection. Its image loader is token-fenced, so an older photo response cannot
+ // restore a stale preview while this Meal's own photo is still arriving.
+ if(!options.deferPrime)primeFoodSwipeMedia();
  maybeShowInCardSwipeCoach();bindFoodSwipe();bindMaybeDeckToggle('food');if(S.familyNormalMode==='setup'&&S.familyDecisionType==='meal')familyNormalBar('meal','setup',S.familyActiveData);bindCardButton('foodDetails',()=>detailsSheet(item,'food'));if($('foodChoose'))bindCardButton('foodChoose',()=>{dismissSwipeHint();if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'){familyRoundStage()===1?familyEnterMaybes('meal'):familyPickSingle('meal');}else winner(item)});bindCardButton('foodCut',()=>foodCut());bindCardButton('foodMaybe',()=>foodMaybe());bindCardButton('foodBack',foodBack);
 }
 function foodCommit(type,item){pushDecisionHistory('food',captureFoodDecisionState());const unkept=S.pool.filter(x=>!S.maybe.has(x.id)).length;S.foodActions.push({type,id:item.id,primary:item.primary,index:S.index,maybeRound:!!S.foodMaybeRound,hadMaybe:S.maybe.has(item.id),recycleOnUndo:type==='cut'&&S.maybe.size>0&&unkept===1});}
@@ -383,6 +369,7 @@ function stageSwipePreview(card,img,src,key){
 
 
 const preparedFoodSwipeCards=new Map();
+let foodNextCardRenderSequence=0;
 const FOOD_SWIPE_PRELOAD_DEPTH=3;
 
 function nextFoodIndexList(count=FOOD_SWIPE_PRELOAD_DEPTH){
@@ -511,6 +498,7 @@ function setFoodNextCardImage(nextCard,view){
 }
 
 function populateFoodNextCard(view){
+ const renderSequence=String(++foodNextCardRenderSequence);
  const nextCard=$('foodNextCard');
  if(!nextCard)return Promise.resolve(false);
  nextCard.classList.toggle('hidden',!view);
@@ -522,6 +510,7 @@ function populateFoodNextCard(view){
  nextCard.style.filter='none';
  nextCard.style.pointerEvents='none';
  nextCard.dataset.mealId=view?.id||'';
+ nextCard.dataset.previewRenderSequence=renderSequence;
  nextCard.dataset.foodReady='0';
  nextCard.dataset.foodImageReady='0';
 
@@ -543,7 +532,7 @@ function populateFoodNextCard(view){
  if(!view)return Promise.resolve(false);
 
  return setFoodNextCardImage(nextCard,view).then(ok=>{
-  if(nextCard.dataset.mealId!==view.id)return false;
+  if(nextCard.dataset.previewRenderSequence!==renderSequence||nextCard.dataset.mealId!==view.id)return false;
   nextCard.dataset.foodReady=ok?'1':'-1';
   nextCard.style.visibility='visible';
   return ok;
