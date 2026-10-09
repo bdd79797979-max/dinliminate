@@ -1868,7 +1868,7 @@ test('CP1350 menu navigation retains the full-screen handoff cover until the des
 });
 
 
-test('Tour button, bubble, and status notice use consistent Tour wording', async ({ page }) => {
+test('Tour button and first guidance bubble use Tour wording', async ({ page }) => {
   const errors = await prepare(page);
   await page.goto('/');
   await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
@@ -1882,6 +1882,6 @@ test('Tour button, bubble, and status notice use consistent Tour wording', async
   await expect(page.locator('#tutorialBubbleBody')).toHaveText('Tap this bubble to move to the next step.');
 
   await tourButton.click();
-  await expect(page.locator('#tutorialModeToast')).toHaveText('Tour Mode OFF', { timeout: 5000 });
+  await expect(page.locator('#tutorialLayer')).toHaveClass(/hidden/, { timeout: 5000 });
   await expectNoPageErrors(errors);
 });

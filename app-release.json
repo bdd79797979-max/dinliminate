@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1351,
-  "sourceBranch": "cp1351-tour-wording",
-  "checkpoint": "CP1351",
-  "deploymentTrigger": "cp1351-tour-wording",
+  "build": 1352,
+  "sourceBranch": "cp1352-tour-wording-test-expectation",
+  "checkpoint": "CP1352",
+  "deploymentTrigger": "cp1352-tour-wording-test-expectation",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained. CP1320: Restaurant handoff no longer hides the newly selected card while asynchronous photo enrichment resolves; the active card exposes its stable restaurant ID for repeat detection. CP1320 was validated by 140 passing automated tests, including successive Restaurant swipes without repeated cut results or blank cards; CP1321 preserves the handoff logic unchanged. CP1320 regression run passed 140 tests, including consecutive Restaurant swipes with no repeats or blank cards; CP1322 preserves swipe logic unchanged. CP1320 passed 140 tests including sequential Restaurant swipes; later CP1322 suite had 135 passed and only 5 identical failures caused by an outdated expected SVG path in the visual test, corrected in CP1323. Swipe business logic unchanged. CP1324/1325 fix the stale waiting Meal card: after a swipe handoff, a guarded callback refreshes the waiting preview only once the newly active Meal is ready, fenced by active row identity and image-load token. Consecutive-swipe regression test checks active and waiting IDs. CP1326 updates next Meal card identity synchronously when the active deck selection changes and fences async preview completion by render generation plus meal ID. New slow-photo handoff regression asserts B no longer remains as the waiting card while B's active photo is pending. CP1327 keeps CP1326 immediate waiting Meal-card identity refresh and async render-sequence fencing, and fixes the release tooling so the delayed-photo regression actually runs. CP1328 retains synchronous waiting Meal-preview identity refresh and async render-sequence fencing; delayed active-image test now uses DOMContentLoaded during blocked-image setup. CP1329 preserves CP1325 sequential active/waiting Meal-card identity assertions and CP1328 slow-photo handoff sequencing; the latest automated run passed both swipe regressions while menu-anchor tests exposed and localized a positioning bug.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -65,5 +65,5 @@
   "homepageEffects": "CP1345 removes the CP1340 logo shimmer, warm golden door light wash, and Home/Restaurant window glow. Preserves the existing door background, homepage layout, text, and tap targets.",
   "backRestoreAudit": "CP1348 preserves the decoded image per meal and restores it directly on Back; retains the current card surface while pending media is decoded; Restaurant history restores the exact displayed photo source. Regression tests exercise delayed photo response and exact-photo return.",
   "menuTransitionAudit": "CP1350 retains the full-screen drawer backdrop after the destination action is mounted, waits for Family Mode or utility-panel backdrop opacity to reach 1, then fades the menu cover away. This prevents an inter-frame uncovered-screen gap during navigation.",
-  "tourTerminologyAudit": "Visible help and status copy uses Tour wording: the first bubble title is TOUR and the on/off status notices say Tour Mode. Tour behavior and step guidance are unchanged."
+  "tourTerminologyAudit": "Visible help and status copy uses Tour wording: the first bubble title is TOUR and on/off status copy says Tour Mode. The first guide bubble/body and existing toggle behavior are covered by the regression test."
 }
