@@ -147,7 +147,6 @@ function drawFood(options={}){
  const photoIndex=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),Math.max(0,photoCount-1)));
  item._mealPhotoIndex=photoIndex;
  if(foodCard)foodCard.dataset.mealId=item.id;
- const handoffRendering=!!options.swipeHandoff;
  const holdCardForMedia=!!foodCard&&!sameMealReady;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;

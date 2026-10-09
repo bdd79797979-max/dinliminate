@@ -700,7 +700,7 @@ test('CP1326 waiting Meal window advances before a slow active-card photo resolv
     return {
       id: String(row?.id || ''),
       urls: [row?.officialImage, row?.image, row?.backupImage, ...(Array.isArray(row?.images) ? row.images : [])]
-        .filter(value => typeof value === 'string' && /^https:\\/\\//i.test(value))
+        .filter(value => typeof value === 'string' && /^https:\/\//i.test(value))
     };
   });
   expect(target.id).toBeTruthy();
