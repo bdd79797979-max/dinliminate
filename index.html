@@ -4,32 +4,32 @@
 <!-- CP1070 Restaurant refine controls -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<script src="./boot.js?v=1318"></script>
-<script src="./viewport.js?v=1318"></script>
+<script src="./boot.js?v=1319"></script>
+<script src="./viewport.js?v=1319"></script>
 <meta name="theme-color" content="#090909">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dinliminate">
 <meta name="format-detection" content="telephone=no">
 
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon.svg?v=1318" type="image/svg+xml">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1318" sizes="180x180">
+<link rel="icon" href="./icon.svg?v=1319" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1319" sizes="180x180">
 <title>Dinliminate — Meal Decisions Simplified</title>
 
 
-<link rel="stylesheet" href="./tokens.css?v=1318">
-<link rel="stylesheet" href="./base.css?v=1318">
-<link rel="stylesheet" href="./chrome.css?v=1318">
-<link rel="stylesheet" href="./modal.css?v=1318">
-<link rel="stylesheet" href="./swipe.css?v=1318">
-<link rel="stylesheet" href="./home.css?v=1318">
-<link rel="stylesheet" href="./meals.css?v=1318">
-<link rel="stylesheet" href="./restaurants.css?v=1318">
-<link rel="stylesheet" href="./winner.css?v=1318">
-<link rel="stylesheet" href="./history.css?v=1318">
-<link rel="stylesheet" href="./family.css?v=1318">
-<link rel="stylesheet" href="./settings.css?v=1318">
-<link rel="stylesheet" href="./tutorial.css?v=1318">
+<link rel="stylesheet" href="./tokens.css?v=1319">
+<link rel="stylesheet" href="./base.css?v=1319">
+<link rel="stylesheet" href="./chrome.css?v=1319">
+<link rel="stylesheet" href="./modal.css?v=1319">
+<link rel="stylesheet" href="./swipe.css?v=1319">
+<link rel="stylesheet" href="./home.css?v=1319">
+<link rel="stylesheet" href="./meals.css?v=1319">
+<link rel="stylesheet" href="./restaurants.css?v=1319">
+<link rel="stylesheet" href="./winner.css?v=1319">
+<link rel="stylesheet" href="./history.css?v=1319">
+<link rel="stylesheet" href="./family.css?v=1319">
+<link rel="stylesheet" href="./settings.css?v=1319">
+<link rel="stylesheet" href="./tutorial.css?v=1319">
 <style id="critical-boot-style">
 html,body{margin:0;background:#090909;color:#f5f5f5;min-height:100%;overscroll-behavior:none}
 *{box-sizing:border-box}
@@ -85,7 +85,7 @@ html.dinliminate-start-family #family{display:flex}
 .app-topbar #menu span{display:block;width:18px;height:1.5px;background:#e8cf98;border-radius:99px}
 #home{
   position:absolute;inset:0;width:100%;height:100dvh;margin:0;padding:0;overflow:hidden;display:block;
-  background:#080706 url("./assets/home-door.jpg?v=1318") center/cover no-repeat;text-align:center;
+  background:#080706 url("./assets/home-door.jpg?v=1319") center/cover no-repeat;text-align:center;
 }
 .home-choice-rail{position:absolute;inset:0;z-index:20;width:100%;height:100%;margin:0;padding:0;display:block;pointer-events:none}
 .home-choice-zone{
@@ -140,7 +140,7 @@ html.dinliminate-start-family #family{display:flex}
 
 <header class="top app-topbar" id="appTopbar">
   <div class="brand-mark" aria-label="Dinliminate">
-    <img class="dinliminate-logo-symbol" src="./logo.svg?v=1318" alt="" aria-hidden="true">
+    <img class="dinliminate-logo-symbol" src="./logo.svg?v=1319" alt="" aria-hidden="true">
     <span class="dinliminate-logo-wordmark">DINLIMINATE</span>
   </div>
   <button id="menu" class="menu" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -250,7 +250,7 @@ html.dinliminate-start-family #family{display:flex}
 <section class="screen hidden decision-screen" id="food">
 <div class="interior-nav food-interior-nav" aria-label="Meals navigation">
   <div class="food-refine-tabs" role="group" aria-label="Meal discovery tools">
-    <button id="foodHomeBack" class="discovery-home-back" type="button" aria-label="Back to homepage" title="Back to homepage"><span aria-hidden="true"><svg class="home-back-arrowhead" viewBox="0 0 24 24" width="25" height="25" focusable="false"><path d="M16.5 3.5 7 12l9.5 8.5" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+    <button id="foodHomeBack" class="discovery-home-back" type="button" aria-label="Back to homepage" title="Back to homepage"><span aria-hidden="true"><svg class="home-back-arrowhead" viewBox="0 0 24 24" width="12" height="12" focusable="false"><path d="M16.5 3.5 7 12l9.5 8.5" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
     <button id="foodMealTimeToggle" class="food-top-refine food-top-meal-times" type="button" aria-expanded="false" aria-pressed="false" aria-label="Show Meal Times" title="Show Meal Times">Meal Times</button>
     <span class="food-top-refine-divider" aria-hidden="true">—</span>
     <button id="foodQuickToggle" class="food-top-refine food-top-cuisine" type="button" aria-expanded="true" aria-pressed="false" aria-label="Show Cuisine" title="Show Cuisine">Cuisine</button>
@@ -283,7 +283,7 @@ html.dinliminate-start-family #family{display:flex}
     <span id="locationSourceLabel" class="location-source-label">No location selected</span>
     <p class="status" id="status" role="status" aria-live="polite">Enter an address or use your location.</p>
   </div>
-</div><div class="quick-section restaurant-quick-section"><div class="label-row quick-label restaurant-choice-management"><div class="restaurant-refine-tabs" role="group" aria-label="Restaurant discovery tools"><button id="restaurantHomeBack" class="discovery-home-back" type="button" aria-label="Back to homepage" title="Back to homepage"><span aria-hidden="true"><svg class="home-back-arrowhead" viewBox="0 0 24 24" width="25" height="25" focusable="false"><path d="M16.5 3.5 7 12l9.5 8.5" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button><button class="restaurant-refine-tab" id="restaurantSearchToggle" type="button" aria-expanded="false" aria-label="Open Search" title="Open Search">Search</button><span class="restaurant-refine-divider" aria-hidden="true">—</span><button class="quick-cuts-collapse-toggle quick-cuts-collapse-toggle-restaurant restaurant-refine-tab" id="restaurantQuickToggle" type="button" aria-expanded="false" aria-label="Open Cuisine" title="Open Cuisine">Cuisine</button><span class="restaurant-refine-divider" aria-hidden="true">—</span><button class="restaurant-refine-tab restaurant-hours-toggle" id="restaurantHoursToggle" type="button" aria-expanded="false" aria-pressed="false" aria-label="Show only restaurants open now" title="Show only restaurants open now">Open</button></div><button class="deck-filter-toggle quick-filter-toggle all-maybe-toggle canonical-maybe-control" id="restaurantMaybeDeck" type="button" data-mode="all" aria-label="Show Maybe choices" title="Show Maybe choices" aria-pressed="false"><span class="maybe-control-all" aria-hidden="true">ALL</span><span class="maybe-control-divider" aria-hidden="true">·</span><span class="maybe-control-maybe" aria-hidden="true">MAYBES</span><span class="maybe-control-count" aria-hidden="true">0</span></button></div><div class="restaurant-search-box hidden" id="restaurantSearchBox"><input id="restaurantQuery" type="search" autocomplete="off" enterkeyhint="search" spellcheck="false" placeholder="Search restaurants or cuisine" aria-label="Search restaurants or cuisine"></div><div class="quick" id="restQuick"></div></div>
+</div><div class="quick-section restaurant-quick-section"><div class="label-row quick-label restaurant-choice-management"><div class="restaurant-refine-tabs" role="group" aria-label="Restaurant discovery tools"><button id="restaurantHomeBack" class="discovery-home-back" type="button" aria-label="Back to homepage" title="Back to homepage"><span aria-hidden="true"><svg class="home-back-arrowhead" viewBox="0 0 24 24" width="12" height="12" focusable="false"><path d="M16.5 3.5 7 12l9.5 8.5" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button><button class="restaurant-refine-tab" id="restaurantSearchToggle" type="button" aria-expanded="false" aria-label="Open Search" title="Open Search">Search</button><span class="restaurant-refine-divider" aria-hidden="true">—</span><button class="quick-cuts-collapse-toggle quick-cuts-collapse-toggle-restaurant restaurant-refine-tab" id="restaurantQuickToggle" type="button" aria-expanded="false" aria-label="Open Cuisine" title="Open Cuisine">Cuisine</button><span class="restaurant-refine-divider" aria-hidden="true">—</span><button class="restaurant-refine-tab restaurant-hours-toggle" id="restaurantHoursToggle" type="button" aria-expanded="false" aria-pressed="false" aria-label="Show only restaurants open now" title="Show only restaurants open now">Open</button></div><button class="deck-filter-toggle quick-filter-toggle all-maybe-toggle canonical-maybe-control" id="restaurantMaybeDeck" type="button" data-mode="all" aria-label="Show Maybe choices" title="Show Maybe choices" aria-pressed="false"><span class="maybe-control-all" aria-hidden="true">ALL</span><span class="maybe-control-divider" aria-hidden="true">·</span><span class="maybe-control-maybe" aria-hidden="true">MAYBES</span><span class="maybe-control-count" aria-hidden="true">0</span></button></div><div class="restaurant-search-box hidden" id="restaurantSearchBox"><input id="restaurantQuery" type="search" autocomplete="off" enterkeyhint="search" spellcheck="false" placeholder="Search restaurants or cuisine" aria-label="Search restaurants or cuisine"></div><div class="quick" id="restQuick"></div></div>
 <div class="rest-stage" id="restStage"><div class="empty"><b>Ready when you are.</b><span>Set a location, then find restaurants.</span></div></div>
 </section>
 

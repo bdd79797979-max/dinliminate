@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1318,
+  "build": 1319,
   "sourceBranch": "main",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1318",
-  "deploymentTrigger": "CP1318-fence-stale-card-swaps-and-dedupe-restored-decks",
+  "checkpoint": "CP1319",
+  "deploymentTrigger": "CP1319-match-home-chevron-size-to-meal-times-and-cuisine-labels",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -38,8 +38,8 @@
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; only Reset receives color emphasis",
   "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained.",
-  "automatedRC": "CP1318 delayed stale-image race + restored duplicate-Meal-ID normalization + successive Meal swipes never reintroduce a Cut card + restaurant handoff/mobile suite.",
-  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px.",
+  "automatedRC": "CP1318 delayed stale-image race + restored duplicate-Meal-ID normalization + successive Meal swipes never reintroduce a Cut card + restaurant handoff/mobile suite. CP1319 asserts both arrowhead SVGs are 12px square across Meal and Restaurant screens.",
+  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px. CP1317: async card image callbacks must retain matching card identity before painting or revealing. CP1318 keeps decision-card identity stable during asynchronous image swaps and swipe completion. CP1319 scales both Meal and Restaurant Back to Home arrowheads from 24–25px to 12px so the visible chevron is approximately the same height as adjacent Meal Times/Cuisine labels; retains 30px tap target and gold borderless presentation.",
   "currentBaseline": "CP1300 visual baseline plus CP1318 async card-image ownership guards, restored Meal deck stable-ID normalization, and captured swipe-row decisions, on top of CP1316 drawer placement.",
   "buildDate": "2026-10-09"
 }

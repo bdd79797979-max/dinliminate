@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1318,
+  "build": 1319,
   "sourceBranch": "main",
-  "checkpoint": "CP1318",
-  "deploymentTrigger": "CP1318-fence-stale-card-swaps-and-dedupe-restored-decks",
+  "checkpoint": "CP1319",
+  "deploymentTrigger": "CP1319-match-home-chevron-size-to-meal-times-and-cuisine-labels",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -28,7 +28,7 @@
   "historyIntegrity": "malformed-storage recovery, bounded 120-entry history, family round idempotence, stable deletion",
   "brandPwaFinal": "restored Dinliminate logo, synchronized viewport/style/app asset versions, service-worker precache, and PWA icon versioning",
   "securityHardening": "shared HTTP helpers + Neon-backed rate limits + DNS-aware SSRF fetch + centralized image-host policy + escaped/textContent UI sinks",
-  "automatedRC": "CP1318 delayed stale-image race + restored duplicate-Meal-ID normalization + successive Meal swipes never reintroduce a Cut card + restaurant handoff/mobile suite.",
+  "automatedRC": "CP1318 delayed stale-image race + restored duplicate-Meal-ID normalization + successive Meal swipes never reintroduce a Cut card + restaurant handoff/mobile suite. CP1319 asserts both arrowhead SVGs are 12px square across Meal and Restaurant screens.",
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
@@ -51,5 +51,5 @@
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action",
   "buildDate": "2026-10-09",
-  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px. CP1317: async card image callbacks must retain matching card identity before painting or revealing. CP1318 keeps decision-card identity stable during asynchronous image swaps and swipe completion."
+  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px. CP1317: async card image callbacks must retain matching card identity before painting or revealing. CP1318 keeps decision-card identity stable during asynchronous image swaps and swipe completion. CP1319 scales both Meal and Restaurant Back to Home arrowheads from 24–25px to 12px so the visible chevron is approximately the same height as adjacent Meal Times/Cuisine labels; retains 30px tap target and gold borderless presentation."
 }

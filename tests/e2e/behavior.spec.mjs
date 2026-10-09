@@ -233,7 +233,9 @@ test('CP1316 decision colors, transparent gold back arrowheads, aligned controls
   expect(mealVisuals.arrowHasCircle).toBe(false);
   expect(mealVisuals.arrowPath).toBe('M16.5 3.5 7 12l9.5 8.5');
   expect(await page.locator('#foodHomeBack svg').getAttribute('class')).toBe('home-back-arrowhead');
-  expect(await page.locator('#foodHomeBack svg').boundingBox().then(box => box.width)).toBeGreaterThanOrEqual(24);
+  const mealArrowBox = await page.locator('#foodHomeBack svg').boundingBox();
+  expect(mealArrowBox.width).toBe(12);
+  expect(mealArrowBox.height).toBe(12);
   expect(Math.max(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)
     - Math.min(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)).toBeLessThanOrEqual(3);
 
@@ -264,6 +266,9 @@ test('CP1316 decision colors, transparent gold back arrowheads, aligned controls
   });
   expect(restaurantVisuals.cut).toBe('rgb(239, 51, 64)');
   expect(restaurantVisuals.maybe).toBe('rgb(40, 199, 111)');
+  const restaurantArrowBox = await page.locator('#restaurantHomeBack svg').boundingBox();
+  expect(restaurantArrowBox.width).toBe(12);
+  expect(restaurantArrowBox.height).toBe(12);
   const restaurantBackStyles = await page.locator('#restaurantHomeBack').evaluate(el => {
     const css = getComputedStyle(el);
     return { color: css.color, background: css.backgroundColor, border: css.borderWidth, radius: css.borderRadius };

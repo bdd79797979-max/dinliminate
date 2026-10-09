@@ -79,3 +79,26 @@ html:root .app > #drawer .drawer-nav{
   margin:0;
   padding:0;
 }
+
+
+/* CP1319: match the visible Home chevron artwork to the neighboring Meal Times/Cuisine label height. */
+html:root .app #food #foodHomeBack .home-back-arrowhead,
+html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
+  display:block;
+  width:12px;
+  height:12px;
+  min-width:12px;
+  min-height:12px;
+  max-width:12px;
+  max-height:12px;
+  flex:0 0 12px;
+  overflow:visible;
+}
+@media(max-width:390px){
+  html:root .app #food #foodHomeBack .home-back-arrowhead,
+  html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
+    width:12px;
+    height:12px;
+    flex-basis:12px;
+  }
+}
