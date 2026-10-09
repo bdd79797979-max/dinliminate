@@ -2258,3 +2258,38 @@ test('homepage press highlight, one-time logo entrance, and bottom controls stay
   }
   expect(Math.max(...controls.map(x=>x.iconCenter))-Math.min(...controls.map(x=>x.iconCenter))).toBeGreaterThan(80);
 });
+
+
+test('CUT and MAYBE buttons visibly enlarge with matching color feedback while pressed', async ({ page }) => {
+  await prepare(page);
+  await seedMeals(page, 4);
+
+  async function pressAndMeasure(selector) {
+    const button = page.locator(selector);
+    await button.dispatchEvent('pointerdown');
+    await expect(button).toHaveClass(/is-pressed/);
+    return button.evaluate(el => {
+      const style = getComputedStyle(el);
+      const matrix = new DOMMatrixReadOnly(style.transform);
+      return {
+        scale: Math.hypot(matrix.a, matrix.b),
+        shadow: style.boxShadow,
+        filter: style.filter,
+        transformDuration: style.transitionDuration
+      };
+    });
+  }
+
+  const cut = await pressAndMeasure('#foodCut');
+  expect(cut.scale).toBeGreaterThanOrEqual(1.075);
+  expect(cut.scale).toBeLessThanOrEqual(1.085);
+  expect(cut.shadow).toContain('239, 51, 64');
+  expect(parseFloat(cut.transformDuration)).toBeGreaterThanOrEqual(0.14);
+  expect(parseFloat(cut.transformDuration)).toBeLessThanOrEqual(0.17);
+
+  const maybe = await pressAndMeasure('#foodMaybe');
+  expect(maybe.scale).toBeGreaterThanOrEqual(1.075);
+  expect(maybe.scale).toBeLessThanOrEqual(1.085);
+  expect(maybe.shadow).toContain('40, 199, 111');
+  expect(maybe.filter).toContain('brightness(1.08)');
+});

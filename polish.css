@@ -19,7 +19,25 @@
   html:root .unified-swipe-actions .round-maybe:active,
   html:root .unified-swipe-actions .round-cut.is-pressed,
   html:root .unified-swipe-actions .round-maybe.is-pressed {
-    transform: scale(1.035);
+    transform: translateZ(0) scale(1.08);
+  }
+
+  /* Visible, short-lived feedback that matches each action's existing color. */
+  html:root .unified-swipe-actions .round-cut:active,
+  html:root .unified-swipe-actions .round-cut.is-pressed {
+    box-shadow: 0 10px 28px rgba(239,51,64,.32), 0 0 0 3px rgba(239,51,64,.24), 0 0 22px rgba(239,51,64,.28);
+    filter: saturate(1.12) brightness(1.08);
+  }
+  html:root .unified-swipe-actions .round-maybe:active,
+  html:root .unified-swipe-actions .round-maybe.is-pressed {
+    box-shadow: 0 10px 28px rgba(40,199,111,.30), 0 0 0 3px rgba(40,199,111,.23), 0 0 22px rgba(40,199,111,.27);
+    filter: saturate(1.12) brightness(1.08);
+  }
+
+  /* Enlarge the circle, not the glyph inside it. */
+  html:root .unified-swipe-actions .round-cut.is-pressed span,
+  html:root .unified-swipe-actions .round-maybe.is-pressed span {
+    transform: none;
   }
 }
 
@@ -73,5 +91,6 @@ html:root #restaurant .location-main .radius-select option {
   html:root .unified-swipe-actions .round-maybe.is-pressed {
     transform: none !important;
     filter: none !important;
+    box-shadow: none !important;
   }
 }
