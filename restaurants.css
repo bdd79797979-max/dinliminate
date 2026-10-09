@@ -685,12 +685,6 @@ html:root .discovery-home-back span{
   align-items:center;
   justify-content:center;
 }
-html:root .discovery-home-back svg{
-  display:block;
-  width:20px;
-  height:20px;
-  overflow:visible;
-}
 html:root #food .food-interior-nav{
   display:flex;
   align-items:center;
@@ -798,26 +792,6 @@ html:root .discovery-home-back span{
   height:30px;
   line-height:30px;
 }
-html:root .discovery-home-back .home-back-arrowhead{
-  display:block;
-  width:25px;
-  height:25px;
-  flex:0 0 25px;
-  overflow:visible;
-}
-@media(max-width:390px){
-  html:root .discovery-home-back{
-    flex-basis:28px;
-    width:28px;
-    min-width:28px;
-    max-width:28px;
-  }
-  html:root .discovery-home-back .home-back-arrowhead{
-    width:24px;
-    height:24px;
-    flex-basis:24px;
-  }
-}
 /* The drawer items sit closer beneath the drawer header, not halfway down the panel. */
 html:root .drawer .drawer-section-label{
   margin-top:0;
@@ -865,14 +839,6 @@ html:root .app #restaurant #restaurantHomeBack.discovery-home-back > span{
   transform:none;
   text-shadow:none;
 }
-html:root .app #food #foodHomeBack .home-back-arrowhead,
-html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
-  display:block;
-  width:25px;
-  height:25px;
-  flex:0 0 25px;
-  overflow:visible;
-}
 @media(max-width:390px){
   html:root .app #food #foodHomeBack.discovery-home-back,
   html:root .app #restaurant #restaurantHomeBack.discovery-home-back{
@@ -880,11 +846,5 @@ html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
     width:28px;
     min-width:28px;
     max-width:28px;
-  }
-  html:root .app #food #foodHomeBack .home-back-arrowhead,
-  html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
-    width:24px;
-    height:24px;
-    flex-basis:24px;
   }
 }

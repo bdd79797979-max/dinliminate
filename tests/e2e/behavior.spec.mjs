@@ -199,14 +199,14 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1316 decision colors, transparent gold back arrowheads, aligned controls, and compact menu navigation', async ({ page }) => {
+test('CP1321 decision colors, label-sized gold arrows, and uniform elevated menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
   const mealVisuals = await page.evaluate(() => {
     const box = id => {
-      const r = document.querySelector('#' + id).getBoundingClientRect();
-      return { x:r.x, y:r.y, width:r.width, height:r.height, centerY:r.y+r.height/2 };
+      const el = document.querySelector('#' + id), r = el.getBoundingClientRect();
+      return { x:r.x, y:r.y, width:r.width, height:r.height, centerY:r.y+r.height/2, fontSize:parseFloat(getComputedStyle(el).fontSize) };
     };
     const color = id => getComputedStyle(document.querySelector('#' + id)).backgroundColor;
     const arrow = document.querySelector('#foodHomeBack svg');
@@ -234,20 +234,28 @@ test('CP1316 decision colors, transparent gold back arrowheads, aligned controls
   expect(mealVisuals.arrowPath).toBe('M16.5 3.5 7 12l9.5 8.5');
   expect(await page.locator('#foodHomeBack svg').getAttribute('class')).toBe('home-back-arrowhead');
   const mealArrowBox = await page.locator('#foodHomeBack svg').boundingBox();
-  expect(mealArrowBox.width).toBe(12);
-  expect(mealArrowBox.height).toBe(12);
+  expect(Math.abs(mealArrowBox.width - mealVisuals.mealTime.fontSize)).toBeLessThanOrEqual(0.6);
+  expect(Math.abs(mealArrowBox.height - mealVisuals.mealTime.fontSize)).toBeLessThanOrEqual(0.6);
   expect(Math.max(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)
     - Math.min(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)).toBeLessThanOrEqual(3);
 
   await page.locator('#foodMenu').click();
   await expect(page.locator('#drawer')).toBeVisible();
   const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
+  const closeBox = await page.locator('#drawerClose').boundingBox();
+  const rows = await page.locator('#drawer .drawer-row').evaluateAll(els => els.map(el => {
+    const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+    return {id:el.id,y:r.y,height:r.height,radius:s.borderRadius,border:s.borderWidth+' '+s.borderStyle+' '+s.borderColor,background:s.backgroundColor+'|'+s.backgroundImage,padding:s.padding};
+  }));
   const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
   expect(drawerHead).not.toBeNull();
+  expect(closeBox).not.toBeNull();
   expect(firstMenuRow).not.toBeNull();
-  expect(firstMenuRow.y).toBeGreaterThanOrEqual(drawerHead.y + drawerHead.height - 1);
-  expect(firstMenuRow.y - (drawerHead.y + drawerHead.height)).toBeLessThan(18);
-  expect(firstMenuRow.y).toBeLessThan(100);
+  expect(rows.map(r=>r.id)).toEqual(['familyMode','manage','history','settings']);
+  expect(firstMenuRow.y).toBeGreaterThanOrEqual(closeBox.y + closeBox.height - 1);
+  expect(firstMenuRow.y - (closeBox.y + closeBox.height)).toBeLessThan(12);
+  expect(firstMenuRow.y).toBeLessThan(60);
+  expect(rows.every(r=>r.height===54 && r.radius==='10px' && r.border===rows[0].border && r.background===rows[0].background && r.padding===rows[0].padding)).toBe(true);
   await page.locator('#drawerClose').click();
 
   await page.evaluate(() => localStorage.clear());
@@ -267,8 +275,9 @@ test('CP1316 decision colors, transparent gold back arrowheads, aligned controls
   expect(restaurantVisuals.cut).toBe('rgb(239, 51, 64)');
   expect(restaurantVisuals.maybe).toBe('rgb(40, 199, 111)');
   const restaurantArrowBox = await page.locator('#restaurantHomeBack svg').boundingBox();
-  expect(restaurantArrowBox.width).toBe(12);
-  expect(restaurantArrowBox.height).toBe(12);
+  const restaurantLabelSize = await page.locator('#restaurantQuickToggle').evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+  expect(Math.abs(restaurantArrowBox.width - restaurantLabelSize)).toBeLessThanOrEqual(0.6);
+  expect(Math.abs(restaurantArrowBox.height - restaurantLabelSize)).toBeLessThanOrEqual(0.6);
   const restaurantBackStyles = await page.locator('#restaurantHomeBack').evaluate(el => {
     const css = getComputedStyle(el);
     return { color: css.color, background: css.backgroundColor, border: css.borderWidth, radius: css.borderRadius };
