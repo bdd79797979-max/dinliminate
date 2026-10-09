@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1315 decision colors, transparent gold back arrowheads, aligned controls, and menu rows below the header', async ({ page }) => {
+test('CP1316 decision colors, transparent gold back arrowheads, aligned controls, and compact menu navigation', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -244,8 +244,8 @@ test('CP1315 decision colors, transparent gold back arrowheads, aligned controls
   expect(drawerHead).not.toBeNull();
   expect(firstMenuRow).not.toBeNull();
   expect(firstMenuRow.y).toBeGreaterThanOrEqual(drawerHead.y + drawerHead.height - 1);
-  expect(firstMenuRow.y - (drawerHead.y + drawerHead.height)).toBeLessThan(40);
-  expect(firstMenuRow.y).toBeLessThan(135);
+  expect(firstMenuRow.y - (drawerHead.y + drawerHead.height)).toBeLessThan(18);
+  expect(firstMenuRow.y).toBeLessThan(100);
   await page.locator('#drawerClose').click();
 
   await page.evaluate(() => localStorage.clear());

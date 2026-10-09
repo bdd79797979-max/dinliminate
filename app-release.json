@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1315,
+  "build": 1316,
   "sourceBranch": "main",
-  "checkpoint": "CP1315",
-  "deploymentTrigger": "CP1315-force-gold-back-icon-transparent-and-menu-rows-below-header",
+  "checkpoint": "CP1316",
+  "deploymentTrigger": "CP1316-remove-shared-drawer-modal-header-padding-and-compact-menu-top",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1312 preserves terminal swipe transforms to prevent card reappearance, clears one-shot refresh route selectors, and waits for the live Meal image before revealing reused cards.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1300 visual baseline with CP1312 swipe/refresh/Details fixes, CP1313 colors/alignment, and CP1315 explicit gold shaft-free back controls plus visible menu rows below the header.",
+  "currentBaseline": "CP1300 visual baseline with CP1312 swipe/refresh/Details fixes, CP1313/1315 visual fixes, and CP1316 corrected drawer cascade plus compact top navigation.",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1299 Tour remembers starting side; second decision screen finishes to Home; Tour button cancels and closes cleanly in both direct and capture handlers",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -51,5 +51,5 @@
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action",
   "buildDate": "2026-10-08",
-  "visualCorrections": "CP1315 forces both Back to Home controls to be borderless/transparent gold arrowheads with no circular backing. Drawer menu rows sit just below the drawer header and remain materially higher than the original CP1312 layout."
+  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px."
 }

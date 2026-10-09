@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1315,
+  "build": 1316,
   "sourceBranch": "main",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1315",
-  "deploymentTrigger": "CP1315-force-gold-back-icon-transparent-and-menu-rows-below-header",
+  "checkpoint": "CP1316",
+  "deploymentTrigger": "CP1316-remove-shared-drawer-modal-header-padding-and-compact-menu-top",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -38,6 +38,6 @@
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; only Reset receives color emphasis",
   "swipeAudit": "CP1312 preserves terminal swipe transforms to prevent card reappearance, clears one-shot refresh route selectors, and waits for the live Meal image before revealing reused cards.",
-  "automatedRC": "CP1315 asserts both Back to Home controls have transparent background, no radius, gold arrowhead, and first menu action row below the header with tighter vertical placement.",
-  "visualCorrections": "CP1315 forces both Back to Home controls to be borderless/transparent gold arrowheads with no circular backing. Drawer menu rows sit just below the drawer header and remain materially higher than the original CP1312 layout."
+  "automatedRC": "CP1316 checks first menu card below the compact drawer header with its top under 100px; preserves CP1315 gold transparent chevrons and CP1313 decision colors/header alignment.",
+  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px."
 }

@@ -29,7 +29,7 @@ html:root .drawer .drawer-row:hover{border-color:#645640;background:linear-gradi
 .drawer .drawer-row:active{transform:translateY(1px) scale(.995)}
 .premium-manage-row,.drawer-row-label,.drawer-row-icon{all:unset}
 .drawer-bg{background:rgba(0,0,0,.68);backdrop-filter:blur(10px);opacity:0;transition:opacity .18s ease}
-.drawer-head{align-items:flex-start;padding:0 0 10px;border-bottom:1px solid #2b2a27}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;padding:0 0 6px;border-bottom:1px solid #2b2a27}
 .drawer-brand{display:grid;gap:4px}
 .drawer-kicker{font-size:9px;font-weight:850;letter-spacing:.22em;color:#9daabd}
 .drawer-brand strong{font-size:25px;line-height:1.02;letter-spacing:-.045em;color:#f5f1e8}

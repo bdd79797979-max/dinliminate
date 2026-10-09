@@ -29,3 +29,53 @@ html:root .settings-action.tutorial-action{background:linear-gradient(145deg,#18
 html:root .tutorial-spotlight, html:root .tutorial-bubble, html:root .tutorial-mode-toast{transition:none}
 }
 html:root \n .tutorial-bubble.is-action-step{pointer-events:none;cursor:default}
+
+
+/* CP1316 drawer placement: compact header, remove inherited modal spacing, and start nav immediately under the header. */
+html:root .app > #drawer.drawer{
+  padding-top:calc(env(safe-area-inset-top) + 5px);
+}
+html:root .app > #drawer .drawer-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+  margin:0;
+  padding:0 0 6px;
+  min-height:0;
+  border-bottom:1px solid #2b2a27;
+}
+html:root .app > #drawer .drawer-brand{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+html:root .app > #drawer .drawer-kicker{
+  display:block;
+  margin:0;
+  font-size:8px;
+  line-height:1;
+}
+html:root .app > #drawer .drawer-brand strong{
+  display:block;
+  margin:0;
+  font-size:19px;
+  line-height:1;
+  white-space:nowrap;
+}
+html:root .app > #drawer .drawer-brand > span:last-child{
+  display:block;
+  margin:0;
+  font-size:9px;
+  line-height:1.1;
+}
+html:root .app > #drawer .drawer-section-label{
+  margin:0;
+  padding:2px 0 1px;
+  font-size:7px;
+  line-height:8px;
+}
+html:root .app > #drawer .drawer-nav{
+  margin:0;
+  padding:0;
+}
