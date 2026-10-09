@@ -557,3 +557,52 @@ test('successive Meal swipes never reintroduce a cut card', async ({ page }) => 
   await expect(page.locator('#foodMaybeDeck')).toHaveAttribute('data-all-count', '1');
   await expectNoPageErrors(errors);
 });
+
+
+test('Meal handoff keeps the next card hidden until its matching photo is ready', async ({ page }) => {
+  const errors = await prepare(page);
+  const catalogResponse = await page.request.get('/data/foods.js');
+  expect(catalogResponse.ok()).toBe(true);
+  const source = await catalogResponse.text();
+  const start = source.indexOf('[');
+  const end = source.lastIndexOf('];');
+  expect(start).toBeGreaterThanOrEqual(0);
+  expect(end).toBeGreaterThan(start);
+  const catalog = JSON.parse(source.slice(start, end + 1));
+  const target = catalog[1];
+  expect(target && target.id).toBeTruthy();
+  const refs = [target.officialImage, target.image, target.backupImage, ...(Array.isArray(target.images) ? target.images : [])]
+    .filter(value => typeof value === 'string' && /^https:\/\//i.test(value));
+  const targetUrls = new Set(refs.map(value => new URL(value).href));
+  expect(targetUrls.size).toBeGreaterThan(0);
+
+  // Register after prepare() so this specific route wins over the fast image stub.
+  await page.route(url =>
+    url.pathname === '/api/image' && targetUrls.has(url.searchParams.get('url') || ''),
+  async route => {
+    await new Promise(resolve => setTimeout(resolve, 900));
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      headers: { 'cache-control': 'no-store' },
+      body: TINY_PNG
+    });
+  });
+
+  await seedMeals(page, 3);
+  await expect(page.locator('#foodCard')).not.toHaveAttribute('data-meal-id', String(target.id));
+  await swipeMeal(page, 'left');
+  await expect(page.locator('#foodCard')).toHaveAttribute('data-meal-id', String(target.id));
+  await expect(page.locator('#foodCard')).toHaveAttribute('data-media-pending', 'true');
+  const pendingStyle = await page.locator('#foodCard').evaluate(el => {
+    const css = getComputedStyle(el);
+    return { visibility: css.visibility, opacity: Number(css.opacity), pointerEvents: css.pointerEvents };
+  });
+  expect(pendingStyle.visibility).toBe('hidden');
+  expect(pendingStyle.opacity).toBeLessThanOrEqual(0.01);
+  expect(pendingStyle.pointerEvents).toBe('none');
+
+  await expect.poll(() => page.locator('#foodCard').getAttribute('data-media-pending'), { timeout: 12000 }).toBe(null);
+  await expect.poll(() => page.locator('#foodCard').evaluate(el => getComputedStyle(el).visibility), { timeout: 12000 }).toBe('visible');
+  await expectNoPageErrors(errors);
+});
