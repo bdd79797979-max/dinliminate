@@ -20,7 +20,11 @@ export default defineConfig({
     reuseExistingServer: true
   },
   projects: [
-    { name: 'chromium-mobile', use: { ...devices['Pixel 7'] } },
-    { name: 'webkit-mobile', use: { ...devices['iPhone 13'] } }
+    { name: 'chromium-360x740', use: { ...devices['Pixel 7'], browserName: 'chromium', viewport: { width: 360, height: 740 } } },
+    { name: 'chromium-375x667', use: { ...devices['Pixel 7'], browserName: 'chromium', viewport: { width: 375, height: 667 } } },
+    { name: 'chromium-390x844', use: { ...devices['iPhone 13'], browserName: 'chromium', viewport: { width: 390, height: 844 } } },
+    { name: 'chromium-412x915', use: { ...devices['Pixel 7'], browserName: 'chromium', viewport: { width: 412, height: 915 } } },
+    { name: 'webkit-mobile', use: { ...devices['iPhone 13'], browserName: 'webkit' } },
+    { name: 'chromium-desktop', use: { browserName: 'chromium', viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, isMobile: false, hasTouch: false } }
   ]
 });

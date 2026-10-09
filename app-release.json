@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1308,
+  "build": 1310,
   "sourceBranch": "main",
-  "checkpoint": "CP1308",
-  "deploymentTrigger": "CP1308-api-security-hardening",
+  "checkpoint": "CP1310",
+  "deploymentTrigger": "CP1310-ui-route-swipe-stabilization",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1306 active Meal selector excludes Cut items, Maybe advances exactly once, and waiting-card previews cannot reintroduce rejected cards",
   "visualParity": "CP952-restaurant-maybe-state-parity",

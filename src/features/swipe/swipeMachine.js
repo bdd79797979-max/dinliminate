@@ -74,13 +74,16 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   };
   const resetVisuals=()=>{
     cancelMoveFrame();
+    const mediaPending=card.dataset.mediaPending==='true';
     card.classList.remove('swipe-active');
     card.style.willChange='';
     card.style.transition='none';
     card.style.transform='';
-    card.style.opacity='1';
-    card.style.visibility='visible';
-    card.style.pointerEvents='auto';
+    // Drawing the next meal can deliberately keep this shared card hidden
+    // until the next image is ready. Never let swipe cleanup reveal it early.
+    card.style.opacity=mediaPending?'0':'1';
+    card.style.visibility=mediaPending?'hidden':'visible';
+    card.style.pointerEvents=mediaPending?'none':'auto';
     card.style.removeProperty('--swipe-tint-alpha');
     card.dataset.swipe='';
     card.dataset.swipeDirection='';
@@ -222,7 +225,11 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     }
     exit.finished.then(async()=>{
       if(!current()||activeTransaction!==localTransaction||phase!=='committing')return;
-      animation=null;
+      // Keep the finished WAAPI animation referenced until the action callback
+      // redraws this shared card. drawFood()/drawRestaurant() destroys this
+      // machine; destroy() must still be able to cancel the fill-forwards effect.
+      // Otherwise the old off-screen transform survives the CSS reset and the
+      // next card looks visible but its hit area remains off-screen.
       setPhase('settled');
       card.style.opacity='0';
       card.style.visibility='hidden';
@@ -233,6 +240,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
         console.error('Dinliminate swipe commit error',error);
       }
       if(!current()||activeTransaction!==localTransaction||phase!=='settled')return;
+      // If the action switched screens without rebinding this machine, clear
+      // the finished animation's fill effect before restoring the card styles.
+      cancelAnimation();
       resetVisuals();
     }).catch(error=>{
       if(!current()||activeTransaction!==localTransaction)return;
@@ -357,6 +367,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
       card.removeEventListener('pointercancel',onPointerCancel);
       card.removeEventListener('lostpointercapture',onLostPointerCapture);
       card.removeEventListener('click',onClick);
+      // A Meal redraw reuses #foodCard. Clean the outgoing gesture before
+      // binding its next transaction, while respecting a pending photo handoff.
+      resetVisuals();
       if(machines.get(card)===api)machines.delete(card);
     }
   };
@@ -365,7 +378,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   card.style.userSelect='none';
   card.style.webkitUserSelect='none';
   card.style.webkitTouchCallout='none';
-  card.style.pointerEvents='auto';
+  card.style.pointerEvents=card.dataset.mediaPending==='true'?'none':'auto';
   return api;
 }
 

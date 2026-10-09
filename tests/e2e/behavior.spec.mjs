@@ -443,3 +443,231 @@ test('restaurant decision state survives reload', async ({ page }) => {
 
   await expectNoPageErrors(errors);
 });
+
+
+test('Home door background remains confined to the Home route', async ({ page }) => {
+  const errors = await prepare(page);
+  const readBackgroundState = () => page.evaluate(() => {
+    const app = document.querySelector('.app');
+    const home = document.querySelector('#home');
+    return {
+      homeActive: app.classList.contains('home-active'),
+      appBackground: getComputedStyle(app).backgroundImage,
+      homeBackground: getComputedStyle(home).backgroundImage,
+      homeDisplay: getComputedStyle(home).display,
+      foodDisplay: getComputedStyle(document.querySelector('#food')).display,
+      restaurantDisplay: getComputedStyle(document.querySelector('#restaurant')).display,
+      winnerDisplay: getComputedStyle(document.querySelector('#winner')).display
+    };
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#home')).toBeVisible();
+  let state = await readBackgroundState();
+  expect(state.homeActive).toBe(true);
+  expect(state.homeBackground).toContain('home-door.jpg');
+  expect(state.appBackground).not.toContain('home-door.jpg');
+
+  await page.locator('#foodStart').click();
+  await expect(page.locator('#food')).toBeVisible();
+  await expect(page.locator('#home')).toBeHidden();
+  state = await readBackgroundState();
+  expect(state.homeActive).toBe(false);
+  expect(state.appBackground).not.toContain('home-door.jpg');
+  expect(state.homeDisplay).toBe('none');
+  expect(state.foodDisplay).not.toBe('none');
+
+  await page.locator('#foodChoose').click();
+  await expect(page.locator('#winner')).toBeVisible();
+  state = await readBackgroundState();
+  expect(state.appBackground).not.toContain('home-door.jpg');
+  expect(state.homeDisplay).toBe('none');
+  expect(state.winnerDisplay).not.toBe('none');
+
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  state = await readBackgroundState();
+  expect(state.homeActive).toBe(false);
+  expect(state.appBackground).not.toContain('home-door.jpg');
+  expect(state.homeDisplay).toBe('none');
+  expect(state.restaurantDisplay).not.toBe('none');
+  await expectNoPageErrors(errors);
+});
+
+test('Meal and Restaurant decision controls stay aligned, visible, and styled across viewports', async ({ page }) => {
+  const errors = await prepare(page);
+  const viewport = page.viewportSize();
+  async function expectDecisionRow(ids) {
+    const boxes = [];
+    for (const id of ids) {
+      const control = page.locator('#' + id);
+      await expect(control, '#' + id + ' should be visible at ' + viewport.width + 'px').toBeVisible();
+      const box = await control.boundingBox();
+      expect(box, '#' + id + ' should have a rendered box').not.toBeNull();
+      expect(box.width, '#' + id + ' width').toBeGreaterThanOrEqual(40);
+      expect(box.height, '#' + id + ' height').toBeGreaterThanOrEqual(40);
+      expect(box.x, '#' + id + ' left edge').toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, '#' + id + ' right edge').toBeLessThanOrEqual(viewport.width + 1);
+      const style = await control.evaluate(el => {
+        const css = getComputedStyle(el);
+        return { backgroundColor: css.backgroundColor, backgroundImage: css.backgroundImage, borderRadius: css.borderRadius };
+      });
+      expect(style.backgroundColor !== 'rgba(0, 0, 0, 0)' || style.backgroundImage !== 'none',
+        '#' + id + ' should have its intentional button treatment').toBe(true);
+      expect(style.borderRadius).not.toBe('0px');
+      boxes.push(box);
+    }
+    for (let index = 1; index < boxes.length; index++) {
+      expect(boxes[index].x, ids[index] + ' should follow ' + ids[index - 1])
+        .toBeGreaterThanOrEqual(boxes[index - 1].x + boxes[index - 1].width - 1);
+    }
+    const centers = boxes.map(box => box.y + box.height / 2);
+    expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(16);
+  }
+
+  await seedMeals(page, 3);
+  await expectDecisionRow(['foodBack', 'foodCut', 'foodMaybe', 'foodChoose']);
+
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  await expectDecisionRow(['restBack', 'restCut', 'restMaybe', 'restChoose']);
+  await expectNoPageErrors(errors);
+});
+
+test('successive Meal swipes never reintroduce a cut card', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 5);
+  const removedIds = [];
+
+  async function expectCardReadyForNextSwipe() {
+    await expect(page.locator('#foodCard')).toBeVisible();
+    await expect.poll(() => page.locator('#foodCard').evaluate(el => {
+      const css = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      return css.visibility === 'visible'
+        && Number(css.opacity) > 0.99
+        && css.pointerEvents === 'auto'
+        // The card stack intentionally bleeds up to 10px beyond its stage.
+        // Allow that edge treatment but reject an inherited fly-off transform.
+        && rect.left >= -12
+        && rect.right <= window.innerWidth + 12;
+    }), { timeout: 12000 }).toBe(true);
+  }
+
+  for (let index = 0; index < 4; index++) {
+    await waitForDecisionIdle(page, '#foodCard');
+    await expectCardReadyForNextSwipe();
+    const currentId = await page.locator('#foodCard').getAttribute('data-meal-id');
+    expect(currentId).toBeTruthy();
+    expect(removedIds).not.toContain(currentId);
+    removedIds.push(currentId);
+    await swipeMeal(page, 'left');
+  }
+
+  await waitForDecisionIdle(page, '#foodCard');
+  await expectCardReadyForNextSwipe();
+  const survivorId = await page.locator('#foodCard').getAttribute('data-meal-id');
+  expect(survivorId).toBeTruthy();
+  expect(removedIds).not.toContain(survivorId);
+  await expect(page.locator('#foodMaybeDeck')).toHaveAttribute('data-all-count', '1');
+  await expectNoPageErrors(errors);
+});
+
+
+test('Meal handoff keeps the next card hidden until its matching photo is ready', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 5);
+
+  const target = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find(value => value.startsWith('dinliminate:v1'));
+    const saved = JSON.parse(localStorage.getItem(key) || '{}');
+    const row = saved.pool?.[4];
+    return {
+      id: row?.id,
+      urls: [row?.officialImage, row?.image, row?.backupImage, ...(Array.isArray(row?.images) ? row.images : [])]
+        .filter(value => typeof value === 'string' && /^https:\/\//i.test(value))
+    };
+  });
+  expect(target.id).toBeTruthy();
+  const targetPaths = new Set(target.urls.map(value => new URL(value).pathname));
+  expect(targetPaths.size).toBeGreaterThan(0);
+
+  // The default visual preloader warms only the next three cards. Target the
+  // fifth seeded meal and hold its request behind a gate for deterministic
+  // control over the pending-photo interval.
+  let releaseTargetPhoto;
+  const targetPhotoGate = new Promise(resolve => { releaseTargetPhoto = resolve; });
+  let delayedRequests = 0;
+  await page.route(url => {
+    const remote = url.searchParams.get('url') || '';
+    if (url.pathname !== '/api/image' || url.searchParams.get('meal') !== '1' || !remote) return false;
+    try { return targetPaths.has(new URL(remote).pathname); }
+    catch { return false; }
+  }, async route => {
+    delayedRequests += 1;
+    await targetPhotoGate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      headers: { 'cache-control': 'no-store' },
+      body: TINY_PNG
+    });
+  });
+
+  for (let index = 0; index < 4; index++) {
+    await expect(page.locator('#foodCard')).toBeVisible();
+    await expect.poll(() => page.locator('#foodCard').evaluate(el => {
+      const css = getComputedStyle(el);
+      return css.visibility === 'visible' && css.pointerEvents === 'auto';
+    }), { timeout: 12000 }).toBe(true);
+    await swipeMeal(page, 'left');
+  }
+
+  await expect(page.locator('#foodCard')).toHaveAttribute('data-meal-id', String(target.id));
+  await expect.poll(() => delayedRequests).toBeGreaterThan(0);
+  await expect(page.locator('#foodCard')).toHaveAttribute('data-media-pending', 'true');
+  const pendingStyle = await page.locator('#foodCard').evaluate(el => {
+    const css = getComputedStyle(el);
+    return { visibility: css.visibility, opacity: Number(css.opacity), pointerEvents: css.pointerEvents };
+  });
+  expect(pendingStyle.visibility).toBe('hidden');
+  expect(pendingStyle.opacity).toBeLessThanOrEqual(0.01);
+  expect(pendingStyle.pointerEvents).toBe('none');
+
+  releaseTargetPhoto();
+  await expect.poll(() => page.locator('#foodCard').getAttribute('data-media-pending'), { timeout: 12000 }).toBe(null);
+  await expect.poll(() => page.locator('#foodCard').evaluate(el => getComputedStyle(el).visibility), { timeout: 12000 }).toBe('visible');
+  await expectNoPageErrors(errors);
+});
+
+
+test('Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
+  const errors = await prepare(page);
+  await openRestaurants(page);
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
+
+  const card = page.locator('#restaurantCard');
+  const box = await card.boundingBox();
+  expect(box).toBeTruthy();
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const delta = Math.max(125, box.width * 0.42);
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - delta, y, { steps: 10 });
+  await page.mouse.up();
+
+  await expect.poll(() => page.locator('#restaurantCard h3').innerText(), { timeout: 12000 })
+    .toBe('Mock Taco House');
+  await expect.poll(() => page.locator('#restaurantCard').evaluate(el => {
+    const css = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return css.visibility === 'visible'
+      && Number(css.opacity) > 0.99
+      && css.pointerEvents === 'auto'
+      && rect.left >= -12
+      && rect.right <= window.innerWidth + 12;
+  }), { timeout: 12000 }).toBe(true);
+  await expectNoPageErrors(errors);
+});

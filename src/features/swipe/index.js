@@ -138,6 +138,8 @@ function drawFood(options={}){
  if(foodCard){
   foodCard.dataset.mealLoadToken=loadToken;
   foodCard.__mealReadyPromise=mealReadyPromise;
+  if(holdCardForMedia)foodCard.dataset.mediaPending='true';
+  else delete foodCard.dataset.mediaPending;
  }
  img.dataset.fallback=foodPhotoFallback(item);
  img.dataset.finalFallback=FINAL_FOOD_IMAGE;
@@ -166,6 +168,7 @@ function drawFood(options={}){
    if(ok)img.dataset.mealPhotoLoaded='true';
    mealReadyResolve(!!ok);
    if(holdCardForMedia){
+    delete foodCard.dataset.mediaPending;
     foodCard.style.transition='none';
     foodCard.style.transform='none';
     foodCard.style.opacity='1';

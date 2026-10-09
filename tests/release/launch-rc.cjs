@@ -42,6 +42,11 @@ const main=read('src/main.js');
 const boot=read('boot.js');
 const imageHosts=read('api/_lib/imageHosts.js');
 const e2e=read('tests/e2e/behavior.spec.mjs');
+const homeCss=read('home.css');
+assert.match(homeCss,/html:root \.app:not\(\.home-active\) > #home\s*\{\s*display:none\s*\}/,'Home screen must be hidden outside the Home route');
+assert.doesNotMatch(homeCss,/\.app\.home-active\{[^}]*url\(/,'app shell must not own the homepage background image');
+const swipeFeatureSource=read('src/features/swipe/index.js');
+assert.ok(swipeFeatureSource.includes("foodCard.dataset.mediaPending='true'"),'Meal redraw must mark a pending media handoff');
 const vercel=read('vercel.json');
 const build=Number(release.build);
 const styleFiles=['tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css'];
@@ -76,6 +81,7 @@ assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
 assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
 assert.ok(read('index.html').includes('<script type="module" src="./src/main.js"></script>'),'production entry must be native ESM');
 const swipeMachineSource=read('src/features/swipe/swipeMachine.js');
+assert.ok(swipeMachineSource.includes("const mediaPending=card.dataset.mediaPending==='true'"),'swipe cleanup must preserve pending media visibility');
 assert.match(swipeMachineSource,/thresholdRatio:\s*0\.21/,'swipe threshold must be 21%');
 assert.match(swipeMachineSource,/thresholdMinPx:\s*72/,'swipe minimum clamp must be 72px');
 assert.match(swipeMachineSource,/thresholdMaxPx:\s*108/,'swipe maximum clamp must be 108px');
@@ -157,7 +163,7 @@ for(const asset of versionedAssets){
  assert.ok(index.includes(asset),'index.html missing versioned asset: '+asset);
  assert.ok(sw.includes(asset),'sw.js missing versioned asset: '+asset);
 }
-const shellCacheName='dinliminate-shell-v1309';
+const shellCacheName='dinliminate-shell-v'+build;
 assert.ok(sw.includes("const CACHE='"+shellCacheName+"'"),'service-worker shell cache version must be explicitly bumped');
 const srcFiles=[];
 const walkSrc=dir=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,entry.name);if(entry.isDirectory())walkSrc(full);else srcFiles.push('./'+path.relative(root,full).split(path.sep).join('/'));}};
