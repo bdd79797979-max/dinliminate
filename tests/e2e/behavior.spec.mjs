@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows', async ({ page }) => {
+test('CP1330 decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -241,6 +241,13 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
 
   await page.locator('#foodMenu').click();
   await expect(page.locator('#drawer')).toBeVisible();
+  await page.waitForFunction(() => {
+    const drawer=document.querySelector('#drawer');
+    if(!drawer?.classList.contains('is-open')) return false;
+    const animations=drawer.getAnimations();
+    return animations.every(animation=>animation.playState!=='running');
+  }, { timeout:5000 });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const triggerBox = await page.locator('#foodMenu').boundingBox();
   const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
   const closeBox = await page.locator('#drawerClose').boundingBox();
@@ -266,6 +273,13 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await page.locator('#restaurantMenu').click();
+  await page.waitForFunction(() => {
+    const drawer=document.querySelector('#drawer');
+    if(!drawer?.classList.contains('is-open')) return false;
+    const animations=drawer.getAnimations();
+    return animations.every(animation=>animation.playState!=='running');
+  }, { timeout:5000 });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const restaurantTriggerBox = await page.locator('#restaurantMenu').boundingBox();
   const restaurantCloseBox = await page.locator('#drawerClose').boundingBox();
   const restaurantFirstWindow = await page.locator('#drawer .drawer-window').first().boundingBox();

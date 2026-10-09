@@ -47,7 +47,7 @@ const homeCss=read('home.css');
 const menuCss=read('menu.css');
 assert.ok(index.indexOf('./menu.css?v='+build)>index.indexOf('./tutorial.css?v='+build),'menu.css must load last');
 assert.ok(menuCss.includes('.drawer-window'),'menu.css defines shared drawer-window styling');
-for(const id of ['familyMode','manage','history','settings'])assert.ok(index.includes('class="drawer-row drawer-window" id="'+id+'"'),'All menu choices use the same window class: '+id);
+for(const id of ['familyMode','manage','history','settings'])assert.ok(index.includes('class="drawer-window" id="'+id+'"'),'All menu choices use only the shared window class: '+id);
 assert.equal(css('chrome.css').includes('.drawer-row{'),false,'Legacy drawer-row styles must not compete');
 assert.equal(css('chrome.css').includes('.drawer-head{'),false,'Legacy drawer-head styles must not compete');
 assert.equal(css('restaurants.css').includes('.drawer .drawer-nav'),false,'Legacy drawer-nav spacing must not compete');
