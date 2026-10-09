@@ -272,7 +272,7 @@ html:root .menu:active, html:root .decision-menu:active, html:root .winner-menu:
 .family-drawer-bg.is-open{opacity:1}
 html:root .app > #family.family-screen{
   position:fixed;left:auto;right:var(--family-trigger-right,0px);top:var(--family-panel-top,0px);bottom:auto;
-  z-index:71;width:min(91vw,390px);max-width:none;height:calc(100dvh - var(--family-panel-top,0px));
+  z-index:90;width:min(91vw,390px);max-width:none;height:calc(100dvh - var(--family-panel-top,0px));
   min-height:0;max-height:100dvh;margin:0;padding:0;overflow:hidden;box-sizing:border-box;
   background:radial-gradient(120% 80% at 100% 0%,#1c2a35 0%,rgba(28,42,53,0) 56%),linear-gradient(165deg,#151515 0%,#0d0d0c 100%);
   border-left:1px solid #34302a;box-shadow:-24px 0 70px #000a;
