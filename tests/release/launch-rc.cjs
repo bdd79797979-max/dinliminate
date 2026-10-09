@@ -74,7 +74,7 @@ assert.match(storeSource,/export const store=Object\.freeze\(\{/,'store module m
 assert.match(storeSource,/get\(key\)/,'central store must expose get');
 assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
 assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
-assert.ok(read('index.html').includes('<script type="module" src="./src/main.js?v='+build+'"></script>'),'production entry must be native ESM');
+assert.ok(read('index.html').includes('<script type="module" src="./src/main.js"></script>'),'production entry must be native ESM');
 const swipeMachineSource=read('src/features/swipe/swipeMachine.js');
 assert.match(swipeMachineSource,/thresholdRatio:\s*0\.21/,'swipe threshold must be 21%');
 assert.match(swipeMachineSource,/thresholdMinPx:\s*72/,'swipe minimum clamp must be 72px');
@@ -108,7 +108,8 @@ assert.equal(exists('styles.css'),false,'legacy monolithic styles.css must be re
   assert.equal(css('family.css').includes('!important'),false,'family.css must not contain !important');
   assert.equal(css('settings.css').includes('!important'),false,'settings.css must not contain !important');
   assert.equal(css('tutorial.css').includes('!important'),false,'tutorial.css must not contain !important');
-assert.match(index, /<script type="module" src="\.\/src\/main\.js\?v=\d+"><\/script>/, 'index.html must load native ESM entry');
+assert.match(index, /<script type="module" src="\\.\\/src\\/main\\.js"><\\/script>/, 'index.html must load native ESM entry');
+assert.doesNotMatch(index, /<script type="module" src="\\.\\/src\\/main\\.js\\?v=/, 'ES module entry URL must not be versioned');
 assert.ok(main.includes("import { FOODS } from '../data/foods.js';"),'main must import foods as ESM');
 assert.ok(main.includes("import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';"),'main must import taxonomy from the source ESM module');
 assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
@@ -121,7 +122,7 @@ assert.equal(fs.existsSync(path.join(root,'styles.css')),false,'legacy monolithi
 assert.ok(fs.existsSync(path.join(root,'dev','diagnostics','index.html')),'development diagnostics must be outside production app');
 assert.ok(index.indexOf('./boot.js?v='+build)<index.indexOf('./viewport.js?v='+build),'boot.js must load before viewport.js');
 assert.ok(sw.includes('./boot.js?v='+build),'sw.js must precache boot.js');
-assert.ok(sw.includes('./src/data/restaurant-taxonomy.js?v='+build),'sw.js must version src restaurant taxonomy data');
+assert.ok(sw.includes('./src/data/restaurant-taxonomy.js')&&!sw.includes('./src/data/restaurant-taxonomy.js?v='),'sw.js must precache the unversioned src restaurant taxonomy module');
 
 const staleIndex=[...index.matchAll(/(\.\/[^"'()\s]+)\?v=(\d+)/g)].filter(m=>Number(m[2])!==build);
 const staleSw=[...sw.matchAll(/(\.\/[^"'()\s]+)\?v=(\d+)/g)].filter(m=>Number(m[2])!==build);
@@ -148,7 +149,7 @@ assert.ok(imageHosts.includes('HOSTS=Object.freeze'),'shared image-host allowlis
 assert.ok(main.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read('api/meal-autofill.js').includes("scope:'meal-autofill',perMinute:8,dailyCap:100"),'meal-autofill rate limit/daily cap must be enabled');
 
 const versionedAssets=[
- './boot.js?v='+build,'./src/main.js?v='+build,'./viewport.js?v='+build,
+ './boot.js?v='+build,'./viewport.js?v='+build,
  './logo.svg?v='+build,'./icon.svg?v='+build,'./apple-touch-icon.png?v='+build,
  './tokens.css?v='+build,'./base.css?v='+build,'./chrome.css?v='+build,'./modal.css?v='+build,'./swipe.css?v='+build,'./home.css?v='+build,'./meals.css?v='+build,'./restaurants.css?v='+build,'./winner.css?v='+build,'./history.css?v='+build,'./family.css?v='+build,'./settings.css?v='+build,'./tutorial.css?v='+build,
 ];
@@ -156,7 +157,20 @@ for(const asset of versionedAssets){
  assert.ok(index.includes(asset),'index.html missing versioned asset: '+asset);
  assert.ok(sw.includes(asset),'sw.js missing versioned asset: '+asset);
 }
-assert.ok(sw.includes("const CACHE='dinliminate-shell-v"+build+"'"),'service-worker shell cache is not on release build');
+const shellCacheName='dinliminate-shell-v1309';
+assert.ok(sw.includes("const CACHE='"+shellCacheName+"'"),'service-worker shell cache version must be explicitly bumped');
+const srcFiles=[];
+const walkSrc=dir=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,entry.name);if(entry.isDirectory())walkSrc(full);else srcFiles.push('./'+path.relative(root,full).split(path.sep).join('/'));}};
+walkSrc(path.join(root,'src'));
+srcFiles.sort();
+const shellMatch=sw.match(/const SHELL=(\[[\s\S]*?\]);/);
+assert.ok(shellMatch,'service worker must declare its shell precache list');
+const shellAssets=JSON.parse(shellMatch[1]);
+const precachedSrc=shellAssets.filter(asset=>asset.startsWith('./src/')).sort();
+assert.equal(srcFiles.length,18,'expected exactly 18 files under src/');
+assert.deepEqual(precachedSrc,srcFiles,'service worker must precache every src file exactly once');
+assert.ok(precachedSrc.every(asset=>!asset.includes('?v=')),'src module URLs must not carry version query strings');
+assert.ok(shellAssets.includes('./data/foods.js'),'service worker must precache the unversioned food data dependency');
 assert.equal(manifest.display,'standalone','PWA must remain standalone');
 assert.equal(manifest.orientation,'portrait','PWA must remain portrait');
 assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>=2,'PWA must expose at least two icons');
