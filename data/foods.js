@@ -367,7 +367,8 @@ const FOODS = [
       "Pasta",
       "American"
     ],
-    "image": "https://images.pexels.com/photos/9397238/pexels-photo-9397238.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "image": "https://images.pexels.com/photos/13051222/pexels-photo-13051222.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.pexels.com/photos/9397238/pexels-photo-9397238.jpeg?auto=compress&cs=tinysrgb&w=1600",
     "ingredients": [
       "elbow macaroni",
       "cheddar cheese",
@@ -949,7 +950,8 @@ const FOODS = [
       "Southern",
       "Soup/Stew"
     ],
-    "image": "https://images.pexels.com/photos/33671581/pexels-photo-33671581.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.pexels.com/photos/37113522/pexels-photo-37113522/free-photo-of-delicious-wonton-soup-in-ceramic-bowl.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.pexels.com/photos/33671581/pexels-photo-33671581.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "chicken",
       "broth",
@@ -1430,7 +1432,8 @@ const FOODS = [
     "quickCuts": [
       "Southern"
     ],
-    "image": "https://images.pexels.com/photos/37271311/pexels-photo-37271311.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.pexels.com/photos/12123355/pexels-photo-12123355.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.pexels.com/photos/37271311/pexels-photo-37271311.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "cabbage",
       "smoked sausage",
@@ -1459,7 +1462,8 @@ const FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/16700075/pexels-photo-16700075.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.pexels.com/photos/27643022/pexels-photo-27643022/free-photo-of-a-steak-and-fries-on-a-plate-with-a-fork.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.pexels.com/photos/16700075/pexels-photo-16700075.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "steak",
       "potato",
@@ -3441,8 +3445,8 @@ const FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/5604808/pexels-photo-5604808.jpeg?auto=compress&cs=tinysrgb&w=1800",
-    "backupImage": "https://images.unsplash.com/photo-1664350454685-a3298c47fb58?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+    "image": "https://images.pexels.com/photos/38594567/pexels-photo-38594567/free-photo-of-truffle-coating-in-industrial-chocolate-machine.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "backupImage": "https://images.pexels.com/photos/5604808/pexels-photo-5604808.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "peanuts",
       "chocolate",
@@ -3459,6 +3463,9 @@ const FOODS = [
     "recipe": "Coat roasted peanuts in melted chocolate, then let them cool until the chocolate is firm.",
     "mealTimes": [
       "Snacks / Desserts"
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1664350454685-a3298c47fb58?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000"
     ]
   },
   {
@@ -3491,6 +3498,6 @@ const FOODS = [
       "Lunch / Dinner"
     ]
   }
- ];
+];
 
 export { FOODS };
