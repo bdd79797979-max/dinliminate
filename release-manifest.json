@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1316,
+  "build": 1317,
   "sourceBranch": "main",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1316",
-  "deploymentTrigger": "CP1316-remove-shared-drawer-modal-header-padding-and-compact-menu-top",
+  "checkpoint": "CP1317",
+  "deploymentTrigger": "CP1317-stop-stale-card-image-swaps-and-repeated-rows",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -37,7 +37,8 @@
   "tourAudit": "CP1299 starting-side aware Tour; second decision screen returns Home and ends; Tour button cancels at capture phase",
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; only Reset receives color emphasis",
-  "swipeAudit": "CP1312 preserves terminal swipe transforms to prevent card reappearance, clears one-shot refresh route selectors, and waits for the live Meal image before revealing reused cards.",
-  "automatedRC": "CP1316 checks first menu card below the compact drawer header with its top under 100px; preserves CP1315 gold transparent chevrons and CP1313 decision colors/header alignment.",
-  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px."
+  "swipeAudit": "CP1317 keeps an async image callback from painting an old card after the shared card element has advanced, guards the restaurant handoff by render sequence and row ID, and deduplicates meal rows by stable ID. CP1312 outgoing transform and decoded-image handoff safeguards remain.",
+  "automatedRC": "CP1317 intentionally delayed stale-image regression + existing multi-swipe no-repeat Meal deck test + Restaurant swipe/handoff and mobile viewport suite.",
+  "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px.",
+  "currentBaseline": "CP1300 visual baseline with CP1317 stale async card/image handoff guards and duplicate meal-row identity protection, alongside CP1316 drawer placement fix."
 }

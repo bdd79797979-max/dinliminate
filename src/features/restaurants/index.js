@@ -1082,25 +1082,29 @@ if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
 }
 const currentPhotoPromise=hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
 if(handoffRendering){
+ const isCurrentHandoff=(freshCard,freshImg)=>drawSeq===restaurantDrawSeq
+  &&!!freshCard&&!!freshImg&&freshCard===$('#restStage #restaurantCard')
+  &&freshCard.isConnected&&freshImg.isConnected&&freshCard.contains(freshImg)
+  &&String(freshImg.dataset.restaurantPhotoKey||'')===String(row.id||'');
  currentPhotoPromise.then(async data=>{
    const freshCard=$('#restStage #restaurantCard'),freshImg=freshCard?.querySelector('img');
-   if(!freshCard||!freshImg)return;
+   if(!isCurrentHandoff(freshCard,freshImg))return;
    if(data?.url)await waitForVisualImage(data.url,freshImg,1200);
    else if(image)await waitForVisualImage(image,freshImg,900);
+   if(!isCurrentHandoff(freshCard,freshImg))return;
    freshCard.style.transition='none';
    freshCard.style.transform='none';
    freshCard.style.opacity='1';
    freshCard.style.visibility='visible';
    freshCard.style.pointerEvents='auto';
  }).catch(()=>{
-   const freshCard=$('#restStage #restaurantCard');
-   if(freshCard){
-    freshCard.style.transition='none';
-    freshCard.style.transform='none';
-    freshCard.style.opacity='1';
-    freshCard.style.visibility='visible';
-    freshCard.style.pointerEvents='auto';
-   }
+   const freshCard=$('#restStage #restaurantCard'),freshImg=freshCard?.querySelector('img');
+   if(!isCurrentHandoff(freshCard,freshImg))return;
+   freshCard.style.transition='none';
+   freshCard.style.transform='none';
+   freshCard.style.opacity='1';
+   freshCard.style.visibility='visible';
+   freshCard.style.pointerEvents='auto';
  });
 }else{
  currentPhotoPromise.catch(error=>{console.error('Dinliminate async operation failed',error);});

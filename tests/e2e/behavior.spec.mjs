@@ -804,6 +804,50 @@ test('a committed Meal swipe never paints the outgoing photo over the next card'
   await expectNoPageErrors(errors);
 });
 
+test('CP1317 a stale image load cannot repaint a reused decision card', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.route(url => url.pathname.startsWith('/__swap-race-'), async route => {
+    const url = new URL(route.request().url());
+    if (url.pathname === '/__swap-race-slow.svg') {
+      await new Promise(resolve => setTimeout(resolve, 450));
+    }
+    const fill = url.pathname === '/__swap-race-slow.svg' ? '#e33' : '#2c7';
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><rect width="12" height="12" fill="'+fill+'"/></svg>'
+    });
+  });
+  await seedMeals(page, 3);
+
+  const result = await page.evaluate(async () => {
+    const { swapImageWhenReady } = await import('/src/main.js');
+    const card = document.querySelector('#foodCard');
+    const img = document.querySelector('#foodImg');
+    const stale = swapImageWhenReady(img, '/__swap-race-slow.svg');
+    await new Promise(resolve => setTimeout(resolve, 35));
+
+    // Simulate a normal redraw reusing this card and image for its next meal.
+    card.dataset.mealId = 'simulated-next-meal';
+    const nextToken = String(Number(card.dataset.mealLoadToken || 0) + 1);
+    card.dataset.mealLoadToken = nextToken;
+    img.dataset.mealLoadToken = nextToken;
+
+    const current = swapImageWhenReady(img, '/__swap-race-fast.svg');
+    const statuses = await Promise.all([stale, current]);
+    return {
+      source: new URL(img.currentSrc || img.src, document.baseURI).pathname,
+      statuses,
+      ownerMealId: card.dataset.mealId
+    };
+  });
+
+  expect(result.ownerMealId).toBe('simulated-next-meal');
+  expect(result.source).toBe('/__swap-race-fast.svg');
+  expect(result.statuses).toEqual([false, true]);
+  await expectNoPageErrors(errors);
+});
+
 test('a restored Meals route clears its one-shot boot selector before normal navigation', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);

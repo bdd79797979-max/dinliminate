@@ -67,7 +67,11 @@ function mealTimesFor(item){
 }
 function mealTimeFor(item){ return mealTimesFor(item)[0]||mealTimeNames()[0]||'Lunch / Dinner'; }
 function foodBasePool(){
+ const seenIds=new Set();
  const rows=allFoods().filter(item=>{
+  const id=String(item?.id||'').trim();
+  if(!id||seenIds.has(id))return false;
+  seenIds.add(id);
   if(S.hidden.has(item.id)||S.foodCuts.has(item.id))return false;
   if(S.mealTimeFilters?.size){const times=mealTimesFor(item);if(!times.some(t=>S.mealTimeFilters.has(t)))return false;}
   const cuts=Array.isArray(item.quickCuts)?item.quickCuts:[item.category];

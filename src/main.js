@@ -31,7 +31,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1316';
+const APP_BUILD = '1317';
 const APP_BUILD_DATE = '2026-10-08';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -390,17 +390,57 @@ function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAG
   });
  });
 }
+const imageSwapRequestTokens=new WeakMap();
 function swapImageWhenReady(img,url){
  if(!img||!url||!img.isConnected)return Promise.resolve(false);
  const nextUrl=String(url);
- const current=img.currentSrc||img.src||'';
- if(current===nextUrl)return Promise.resolve(true);
+ const requestToken=(imageSwapRequestTokens.get(img)||0)+1;
+ imageSwapRequestTokens.set(img,requestToken);
+ const owner=img.closest?.('#foodCard,#restaurantCard,#restaurantNextCard')||null;
+ const ownerId=String(owner?.id||'');
+ const identity={
+  mealId:String(owner?.dataset?.mealId||''),
+  mealLoadToken:String(owner?.dataset?.mealLoadToken||''),
+  imageMealLoadToken:String(img.dataset?.mealLoadToken||''),
+  photoKey:String(img.dataset?.restaurantPhotoKey||''),
+  previewToken:String(owner?.dataset?.swipePreviewToken||''),
+  previewKey:String(owner?.dataset?.swipePreviewKey||'')
+ };
+ const stillCurrent=()=>{
+  if(!img.isConnected||imageSwapRequestTokens.get(img)!==requestToken)return false;
+  if(!owner)return true;
+  if(!owner.isConnected||!owner.contains(img)||owner.id!==ownerId)return false;
+  if(ownerId==='foodCard'){
+   return String(owner.dataset.mealId||'')===identity.mealId
+    &&String(owner.dataset.mealLoadToken||'')===identity.mealLoadToken
+    &&String(img.dataset.mealLoadToken||'')===identity.imageMealLoadToken
+    &&identity.imageMealLoadToken===identity.mealLoadToken;
+  }
+  if(ownerId==='restaurantCard'||ownerId==='restaurantNextCard'){
+   if(String(img.dataset.restaurantPhotoKey||'')!==identity.photoKey)return false;
+   if(ownerId==='restaurantNextCard'){
+    return String(owner.dataset.swipePreviewToken||'')===identity.previewToken
+     &&String(owner.dataset.swipePreviewKey||'')===identity.previewKey
+     &&identity.previewKey===identity.photoKey;
+   }
+   return true;
+  }
+  return true;
+ };
+ const current=normalizeMealImageUrl(img.currentSrc||img.src||'');
+ const expected=normalizeMealImageUrl(nextUrl);
+ if(current===expected&&img.complete&&img.naturalWidth>0&&stillCurrent())return Promise.resolve(true);
  return new Promise(resolve=>{
   const probe=new Image();
   probe.decoding='async';
   let settled=false;
   const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
-  probe.onload=async()=>{try{await probe.decode?.();}catch(error){console.error('Dinliminate error',error)}if(img.isConnected)img.src=nextUrl;finish(true);};
+  probe.onload=async()=>{
+   try{await probe.decode?.();}catch(error){console.error('Dinliminate error',error);}
+   if(!stillCurrent()){finish(false);return;}
+   try{img.src=nextUrl;finish(true);}
+   catch(error){console.error('Dinliminate image assignment error',error);finish(false);}
+  };
   probe.onerror=()=>finish(false);
   probe.src=nextUrl;
  });
@@ -1100,16 +1140,25 @@ function bindMealPhotoCountControls(){
 function cycleFoodPhotoFromTap(target){
  const card=target?.closest?.('#foodCard')||$('foodCard'),img=card?.querySelector?.('#foodImg'),item=S.pool[S.index];
  if(!img||!item||!card)return false;
+ const ownerId=String(item.id||''),loadToken=String(card.dataset.mealLoadToken||''),imageToken=String(img.dataset.mealLoadToken||'');
+ const stillCurrent=()=>card.isConnected&&img.isConnected&&card.querySelector('#foodImg')===img
+  &&S.pool[S.index]===item&&String(card.dataset.mealId||'')===ownerId
+  &&String(card.dataset.mealLoadToken||'')===loadToken
+  &&String(img.dataset.mealLoadToken||'')===imageToken;
  const count=mealPhotoList(item).length||1;
  if(count<=1)return false;
  item._mealPhotoIndex=(Number(item._mealPhotoIndex||0)+1)%count;
  hydrateMealPhotoGallery(item).then(photos=>{
-  if(S.pool[S.index]!==item)return;
+  if(!stillCurrent())return;
   const total=photos.length||1;
   const idx=((Number(item._mealPhotoIndex||0)%total)+total)%total;
   item._mealPhotoIndex=idx;
-  img.src=photos[idx]||foodPhoto(item);
-  ensureMealCardPhotoPager(card,total,idx);
+  const nextUrl=photos[idx]||foodPhoto(item);
+  if(!nextUrl)return;
+  swapImageWhenReady(img,nextUrl).then(swapped=>{
+   if(!swapped||!stillCurrent())return;
+   ensureMealCardPhotoPager(card,total,idx);
+  }).catch(error=>console.error('Dinliminate meal photo swap error',error));
  });
  return true;
 }
