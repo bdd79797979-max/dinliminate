@@ -1110,6 +1110,11 @@ function legacyRestaurantBack(){
  drawRestaurants();save();return true;
 }
 
+function focusFamilyReturnTarget(target){
+ if(!target)return;
+ try{target.focus({preventScroll:true});}catch{target.focus();}
+}
+
 function closeFamilyDrawer(immediate=false,restoreFocus=true) {
  const family=$('family'),bg=$('familyDrawerBg');
  family?.classList.remove('is-open');bg?.classList.remove('is-open');
@@ -1121,10 +1126,10 @@ function closeFamilyDrawer(immediate=false,restoreFocus=true) {
   if(S.familyDrawerOpen)return;
   family?.classList.add('hidden');bg?.classList.add('hidden');
   if(restoreFocus&&returnFocus?.isConnected&&returnFocus.getClientRects().length){
-   try{returnFocus.focus({preventScroll:true});}catch{}
+   focusFamilyReturnTarget(returnFocus)
   }
  };
- if(immediate){family?.classList.add('hidden');bg?.classList.add('hidden');if(restoreFocus&&returnFocus?.isConnected&&returnFocus.getClientRects().length){try{returnFocus.focus({preventScroll:true});}catch{}}return;}
+ if(immediate){family?.classList.add('hidden');bg?.classList.add('hidden');if(restoreFocus&&returnFocus?.isConnected&&returnFocus.getClientRects().length){focusFamilyReturnTarget(returnFocus)}return;}
  window.setTimeout(finish,180);
 }
 
