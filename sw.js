@@ -1,6 +1,6 @@
-importScripts('./api/_lib/imageHosts.js?v=1332');
+importScripts('./api/_lib/imageHosts.js?v=1334');
 // CP1306: shell/cache version bump for Meal deck selection.
-const CACHE='dinliminate-shell-v1332';
+const CACHE='dinliminate-shell-v1334';
 const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
@@ -169,7 +169,7 @@ async function touchCachedImage(req){
   }catch(error){console.error('Dinliminate error',error)}
 }
 
-const SHELL=["./api/_lib/imageHosts.js?v=1332","./","./index.html","./boot.js?v=1332","./viewport.js?v=1332","./src/api/client.js","./src/data/restaurant-taxonomy.js","./src/features/family/index.js","./src/features/history/index.js","./src/features/meals/index.js","./src/features/restaurants/index.js","./src/features/settings/index.js","./src/features/swipe/index.js","./src/features/swipe/swipeMachine.js","./src/features/tutorial/index.js","./src/features/winner/index.js","./src/main.js","./src/state/migrations.js","./src/state/storage.js","./src/state/store.js","./src/ui/dom.js","./src/ui/esc.js","./src/ui/modal.js","./logo.svg?v=1332","./data/foods.js","./data/foods.js?v=1332","./manifest.webmanifest","./app-release.json","./release-manifest.json","./icon.svg?v=1332","./app-icon.svg?v=1332","./apple-touch-icon.png?v=1332","./fallback-food.svg","./fallback-restaurant.svg","./tokens.css?v=1332","./base.css?v=1332","./chrome.css?v=1332","./modal.css?v=1332","./swipe.css?v=1332","./home.css?v=1332","./meals.css?v=1332","./restaurants.css?v=1332","./winner.css?v=1332","./history.css?v=1332","./family.css?v=1332","./settings.css?v=1332","./tutorial.css?v=1332","./menu.css?v=1332"];
+const SHELL=["./api/_lib/imageHosts.js?v=1334","./","./index.html","./boot.js?v=1334","./viewport.js?v=1334","./src/api/client.js","./src/data/restaurant-taxonomy.js","./src/features/family/index.js","./src/features/history/index.js","./src/features/meals/index.js","./src/features/restaurants/index.js","./src/features/settings/index.js","./src/features/swipe/index.js","./src/features/swipe/swipeMachine.js","./src/features/tutorial/index.js","./src/features/winner/index.js","./src/main.js","./src/state/migrations.js","./src/state/storage.js","./src/state/store.js","./src/ui/dom.js","./src/ui/esc.js","./src/ui/modal.js","./logo.svg?v=1334","./data/foods.js","./data/foods.js?v=1334","./manifest.webmanifest","./app-release.json","./release-manifest.json","./icon.svg?v=1334","./app-icon.svg?v=1334","./apple-touch-icon.png?v=1334","./fallback-food.svg","./fallback-restaurant.svg","./tokens.css?v=1334","./base.css?v=1334","./chrome.css?v=1334","./modal.css?v=1334","./swipe.css?v=1334","./home.css?v=1334","./meals.css?v=1334","./restaurants.css?v=1334","./winner.css?v=1334","./history.css?v=1334","./family.css?v=1334","./settings.css?v=1334","./tutorial.css?v=1334","./menu.css?v=1334"];
 
 self.addEventListener('install',event=>{
   event.waitUntil(Promise.all([

@@ -51,6 +51,8 @@ assert.ok(read('src/features/restaurants/index.js').includes('const recyclesMayb
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 238px)'),'Home slogan must move upward by 2px on standard phone widths');
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 218px);font-size:10.5px'),'Home slogan must move upward by 2px on narrow phones');
 assert.ok(css('restaurants.css').includes('justify-content:space-between;'),'Phone swipe controls must span the full available row width');
+assert.ok(css('menu.css').includes('CP1334: maximize phone discovery toolbar controls without wrapping'),'Phone discovery toolbar controls must use the responsive no-wrap layout');
+assert.ok(e2e.includes('CP1334 phone discovery toolbars maximize their controls without wrapping'),'Release audit must cover enlarged Meals/Restaurant toolbars at phone widths');
 assert.ok(css('restaurants.css').includes('@media(max-width:430px){\n html:root #food .unified-swipe-actions,'),'Full-width swipe-control distribution must be phone-only');
 
 const tutorialSource=read('src/features/tutorial/index.js');

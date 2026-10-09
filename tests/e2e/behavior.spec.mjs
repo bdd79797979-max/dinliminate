@@ -1230,3 +1230,88 @@ test('Meal Details starts with the exact photo currently rendered on the card', 
   await expectNoPageErrors(errors);
 });
 
+
+
+test('CP1334 phone discovery toolbars maximize their controls without wrapping', async ({ page }) => {
+  const errors = await prepare(page);
+  const widths = [320, 340, 360, 375, 390, 412, 430];
+
+  await page.setViewportSize({ width: widths[0], height: 844 });
+  await seedMeals(page, 3);
+
+  async function expectOneToolbarRow(rowSelector, ids, textIds) {
+    const layout = await page.evaluate(({ rowSelector, ids, textIds }) => {
+      const rowEl = document.querySelector(rowSelector);
+      const row = rowEl.getBoundingClientRect();
+      const controls = ids.map(id => {
+        const el = document.getElementById(id);
+        const r = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return {
+          id, left:r.left, right:r.right, top:r.top, bottom:r.bottom,
+          width:r.width, height:r.height, centerY:r.top+r.height/2,
+          fontSize:parseFloat(style.fontSize),
+          visible:style.display!=='none' && style.visibility==='visible' && r.width>0 && r.height>0
+        };
+      });
+      const text = Object.fromEntries(textIds.map(id => [
+        id, parseFloat(getComputedStyle(document.getElementById(id)).fontSize)
+      ]));
+      return {
+        row:{left:row.left,right:row.right,top:row.top,bottom:row.bottom,width:row.width,height:row.height},
+        viewportWidth:window.innerWidth, controls, text
+      };
+    }, { rowSelector, ids, textIds });
+
+    expect(layout.row.width).toBeGreaterThan(0);
+    expect(layout.controls.every(control => control.visible)).toBe(true);
+    expect(Math.min(...layout.controls.map(control=>control.left))).toBeGreaterThanOrEqual(layout.row.left-1);
+    expect(Math.max(...layout.controls.map(control=>control.right)))
+      .toBeLessThanOrEqual(Math.min(layout.row.right,layout.viewportWidth)+1);
+    expect(Math.max(...layout.controls.map(control=>control.centerY))
+      - Math.min(...layout.controls.map(control=>control.centerY))).toBeLessThanOrEqual(4);
+
+    for (let i=1;i<layout.controls.length;i++) {
+      expect(layout.controls[i].left, layout.controls[i].id+' must remain to the right of '+layout.controls[i-1].id)
+        .toBeGreaterThanOrEqual(layout.controls[i-1].right-1);
+    }
+    for (const control of layout.controls) {
+      if (control.id.endsWith('HomeBack')) {
+        expect(control.width).toBeGreaterThanOrEqual(33);
+        expect(control.height).toBeGreaterThanOrEqual(35);
+      }
+      if (control.id.endsWith('MaybeDeck')) {
+        expect(control.height).toBeGreaterThanOrEqual(35);
+        expect(control.fontSize).toBeGreaterThanOrEqual(8.4);
+      }
+      if (control.id.endsWith('Menu')) {
+        expect(control.width).toBeGreaterThanOrEqual(39);
+        expect(control.height).toBeGreaterThanOrEqual(39);
+      }
+    }
+    for (const [id,fontSize] of Object.entries(layout.text)) {
+      expect(fontSize, id+' should use the enlarged readable phone label size').toBeGreaterThanOrEqual(10);
+    }
+  }
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height:844 });
+    await expectOneToolbarRow(
+      '#food .food-interior-nav',
+      ['foodHomeBack','foodMealTimeToggle','foodQuickToggle','foodMaybeDeck','foodMenu'],
+      ['foodMealTimeToggle','foodQuickToggle']
+    );
+  }
+
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  for (const width of widths) {
+    await page.setViewportSize({ width, height:844 });
+    await expectOneToolbarRow(
+      '#restaurant .restaurant-choice-management',
+      ['restaurantHomeBack','restaurantSearchToggle','restaurantQuickToggle','restaurantHoursToggle','restaurantMaybeDeck'],
+      ['restaurantSearchToggle','restaurantQuickToggle','restaurantHoursToggle']
+    );
+  }
+  await expectNoPageErrors(errors);
+});
