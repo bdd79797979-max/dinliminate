@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1349,
-  "sourceBranch": "cp1349-menu-handoff-no-flash",
+  "build": 1350,
+  "sourceBranch": "cp1350-menu-cover-handoff",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1349",
-  "deploymentTrigger": "cp1349-menu-handoff-no-flash",
+  "checkpoint": "CP1350",
+  "deploymentTrigger": "cp1350-menu-cover-handoff",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -55,5 +55,5 @@
   "mobileDrawerConsistency": "Phone drawer behavior unified across all four panels: anchored top/right, shared panel width, partial-screen backdrop, X placement, slide-in/out, and return to shared menu.",
   "homepageEffects": "CP1345 removes only CP1340 gold-shine effects from home.css; the wooden-door background, layout, copy and behavior are unchanged.",
   "backRestoreAudit": "CP1348 keeps restored card photos and titles paired on Back, persists Restaurant photo identity in decision history, and tests Back while the next Meal photo request is held.",
-  "menuTransitionAudit": "CP1349 removes the transparent first frame during menu-to-panel handoff; regression test samples utility backdrops at initial mount and Family Mode's backdrop before the main menu is removed."
+  "menuTransitionAudit": "CP1350 uses a time-ordered menu cover handoff and regression checks that the prior screen's full-screen backdrop remains opaque until destination panel covers are ready."
 }

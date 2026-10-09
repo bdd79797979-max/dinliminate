@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1349';
+const APP_BUILD = '1350';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1385,15 +1385,17 @@ let drawerCloseTimer=0;
 let familyDrawerReturnFocus=null;
 // CP1071: remove the temporary Menu tooltip; the hamburger icon is self-explanatory.
 const showMenuHint=()=>{};
+let drawerHandoffReleaseTimer=0;
 const closeDrawer=(immediate=false)=>{
-  clearTimeout(drawerCloseTimer);const drawer=$('drawer'),bg=$('drawerBg');
+  clearTimeout(drawerCloseTimer);clearTimeout(drawerHandoffReleaseTimer);
+  const drawer=$('drawer'),bg=$('drawerBg');
   drawer?.classList.remove('is-open');bg?.classList.remove('is-open');document.querySelector('#menuHint')?.remove();
   ['#menu','#foodMenu','#restaurantMenu','#winnerMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
   if(immediate){drawer?.classList.add('hidden');bg?.classList.add('hidden');return;}
   drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
 };
 const openDrawer=(event)=>{
-  clearTimeout(drawerCloseTimer);const drawer=$('drawer'),bg=$('drawerBg');
+  clearTimeout(drawerCloseTimer);clearTimeout(drawerHandoffReleaseTimer);const drawer=$('drawer'),bg=$('drawerBg');
   const trigger=event?.currentTarget;
   if(drawer&&trigger&&typeof trigger.getBoundingClientRect==='function'){
     const rect=trigger.getBoundingClientRect();
@@ -1426,11 +1428,48 @@ const restaurantBackTop = $('restaurantBackTop'); if (restaurantBackTop) restaur
 $('drawerClose').onclick = closeDrawer;
 $('drawerBg').onclick = closeDrawer;
 const navigateFromDrawer=(navigate)=>{
-  // Mount the destination before removing the menu cover. Utility panels now
-  // start with an opaque backdrop, and Family Mode raises its backdrop in the
-  // same task, so the previous screen cannot flash between overlays.
-  try{navigate?.();}catch(error){console.error('Dinliminate error',error)}
-  closeDrawer(true);
+  clearTimeout(drawerCloseTimer);clearTimeout(drawerHandoffReleaseTimer);
+  const drawer=$('drawer'),bg=$('drawerBg');
+  // Mount the destination while the menu is still open so it can detect the
+  // handoff and create its own backdrop in the same task.
+  try{navigate?.();}catch(error){console.error('Dinliminate error',error);closeDrawer(true);return;}
+  // Hide the menu panel, but keep its full-screen backdrop as a handoff cover.
+  // We release it only after the destination's own opaque backdrop is painted.
+  drawer?.classList.remove('is-open');drawer?.classList.add('hidden');
+  bg?.classList.remove('hidden');bg?.classList.add('is-open');
+  document.querySelector('#menuHint')?.remove();
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
+  let frames=0;
+  const destinationCoverReady=()=>{
+    const familyBg=$('familyDrawerBg');
+    if(familyBg&&!familyBg.classList.contains('hidden')&&familyBg.classList.contains('is-open')
+      &&Number.parseFloat(getComputedStyle(familyBg).opacity)>=.99)return true;
+    for(const id of ['manageFoodsModalBg','historyModalBg','settingsModalBg']){
+      const target=$(id);
+      if(target&&!target.classList.contains('hidden')&&target.classList.contains('modal-bg-open')
+        &&!target.classList.contains('modal-bg-opening')
+        &&Number.parseFloat(getComputedStyle(target).opacity)>=.99)return true;
+    }
+    return false;
+  };
+  const releaseCover=()=>{
+    frames++;
+    const ready=destinationCoverReady();
+    // Home has no destination panel; two paints are enough because the screen
+    // switch happens synchronously above. Panel routes wait for their backdrop.
+    const simpleHome=S.screen==='home';
+    if(!ready&&!simpleHome&&frames<120){window.requestAnimationFrame(releaseCover);return;}
+    bg?.classList.remove('is-open');
+    const finish=()=>{
+      // If the user reopened the menu during the fade, leave its backdrop alone.
+      if(!bg?.classList.contains('is-open'))bg?.classList.add('hidden');
+    };
+    bg?.addEventListener('transitionend',event=>{
+      if(event.target===bg&&event.propertyName==='opacity')finish();
+    },{once:true});
+    drawerHandoffReleaseTimer=window.setTimeout(finish,240);
+  };
+  window.requestAnimationFrame(()=>window.requestAnimationFrame(releaseCover));
 };
 $('menu')?.addEventListener('click',openDrawer);
 $('foodMenu')?.addEventListener('click',openDrawer);
