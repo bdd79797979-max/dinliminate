@@ -43,6 +43,16 @@ const boot=read('boot.js');
 const imageHosts=read('api/_lib/imageHosts.js');
 const e2e=read('tests/e2e/behavior.spec.mjs');
 const homeCss=read('home.css');
+const menuCss=read('menu.css');
+assert.ok(index.indexOf('./menu.css?v='+build)>index.indexOf('./tutorial.css?v='+build),'menu.css must load last');
+assert.ok(menuCss.includes('.drawer-window'),'menu.css defines shared drawer-window styling');
+for(const id of ['familyMode','manage','history','settings'])assert.ok(index.includes('class="drawer-row drawer-window" id="'+id+'"'),'All menu choices use the same window class: '+id);
+assert.equal(css('chrome.css').includes('.drawer-row{'),false,'Legacy drawer-row styles must not compete');
+assert.equal(css('chrome.css').includes('.drawer-head{'),false,'Legacy drawer-head styles must not compete');
+assert.equal(css('restaurants.css').includes('.drawer .drawer-nav'),false,'Legacy drawer-nav spacing must not compete');
+assert.equal(css('tutorial.css').includes('.app > #drawer .drawer-window'),false,'Tutorial stylesheet must not override menu windows');
+assert.doesNotMatch(css('home.css'),/\.app\.home-active > #drawer \.drawer-close\{[^}]*position:/,'Home CSS must not compete with drawer close positioning');
+
 assert.match(homeCss,/html:root \.app:not\(\.home-active\) > #home\s*\{\s*display:none\s*\}/,'Home screen must be hidden outside the Home route');
 assert.doesNotMatch(homeCss,/\.app\.home-active\{[^}]*url\(/,'app shell must not own the homepage background image');
 const swipeFeatureSource=read('src/features/swipe/index.js');

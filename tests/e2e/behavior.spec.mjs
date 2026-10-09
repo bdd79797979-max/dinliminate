@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1327 decision colors, label-sized gold arrows, and trigger-anchored uniform menu windows', async ({ page }) => {
+test('CP1328 decision colors, label-sized gold arrows, and trigger-sized uniform menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -258,8 +258,8 @@ test('CP1327 decision colors, label-sized gold arrows, and trigger-anchored unif
   expect(Math.abs((closeBox.x+closeBox.width)-(triggerBox.x+triggerBox.width))).toBeLessThanOrEqual(1);
   expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeGreaterThanOrEqual(2);
   expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeLessThanOrEqual(5);
-  expect(closeBox.width).toBe(40);
-  expect(closeBox.height).toBe(40);
+  expect(Math.abs(closeBox.width-triggerBox.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(closeBox.height-triggerBox.height)).toBeLessThanOrEqual(1);
   expect(rows.every(r=>r.isWindow && r.height===54 && r.radius==='10px' && r.border===rows[0].border && r.background===rows[0].background && r.padding===rows[0].padding)).toBe(true);
   await page.locator('#drawerClose').click();
 
@@ -704,7 +704,7 @@ test('CP1325 active and waiting Meal cards advance together without repeating pr
 });
 
 
-test('CP1327 waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
+test('CP1328 waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   const target = await page.evaluate(() => {
@@ -746,7 +746,7 @@ test('CP1327 waiting Meal window advances before a slow active-card photo resolv
   });
 
   try {
-    await page.reload();
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page.locator('#food')).toBeVisible();
     await expect(page.locator('#foodCard')).toBeVisible();
     await expect(page.locator('#foodCard')).toHaveAttribute('data-meal-id', expectedIds[0]);

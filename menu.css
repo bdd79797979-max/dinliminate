@@ -15,8 +15,8 @@ html:root .app > #drawer .drawer-head{
   justify-content:space-between;
   gap:8px;
   width:100%;
-  height:40px;
-  min-height:40px;
+  height:var(--drawer-trigger-height, 40px);
+  min-height:var(--drawer-trigger-height, 40px);
   margin:0;
   padding:0;
   border:0;
@@ -48,14 +48,17 @@ html:root .app > #drawer .drawer-section-label{
 html:root .app > #drawer .drawer-close{
   appearance:none;
   -webkit-appearance:none;
+  position:absolute;
+  top:var(--drawer-trigger-top, calc(env(safe-area-inset-top) + 8px));
+  right:var(--drawer-trigger-right, 10px);
   display:grid;
   place-items:center;
   box-sizing:border-box;
-  width:40px;
-  min-width:40px;
-  height:40px;
-  min-height:40px;
-  margin:0 calc(var(--drawer-trigger-right, 10px) - 17px) 0 0;
+  width:var(--drawer-trigger-width, 40px);
+  min-width:var(--drawer-trigger-width, 40px);
+  height:var(--drawer-trigger-height, 40px);
+  min-height:var(--drawer-trigger-height, 40px);
+  margin:0;
   padding:0;
   border:1px solid #40392e;
   border-radius:50%;
@@ -193,10 +196,13 @@ html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
   overflow:visible;
 }
 @media(max-width:390px){
-  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:10px}
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:11px}
   html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack{font-size:11px}
 }
 @media(max-width:360px){
-  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:10px}
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:8px}
   html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack{font-size:9.5px}
+}
+@media(max-width:340px){
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:10.5px}
 }

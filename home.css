@@ -42,7 +42,7 @@ html:root .app.home-active #home .home-icon-label{font-size:7px;letter-spacing:.
 html:root .app.home-active > #drawerBg{z-index:99;pointer-events:auto}
 html:root .app.home-active > #drawer{z-index:100;pointer-events:auto;background:linear-gradient(165deg,#151515 0%,#0d0d0c 100%)}
 html:root .app.home-active > #drawer.is-open{z-index:100}
-html:root .app.home-active > #drawer .drawer-close{position:relative;z-index:101;pointer-events:auto}
+html:root .app.home-active > #drawer .drawer-close{z-index:101;pointer-events:auto}
 @media only screen and (max-width:390px){
 html:root .app.home-active #home #restStart{right:10%}
 }
