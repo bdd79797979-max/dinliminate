@@ -121,7 +121,7 @@ async function seedMeals(page, count) {
   await expect(page.locator('#foodCard')).toBeVisible();
 
   const storageKey = await page.evaluate(() =>
-    Object.keys(localStorage).find(key => key.startsWith('dinliminate.clean.'))
+    Object.keys(localStorage).find(key => key.startsWith('dinliminate:v1'))
   );
   expect(storageKey).toBeTruthy();
 
@@ -426,7 +426,7 @@ test('restaurant decision state survives reload', async ({ page }) => {
   await page.locator('#restMaybe').click();
   await expect.poll(() => page.locator('#restaurantMaybeDeck').getAttribute('data-maybe-count')).toBe('1');
   await expect.poll(async () => page.evaluate(() => {
-    const key = Object.keys(localStorage).find(value => value.startsWith('dinliminate.clean.'));
+    const key = Object.keys(localStorage).find(value => value.startsWith('dinliminate:v1'));
     if (!key) return 0;
     const saved = JSON.parse(localStorage.getItem(key) || '{}');
     return Array.isArray(saved.restaurantPool) ? saved.restaurantPool.filter(row => row._maybe).length : 0;
