@@ -626,7 +626,7 @@ test('Meal and Restaurant decision controls stay aligned, visible, and styled ac
   await expectNoPageErrors(errors);
 });
 
-test('CP1324 active and waiting Meal cards advance together without repeating previews', async ({ page }) => {
+test('CP1325 active and waiting Meal cards advance together without repeating previews', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 5);
   const expectedIds = await page.evaluate(async () => {
