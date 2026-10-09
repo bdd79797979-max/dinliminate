@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1354,
-  "sourceBranch": "cp1354-phone-swipe-controls-spacing",
+  "build": 1355,
+  "sourceBranch": "cp1355-phone-swipe-controls-build-stamp",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1354",
-  "deploymentTrigger": "cp1354-phone-swipe-controls-spacing",
+  "checkpoint": "CP1355",
+  "deploymentTrigger": "cp1355-phone-swipe-controls-build-stamp",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -57,5 +57,6 @@
   "backRestoreAudit": "CP1348 keeps restored card photos and titles paired on Back, persists Restaurant photo identity in decision history, and tests Back while the next Meal photo request is held.",
   "menuTransitionAudit": "CP1350 uses a time-ordered menu cover handoff and regression checks that the prior screen's full-screen backdrop remains opaque until destination panel covers are ready.",
   "tourTerminologyAudit": "Visible help and status copy uses Tour wording: the first bubble title is TOUR and on/off status copy says Tour Mode. The first guide bubble/body and existing toggle behavior are covered by the regression test.",
-  "panelCloseHandoffAudit": "Family Mode now opens the main menu and its opaque cover before the family panel begins closing. Manage Meals, History, and Settings restore the main menu synchronously before their panel/backdrop close transitions. This prevents a frame of the previous screen becoming visible on phone close."
+  "panelCloseHandoffAudit": "Family Mode now opens the main menu and its opaque cover before the family panel begins closing. Manage Meals, History, and Settings restore the main menu synchronously before their panel/backdrop close transitions. This prevents a frame of the previous screen becoming visible on phone close.",
+  "releaseStampSync": "CP1355 syncs src/main.js APP_BUILD, app-release.json, release-manifest.json, HTML asset query versions, PWA manifest, and service-worker shell cache at 1355. CP1354 phone swipe button sizing and its regression assertions are retained."
 }
