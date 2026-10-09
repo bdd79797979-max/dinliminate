@@ -47,7 +47,6 @@ assert.match(homeCss,/html:root \.app:not\(\.home-active\) > #home\s*\{\s*displa
 assert.doesNotMatch(homeCss,/\.app\.home-active\{[^}]*url\(/,'app shell must not own the homepage background image');
 const swipeFeatureSource=read('src/features/swipe/index.js');
 assert.ok(swipeFeatureSource.includes("foodCard.dataset.mediaPending='true'"),'Meal redraw must mark a pending media handoff');
-assert.ok(swipeMachineSource.includes("const mediaPending=card.dataset.mediaPending==='true'"),'swipe cleanup must preserve pending media visibility');
 const vercel=read('vercel.json');
 const build=Number(release.build);
 const styleFiles=['tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css'];
@@ -82,6 +81,7 @@ assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
 assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
 assert.ok(read('index.html').includes('<script type="module" src="./src/main.js"></script>'),'production entry must be native ESM');
 const swipeMachineSource=read('src/features/swipe/swipeMachine.js');
+assert.ok(swipeMachineSource.includes("const mediaPending=card.dataset.mediaPending==='true'"),'swipe cleanup must preserve pending media visibility');
 assert.match(swipeMachineSource,/thresholdRatio:\s*0\.21/,'swipe threshold must be 21%');
 assert.match(swipeMachineSource,/thresholdMinPx:\s*72/,'swipe minimum clamp must be 72px');
 assert.match(swipeMachineSource,/thresholdMaxPx:\s*108/,'swipe maximum clamp must be 108px');
