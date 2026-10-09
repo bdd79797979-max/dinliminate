@@ -582,7 +582,10 @@ test('phone swipe controls and first-entry directions remain responsive', async 
         cardCenterX:cardRect.left + cardRect.width / 2,
         cardCenterY:cardRect.top + cardRect.height / 2,
         coachWidth:coachRect.width,
-        cardWidth:cardRect.width
+        cardWidth:cardRect.width,
+        backgroundColor:style.backgroundColor,
+        borderRadius:style.borderRadius,
+        borderColor:style.borderTopColor
       };
     });
     const expectedFontSize = metrics.viewportWidth <= 390 ? 15.2 : 16;
@@ -593,6 +596,27 @@ test('phone swipe controls and first-entry directions remain responsive', async 
     expect(Math.abs(metrics.centerX - metrics.cardCenterX)).toBeLessThanOrEqual(1);
     expect(Math.abs(metrics.centerY - metrics.cardCenterY)).toBeLessThanOrEqual(1);
     expect(metrics.coachWidth).toBeLessThanOrEqual(metrics.cardWidth);
+    expect(metrics.backgroundColor).toBe('rgb(9, 9, 9)');
+    expect(metrics.borderRadius).toBe('12px');
+    expect(metrics.borderColor).toBe('rgba(214, 183, 120, 0.45)');
+  }
+
+  async function expectBlackRadiusField() {
+    const colors = await page.locator('#restaurant .location-main .radius-select').evaluate(el => {
+      const control = el.closest('.radius-control');
+      const color = node => getComputedStyle(node).backgroundColor;
+      const resting = color(el);
+      const controlResting = color(control);
+      el.focus();
+      const focused = color(el);
+      const controlFocused = color(control);
+      el.blur();
+      return { resting, controlResting, focused, controlFocused };
+    });
+    expect(colors.resting).toBe('rgb(9, 9, 9)');
+    expect(colors.controlResting).toBe('rgb(9, 9, 9)');
+    expect(colors.focused).toBe('rgb(9, 9, 9)');
+    expect(colors.controlFocused).toBe('rgb(9, 9, 9)');
   }
 
   async function expectSlightlyLargerCutMaybe(root) {
@@ -633,12 +657,14 @@ test('phone swipe controls and first-entry directions remain responsive', async 
 
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
+  await expectBlackRadiusField();
   await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
   await expectSlightlyLargerCutMaybe('#restaurant .unified-swipe-actions');
   await expectStyledBack('#restBack');
   await expectCenteredFirstEntryCoach('#restaurantCard');
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await expectBlackRadiusField();
   await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
   await expectSlightlyLargerCutMaybe('#restaurant .unified-swipe-actions');
   await expectCenteredFirstEntryCoach('#restaurantCard');
