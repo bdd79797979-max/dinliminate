@@ -31,7 +31,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1310';
+const APP_BUILD = '1311';
 const APP_BUILD_DATE = '2026-10-08';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -393,16 +393,86 @@ function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAG
 function swapImageWhenReady(img,url){
  if(!img||!url||!img.isConnected)return Promise.resolve(false);
  const nextUrl=String(url);
- const current=img.currentSrc||img.src||'';
- if(current===nextUrl)return Promise.resolve(true);
+ const href=value=>{try{return new URL(String(value||''),document.baseURI).href;}catch{return String(value||'');}};
+ const expected=href(nextUrl);
+ const current=href(img.currentSrc||img.src||'');
+ const alreadyReady=current===expected&&img.complete&&img.naturalWidth>0;
  return new Promise(resolve=>{
-  const probe=new Image();
+  let settled=false,checking=false,timer=0,probe=null;
+  const cleanup=()=>{
+   clearTimeout(timer);
+   img.removeEventListener('load',onTargetLoad);
+   img.removeEventListener('error',onTargetError);
+   if(probe){probe.onload=null;probe.onerror=null;}
+  };
+  const finish=ok=>{if(settled)return;settled=true;cleanup();resolve(!!ok);};
+  const targetReady=()=>img.isConnected&&img.complete&&img.naturalWidth>0&&href(img.currentSrc||img.src)===expected;
+  const verify=async()=>{
+   if(settled||checking)return;
+   if(!img.isConnected){finish(false);return;}
+   if(!targetReady())return;
+   checking=true;
+   try{if(typeof img.decode==='function')await img.decode();}catch(error){console.error('Dinliminate image decode error',error);}
+   checking=false;
+   finish(targetReady());
+  };
+  const onTargetLoad=()=>{void verify();};
+  const onTargetError=()=>{if(href(img.currentSrc||img.src)===expected)finish(false);};
+  img.addEventListener('load',onTargetLoad);
+  img.addEventListener('error',onTargetError);
+  timer=window.setTimeout(()=>finish(false),2200);
+  if(alreadyReady){void verify();return;}
+  probe=new Image();
   probe.decoding='async';
-  let settled=false;
-  const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
-  probe.onload=async()=>{try{await probe.decode?.();}catch(error){console.error('Dinliminate error',error)}if(img.isConnected)img.src=nextUrl;finish(true);};
+  probe.referrerPolicy='no-referrer';
+  probe.onload=async()=>{
+   try{if(typeof probe.decode==='function')await probe.decode();}catch(error){console.error('Dinliminate image decode error',error);}
+   if(settled)return;
+   if(!img.isConnected){finish(false);return;}
+   if(targetReady()){void verify();return;}
+   try{img.src=nextUrl;}catch(error){console.error('Dinliminate image assignment error',error);finish(false);return;}
+   void verify();
+  };
   probe.onerror=()=>finish(false);
   probe.src=nextUrl;
+ });
+}
+function normalizeMealImageUrl(value){
+ try{return new URL(String(value||''),document.baseURI).href;}catch{return String(value||'');}
+}
+function waitForMealImageReady(img,url,stillCurrent,timeoutMs=1800){
+ const expected=normalizeMealImageUrl(url);
+ return new Promise(resolve=>{
+  let finished=false,checking=false,timer=0;
+  const cleanup=()=>{
+   clearTimeout(timer);
+   img.removeEventListener('load',onLoad);
+   img.removeEventListener('error',onError);
+  };
+  const finish=ok=>{
+   if(finished)return;
+   finished=true;cleanup();resolve(!!ok);
+  };
+  const verify=async()=>{
+   if(finished||checking)return;
+   if(!stillCurrent()){finish(false);return;}
+   const current=normalizeMealImageUrl(img.currentSrc||img.src);
+   if(current!==expected||!img.complete||img.naturalWidth<=0)return;
+   checking=true;
+   try{if(typeof img.decode==='function')await img.decode();}catch(error){console.error('Dinliminate image decode error',error);}
+   checking=false;
+   if(!stillCurrent()){finish(false);return;}
+   finish(img.isConnected&&img.complete&&img.naturalWidth>0
+    &&normalizeMealImageUrl(img.currentSrc||img.src)===expected);
+  };
+  const onLoad=()=>{void verify();};
+  const onError=()=>finish(false);
+  img.addEventListener('load',onLoad);
+  img.addEventListener('error',onError);
+  timer=window.setTimeout(()=>finish(false),Math.max(250,Number(timeoutMs)||1800));
+  img.style.visibility='hidden';
+  try{img.src=url;}catch(error){console.error('Dinliminate meal image assignment error',error);finish(false);return;}
+  void verify();
  });
 }
 function loadMealPhotoCandidates(img,candidates,target){
@@ -421,9 +491,10 @@ function loadMealPhotoCandidates(img,candidates,target){
  const attempt=async()=>{
   for(const url of list){
    if(!stillCurrent())return false;
-   const ready=await preloadSwipeImage(url);
-   if(!ready||!stillCurrent())continue;
-   try{img.src=url;}catch{continue;}
+   const preloaded=await preloadSwipeImage(url);
+   if(!preloaded||!stillCurrent())continue;
+   const painted=await waitForMealImageReady(img,url,stillCurrent);
+   if(!painted||!stillCurrent())continue;
    img.style.visibility='visible';
    img.dataset.imageFallback='false';
    target.dataset.foodImageSource=url;
@@ -1020,6 +1091,9 @@ document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 const screenChanged=S.screen!==screen;S.screen=screen;if(screenChanged)save();
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
+// CP1311: critical-boot route selectors are one-shot hints. Leaving them on
+// would override .hidden and let a previous screen flash back after navigation.
+document.documentElement.classList.remove('dinliminate-start-food','dinliminate-start-restaurant','dinliminate-start-winner','dinliminate-start-family');
 $('globalBack')?.classList.add('hidden');
 $('appTopbar')?.classList.toggle('hidden', screen === 'food' || screen === 'restaurant' || screen === 'winner' || screen === 'family');
 window.scrollTo?.(0,0);
@@ -1318,6 +1392,7 @@ try{
   show('food');
   foodQuick();
   drawFood({deferPrime:true});
+  await $('foodCard')?.__mealReadyPromise;
   primeFoodSwipeMedia();
  } else if (S.saved && S.screen === 'restaurant' && S.restaurantPool.length) {
   show('restaurant');

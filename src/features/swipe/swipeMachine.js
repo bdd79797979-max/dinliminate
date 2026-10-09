@@ -102,6 +102,15 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     card.dataset.swipe=dx<0?'cut':dx>0?'maybe':'';
     return {rotation};
   };
+  const preserveExitFrame=()=>{
+    const finalTransform=String(card.dataset.swipeFinalTransform||'').trim();
+    if(finalTransform)card.style.transform=finalTransform;
+    card.style.opacity='0';
+    card.style.visibility='hidden';
+    card.style.pointerEvents='none';
+    card.style.willChange='transform,opacity';
+  };
+
   const animate=(keyframes,timing)=>{
     if(typeof card.animate!=='function'){
       const error=new Error('Web Animations API unavailable');
@@ -206,6 +215,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
       SWIPE_CONFIG.exitDurationMinMs,
       SWIPE_CONFIG.exitDurationMaxMs
     ));
+    card.dataset.swipeFinalTransform=targetTransform;
     const exit=animate(
       [
         {transform:fromTransform,opacity:1},
@@ -216,10 +226,13 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     animation=exit;
     if(!exit){
       if(current()&&activeTransaction===localTransaction){
+        preserveExitFrame();
         setPhase('settled');
         Promise.resolve(normalized<0?onCut?.({fromSwipe:true,...context}):onMaybe?.({fromSwipe:true,...context}))
           .catch(error=>console.error('Dinliminate swipe commit error',error))
-          .finally(resetVisuals);
+          .finally(()=>{
+            if(current()&&activeTransaction===localTransaction)resetVisuals();
+          });
       }
       return 'accepted';
     }
@@ -230,9 +243,8 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
       // machine; destroy() must still be able to cancel the fill-forwards effect.
       // Otherwise the old off-screen transform survives the CSS reset and the
       // next card looks visible but its hit area remains off-screen.
+      preserveExitFrame();
       setPhase('settled');
-      card.style.opacity='0';
-      card.style.visibility='hidden';
       try{
         if(normalized<0)await onCut?.({fromSwipe:true,...context});
         else await onMaybe?.({fromSwipe:true,...context});
@@ -246,8 +258,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
       resetVisuals();
     }).catch(error=>{
       if(!current()||activeTransaction!==localTransaction)return;
-      animation=null;
       console.error('Dinliminate swipe exit error',error);
+      preserveExitFrame();
+      cancelAnimation();
       setPhase('settled');
       Promise.resolve(normalized<0?onCut?.({fromSwipe:true,...context}):onMaybe?.({fromSwipe:true,...context}))
         .catch(commitError=>console.error('Dinliminate swipe commit error',commitError))
@@ -257,7 +270,6 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     });
     suppressClickUntil=performance.now()+700;
     card.style.transform=fromTransform;
-    card.dataset.swipeFinalTransform=targetTransform;
     return 'accepted';
   };
 
