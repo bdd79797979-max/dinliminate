@@ -494,11 +494,9 @@ test('Home door background remains confined to the Home route', async ({ page })
   await expectNoPageErrors(errors);
 });
 
-test('Meal and Restaurant decision controls stay aligned, visible, and styled on mobile', async ({ page }) => {
+test('Meal and Restaurant decision controls stay aligned, visible, and styled across viewports', async ({ page }) => {
   const errors = await prepare(page);
   const viewport = page.viewportSize();
-  expect([360, 375, 390, 412]).toContain(viewport.width);
-
   async function expectDecisionRow(ids) {
     const boxes = [];
     for (const id of ids) {
@@ -549,8 +547,10 @@ test('successive Meal swipes never reintroduce a cut card', async ({ page }) => 
       return css.visibility === 'visible'
         && Number(css.opacity) > 0.99
         && css.pointerEvents === 'auto'
-        && rect.left >= -1
-        && rect.right <= window.innerWidth + 1;
+        // The card stack intentionally bleeds up to 10px beyond its stage.
+        // Allow that edge treatment but reject an inherited fly-off transform.
+        && rect.left >= -12
+        && rect.right <= window.innerWidth + 12;
     }), { timeout: 12000 }).toBe(true);
   }
 
