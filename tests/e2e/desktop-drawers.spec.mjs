@@ -72,7 +72,8 @@ async function expectDrawerAnchored(page, panelSelector, triggerId, closeId) {
     .toBeLessThanOrEqual(1);
   expect(Math.abs(geometry.close.height - geometry.trigger.height), closeId+' height')
     .toBeLessThanOrEqual(1);
-  expect(geometry.panel.left).toBeGreaterThanOrEqual(geometry.viewport.width - 400);
+  expect(geometry.panel.width).toBeLessThanOrEqual(400);
+  expect(geometry.panel.width).toBeGreaterThanOrEqual(350);
   expect(geometry.panel.right).toBeLessThanOrEqual(geometry.viewport.width + 1);
 }
 
