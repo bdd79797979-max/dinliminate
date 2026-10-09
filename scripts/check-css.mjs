@@ -7,7 +7,7 @@ const root = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const cssFiles = [
   'tokens.css', 'base.css', 'chrome.css', 'modal.css', 'swipe.css',
   'home.css', 'meals.css', 'restaurants.css', 'winner.css', 'history.css',
-  'family.css', 'settings.css', 'tutorial.css'
+  'family.css', 'settings.css', 'tutorial.css', 'menu.css'
 ];
 const problems = [];
 

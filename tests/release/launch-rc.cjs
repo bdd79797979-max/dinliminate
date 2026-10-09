@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 
 const root = path.resolve(__dirname, '..', '..');
 const requiredFiles = [
-  'index.html','boot.js','tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','src/main.js','viewport.js','sw.js',
+  'index.html','boot.js','tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','menu.css','src/main.js','viewport.js','sw.js',
   'manifest.webmanifest','logo.svg','icon.svg','app-release.json','api/_lib/http.js','api/_lib/rateLimit.js','api/_lib/ssrf.js','api/_lib/imageHosts.js',
   'release-manifest.json','package.json','scripts/stamp.mjs','api/restaurants.js',
   'api/restaurant-photo.js','api/google-restaurant-photo.js',
@@ -49,7 +49,7 @@ const swipeFeatureSource=read('src/features/swipe/index.js');
 assert.ok(swipeFeatureSource.includes("foodCard.dataset.mediaPending='true'"),'Meal redraw must mark a pending media handoff');
 const vercel=read('vercel.json');
 const build=Number(release.build);
-const styleFiles=['tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css'];
+const styleFiles=['tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','menu.css'];
 for(const file of styleFiles){const css=read(file);let depth=0;for(const ch of css){if(ch==='{')depth++;else if(ch==='}')depth--;};assert.equal(depth,0,'CSS braces must balance: '+file);assert.equal(css.includes('!important'),false,'CSS must not contain !important: '+file);}
 for(const file of styleFiles)assert.ok(index.includes('./'+file+'?v='+build),'index.html missing stylesheet: '+file);
 for(const file of styleFiles)assert.ok(sw.includes('./'+file+'?v='+build),'sw.js missing stylesheet: '+file);
@@ -157,7 +157,7 @@ assert.ok(main.includes("scope:'meal-autofill',perMinute:8,dailyCap:100")||read(
 const versionedAssets=[
  './boot.js?v='+build,'./viewport.js?v='+build,
  './logo.svg?v='+build,'./icon.svg?v='+build,'./apple-touch-icon.png?v='+build,
- './tokens.css?v='+build,'./base.css?v='+build,'./chrome.css?v='+build,'./modal.css?v='+build,'./swipe.css?v='+build,'./home.css?v='+build,'./meals.css?v='+build,'./restaurants.css?v='+build,'./winner.css?v='+build,'./history.css?v='+build,'./family.css?v='+build,'./settings.css?v='+build,'./tutorial.css?v='+build,
+ './tokens.css?v='+build,'./base.css?v='+build,'./chrome.css?v='+build,'./modal.css?v='+build,'./swipe.css?v='+build,'./home.css?v='+build,'./meals.css?v='+build,'./restaurants.css?v='+build,'./winner.css?v='+build,'./history.css?v='+build,'./family.css?v='+build,'./settings.css?v='+build,'./tutorial.css?v='+build,'./menu.css?v='+build,
 ];
 for(const asset of versionedAssets){
  assert.ok(index.includes(asset),'index.html missing versioned asset: '+asset);

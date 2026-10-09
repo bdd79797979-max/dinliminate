@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1326 decision colors, label-sized gold arrows, and uniform elevated menu windows', async ({ page }) => {
+test('CP1327 decision colors, label-sized gold arrows, and trigger-anchored uniform menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -241,6 +241,7 @@ test('CP1326 decision colors, label-sized gold arrows, and uniform elevated menu
 
   await page.locator('#foodMenu').click();
   await expect(page.locator('#drawer')).toBeVisible();
+  const triggerBox = await page.locator('#foodMenu').boundingBox();
   const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
   const closeBox = await page.locator('#drawerClose').boundingBox();
   const rows = await page.locator('#drawer .drawer-row').evaluateAll(els => els.map(el => {
@@ -248,14 +249,15 @@ test('CP1326 decision colors, label-sized gold arrows, and uniform elevated menu
     return {id:el.id,y:r.y,height:r.height,radius:s.borderRadius,border:s.borderWidth+' '+s.borderStyle+' '+s.borderColor,background:s.backgroundColor+'|'+s.backgroundImage,padding:s.padding,isWindow:el.classList.contains('drawer-window')};
   }));
   const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
+  expect(triggerBox).not.toBeNull();
   expect(drawerHead).not.toBeNull();
   expect(closeBox).not.toBeNull();
   expect(firstMenuRow).not.toBeNull();
   expect(rows.map(r=>r.id)).toEqual(['familyMode','manage','history','settings']);
-  expect(firstMenuRow.y).toBeGreaterThanOrEqual(closeBox.y + closeBox.height - 1);
-  expect(firstMenuRow.y - (closeBox.y + closeBox.height)).toBeGreaterThanOrEqual(2);
-  expect(firstMenuRow.y - (closeBox.y + closeBox.height)).toBeLessThanOrEqual(5);
-  expect(firstMenuRow.y).toBeLessThan(60);
+  expect(Math.abs(closeBox.y-triggerBox.y)).toBeLessThanOrEqual(1);
+  expect(Math.abs((closeBox.x+closeBox.width)-(triggerBox.x+triggerBox.width))).toBeLessThanOrEqual(1);
+  expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeGreaterThanOrEqual(2);
+  expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeLessThanOrEqual(5);
   expect(closeBox.width).toBe(40);
   expect(closeBox.height).toBe(40);
   expect(rows.every(r=>r.isWindow && r.height===54 && r.radius==='10px' && r.border===rows[0].border && r.background===rows[0].background && r.padding===rows[0].padding)).toBe(true);
@@ -263,6 +265,18 @@ test('CP1326 decision colors, label-sized gold arrows, and uniform elevated menu
 
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
+  await page.locator('#restaurantMenu').click();
+  const restaurantTriggerBox = await page.locator('#restaurantMenu').boundingBox();
+  const restaurantCloseBox = await page.locator('#drawerClose').boundingBox();
+  const restaurantFirstWindow = await page.locator('#drawer .drawer-window').first().boundingBox();
+  expect(restaurantTriggerBox).not.toBeNull();
+  expect(restaurantCloseBox).not.toBeNull();
+  expect(restaurantFirstWindow).not.toBeNull();
+  expect(Math.abs(restaurantCloseBox.y-restaurantTriggerBox.y)).toBeLessThanOrEqual(1);
+  expect(Math.abs((restaurantCloseBox.x+restaurantCloseBox.width)-(restaurantTriggerBox.x+restaurantTriggerBox.width))).toBeLessThanOrEqual(1);
+  expect(restaurantFirstWindow.y-(restaurantTriggerBox.y+restaurantTriggerBox.height)).toBeGreaterThanOrEqual(2);
+  expect(restaurantFirstWindow.y-(restaurantTriggerBox.y+restaurantTriggerBox.height)).toBeLessThanOrEqual(5);
+  await page.locator('#drawerClose').click();
   const restaurantVisuals = await page.evaluate(() => {
     const box = id => {
       const r = document.querySelector('#' + id).getBoundingClientRect();
@@ -690,7 +704,7 @@ test('CP1325 active and waiting Meal cards advance together without repeating pr
 });
 
 
-test('CP1326 waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
+test('CP1327 waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   const target = await page.evaluate(() => {

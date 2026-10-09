@@ -792,16 +792,6 @@ html:root .discovery-home-back span{
   height:30px;
   line-height:30px;
 }
-/* The drawer items sit closer beneath the drawer header, not halfway down the panel. */
-html:root .drawer .drawer-section-label{
-  margin-top:0;
-}
-html:root .drawer .drawer-nav{
-  margin-top:0;
-  padding-top:0;
-}
-
-
 /* CP1315: explicit high-specificity treatment for the two Home back controls. */
 html:root .app #food #foodHomeBack.discovery-home-back,
 html:root .app #restaurant #restaurantHomeBack.discovery-home-back{
