@@ -82,9 +82,14 @@ $(id)?.remove();
 $(id+'Bg')?.remove();
 const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].includes(id);
 const anchoredUtilityModal=isDrawerUtilityModal;
+const sourceDrawer=$('drawer');
+const menuHandoff=!!anchoredUtilityModal&&!!sourceDrawer
+ &&!sourceDrawer.classList.contains('hidden')&&sourceDrawer.classList.contains('is-open');
 const bg=document.createElement('div');
 bg.id=id+'Bg';
-bg.className='modal-bg'+(anchoredUtilityModal?' modal-bg-opening utility-panel-bg':(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening'))+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
+bg.className='modal-bg'+(anchoredUtilityModal
+ ?(menuHandoff?' modal-bg-open utility-panel-bg':' modal-bg-opening utility-panel-bg')
+ :(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening'))+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
 const modal=document.createElement('section');
 modal.id=id;
 modal.className='modal'+(anchoredUtilityModal?' utility-panel-opening':(isDrawerUtilityModal?' modal-open':' modal-opening'));

@@ -1610,7 +1610,7 @@ test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
   await expect(page.locator('#home')).toBeVisible();
 
   const css = await page.evaluate(async () => {
-    const response = await fetch('./home.css?v=1348', { cache:'no-store' });
+    const response = await fetch('./home.css?v=1349', { cache:'no-store' });
     if (!response.ok) throw new Error('could not load the current homepage stylesheet');
     return response.text();
   });
@@ -1784,5 +1784,79 @@ test('CP1348 Restaurant Maybe and Back reuse the prior photo on restore', async 
     expect(afterBack.imageSrc, 'Back should restore the prior restaurant photo at cycle '+i)
       .toBe(before.imageSrc);
   }
+  await expectNoPageErrors(errors);
+});
+
+
+test('CP1349 menu navigation keeps the previous screen covered during handoff', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.goto('/');
+  await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
+  await expect(page.locator('#home')).toBeVisible();
+
+  await page.evaluate(() => {
+    window.__cp1349BackdropSamples = [];
+    window.__cp1349FamilyBackdropSample = null;
+    const append = Element.prototype.append;
+    Element.prototype.append = function (...nodes) {
+      const result = append.apply(this, nodes);
+      for (const node of nodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (!['manageFoodsModalBg', 'historyModalBg', 'settingsModalBg'].includes(node.id)) continue;
+        window.__cp1349BackdropSamples.push({
+          id: node.id,
+          className: node.className,
+          opacity: Number(getComputedStyle(node).opacity),
+          previousMenuStillOpen: document.querySelector('#drawer')?.classList.contains('is-open') === true
+        });
+      }
+      return result;
+    };
+    document.addEventListener('click', event => {
+      if (!(event.target instanceof Element) || !event.target.closest('#familyMode')) return;
+      queueMicrotask(() => {
+        const bg = document.querySelector('#familyDrawerBg');
+        window.__cp1349FamilyBackdropSample = bg ? {
+          className: bg.className,
+          opacity: Number(getComputedStyle(bg).opacity),
+          menuBgHidden: document.querySelector('#drawerBg')?.classList.contains('hidden') === true
+        } : null;
+      });
+    }, true);
+  });
+
+  await page.locator('#menu').click();
+  await expect(page.locator('#drawer')).toHaveClass(/is-open/);
+  await page.locator('#familyMode').click();
+  await expect(page.locator('#familyCloseTop')).toBeVisible();
+  const familySample = await page.evaluate(() => window.__cp1349FamilyBackdropSample);
+  expect(familySample).not.toBeNull();
+  expect(familySample.className).toContain('is-open');
+  expect(familySample.opacity).toBeGreaterThan(0.99);
+  expect(familySample.menuBgHidden).toBe(true);
+
+  await page.locator('#familyCloseTop').click();
+  await expect(page.locator('#drawer')).toHaveClass(/is-open/, { timeout: 4000 });
+
+  for (const item of [
+    { button: '#manage', modal: '#manageFoodsModal', backdrop: 'manageFoodsModalBg' },
+    { button: '#history', modal: '#historyModal', backdrop: 'historyModalBg' },
+    { button: '#settings', modal: '#settingsModal', backdrop: 'settingsModalBg' }
+  ]) {
+    await page.locator(item.button).click();
+    await expect(page.locator(item.modal)).toBeVisible({ timeout: 5000 });
+    const sample = await page.evaluate(id =>
+      window.__cp1349BackdropSamples.filter(entry => entry.id === id).at(-1) || null,
+      item.backdrop
+    );
+    expect(sample, item.backdrop + ' should be sampled on initial mount').not.toBeNull();
+    expect(sample.className, item.backdrop + ' must not begin transparent').toContain('modal-bg-open');
+    expect(sample.className, item.backdrop + ' must not use the opening fade').not.toContain('modal-bg-opening');
+    expect(sample.opacity, item.backdrop + ' opacity on initial mount').toBeGreaterThan(0.99);
+
+    await page.locator(item.modal + ' [data-close]').click();
+    await expect(page.locator('#drawer')).toHaveClass(/is-open/, { timeout: 4000 });
+  }
+
   await expectNoPageErrors(errors);
 });
