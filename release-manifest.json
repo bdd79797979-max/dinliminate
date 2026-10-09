@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1330,
-  "sourceBranch": "cp1330-requested-meal-photos",
+  "build": 1331,
+  "sourceBranch": "cp1331-tour-swipe-directions-chocolate-single-photo",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1330",
-  "deploymentTrigger": "CP1330-user-selected-pexels-meal-photos",
+  "checkpoint": "CP1331",
+  "deploymentTrigger": "CP1331-tour-swipe-directions-chocolate-single-photo",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -31,7 +31,7 @@
   "swipeFeel": "CP1305 Tinder-style continuous drag, proportional rotation, velocity-aware flight, controlled spring-back, and no instant removal",
   "mealPhotoPass": "Pexels refresh evaluated all 7 requested meals; stronger exact/close matches used where justified; existing stronger images retained where Pexels was not a better exact match",
   "detailPhotoUX": "CP1312 Meal Details starts with the currently decoded card photo and the selected gallery index.",
-  "mealPhotoUpdate": "CP1330 applies the five user-selected Pexels photos as primary images for Cabbage & Sausage, Chicken & Dumplings, Chocolate Covered Peanuts, Steak & Potato, and Mac & Cheese. The prior primary images are retained as same-meal backup candidates.",
+  "mealPhotoUpdate": "CP1331 makes the user-selected Pexels 38594567 image the only Chocolate Covered Peanuts photo, removes previous alternate photo references, normalizes any saved built-in override, and prunes old local stored photos for that meal.",
   "bootRouting": "CP1312 restored route selectors are one-shot and cleared after normal routing; restored Meal shell remains masked until its live card image is ready.",
   "cacheSync": "CP1312 app/index/service-worker asset URLs and shell cache synchronized.",
   "tourAudit": "CP1299 starting-side aware Tour; second decision screen returns Home and ends; Tour button cancels at capture phase",
@@ -41,5 +41,6 @@
   "automatedRC": "CP1329 checks menu trigger/close alignment on Meals and Restaurants, first window 2-5px below the hamburger, all four menu windows equal in size/border/radius/background/padding including Family Mode, label-sized gold back arrows, and sequential Meals card/waiting-card identity through four swipes plus delayed-photo handoff. Release stamps and precache assets are synchronized.",
   "visualCorrections": "CP1329 applies one outer class (drawer-window) to Family Mode, Manage Meals, History, and Settings, preventing legacy .drawer-row cascade interference; moves all menu windows directly beneath the originating hamburger by fixing the close-control containing block and setting the navigation gap to 2px. Preserves gold back arrows sized to Meal Times/Cuisine labels.",
   "currentBaseline": "CP1300 visual baseline with CP1312 swipe/refresh/Details fixes, CP1317/1318 async card safeguards, CP1320 sequential Restaurant handoff checks, CP1323 menu/arrow checks, CP1324/1325 waiting Meal-card guards, CP1326/1327 unified menu stylesheet and dynamic anchoring, CP1328 waiting-card render sequencing and label-sized arrows, CP1329 single-class menu windows and corrected drawer close-control containing block.",
-  "buildDate": "2026-10-09"
+  "buildDate": "2026-10-09",
+  "tourCopyAudit": "CP1331 clarifies both Tour decision prompts: MAYBE tells users to include the item in Maybes or swipe right; CUT tells users to exclude the item or swipe left, for Meals and Restaurants."
 }

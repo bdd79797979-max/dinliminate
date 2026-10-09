@@ -23,15 +23,34 @@ import { tutorialStepsForScreen, tutorialUnionRect, tutorialTargetRect, tutorial
 // CP954 restaurant first-paint restoration: exact/direct venue photos win before generic fallback.
 // CP945 photo-pipeline release sync: canonical Restaurant photo handoff + cache revision.
 const getDefaultFoods = () => Array.isArray(FOODS) ? FOODS : [];
+function normalizeChocolateCoveredPeanutsPhoto(){
+ const id=CHOCOLATE_COVERED_PEANUTS_ID,photo=CHOCOLATE_COVERED_PEANUTS_PHOTO;
+ let changed=false;
+ for(const collection of [S.custom,S.deletedCustomMeals]){
+  if(!Array.isArray(collection))continue;
+  for(const item of collection){
+   if(String(item?.id||'')!==id)continue;
+   if(item.image!==photo){item.image=photo;changed=true;}
+   if(!Array.isArray(item.images)||item.images.length!==1||item.images[0]!==photo){item.images=[photo];changed=true;}
+   for(const key of ['backupImage','officialImage']){
+    if(Object.prototype.hasOwnProperty.call(item,key)){delete item[key];changed=true;}
+   }
+  }
+ }
+ if(changed)save();
+ storeMealPhotoSet(id,[photo]).catch(error=>console.error('Dinliminate stored photo cleanup failed',error));
+}
 // CP1149 — meal photo policy: official source first, exact same-meal backup second, never a generic food fallback.
 const DEFAULT_FOOD_IMAGE = '';
+const CHOCOLATE_COVERED_PEANUTS_ID = 'chocolate-covered-peanuts';
+const CHOCOLATE_COVERED_PEANUTS_PHOTO = "https://images.pexels.com/photos/38594567/pexels-photo-38594567.jpeg?auto=compress&cs=tinysrgb&w=1800";
 
 const KEY = 'dinliminate:v1';
 const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1330';
+const APP_BUILD = '1331';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1397,6 +1416,7 @@ configureModal({mealTimesFor,restaurantFallbackImage,imageProxyUrl,mealImageUrl,
 
 bindMealPhotoCountControls();
 load();
+normalizeChocolateCoveredPeanutsPhoto();
 loadRestaurantWebsiteStore();
 renderLocationSource();
 renderFindButton();

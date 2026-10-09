@@ -79,8 +79,8 @@ function tutorialStepsForScreen(screen){
   {targets:['#foodStart .home-choice-content','#restStart .home-choice-content'],title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#menu']}
  ];
  if(screen==='food')return[
-  {target:'#foodMaybe',title:'MAYBE',body:'Keep this meal in consideration.'},
-  {target:'#foodCut',title:'CUT',body:'Remove this meal.'},
+  {target:'#foodMaybe',title:'MAYBE',body:'Include this meal in your Maybes, or swipe right.'},
+  {target:'#foodCut',title:'CUT',body:'Exclude this meal, or swipe left.'},
   {target:'#foodBack',title:'Back',body:'Return to the previous meal.'},
   {target:'#foodChoose',title:'CHOOSE',body:'Make your decision early.',action:'choose'},
   {target:'#foodDetails',title:'DETAILS',body:'See more about this meal.'},
@@ -98,8 +98,8 @@ function tutorialStepsForScreen(screen){
   {target:'#find',title:'REFRESH',body:'Refresh your restaurant results.'},
   {target:'#radius',title:'RADIUS',body:'Choose how far to search.'},
   {target:'#restaurantHomeBack',title:'BACK TO HOME',body:'Return to the homepage.'},
-  {target:'#restMaybe',title:'MAYBE',body:'Keep this restaurant in consideration.'},
-  {target:'#restCut',title:'CUT',body:'Remove this restaurant.'},
+  {target:'#restMaybe',title:'MAYBE',body:'Include this restaurant in your Maybes, or swipe right.'},
+  {target:'#restCut',title:'CUT',body:'Exclude this restaurant, or swipe left.'},
   {target:'#restBack',title:'Back',body:'Return to the previous restaurant.'},
   {target:'#restChoose',title:'CHOOSE',body:'Make your decision early.',action:'choose'},
   {target:'#restaurantSearchToggle',title:'RESTAURANT SEARCH',body:'Search for a specific restaurant.',avoid:['#restaurantSearchBox']},

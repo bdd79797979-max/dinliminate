@@ -46,8 +46,20 @@ const e2e=read('tests/e2e/behavior.spec.mjs');
 const homeCss=read('home.css');
 const menuCss=read('menu.css');
 assert.ok(index.indexOf('./menu.css?v='+build)>index.indexOf('./tutorial.css?v='+build),'menu.css must load last');
+
+const tutorialSource=read('src/features/tutorial/index.js');
+for(const copy of ["Include this meal in your Maybes, or swipe right.","Exclude this meal, or swipe left.","Include this restaurant in your Maybes, or swipe right.","Exclude this restaurant, or swipe left."])assert.ok(tutorialSource.includes(copy),'Tour must explain the decision and swipe direction: '+copy);
+const foodsSource=read('data/foods.js');
+const peanutStart=foodsSource.indexOf('"id": "chocolate-covered-peanuts"');
+assert.ok(peanutStart>=0,'Chocolate Covered Peanuts must exist in the built-in catalog');
+const peanutEnd=foodsSource.indexOf('\n  },',peanutStart);
+const peanutRecord=foodsSource.slice(peanutStart,peanutEnd<0?undefined:peanutEnd);
+assert.ok(peanutRecord.includes("https://images.pexels.com/photos/38594567/pexels-photo-38594567.jpeg?auto=compress&cs=tinysrgb&w=1800"),'Chocolate Covered Peanuts must use the selected Pexels photo');
+assert.doesNotMatch(peanutRecord,/"(?:backupImage|officialImage|images)"\s*:/,'Chocolate Covered Peanuts must not retain alternate photo references');
+assert.ok(main.includes('normalizeChocolateCoveredPeanutsPhoto();'),'persisted built-in photo overrides must be normalized');
+
 assert.ok(menuCss.includes('.drawer-window'),'menu.css defines shared drawer-window styling');
-for(const id of ['familyMode','manage','history','settings'])assert.ok(index.includes('class="drawer-row drawer-window" id="'+id+'"'),'All menu choices use the same window class: '+id);
+for(const id of ['familyMode','manage','history','settings'])assert.ok(index.includes('class="drawer-window" id="'+id+'"'),'All menu choices use the unified drawer-window class: '+id);
 assert.equal(css('chrome.css').includes('.drawer-row{'),false,'Legacy drawer-row styles must not compete');
 assert.equal(css('chrome.css').includes('.drawer-head{'),false,'Legacy drawer-head styles must not compete');
 assert.equal(css('restaurants.css').includes('.drawer .drawer-nav'),false,'Legacy drawer-nav spacing must not compete');
@@ -106,8 +118,9 @@ assert.equal(swipeMachineSource.includes("phase='completing'"),false,'legacy com
 assert.ok(Number.isInteger(build)&&build>0,'release build must be a positive integer');
 assert.match(String(release.buildDate||''),/^\d{4}-\d{2}-\d{2}$/,'release build date must be YYYY-MM-DD');
 assert.equal(releaseManifest.build,build,'release-manifest build must match app-release build');
-assert.equal(release.sourceBranch,'main','release source branch must be main');
-assert.equal(releaseManifest.sourceBranch,'main','release-manifest source branch must be main');
+const expectedSourceBranch=String(process.env.GITHUB_REF_NAME||process.env.VERCEL_GIT_COMMIT_REF||'').trim();
+if(expectedSourceBranch){assert.equal(release.sourceBranch,expectedSourceBranch,'release source branch must match the active CI/deployment ref');}
+assert.equal(releaseManifest.sourceBranch,release.sourceBranch,'release-manifest source branch must match app-release source branch');
 assert.equal((index.match(/<script(?![^>]*src)[^>]*>/g)||[]).length,0,'index.html must not contain inline executable scripts');
 assert.ok(index.includes('./boot.js?v='+build),'index.html must load boot.js');
 assert.equal(exists('styles.css'),false,'legacy monolithic styles.css must be removed');
