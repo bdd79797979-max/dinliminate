@@ -289,6 +289,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   };
 
   const onPointerDown=event=>{
+    // A new Meal shell can be visible while its correct photo loads. Keep its
+    // details button usable, but don't start a gesture until the photo is ready.
+    if(card.dataset.mediaPending==='true')return;
     if(destroyed||event.isPrimary===false||phase!=='idle')return;
     if(event.button!=null&&event.button!==0)return;
     if(event.target?.closest?.('button,a,input,select,textarea'))return;

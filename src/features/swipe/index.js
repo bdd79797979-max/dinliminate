@@ -148,6 +148,7 @@ function drawFood(options={}){
  item._mealPhotoIndex=photoIndex;
  if(foodCard)foodCard.dataset.mealId=item.id;
  const holdCardForMedia=!!foodCard&&!sameMealReady;
+ const preserveCardSurface=options.preserveCardSurface===true;
  const loadToken=String(Number(img.dataset.mealLoadToken||0)+1);
  img.dataset.mealLoadToken=loadToken;
  let mealReadyResolve=()=>{};
@@ -167,38 +168,55 @@ function drawFood(options={}){
   if(fb&&current!==fb){this.src=fb;return;}
   markMealImageUnavailable(this);
  };
- // Never expose the previous decoded bitmap while this DOM node is rebound.
- img.style.visibility='hidden';
+ // Keep the current card's copy in place while the replacement photo is
+ // prepared. Never show the old bitmap with the new meal's title.
+ img.style.visibility=sameMealReady?'visible':'hidden';
  if(holdCardForMedia){
    foodCard.style.transition='none';
-   foodCard.style.opacity='0';
-   foodCard.style.visibility='hidden';
-   foodCard.style.pointerEvents='none';
+   foodCard.style.transform='none';
+   foodCard.style.opacity=preserveCardSurface?'1':'0';
+   foodCard.style.visibility=preserveCardSurface?'visible':'hidden';
+   foodCard.style.pointerEvents=preserveCardSurface?'auto':'none';
+   if(preserveCardSurface){
+    foodCard.classList.remove('swipe-active');
+    foodCard.style.willChange='';
+    foodCard.style.removeProperty('--swipe-tint-alpha');
+    foodCard.dataset.swipe='';
+    foodCard.dataset.swipeDirection='';
+   }
    syncFoodNextCardVisibility();
  }
  img.dataset.imageFallback='false';
- img.dataset.mealPhotoLoaded='false';
- img.dataset.foodImageSource='';
- if(!primaryPhoto&&!backupPhoto)markMealImageUnavailable(img);
- if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
-  if(String(img.dataset.mealLoadToken||'')===loadToken){
-   if(!ok)markMealImageUnavailable(img);
-   if(ok)img.dataset.mealPhotoLoaded='true';
-   mealReadyResolve(!!ok);
-   if(holdCardForMedia){
-    delete foodCard.dataset.mediaPending;
-    foodCard.style.transition='none';
-    foodCard.style.transform='none';
-    foodCard.style.opacity='1';
-    foodCard.style.visibility='visible';
-    foodCard.style.pointerEvents='auto';
-    syncFoodNextCardVisibility();
+ if(sameMealReady){
+  // A redraw of the same, already decoded photo should be a true no-op.
+  // Reassigning src and hiding it here caused an avoidable one-frame flash.
+  img.dataset.mealPhotoLoaded='true';
+  img.dataset.foodImageSource=previousSrc;
+  mealReadyResolve(true);
+ }else{
+  img.dataset.mealPhotoLoaded='false';
+  img.dataset.foodImageSource='';
+  if(!primaryPhoto&&!backupPhoto)markMealImageUnavailable(img);
+  if(foodCard){loadMealPhotoCandidates(img,[primaryPhoto,backupPhoto],foodCard).then(ok=>{
+   if(String(img.dataset.mealLoadToken||'')===loadToken){
+    if(!ok)markMealImageUnavailable(img);
+    if(ok)img.dataset.mealPhotoLoaded='true';
+    mealReadyResolve(!!ok);
+    if(holdCardForMedia){
+     delete foodCard.dataset.mediaPending;
+     foodCard.style.transition='none';
+     foodCard.style.transform='none';
+     foodCard.style.opacity='1';
+     foodCard.style.visibility='visible';
+     foodCard.style.pointerEvents='auto';
+     syncFoodNextCardVisibility();
+    }
+   }else{
+    mealReadyResolve(false);
    }
-  }else{
+  });}else{
    mealReadyResolve(false);
   }
- });}else{
-  mealReadyResolve(false);
  }
  if(foodCard){
   foodCard.querySelector('.maybe-stamp')?.remove();
@@ -248,7 +266,7 @@ function foodMaybe(item=S.pool[S.index],options={}){
   const nextIndex=foodChoiceIndex(S.pool,(S.index+1)%Math.max(1,S.pool.length),true);
   if(nextIndex>=0)S.index=nextIndex;
  }
- drawFood({swipeHandoff:!!options.fromSwipe});save();
+ drawFood({swipeHandoff:!!options.fromSwipe,preserveCardSurface:!options.fromSwipe});save();
 }
 function resolveFoodAfterDecision(options={}){
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
@@ -272,7 +290,7 @@ function resolveFoodAfterDecision(options={}){
   }
  }
  S.index=Math.max(0,Math.min(S.index,Math.max(0,S.pool.length-1)));
- drawFood(options);save();
+ drawFood({...options,preserveCardSurface:options.preserveCardSurface??!options.swipeHandoff});save();
 }
 function foodBack(){
  if(familyIsBrowseStage('meal')){familyBrowseBack('meal');return;}
@@ -281,7 +299,7 @@ function foodBack(){
  if(!state){legacyFoodBack();updateDecisionBackButtons();return;}
  S.foodActions.pop();
  if(!restoreFoodDecisionState(state))return;
- drawFood();save();updateDecisionBackButtons();
+ drawFood({preserveCardSurface:true});save();updateDecisionBackButtons();
 }
 
 function waitForSwipeImage(img,card,key,timeoutMs=1400){

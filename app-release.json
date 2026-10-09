@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1345,
-  "sourceBranch": "cp1345-remove-homepage-glow",
-  "checkpoint": "CP1345",
-  "deploymentTrigger": "cp1345-remove-homepage-glow",
+  "build": 1346,
+  "sourceBranch": "cp1346-back-restore-no-flash",
+  "checkpoint": "CP1346",
+  "deploymentTrigger": "cp1346-back-restore-no-flash",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained. CP1320: Restaurant handoff no longer hides the newly selected card while asynchronous photo enrichment resolves; the active card exposes its stable restaurant ID for repeat detection. CP1320 was validated by 140 passing automated tests, including successive Restaurant swipes without repeated cut results or blank cards; CP1321 preserves the handoff logic unchanged. CP1320 regression run passed 140 tests, including consecutive Restaurant swipes with no repeats or blank cards; CP1322 preserves swipe logic unchanged. CP1320 passed 140 tests including sequential Restaurant swipes; later CP1322 suite had 135 passed and only 5 identical failures caused by an outdated expected SVG path in the visual test, corrected in CP1323. Swipe business logic unchanged. CP1324/1325 fix the stale waiting Meal card: after a swipe handoff, a guarded callback refreshes the waiting preview only once the newly active Meal is ready, fenced by active row identity and image-load token. Consecutive-swipe regression test checks active and waiting IDs. CP1326 updates next Meal card identity synchronously when the active deck selection changes and fences async preview completion by render generation plus meal ID. New slow-photo handoff regression asserts B no longer remains as the waiting card while B's active photo is pending. CP1327 keeps CP1326 immediate waiting Meal-card identity refresh and async render-sequence fencing, and fixes the release tooling so the delayed-photo regression actually runs. CP1328 retains synchronous waiting Meal-preview identity refresh and async render-sequence fencing; delayed active-image test now uses DOMContentLoaded during blocked-image setup. CP1329 preserves CP1325 sequential active/waiting Meal-card identity assertions and CP1328 slow-photo handoff sequencing; the latest automated run passed both swipe regressions while menu-anchor tests exposed and localized a positioning bug.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -62,5 +62,6 @@
   "desktopUtilityWindowPosition": "CP1341 anchors desktop Manage Meals, History, and Settings directly below the originating hamburger and right-aligns their panel; phone positioning remains unchanged.",
   "desktopDrawerConsistency": "CP1342 aligned desktop drawers. CP1344 applies the same hamburger-relative positioning, shared min(91vw,510px) width, partial-screen dim/blur overlay, and slide/close behavior on phones and desktop for Family Mode, Manage Meals, History, and Settings.",
   "mobileDrawerConsistency": "All four panels use the originating hamburger bottom + 4px and right edge on phones and desktop. The header row stays clear above the partial-screen dim/blur layer, with common width rules, slide animation, close-to-menu behavior, and reduced-motion support.",
-  "homepageEffects": "CP1345 removes the CP1340 logo shimmer, warm golden door light wash, and Home/Restaurant window glow. Preserves the existing door background, homepage layout, text, and tap targets."
+  "homepageEffects": "CP1345 removes the CP1340 logo shimmer, warm golden door light wash, and Home/Restaurant window glow. Preserves the existing door background, homepage layout, text, and tap targets.",
+  "backRestoreAudit": "CP1346 keeps Meal card copy visible while replacement media loads, reuses an already decoded photo without hiding/reloading it, and renders Restaurant Maybe/Back choices immediately while photo enrichment continues."
 }

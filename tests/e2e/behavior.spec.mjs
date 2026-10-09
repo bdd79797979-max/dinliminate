@@ -1585,7 +1585,7 @@ test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
   await expect(page.locator('#home')).toBeVisible();
 
   const css = await page.evaluate(async () => {
-    const response = await fetch('./home.css?v=1345', { cache:'no-store' });
+    const response = await fetch('./home.css?v=1346', { cache:'no-store' });
     if (!response.ok) throw new Error('could not load the current homepage stylesheet');
     return response.text();
   });
@@ -1598,4 +1598,148 @@ test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
   expect(css).not.toContain('html:root .app.home-active .app-topbar .brand-mark::after{');
   expect(css).not.toContain('html:root .app.home-active #home .home-choice-zone::before{');
   expect(errors).toEqual([]);
+});
+
+
+test('CP1346 Maybe and Back restore the exact Meal immediately without a card flash', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 4);
+  await expect.poll(() => page.locator('#foodImg').evaluate(img =>
+    img.dataset.mealPhotoLoaded === 'true' && img.complete && img.naturalWidth > 0
+  ), { timeout: 12000 }).toBe(true);
+
+  const cycles = await page.evaluate(async () => {
+    const { store } = await import('/src/state/store.js');
+    const snapshot = () => {
+      const state = store.get();
+      const item = state.pool[state.index];
+      const card = document.querySelector('#foodCard');
+      const image = document.querySelector('#foodImg');
+      const css = getComputedStyle(card);
+      return {
+        expectedId: String(item?.id || ''),
+        expectedName: String(item?.name || ''),
+        cardId: String(card?.dataset.mealId || ''),
+        cardName: document.querySelector('#foodName')?.textContent?.trim() || '',
+        visibility: css.visibility,
+        opacity: Number(css.opacity),
+        pointerEvents: css.pointerEvents,
+        mediaPending: String(card?.dataset.mediaPending || ''),
+        imageVisibility: getComputedStyle(image).visibility,
+        imageLoaded: String(image.dataset.mealPhotoLoaded || 'false')
+      };
+    };
+    const results = [];
+    for (let i = 0; i < 3; i++) {
+      const before = snapshot();
+      document.querySelector('#foodMaybe').click();
+      const afterMaybe = snapshot();
+      document.querySelector('#foodBack').click();
+      const afterBack = snapshot();
+      results.push({ before, afterMaybe, afterBack });
+    }
+    return results;
+  });
+
+  expect(cycles).toHaveLength(3);
+  for (const [index, result] of cycles.entries()) {
+    const { before, afterMaybe, afterBack } = result;
+    expect(before.cardId, 'starting meal '+index).toBe(before.expectedId);
+    expect(before.cardName).toBe(before.expectedName);
+
+    expect(afterMaybe.cardId, 'Maybe must advance immediately at cycle '+index).not.toBe(before.cardId);
+    expect(afterMaybe.cardId).toBe(afterMaybe.expectedId);
+    expect(afterMaybe.cardName).toBe(afterMaybe.expectedName);
+    expect(afterMaybe.visibility).toBe('visible');
+    expect(afterMaybe.opacity).toBeGreaterThan(0.99);
+    if (afterMaybe.mediaPending === 'true') {
+      expect(afterMaybe.imageVisibility).toBe('hidden');
+      expect(afterMaybe.pointerEvents).toBe('auto');
+    }
+
+    expect(afterBack.cardId, 'Back must restore the exact meal at cycle '+index).toBe(before.cardId);
+    expect(afterBack.cardName).toBe(before.cardName);
+    expect(afterBack.expectedId).toBe(before.expectedId);
+    expect(afterBack.visibility).toBe('visible');
+    expect(afterBack.opacity).toBeGreaterThan(0.99);
+    if (afterBack.mediaPending === 'true') {
+      expect(afterBack.imageVisibility).toBe('hidden');
+      expect(afterBack.pointerEvents).toBe('auto');
+    }
+  }
+
+  await expect.poll(() => page.locator('#foodCard').getAttribute('data-media-pending'), { timeout: 12000 }).toBe(null);
+  await expect.poll(() => page.locator('#foodImg').evaluate(img =>
+    img.dataset.mealPhotoLoaded === 'true' && img.complete && img.naturalWidth > 0
+  ), { timeout: 12000 }).toBe(true);
+  await expectNoPageErrors(errors);
+});
+
+test('CP1346 Restaurant Maybe and Back restore the exact card without photo-prep delay', async ({ page }) => {
+  const errors = await prepare(page);
+  await openRestaurants(page);
+
+  async function snapshot() {
+    return page.evaluate(async () => {
+      const { store } = await import('/src/state/store.js');
+      const card = document.querySelector('#restaurantCard');
+      const id = String(card?.dataset.restaurantId || '');
+      const row = store.get().restaurantPool.find(item => String(item?.id || '') === id);
+      const css = getComputedStyle(card);
+      return {
+        id,
+        name: document.querySelector('#restaurantCard h3')?.textContent?.trim() || '',
+        expectedName: String(row?.name || ''),
+        visibility: css.visibility,
+        opacity: Number(css.opacity),
+        imageKey: String(card?.querySelector('img')?.dataset.restaurantPhotoKey || '')
+      };
+    });
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const before = await snapshot();
+    expect(before.id).toBeTruthy();
+    expect(before.name).toBe(before.expectedName);
+
+    const afterMaybe = await page.evaluate(async () => {
+      document.querySelector('#restMaybe').click();
+      const { store } = await import('/src/state/store.js');
+      const card = document.querySelector('#restaurantCard');
+      const id = String(card?.dataset.restaurantId || '');
+      const row = store.get().restaurantPool.find(item => String(item?.id || '') === id);
+      const css = getComputedStyle(card);
+      return {
+        id, name:document.querySelector('#restaurantCard h3')?.textContent?.trim() || '',
+        expectedName:String(row?.name || ''), visibility:css.visibility, opacity:Number(css.opacity),
+        imageKey:String(card?.querySelector('img')?.dataset.restaurantPhotoKey || '')
+      };
+    });
+    expect(afterMaybe.id, 'Maybe must advance immediately at cycle '+i).not.toBe(before.id);
+    expect(afterMaybe.name).toBe(afterMaybe.expectedName);
+    expect(afterMaybe.visibility).toBe('visible');
+    expect(afterMaybe.opacity).toBeGreaterThan(0.99);
+    expect(afterMaybe.imageKey).toBe(afterMaybe.id);
+
+    const afterBack = await page.evaluate(async () => {
+      document.querySelector('#restBack').click();
+      const { store } = await import('/src/state/store.js');
+      const card = document.querySelector('#restaurantCard');
+      const id = String(card?.dataset.restaurantId || '');
+      const row = store.get().restaurantPool.find(item => String(item?.id || '') === id);
+      const css = getComputedStyle(card);
+      return {
+        id, name:document.querySelector('#restaurantCard h3')?.textContent?.trim() || '',
+        expectedName:String(row?.name || ''), visibility:css.visibility, opacity:Number(css.opacity),
+        imageKey:String(card?.querySelector('img')?.dataset.restaurantPhotoKey || '')
+      };
+    });
+    expect(afterBack.id, 'Back must restore the exact restaurant at cycle '+i).toBe(before.id);
+    expect(afterBack.name).toBe(before.name);
+    expect(afterBack.name).toBe(afterBack.expectedName);
+    expect(afterBack.visibility).toBe('visible');
+    expect(afterBack.opacity).toBeGreaterThan(0.99);
+    expect(afterBack.imageKey).toBe(afterBack.id);
+  }
+  await expectNoPageErrors(errors);
 });

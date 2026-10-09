@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1345,
-  "sourceBranch": "cp1345-remove-homepage-glow",
+  "build": 1346,
+  "sourceBranch": "cp1346-back-restore-no-flash",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1345",
-  "deploymentTrigger": "cp1345-remove-homepage-glow",
+  "checkpoint": "CP1346",
+  "deploymentTrigger": "cp1346-back-restore-no-flash",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -53,5 +53,6 @@
   "utilityPanelPosition": "CP1344 all viewports: Family Mode, Manage Meals, History, and Settings open 4px below the originating hamburger, right-align with it, and share width min(91vw,510px). Backdrop begins below the header row; common slide and close-to-menu behavior; reduced motion supported.",
   "desktopDrawerVerification": "CP1343 adds settled-animation geometry assertions for desktop utility panels and makes shared-menu anchoring tests verify the first menu window under its hamburger; CP1342's four-panel desktop positioning remains unchanged.",
   "mobileDrawerConsistency": "Phone drawer behavior unified across all four panels: anchored top/right, shared panel width, partial-screen backdrop, X placement, slide-in/out, and return to shared menu.",
-  "homepageEffects": "CP1345 removes only CP1340 gold-shine effects from home.css; the wooden-door background, layout, copy and behavior are unchanged."
+  "homepageEffects": "CP1345 removes only CP1340 gold-shine effects from home.css; the wooden-door background, layout, copy and behavior are unchanged.",
+  "backRestoreAudit": "CP1346 immediate Meal and Restaurant Maybe/Back restore; preserves text and card surface during meal image decode and avoids waiting for Restaurant photo-deck prep."
 }

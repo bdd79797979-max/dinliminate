@@ -1127,7 +1127,7 @@ async function restaurantCut(row,options={}){
  S.restaurantActions.push({type:'cut',id:row.id,index:S.restaurantIndex,maybeRound:!!S.restaurantMaybeRound,hadMaybe:!!row._maybe,roundAfter:!!S.restaurantMaybeRound||(Array.isArray(S.restaurantPool)&&S.restaurantPool.some(x=>x._maybe)&&unkept<=1)});
  row._cut=true;
  const remaining=restaurantPoolFiltered();
- if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);await drawRestaurants({swipeHandoff:!!options.fromSwipe});}
+ if(!remaining.length)winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});else{S.restaurantIndex=Math.min(S.restaurantIndex,remaining.length-1);await drawRestaurants({swipeHandoff:true});}
  save();
 }
 
@@ -1142,7 +1142,7 @@ async function restaurantMaybe(row,options={}){
  row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
  if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
- await drawRestaurants({swipeHandoff:!!options.fromSwipe});save();
+ await drawRestaurants({swipeHandoff:true});save();
 }
 
 function restaurantBack(){
@@ -1153,7 +1153,8 @@ function restaurantBack(){
  S.restaurantActions.pop();
  if(!restoreRestaurantDecisionState(state))return;
  restaurantBackBusy=true;
- Promise.resolve(drawRestaurants()).finally(()=>{restaurantBackBusy=false;updateDecisionBackButtons();});
+ // Restore the selected card immediately; photo preparation continues in the background.
+ Promise.resolve(drawRestaurants({swipeHandoff:true})).finally(()=>{restaurantBackBusy=false;updateDecisionBackButtons();});
  save();
 }
 
