@@ -108,8 +108,8 @@ assert.equal(exists('styles.css'),false,'legacy monolithic styles.css must be re
   assert.equal(css('family.css').includes('!important'),false,'family.css must not contain !important');
   assert.equal(css('settings.css').includes('!important'),false,'settings.css must not contain !important');
   assert.equal(css('tutorial.css').includes('!important'),false,'tutorial.css must not contain !important');
-assert.match(index, /<script type="module" src="\\.\\/src\\/main\\.js"><\\/script>/, 'index.html must load native ESM entry');
-assert.doesNotMatch(index, /<script type="module" src="\\.\\/src\\/main\\.js\\?v=/, 'ES module entry URL must not be versioned');
+assert.match(index, /<script type="module" src="\.\/src\/main\.js"><\/script>/, 'index.html must load native ESM entry');
+assert.doesNotMatch(index, /<script type="module" src="\.\/src\/main\.js\?v=/, 'ES module entry URL must not be versioned');
 assert.ok(main.includes("import { FOODS } from '../data/foods.js';"),'main must import foods as ESM');
 assert.ok(main.includes("import RESTAURANT_TAXONOMY from './data/restaurant-taxonomy.js';"),'main must import taxonomy from the source ESM module');
 assert.equal(main.includes('window.__DINLIMINATE_'),false,'production main must not publish custom globals');
