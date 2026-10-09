@@ -1,8 +1,8 @@
 .home h1{font-size:clamp(40px,10vw,56px);line-height:.96;letter-spacing:-.06em;margin:0;max-width:8em}
 .home .brand-mark{margin-left:0}
-html:root .app.home-active{position:fixed;inset:0;width:min(100vw,430px);max-width:430px;height:100dvh;min-height:100dvh;max-height:100dvh;margin:0;padding:0;left:50%;right:auto;transform:translateX(-50%);overflow:hidden;background:#080706 url("./assets/home-door.jpg?v=1109") center center / cover no-repeat;isolation:isolate}
+html:root .app.home-active{position:fixed;inset:0;width:min(100vw,430px);max-width:430px;height:100dvh;min-height:100dvh;max-height:100dvh;margin:0;padding:0;left:50%;right:auto;transform:translateX(-50%);overflow:hidden;background:#080706;isolation:isolate}
 html:root .app.home-active::before, html:root .app.home-active::after, html:root body:has(.app.home-active)::before, html:root body:has(.app.home-active)::after{display:none;content:none;background:none;box-shadow:none}
-html:root .app.home-active #home{position:absolute;inset:0;width:100%;max-width:none;height:100dvh;min-height:100dvh;max-height:100dvh;margin:0;padding:0;overflow:hidden;display:block;background:transparent;text-align:center}
+html:root .app.home-active #home{position:absolute;inset:0;width:100%;max-width:none;height:100dvh;min-height:100dvh;max-height:100dvh;margin:0;padding:0;overflow:hidden;display:block;text-align:center}
 html:root .app.home-active .app-topbar{position:absolute;inset:0 0 auto 0;z-index:80;width:100%;min-height:0;height:auto;margin:0;padding:calc(env(safe-area-inset-top) + 6px) 10px 0;background:transparent;border:0;box-shadow:none}
 html:root .app.home-active .app-topbar .brand-mark{position:relative;margin:0 auto;padding:0;width:max-content;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;z-index:81;filter:drop-shadow(0 2px 7px rgba(0,0,0,.62))}
 html:root .app.home-active .app-topbar .dinliminate-logo-symbol{display:block;width:84px;height:84px;flex:0 0 84px}
