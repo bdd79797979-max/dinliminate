@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1328 decision colors, label-sized gold arrows, and trigger-sized uniform menu windows', async ({ page }) => {
+test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -244,11 +244,11 @@ test('CP1328 decision colors, label-sized gold arrows, and trigger-sized uniform
   const triggerBox = await page.locator('#foodMenu').boundingBox();
   const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
   const closeBox = await page.locator('#drawerClose').boundingBox();
-  const rows = await page.locator('#drawer .drawer-row').evaluateAll(els => els.map(el => {
+  const rows = await page.locator('#drawer .drawer-window').evaluateAll(els => els.map(el => {
     const r=el.getBoundingClientRect(),s=getComputedStyle(el);
     return {id:el.id,y:r.y,height:r.height,radius:s.borderRadius,border:s.borderWidth+' '+s.borderStyle+' '+s.borderColor,background:s.backgroundColor+'|'+s.backgroundImage,padding:s.padding,isWindow:el.classList.contains('drawer-window')};
   }));
-  const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
+  const firstMenuRow = await page.locator('#drawer .drawer-window').first().boundingBox();
   expect(triggerBox).not.toBeNull();
   expect(drawerHead).not.toBeNull();
   expect(closeBox).not.toBeNull();
