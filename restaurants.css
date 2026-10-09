@@ -935,7 +935,7 @@ html:root #restaurant .restaurant-card-stack > .card{
   }
 }
 
-/* CP1354: keep the Radius field black in resting, hover, focused, and active
+/* CP1355: keep the Radius field black in resting, hover, focused, and active
    states. Native mobile select focus can otherwise paint a gray control face
    even when the unfocused Radius control is transparent. */
 html:root #restaurant .location-main .radius-control,
@@ -944,23 +944,23 @@ html:root #restaurant .location-main .radius-control:focus,
 html:root #restaurant .location-main .radius-control:focus-visible,
 html:root #restaurant .location-main .radius-control:focus-within,
 html:root #restaurant .location-main .radius-control:active{
-  background:#090909 !important;
-  background-color:#090909 !important;
-  background-image:none !important;
-  box-shadow:none !important;
+  background:#090909;
+  background-color:#090909;
+  background-image:none;
+  box-shadow:none;
 }
 html:root #restaurant .location-main .radius-select,
 html:root #restaurant .location-main .radius-select:hover,
 html:root #restaurant .location-main .radius-select:focus,
 html:root #restaurant .location-main .radius-select:focus-visible,
 html:root #restaurant .location-main .radius-select:active{
-  -webkit-appearance:none !important;
-  appearance:none !important;
-  background:#090909 !important;
-  background-color:#090909 !important;
-  background-image:none !important;
+  -webkit-appearance:none;
+  appearance:none;
+  background:#090909;
+  background-color:#090909;
+  background-image:none;
   color-scheme:dark;
-  box-shadow:none !important;
+  box-shadow:none;
   -webkit-tap-highlight-color:transparent;
 }
 html:root #restaurant .location-main .radius-select option{
