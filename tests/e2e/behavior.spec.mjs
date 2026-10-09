@@ -1475,3 +1475,35 @@ test('CP1337 uses the five exact selected Pexels photos and normalizes restored 
   });
   await expectNoPageErrors(errors);
 });
+
+
+test('CP1338 keeps the shared menu directly under its hamburger and Family Mode exits to the menu', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.goto('/');
+  await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
+  await page.locator('#menu').click();
+  await expect(page.locator('#drawer')).toBeVisible();
+
+  const geometry = await page.evaluate(() => {
+    const trigger = document.querySelector('#menu').getBoundingClientRect();
+    const first = document.querySelector('#drawer .drawer-window').getBoundingClientRect();
+    const close = document.querySelector('#drawerClose').getBoundingClientRect();
+    return {
+      gap: first.top - trigger.bottom,
+      closeTopDelta: Math.abs(close.top - trigger.top),
+      closeRightDelta: Math.abs(close.right - trigger.right)
+    };
+  });
+  expect(geometry.gap).toBeGreaterThanOrEqual(2);
+  expect(geometry.gap).toBeLessThanOrEqual(5);
+  expect(geometry.closeTopDelta).toBeLessThanOrEqual(1);
+  expect(geometry.closeRightDelta).toBeLessThanOrEqual(1);
+
+  await page.locator('#familyMode').click();
+  await expect(page.locator('#family')).toBeVisible();
+  await page.locator('#familyCloseTop').click();
+  await expect(page.locator('#family')).toBeHidden({ timeout: 5000 });
+  await expect(page.locator('#drawer')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('#drawer .drawer-window')).toHaveCount(4);
+  await expectNoPageErrors(errors);
+});

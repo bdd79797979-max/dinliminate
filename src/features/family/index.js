@@ -2,7 +2,7 @@ import { store } from '../../state/store.js';
 const S = store.get();
 import { $ } from '../../ui/dom.js';
 import { esc } from '../../ui/esc.js';
-import { show, home, closeFamilyDrawer } from '../../main.js';
+import { show, home, closeFamilyDrawerToMenu } from '../../main.js';
 import { startFood } from '../swipe/index.js';
 import { openRestaurant, restaurantPoolFiltered, drawRestaurants } from '../restaurants/index.js';
 import { drawFood } from '../swipe/index.js';
@@ -197,7 +197,7 @@ async function familyEndDinner(){
 }
 async function familyLeave(){const s=familySessionRead();if(!await appConfirm('Leave Family Mode',s?.family?.activeRoundId?'A Family dinner is active. You can leave and rejoin later.':'Leave this Family on this device?','Leave'))return;familyResetCompareState();S.familyNormalMode='idle';S.familyNormalAutoResume=false;stopFamilyLobbyPolling();if(s?.token){try{await familyApi('leave',{token:s.token});}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not leave the Family.','error');return;}}familySessionClear();familyShowEntry();show('family');}
 async function familyRotateCode(){const s=familySessionRead();if(!s?.token)return;try{const d=await familyApi('rotate-code',{token:s.token});familySessionWrite({...s,family:{...(s.family||{}),joinCode:d.joinCode}});await familyRefreshState();}catch(err){familySetStatus('familyLobbyStatus',err.message||'Could not regenerate the code.','error');}}
-function familyBackFromMode(){closeFamilyDrawer();}
+function familyBackFromMode(){closeFamilyDrawerToMenu();}
 
 $('foodHomeBack')?.addEventListener('click',(event)=>{event.preventDefault();event.stopPropagation();home();});
 $('restaurantHomeBack')?.addEventListener('click',(event)=>{event.preventDefault();event.stopPropagation();home();});

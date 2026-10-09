@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1337';
+const APP_BUILD = '1338';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1163,12 +1163,24 @@ function closeFamilyDrawer(immediate=false,restoreFocus=true) {
  window.setTimeout(finish,180);
 }
 
+function closeFamilyDrawerToMenu(){
+ const trigger=familyDrawerReturnFocus;
+ closeFamilyDrawer(false,false);
+ window.setTimeout(()=>{
+  const visible=el=>!!el&&el.isConnected&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';
+  const fallbackId=({home:'menu',food:'foodMenu',restaurant:'restaurantMenu',winner:'winnerMenu'})[S.screen]||'menu';
+  const fallback=$(fallbackId);
+  const target=visible(trigger)?trigger:(visible(fallback)?fallback:null);
+  if(target)openDrawer({currentTarget:target});
+ },190);
+}
+
 function familyDrawerKeydown(event){
  if(!S.familyDrawerOpen)return;
  const family=$('family');
  if(!family)return;
  if(event.key==='Escape'){
-  event.preventDefault();closeFamilyDrawer();return;
+  event.preventDefault();closeFamilyDrawerToMenu();return;
  }
  if(event.key!=='Tab')return;
  const focusable=[...family.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])')]
@@ -1374,8 +1386,6 @@ const openDrawer=(event)=>{
     const rect=trigger.getBoundingClientRect();
     const top=Math.max(0,rect.top);
     const right=Math.max(0,(document.documentElement.clientWidth||window.innerWidth)-rect.right);
-    const desktop=window.matchMedia('(min-width: 601px)').matches;
-    drawer.style.setProperty('--drawer-panel-top',(desktop?Math.max(0,rect.bottom+4):0)+'px');
     drawer.style.setProperty('--drawer-trigger-top',top+'px');
     drawer.style.setProperty('--drawer-trigger-right',right+'px');
     drawer.style.setProperty('--drawer-trigger-width',rect.width+'px');
@@ -1579,6 +1589,6 @@ export { HISTORY_KEY };
 export { RESTAURANT_PHOTO_PREFETCH_COUNT, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE };
 
 
-export { foodQuickImage, foodPhoto, foodPhotoFallback, restaurantFallbackImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, closeFamilyDrawer, openModal, home, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, markMealImageUnavailable, loadMealPhotoCandidates, ensureMealCardPhotoPager, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, previewDecisionCount, familyHideWinnerMeta, APP_VERSION, APP_BUILD, APP_BUILD_DATE, DEFAULT_FOOD_IMAGE, FINAL_FOOD_IMAGE, FOOD_QUICK, DEFAULT_MEAL_TIME_DEFS, normKey, allFoods, foodQuickLabels, getDefaultFoods, MEAL_AUTOFILL_ENABLED, removeFoodOverlays, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, restaurantWebsiteCache, restaurantWebsiteInflight, restaurantPhotoCache, restaurantPhotoMissCache, restaurantPhotoInflight, resetRestaurantPhotoCaches, bindMealPhotoCountControls, hydrateMealPhotoGallery, navigateFromDrawer };
+export { foodQuickImage, foodPhoto, foodPhotoFallback, restaurantFallbackImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, closeFamilyDrawer, closeFamilyDrawerToMenu, openModal, home, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, markMealImageUnavailable, loadMealPhotoCandidates, ensureMealCardPhotoPager, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, previewDecisionCount, familyHideWinnerMeta, APP_VERSION, APP_BUILD, APP_BUILD_DATE, DEFAULT_FOOD_IMAGE, FINAL_FOOD_IMAGE, FOOD_QUICK, DEFAULT_MEAL_TIME_DEFS, normKey, allFoods, foodQuickLabels, getDefaultFoods, MEAL_AUTOFILL_ENABLED, removeFoodOverlays, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, restaurantWebsiteCache, restaurantWebsiteInflight, restaurantPhotoCache, restaurantPhotoMissCache, restaurantPhotoInflight, resetRestaurantPhotoCaches, bindMealPhotoCountControls, hydrateMealPhotoGallery, navigateFromDrawer };
 
 

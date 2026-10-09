@@ -291,12 +291,12 @@ html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
 /* CP1335: desktop drawer geometry is tied to the actual hamburger, not the centered app's width. */
 @media(min-width:601px){
   html:root .app > #drawer.drawer{
-    position:fixed;top:var(--drawer-panel-top,0px);right:var(--drawer-trigger-right,0px);
+    position:fixed;top:0;right:var(--drawer-trigger-right,0px);
     left:auto;bottom:auto;width:min(91vw,390px);
-    height:calc(100dvh - var(--drawer-panel-top,0px));padding-top:0;
+    height:100dvh;padding-top:var(--drawer-trigger-top,calc(env(safe-area-inset-top) + 8px));
   }
   html:root .app > #drawer .drawer-close{
-    top:0;right:0;width:var(--drawer-trigger-width,40px);min-width:var(--drawer-trigger-width,40px);
+    top:var(--drawer-trigger-top,0px);right:0;width:var(--drawer-trigger-width,40px);min-width:var(--drawer-trigger-width,40px);
     height:var(--drawer-trigger-height,40px);min-height:var(--drawer-trigger-height,40px);
   }
 }
