@@ -157,7 +157,7 @@ for(const asset of versionedAssets){
  assert.ok(index.includes(asset),'index.html missing versioned asset: '+asset);
  assert.ok(sw.includes(asset),'sw.js missing versioned asset: '+asset);
 }
-const shellCacheName='dinliminate-shell-v1309';
+const shellCacheName='dinliminate-shell-v'+build;
 assert.ok(sw.includes("const CACHE='"+shellCacheName+"'"),'service-worker shell cache version must be explicitly bumped');
 const srcFiles=[];
 const walkSrc=dir=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,entry.name);if(entry.isDirectory())walkSrc(full);else srcFiles.push('./'+path.relative(root,full).split(path.sep).join('/'));}};
