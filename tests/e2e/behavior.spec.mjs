@@ -443,3 +443,117 @@ test('restaurant decision state survives reload', async ({ page }) => {
 
   await expectNoPageErrors(errors);
 });
+
+
+test('Home door background remains confined to the Home route', async ({ page }) => {
+  const errors = await prepare(page);
+  const readBackgroundState = () => page.evaluate(() => {
+    const app = document.querySelector('.app');
+    const home = document.querySelector('#home');
+    return {
+      homeActive: app.classList.contains('home-active'),
+      appBackground: getComputedStyle(app).backgroundImage,
+      homeBackground: getComputedStyle(home).backgroundImage,
+      homeDisplay: getComputedStyle(home).display,
+      foodDisplay: getComputedStyle(document.querySelector('#food')).display,
+      restaurantDisplay: getComputedStyle(document.querySelector('#restaurant')).display,
+      winnerDisplay: getComputedStyle(document.querySelector('#winner')).display
+    };
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#home')).toBeVisible();
+  let state = await readBackgroundState();
+  expect(state.homeActive).toBe(true);
+  expect(state.homeBackground).toContain('home-door.jpg');
+  expect(state.appBackground).not.toContain('home-door.jpg');
+
+  await page.locator('#foodStart').click();
+  await expect(page.locator('#food')).toBeVisible();
+  await expect(page.locator('#home')).toBeHidden();
+  state = await readBackgroundState();
+  expect(state.homeActive).toBe(false);
+  expect(state.appBackground).not.toContain('home-door.jpg');
+  expect(state.homeDisplay).toBe('none');
+  expect(state.foodDisplay).not.toBe('none');
+
+  await page.locator('#foodChoose').click();
+  await expect(page.locator('#winner')).toBeVisible();
+  state = await readBackgroundState();
+  expect(state.appBackground).not.toContain('home-door.jpg');
+  expect(state.homeDisplay).toBe('none');
+  expect(state.winnerDisplay).not.toBe('none');
+
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  state = await readBackgroundState();
+  expect(state.homeActive).toBe(false);
+  expect(state.appBackground).not.toContain('home-door.jpg');
+  expect(state.homeDisplay).toBe('none');
+  expect(state.restaurantDisplay).not.toBe('none');
+  await expectNoPageErrors(errors);
+});
+
+test('Meal and Restaurant decision controls stay aligned, visible, and styled on mobile', async ({ page }) => {
+  const errors = await prepare(page);
+  const viewport = page.viewportSize();
+  expect([360, 375, 390, 412]).toContain(viewport.width);
+
+  async function expectDecisionRow(ids) {
+    const boxes = [];
+    for (const id of ids) {
+      const control = page.locator('#' + id);
+      await expect(control, '#' + id + ' should be visible at ' + viewport.width + 'px').toBeVisible();
+      const box = await control.boundingBox();
+      expect(box, '#' + id + ' should have a rendered box').not.toBeNull();
+      expect(box.width, '#' + id + ' width').toBeGreaterThanOrEqual(40);
+      expect(box.height, '#' + id + ' height').toBeGreaterThanOrEqual(40);
+      expect(box.x, '#' + id + ' left edge').toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, '#' + id + ' right edge').toBeLessThanOrEqual(viewport.width + 1);
+      const style = await control.evaluate(el => {
+        const css = getComputedStyle(el);
+        return { backgroundColor: css.backgroundColor, backgroundImage: css.backgroundImage, borderRadius: css.borderRadius };
+      });
+      expect(style.backgroundColor !== 'rgba(0, 0, 0, 0)' || style.backgroundImage !== 'none',
+        '#' + id + ' should have its intentional button treatment').toBe(true);
+      expect(style.borderRadius).not.toBe('0px');
+      boxes.push(box);
+    }
+    for (let index = 1; index < boxes.length; index++) {
+      expect(boxes[index].x, ids[index] + ' should follow ' + ids[index - 1])
+        .toBeGreaterThanOrEqual(boxes[index - 1].x + boxes[index - 1].width - 1);
+    }
+    const centers = boxes.map(box => box.y + box.height / 2);
+    expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(16);
+  }
+
+  await seedMeals(page, 3);
+  await expectDecisionRow(['foodBack', 'foodCut', 'foodMaybe', 'foodChoose']);
+
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  await expectDecisionRow(['restBack', 'restCut', 'restMaybe', 'restChoose']);
+  await expectNoPageErrors(errors);
+});
+
+test('successive Meal swipes never reintroduce a cut card', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 5);
+  const removedIds = [];
+
+  for (let index = 0; index < 4; index++) {
+    await waitForDecisionIdle(page, '#foodCard');
+    const currentId = await page.locator('#foodCard').getAttribute('data-meal-id');
+    expect(currentId).toBeTruthy();
+    expect(removedIds).not.toContain(currentId);
+    removedIds.push(currentId);
+    await swipeMeal(page, 'left');
+  }
+
+  await waitForDecisionIdle(page, '#foodCard');
+  const survivorId = await page.locator('#foodCard').getAttribute('data-meal-id');
+  expect(survivorId).toBeTruthy();
+  expect(removedIds).not.toContain(survivorId);
+  await expect(page.locator('#foodMaybeDeck')).toHaveAttribute('data-all-count', '1');
+  await expectNoPageErrors(errors);
+});
