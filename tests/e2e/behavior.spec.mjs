@@ -541,8 +541,22 @@ test('successive Meal swipes never reintroduce a cut card', async ({ page }) => 
   await seedMeals(page, 5);
   const removedIds = [];
 
+  async function expectCardReadyForNextSwipe() {
+    await expect(page.locator('#foodCard')).toBeVisible();
+    await expect.poll(() => page.locator('#foodCard').evaluate(el => {
+      const css = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      return css.visibility === 'visible'
+        && Number(css.opacity) > 0.99
+        && css.pointerEvents === 'auto'
+        && rect.left >= -1
+        && rect.right <= window.innerWidth + 1;
+    }), { timeout: 12000 }).toBe(true);
+  }
+
   for (let index = 0; index < 4; index++) {
     await waitForDecisionIdle(page, '#foodCard');
+    await expectCardReadyForNextSwipe();
     const currentId = await page.locator('#foodCard').getAttribute('data-meal-id');
     expect(currentId).toBeTruthy();
     expect(removedIds).not.toContain(currentId);
@@ -551,6 +565,7 @@ test('successive Meal swipes never reintroduce a cut card', async ({ page }) => 
   }
 
   await waitForDecisionIdle(page, '#foodCard');
+  await expectCardReadyForNextSwipe();
   const survivorId = await page.locator('#foodCard').getAttribute('data-meal-id');
   expect(survivorId).toBeTruthy();
   expect(removedIds).not.toContain(survivorId);
@@ -561,26 +576,36 @@ test('successive Meal swipes never reintroduce a cut card', async ({ page }) => 
 
 test('Meal handoff keeps the next card hidden until its matching photo is ready', async ({ page }) => {
   const errors = await prepare(page);
-  const catalogResponse = await page.request.get('/data/foods.js');
-  expect(catalogResponse.ok()).toBe(true);
-  const source = await catalogResponse.text();
-  const start = source.indexOf('[');
-  const end = source.lastIndexOf('];');
-  expect(start).toBeGreaterThanOrEqual(0);
-  expect(end).toBeGreaterThan(start);
-  const catalog = JSON.parse(source.slice(start, end + 1));
-  const target = catalog[1];
-  expect(target && target.id).toBeTruthy();
-  const refs = [target.officialImage, target.image, target.backupImage, ...(Array.isArray(target.images) ? target.images : [])]
-    .filter(value => typeof value === 'string' && /^https:\/\//i.test(value));
-  const targetUrls = new Set(refs.map(value => new URL(value).href));
-  expect(targetUrls.size).toBeGreaterThan(0);
+  await seedMeals(page, 5);
 
-  // Register after prepare() so this specific route wins over the fast image stub.
-  await page.route(url =>
-    url.pathname === '/api/image' && targetUrls.has(url.searchParams.get('url') || ''),
-  async route => {
-    await new Promise(resolve => setTimeout(resolve, 900));
+  const target = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find(value => value.startsWith('dinliminate:v1'));
+    const saved = JSON.parse(localStorage.getItem(key) || '{}');
+    const row = saved.pool?.[4];
+    return {
+      id: row?.id,
+      urls: [row?.officialImage, row?.image, row?.backupImage, ...(Array.isArray(row?.images) ? row.images : [])]
+        .filter(value => typeof value === 'string' && /^https:\/\//i.test(value))
+    };
+  });
+  expect(target.id).toBeTruthy();
+  const targetPaths = new Set(target.urls.map(value => new URL(value).pathname));
+  expect(targetPaths.size).toBeGreaterThan(0);
+
+  // The default visual preloader warms only the next three cards. Target the
+  // fifth seeded meal and hold its request behind a gate for deterministic
+  // control over the pending-photo interval.
+  let releaseTargetPhoto;
+  const targetPhotoGate = new Promise(resolve => { releaseTargetPhoto = resolve; });
+  let delayedRequests = 0;
+  await page.route(url => {
+    const remote = url.searchParams.get('url') || '';
+    if (url.pathname !== '/api/image' || url.searchParams.get('meal') !== '1' || !remote) return false;
+    try { return targetPaths.has(new URL(remote).pathname); }
+    catch { return false; }
+  }, async route => {
+    delayedRequests += 1;
+    await targetPhotoGate;
     await route.fulfill({
       status: 200,
       contentType: 'image/png',
@@ -589,10 +614,17 @@ test('Meal handoff keeps the next card hidden until its matching photo is ready'
     });
   });
 
-  await seedMeals(page, 3);
-  await expect(page.locator('#foodCard')).not.toHaveAttribute('data-meal-id', String(target.id));
-  await swipeMeal(page, 'left');
+  for (let index = 0; index < 4; index++) {
+    await expect(page.locator('#foodCard')).toBeVisible();
+    await expect.poll(() => page.locator('#foodCard').evaluate(el => {
+      const css = getComputedStyle(el);
+      return css.visibility === 'visible' && css.pointerEvents === 'auto';
+    }), { timeout: 12000 }).toBe(true);
+    await swipeMeal(page, 'left');
+  }
+
   await expect(page.locator('#foodCard')).toHaveAttribute('data-meal-id', String(target.id));
+  await expect.poll(() => delayedRequests).toBeGreaterThan(0);
   await expect(page.locator('#foodCard')).toHaveAttribute('data-media-pending', 'true');
   const pendingStyle = await page.locator('#foodCard').evaluate(el => {
     const css = getComputedStyle(el);
@@ -602,6 +634,7 @@ test('Meal handoff keeps the next card hidden until its matching photo is ready'
   expect(pendingStyle.opacity).toBeLessThanOrEqual(0.01);
   expect(pendingStyle.pointerEvents).toBe('none');
 
+  releaseTargetPhoto();
   await expect.poll(() => page.locator('#foodCard').getAttribute('data-media-pending'), { timeout: 12000 }).toBe(null);
   await expect.poll(() => page.locator('#foodCard').evaluate(el => getComputedStyle(el).visibility), { timeout: 12000 }).toBe('visible');
   await expectNoPageErrors(errors);
