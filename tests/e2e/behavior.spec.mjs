@@ -639,3 +639,35 @@ test('Meal handoff keeps the next card hidden until its matching photo is ready'
   await expect.poll(() => page.locator('#foodCard').evaluate(el => getComputedStyle(el).visibility), { timeout: 12000 }).toBe('visible');
   await expectNoPageErrors(errors);
 });
+
+
+test('Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
+  const errors = await prepare(page);
+  await openRestaurants(page);
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
+
+  const card = page.locator('#restaurantCard');
+  const box = await card.boundingBox();
+  expect(box).toBeTruthy();
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const delta = Math.max(125, box.width * 0.42);
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - delta, y, { steps: 10 });
+  await page.mouse.up();
+
+  await expect.poll(() => page.locator('#restaurantCard h3').innerText(), { timeout: 12000 })
+    .toBe('Mock Taco House');
+  await expect.poll(() => page.locator('#restaurantCard').evaluate(el => {
+    const css = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return css.visibility === 'visible'
+      && Number(css.opacity) > 0.99
+      && css.pointerEvents === 'auto'
+      && rect.left >= -12
+      && rect.right <= window.innerWidth + 12;
+  }), { timeout: 12000 }).toBe(true);
+  await expectNoPageErrors(errors);
+});
