@@ -1885,3 +1885,81 @@ test('Tour button and first guidance bubble use Tour wording', async ({ page }) 
   await expect(page.locator('#tutorialLayer')).toHaveClass(/hidden/, { timeout: 5000 });
   await expectNoPageErrors(errors);
 });
+
+
+test('phone panel close actions restore the main menu before the panel closes', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
+  await expect(page.locator('#home')).toBeVisible();
+
+  await page.evaluate(() => {
+    window.__panelCloseHandoffSamples = {};
+    document.addEventListener('click', event => {
+      const target = event.target instanceof Element ? event.target : null;
+      let key = '';
+      if (target?.closest('#familyCloseTop')) key = 'family';
+      else if (target?.closest('#manageFoodsModal [data-close]')) key = 'manage';
+      else if (target?.closest('#historyModal [data-close]')) key = 'history';
+      else if (target?.closest('#settingsModal [data-close]')) key = 'settings';
+      if (!key) return;
+
+      queueMicrotask(() => {
+        const drawer = document.querySelector('#drawer');
+        const drawerBg = document.querySelector('#drawerBg');
+        const familyBg = document.querySelector('#familyDrawerBg');
+        const backdropId = {
+          manage: 'manageFoodsModalBg',
+          history: 'historyModalBg',
+          settings: 'settingsModalBg'
+        }[key];
+        const panelBg = backdropId ? document.getElementById(backdropId) : familyBg;
+        window.__panelCloseHandoffSamples[key] = {
+          drawerHidden: drawer?.classList.contains('hidden') === true,
+          drawerOpen: drawer?.classList.contains('is-open') === true,
+          drawerBgHidden: drawerBg?.classList.contains('hidden') === true,
+          drawerBgOpen: drawerBg?.classList.contains('is-open') === true,
+          panelBgHidden: panelBg?.classList.contains('hidden') === true,
+          panelBgOpacity: panelBg ? Number(getComputedStyle(panelBg).opacity) : 0
+        };
+      });
+    }, true);
+  });
+
+  const expectMenuHandoff = async key => {
+    await expect.poll(() => page.evaluate(name =>
+      Boolean(window.__panelCloseHandoffSamples?.[name]), key
+    )).toBe(true);
+    const sample = await page.evaluate(name => window.__panelCloseHandoffSamples[name], key);
+    expect(sample.drawerHidden, key + ': menu should be restored in the close click task').toBe(false);
+    expect(sample.drawerOpen, key + ': menu should already be opening').toBe(true);
+    expect(sample.drawerBgHidden, key + ': menu backdrop should cover the previous screen').toBe(false);
+    expect(sample.drawerBgOpen, key + ': menu backdrop should already be opaque').toBe(true);
+  };
+
+  await page.locator('#menu').click();
+  await expect(page.locator('#drawer')).toHaveClass(/is-open/);
+  await page.locator('#familyMode').click();
+  await expect(page.locator('#familyCloseTop')).toBeVisible({ timeout: 5000 });
+  await page.locator('#familyCloseTop').click();
+  await expectMenuHandoff('family');
+  await expect(page.locator('#family')).toBeHidden({ timeout: 5000 });
+  await expect(page.locator('#drawer')).toHaveClass(/is-open/, { timeout: 5000 });
+
+  for (const item of [
+    { key: 'manage', button: '#manage', modal: '#manageFoodsModal' },
+    { key: 'history', button: '#history', modal: '#historyModal' },
+    { key: 'settings', button: '#settings', modal: '#settingsModal' }
+  ]) {
+    await page.locator(item.button).click();
+    await expect(page.locator(item.modal)).toBeVisible({ timeout: 5000 });
+    await page.locator(item.modal + ' [data-close]').click();
+    await expectMenuHandoff(item.key);
+    await expect(page.locator(item.modal)).toBeHidden({ timeout: 5000 });
+    await expect(page.locator('#drawer')).toHaveClass(/is-open/, { timeout: 5000 });
+  }
+
+  await expectNoPageErrors(errors);
+});
+

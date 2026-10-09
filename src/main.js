@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1352';
+const APP_BUILD = '1353';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1174,14 +1174,17 @@ function closeFamilyDrawer(immediate=false,restoreFocus=true) {
 
 function closeFamilyDrawerToMenu(){
  const trigger=familyDrawerReturnFocus;
+ const visible=el=>!!el&&el.isConnected&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';
+ const fallbackId=({home:'menu',food:'foodMenu',restaurant:'restaurantMenu',winner:'winnerMenu'})[S.screen]||'menu';
+ const fallback=$(fallbackId);
+ const target=visible(trigger)?trigger:(visible(fallback)?fallback:null);
+ // Restore the main menu and its full-screen cover before the Family panel
+ // begins sliding away. The cover layers overlap, so the prior screen is
+ // never exposed while the phone UI hands control back to the menu.
+ if(target)openDrawer({currentTarget:target});
+ $('drawer')?.classList.add('is-open');
+ $('drawerBg')?.classList.add('is-open');
  closeFamilyDrawer(false,false);
- window.setTimeout(()=>{
-  const visible=el=>!!el&&el.isConnected&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';
-  const fallbackId=({home:'menu',food:'foodMenu',restaurant:'restaurantMenu',winner:'winnerMenu'})[S.screen]||'menu';
-  const fallback=$(fallbackId);
-  const target=visible(trigger)?trigger:(visible(fallback)?fallback:null);
-  if(target)openDrawer({currentTarget:target});
- },190);
 }
 
 function familyDrawerKeydown(event){

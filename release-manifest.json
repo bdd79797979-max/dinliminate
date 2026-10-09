@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1352,
-  "sourceBranch": "cp1352-tour-wording-test-expectation",
+  "build": 1353,
+  "sourceBranch": "cp1353-panel-close-handoff",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1352",
-  "deploymentTrigger": "cp1352-tour-wording-test-expectation",
+  "checkpoint": "CP1353",
+  "deploymentTrigger": "cp1353-panel-close-handoff",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -56,5 +56,6 @@
   "homepageEffects": "CP1345 removes only CP1340 gold-shine effects from home.css; the wooden-door background, layout, copy and behavior are unchanged.",
   "backRestoreAudit": "CP1348 keeps restored card photos and titles paired on Back, persists Restaurant photo identity in decision history, and tests Back while the next Meal photo request is held.",
   "menuTransitionAudit": "CP1350 uses a time-ordered menu cover handoff and regression checks that the prior screen's full-screen backdrop remains opaque until destination panel covers are ready.",
-  "tourTerminologyAudit": "Visible help and status copy uses Tour wording: the first bubble title is TOUR and on/off status copy says Tour Mode. The first guide bubble/body and existing toggle behavior are covered by the regression test."
+  "tourTerminologyAudit": "Visible help and status copy uses Tour wording: the first bubble title is TOUR and on/off status copy says Tour Mode. The first guide bubble/body and existing toggle behavior are covered by the regression test.",
+  "panelCloseHandoffAudit": "Family Mode now opens the main menu and its opaque cover before the family panel begins closing. Manage Meals, History, and Settings restore the main menu synchronously before their panel/backdrop close transitions. This prevents a frame of the previous screen becoming visible on phone close."
 }

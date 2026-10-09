@@ -146,6 +146,11 @@ const close=()=>{
  if(closed)return;
  closed=true;
  if(isDrawerUtilityModal){
+  // Restore the main menu beneath this panel before either the panel or its
+  // backdrop starts closing. The menu's own full-screen cover remains active
+  // under the utility backdrop, so the previous Home/Meals/Restaurants screen
+  // cannot flash through during the handoff.
+  returnToMenuWithoutFlash();
   if(anchoredUtilityModal){
    modal.classList.remove('modal-open');
    modal.classList.add('modal-closing');
@@ -154,12 +159,10 @@ const close=()=>{
    window.setTimeout(()=>{
     modal.remove();
     bg.remove();
-    returnToMenuWithoutFlash();
     if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
     if(id==='settingsModal')removeFoodOverlays();
    },180);
   }else{
-   returnToMenuWithoutFlash();
    modal.remove();
    bg.remove();
    if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
