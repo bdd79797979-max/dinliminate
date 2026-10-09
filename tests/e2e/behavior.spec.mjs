@@ -724,7 +724,7 @@ test('Meal handoff keeps the next card hidden until its matching photo is ready'
 });
 
 
-test('Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
+test('CP1320 Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
   const errors = await prepare(page);
   await openRestaurants(page);
   await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
@@ -752,6 +752,78 @@ test('Restaurant swipe advances to the next result and resets the outgoing card'
       && rect.left >= -12
       && rect.right <= window.innerWidth + 12;
   }), { timeout: 12000 }).toBe(true);
+  await expectNoPageErrors(errors);
+});
+
+test('CP1320 successive Restaurant swipes never repeat a cut result or leave a blank card', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.route(url => url.pathname === '/api/restaurants' && url.searchParams.get('mode') === 'search', async route => {
+    const third = {
+      ...MOCK_RESTAURANTS[1],
+      id: 'mock-bbq',
+      name: 'Mock BBQ Table',
+      category: 'BBQ',
+      cuisine: 'bbq',
+      address: '789 Cedar Rd, Clarksville, TN 37040',
+      lat: 36.533,
+      lon: -87.357,
+      distance: 0.4
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        radiusMiles: 10,
+        searchLatencyMs: 2,
+        hoursTimeZone: 'America/Chicago',
+        providerErrors: [],
+        results: [...MOCK_RESTAURANTS, third]
+      })
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await expect.poll(() => page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'), { timeout: 12000 }).toBe('3');
+
+  const seenIds = [];
+  const expectedNames = ['Mock Pizza Kitchen', 'Mock Taco House', 'Mock BBQ Table'];
+  for (let step = 0; step < 2; step++) {
+    const card = page.locator('#restaurantCard');
+    await expect(card.locator('h3')).toHaveText(expectedNames[step]);
+    const id = await card.getAttribute('data-restaurant-id');
+    expect(id).toBeTruthy();
+    expect(seenIds).not.toContain(id);
+    seenIds.push(id);
+
+    const box = await card.boundingBox();
+    expect(box).toBeTruthy();
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    const delta = Math.max(125, box.width * 0.42);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x - delta, y, { steps: 10 });
+    await page.mouse.up();
+
+    const next = page.locator('#restaurantCard');
+    await expect.poll(() => next.getAttribute('data-restaurant-id'), { timeout: 12000 })
+      .not.toBe(id);
+    await expect(next.locator('h3')).toHaveText(expectedNames[step + 1], { timeout: 12000 });
+    await expect.poll(() => next.evaluate(el => {
+      const css = getComputedStyle(el);
+      return css.visibility === 'visible'
+        && Number(css.opacity) > 0.99
+        && css.pointerEvents === 'auto';
+    }), { timeout: 7000 }).toBe(true);
+  }
+
+  const finalId = await page.locator('#restaurantCard').getAttribute('data-restaurant-id');
+  expect(finalId).toBeTruthy();
+  expect(seenIds).not.toContain(finalId);
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock BBQ Table');
   await expectNoPageErrors(errors);
 });
 
