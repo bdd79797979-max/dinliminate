@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1347,
-  "sourceBranch": "cp1347-keep-restored-card-visible",
+  "build": 1348,
+  "sourceBranch": "cp1348-back-previous-card",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1347",
-  "deploymentTrigger": "cp1347-keep-restored-card-visible",
+  "checkpoint": "CP1348",
+  "deploymentTrigger": "cp1348-back-previous-card",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -54,5 +54,5 @@
   "desktopDrawerVerification": "CP1343 adds settled-animation geometry assertions for desktop utility panels and makes shared-menu anchoring tests verify the first menu window under its hamburger; CP1342's four-panel desktop positioning remains unchanged.",
   "mobileDrawerConsistency": "Phone drawer behavior unified across all four panels: anchored top/right, shared panel width, partial-screen backdrop, X placement, slide-in/out, and return to shared menu.",
   "homepageEffects": "CP1345 removes only CP1340 gold-shine effects from home.css; the wooden-door background, layout, copy and behavior are unchanged.",
-  "backRestoreAudit": "CP1347 preserves Meal card copy during deferred media, reuses decoded Meal photos on Back, and restores the selected Restaurant's exact ready photo with its matching row."
+  "backRestoreAudit": "CP1348 keeps restored card photos and titles paired on Back, persists Restaurant photo identity in decision history, and tests Back while the next Meal photo request is held."
 }

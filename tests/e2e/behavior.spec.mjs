@@ -1510,7 +1510,7 @@ test('CP1338 keeps the shared menu directly under its hamburger and Family Mode 
 });
 
 
-test('CP1347 pending-photo Maybe keeps card copy visible and Back restores the decoded photo', async ({ page }) => {
+test('CP1348 pending-photo Maybe keeps card copy visible and Back restores the decoded photo', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   const target = await page.evaluate(() => {
@@ -1519,6 +1519,7 @@ test('CP1347 pending-photo Maybe keeps card copy visible and Back restores the d
     const row = saved.pool?.[1];
     return {
       id: String(row?.id || ''),
+      name: String(row?.name || row?.title || ''),
       urls: [row?.officialImage, row?.image, row?.backupImage, ...(Array.isArray(row?.images) ? row.images : [])]
         .filter(value => typeof value === 'string' && /^https:\/\//i.test(value))
     };
@@ -1609,7 +1610,7 @@ test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
   await expect(page.locator('#home')).toBeVisible();
 
   const css = await page.evaluate(async () => {
-    const response = await fetch('./home.css?v=1347', { cache:'no-store' });
+    const response = await fetch('./home.css?v=1348', { cache:'no-store' });
     if (!response.ok) throw new Error('could not load the current homepage stylesheet');
     return response.text();
   });
@@ -1699,7 +1700,7 @@ test('CP1346 Maybe and Back restore the exact Meal immediately without a card fl
   await expectNoPageErrors(errors);
 });
 
-test('CP1347 Restaurant Maybe and Back reuse the prior photo on restore', async ({ page }) => {
+test('CP1348 Restaurant Maybe and Back reuse the prior photo on restore', async ({ page }) => {
   const errors = await prepare(page);
   await openRestaurants(page);
   // Seed a decoded, row-matched photo so this test does not depend on live
@@ -1770,7 +1771,8 @@ test('CP1347 Restaurant Maybe and Back reuse the prior photo on restore', async 
       return {
         id, name:document.querySelector('#restaurantCard h3')?.textContent?.trim() || '',
         expectedName:String(row?.name || ''), visibility:css.visibility, opacity:Number(css.opacity),
-        imageKey:String(card?.querySelector('img')?.dataset.restaurantPhotoKey || '')
+        imageKey:String(card?.querySelector('img')?.dataset.restaurantPhotoKey || ''),
+        imageSrc:String(card?.querySelector('img')?.currentSrc || card?.querySelector('img')?.src || '')
       };
     });
     expect(afterBack.id, 'Back must restore the exact restaurant at cycle '+i).toBe(before.id);

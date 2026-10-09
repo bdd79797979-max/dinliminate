@@ -270,14 +270,21 @@ function drawFood(options={}){
   const total=usable.length||1;
   const idx=Math.max(0,Math.min(Number(item._mealPhotoIndex||0),total-1));
   item._mealPhotoIndex=idx;
-  if(usable[idx])swapImageWhenReady(img,usable[idx]).then(ok=>{
-   if(ok&&String(img.dataset.mealLoadToken||'')===loadToken&&String(foodCard?.dataset?.mealId||'')===String(item.id||'')){
-    resolvedFoodCardPhotos.set(String(item.id||''),{
-     src:String(img.currentSrc||img.src||usable[idx]).trim(),
-     photoIndex:idx
-    });
-   }
-  });
+  if(usable[idx]){
+   // Gallery-selected photos need the same decoded LRU cache as primary
+   // photos, otherwise Back can hit a second image-decode wait.
+   void preloadSwipeImage(usable[idx]);
+   swapImageWhenReady(img,usable[idx]).then(ok=>{
+    if(ok&&String(img.dataset.mealLoadToken||'')===loadToken&&String(foodCard?.dataset?.mealId||'')===String(item.id||'')){
+     const resolvedSrc=String(img.currentSrc||img.src||usable[idx]).trim();
+     resolvedFoodCardPhotos.set(String(item.id||''),{
+      src:resolvedSrc,
+      photoIndex:idx
+     });
+     void preloadSwipeImage(resolvedSrc);
+    }
+   });
+  }
   ensureMealCardPhotoPager(foodCard,usable.length>1?usable.length:1,idx);
  });}
  updateDecisionBackButtons();
