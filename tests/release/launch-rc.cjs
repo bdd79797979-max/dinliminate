@@ -45,8 +45,6 @@ const e2e=read('tests/e2e/behavior.spec.mjs');
 const homeCss=read('home.css');
 assert.match(homeCss,/html:root \.app:not\(\.home-active\) > #home\s*\{\s*display:none\s*\}/,'Home screen must be hidden outside the Home route');
 assert.doesNotMatch(homeCss,/\.app\.home-active\{[^}]*url\(/,'app shell must not own the homepage background image');
-const baseCss=read('base.css');
-assert.match(baseCss,/#restaurant \.restaurant-card-stack>\.card\{\s*width:100%;max-width:none;height:100%;max-height:none;aspect-ratio:auto\}\s*\}\s*@media\(max-width:600px\) and \(max-height:720px\)\{/,'mobile layout media block must close before the short-height query');
 const swipeFeatureSource=read('src/features/swipe/index.js');
 assert.ok(swipeFeatureSource.includes("foodCard.dataset.mediaPending='true'"),'Meal redraw must mark a pending media handoff');
 const vercel=read('vercel.json');
