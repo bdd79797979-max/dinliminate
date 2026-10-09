@@ -169,3 +169,48 @@ test('desktop Family Mode is a right-side drawer that closes without changing it
 
   expect(errors).toEqual([]);
 });
+
+
+test('CP1341 desktop utility windows anchor below the hamburger instead of opening low', async ({ page }) => {
+  const errors = await openApp(page);
+  const items = [
+    { menuId:'manage', modalId:'manageFoodsModal', title:'Manage Meals' },
+    { menuId:'history', modalId:'historyModal', title:'History' },
+    { menuId:'settings', modalId:'settingsModal', title:'Settings' }
+  ];
+
+  for (const item of items) {
+    await page.locator('#menu').click();
+    await expect(page.locator('#drawer')).toHaveClass(/is-open/);
+    await page.locator('#' + item.menuId).click();
+    const modal = page.locator('#' + item.modalId);
+    await expect(modal).toBeVisible();
+    await expect(modal.locator('.modal-head h3')).toHaveText(item.title);
+
+    const geometry = await page.evaluate(({ modalId }) => {
+      const trigger = document.querySelector('#menu').getBoundingClientRect();
+      const panel = document.getElementById(modalId).getBoundingClientRect();
+      return {
+        trigger:{bottom:trigger.bottom,right:trigger.right},
+        panel:{top:panel.top,right:panel.right,bottom:panel.bottom},
+        viewport:{width:document.documentElement.clientWidth,height:window.innerHeight}
+      };
+    }, { modalId:item.modalId });
+
+    expect(geometry.panel.top, item.title + ' starts 4px below the hamburger')
+      .toBeCloseTo(geometry.trigger.bottom + 4, 0);
+    expect(Math.abs(geometry.panel.right - geometry.trigger.right), item.title + ' right edge follows hamburger')
+      .toBeLessThanOrEqual(1);
+    expect(geometry.panel.top, item.title + ' is in the upper part of the desktop viewport')
+      .toBeLessThan(geometry.viewport.height * .2);
+    expect(geometry.panel.bottom, item.title + ' stays inside the viewport')
+      .toBeLessThanOrEqual(geometry.viewport.height + 1);
+
+    await modal.locator('[data-close]').click();
+    await expect(modal).toHaveCount(0);
+    await expect(page.locator('#drawer')).toHaveClass(/is-open/);
+    await page.locator('#drawerClose').click();
+    await expect(page.locator('#drawer')).toBeHidden();
+  }
+  expect(errors).toEqual([]);
+});

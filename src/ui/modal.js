@@ -81,6 +81,7 @@ const opener=document.activeElement;
 $(id)?.remove();
 $(id+'Bg')?.remove();
 const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].includes(id);
+const desktopUtilityModal=isDrawerUtilityModal&&window.matchMedia('(min-width: 601px)').matches;
 const bg=document.createElement('div');
 bg.id=id+'Bg';
 bg.className='modal-bg'+(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening')+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
@@ -88,6 +89,20 @@ const modal=document.createElement('section');
 modal.id=id;
 modal.className='modal'+(isDrawerUtilityModal?' modal-open':' modal-opening');
 if(isDrawerUtilityModal)modal.classList.add('utility-modal');
+if(desktopUtilityModal){
+ const drawer=$('drawer');
+ const anchorId=String(drawer?.dataset.menuAnchorId||'menu');
+ const anchor=$(anchorId);
+ const anchorStyle=anchor?getComputedStyle(anchor):null;
+ const visible=!!anchor&&anchor.getClientRects().length>0&&anchorStyle?.visibility!=='hidden'&&anchorStyle?.display!=='none';
+ const rect=visible?anchor.getBoundingClientRect():null;
+ const viewportWidth=document.documentElement.clientWidth||window.innerWidth;
+ const panelTop=rect?Math.max(0,Math.ceil(rect.bottom+4)):64;
+ const panelRight=rect?Math.max(0,Math.ceil(viewportWidth-rect.right)):12;
+ modal.style.setProperty('--utility-modal-top',panelTop+'px');
+ modal.style.setProperty('--utility-modal-right',panelRight+'px');
+ modal.dataset.menuAnchorId=anchorId;
+}
 if(id==='detailsModal')modal.classList.add('details-modal');
 modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');

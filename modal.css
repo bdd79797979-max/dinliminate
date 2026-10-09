@@ -166,3 +166,28 @@ html:root #detailsModal.modal-closing, html:root #detailsModal.details-modal.mod
 html:root .modal-close{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.08);background-color:rgba(255,255,255,.08);background-image:none;border:1px solid rgba(214,183,120,.72);color:#d6b778;box-shadow:0 0 10px rgba(214,183,120,.08),inset 0 1px 0 rgba(255,248,226,.12)}
 html:root .modal-close:hover, html:root .modal-close:active{background:rgba(255,255,255,.13);color:#fffaf0;border-color:#f4f0e7;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 12px rgba(255,255,255,.08)}
 html:root .modal-bg.modal-bg-opening{opacity:1;background:#000c;transition:none}
+
+
+/* CP1341: desktop utility windows open just beneath the hamburger that launched them.
+   Keep phone layouts centered; only desktop Manage Meals, History, and Settings move. */
+@media(min-width:601px){
+  html:root .utility-modal{
+    position:fixed;
+    top:var(--utility-modal-top,64px);
+    right:var(--utility-modal-right,12px);
+    left:auto;
+    bottom:auto;
+    width:min(91vw,510px);
+    max-height:calc(100dvh - var(--utility-modal-top,64px) - 16px);
+    transform:none;
+    border-radius:18px;
+  }
+  html:root .utility-modal.modal-open{
+    transform:none;
+    transition:opacity .14s ease;
+  }
+  html:root .utility-modal.modal-closing{
+    transform:none;
+    transition:opacity .11s ease;
+  }
+}
