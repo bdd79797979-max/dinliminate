@@ -199,14 +199,6 @@ html:root .round-choose{width:58px;min-width:58px;height:44px;min-height:44px;bo
 html:root .round-choose{width:58px;min-width:58px;height:44px;min-height:44px}
 }
 html:root .decision-tools{align-items:center;justify-content:flex-end;gap:6px;height:43px;display:none}
-.top-choose{width:34px;height:34px;min-width:34px;border-radius:50%;display:grid;place-items:center;padding:0;background:#151515;color:#d7bd7b;border:1px solid #4a4133;box-shadow:0 6px 16px #0007;font-size:17px;font-weight:900;line-height:1}
-.top-choose:active{transform:scale(.93)}
-.top-choose span{transform:translateY(-.5px)}
-@media(max-width:390px){
-.top-choose{width:32px;height:32px;min-width:32px;font-size:16px}
-}
-html:root .choose-card-action{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;border-radius:50%;display:inline-grid;place-items:center;background:#151515;color:#d7bd7b;border:1px solid #4a4133;box-shadow:0 6px 14px #0007;font-size:15px;font-weight:900;line-height:1}
-html:root .choose-card-action:active{transform:scale(.93)}
 @media(max-width:600px){.decision-screen{
     min-height:0;}
   .decision-screen .stage,
@@ -396,6 +388,7 @@ html:root #manageFoodsModal .row-state.is-deleted{color:#d09d95}
     width:68px;height:68px;min-width:68px;min-height:68px;}
   .unified-swipe-actions .round-cut span,
   .unified-swipe-actions .round-maybe span{font-size:22px}
+}
 @media(max-width:390px){
 html:root .unified-swipe-actions .round-cut span, html:root .unified-swipe-actions .round-maybe span{font-size:21px}
 }
@@ -521,7 +514,6 @@ html:root .canonical-maybe-control>span{height:19px;padding:0 4px}
 @media(max-width:340px){
 html:root .canonical-maybe-control{min-width:80px;height:24px;min-height:24px;padding:2px;font-size:8.4px}
 html:root .canonical-maybe-control>span{height:18px;padding:0 3px}
-}
 }
 @media only screen and (max-width:1199px){html,
   body{
