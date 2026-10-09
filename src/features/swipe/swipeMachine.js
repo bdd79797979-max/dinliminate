@@ -371,7 +371,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   card.style.userSelect='none';
   card.style.webkitUserSelect='none';
   card.style.webkitTouchCallout='none';
-  card.style.pointerEvents='auto';
+  card.style.pointerEvents=card.dataset.mediaPending==='true'?'none':'auto';
   return api;
 }
 
