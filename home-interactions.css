@@ -36,19 +36,24 @@ html:root .app.home-active #home #restStart.home-window-hit.is-pressed .home-cho
 html:root .app.home-active #home #restStart.home-window-hit:active .home-choice-arrow {
   transform:translateX(2px);color:#f5dfaa;
 }
+/* The first reveal is intentionally visible without feeling like a splash screen. */
 @keyframes homeBrandMarkEntrance {
-  from { opacity:0;transform:translateY(3px) scale(.99); }
-  to { opacity:1;transform:translateY(0) scale(1); }
+  from { opacity:0; transform:translateY(9px) scale(.955); }
+  to { opacity:1; transform:translateY(0) scale(1); }
 }
 @keyframes homeBrandWordmarkEntrance {
-  from { opacity:0;transform:translateY(4px); }
-  to { opacity:1;transform:translateY(0); }
+  from { opacity:0; transform:translateY(7px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes homeBrandFadeOnly {
+  from { opacity:0; }
+  to { opacity:1; }
 }
 html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-symbol {
-  animation:homeBrandMarkEntrance 260ms cubic-bezier(.2,.75,.25,1) both;
+  animation:homeBrandMarkEntrance 480ms cubic-bezier(.2,.75,.25,1) both;
 }
 html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-wordmark {
-  animation:homeBrandWordmarkEntrance 230ms ease-out 35ms both;
+  animation:homeBrandWordmarkEntrance 410ms ease-out 80ms both;
 }
 /* Keep Add / Share / Tour icon and label baselines consistent. */
 html:root .app.home-active #home .home-foot-actions { align-items:flex-end; }
@@ -69,8 +74,13 @@ html:root .app.home-active #home .home-icon-action:active { transform:scale(.97)
   html:root .app.home-active #home .home-icon-action { grid-template-rows:22px 9px;row-gap:4px; }
 }
 @media(prefers-reduced-motion:reduce) {
-  html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-symbol,
-  html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-wordmark { animation:none; }
+  /* Preserve a short opacity-only arrival for reduced-motion users. */
+  html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-symbol {
+    animation:homeBrandFadeOnly 160ms linear both;
+  }
+  html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-wordmark {
+    animation:homeBrandFadeOnly 150ms linear 20ms both;
+  }
   html:root .app.home-active #home #foodStart.home-window-hit::before,
   html:root .app.home-active #home #restStart.home-window-hit::before,
   html:root .app.home-active #home #foodStart.home-window-hit .home-choice-arrow,

@@ -2317,3 +2317,35 @@ test('CUT and MAYBE remain visibly enlarged when reduced motion is enabled', asy
     expect(state.transition).toBe('0s');
   }
 });
+
+
+test('homepage logo entrance visibly runs for the D and wordmark', async ({ page }) => {
+  await prepare(page);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('#foodStart')).toBeVisible();
+  await expect.poll(() => page.locator('.app').getAttribute('data-home-logo-entrance-played')).toBe('true');
+
+  const animation = await page.evaluate(() => {
+    const symbol = document.querySelector('.dinliminate-logo-symbol');
+    const wordmark = document.querySelector('.dinliminate-logo-wordmark');
+    const describe = el => el.getAnimations().map(a => ({
+      name:a.animationName, state:a.playState, duration:a.effect?.getTiming?.().duration
+    }));
+    return {symbol:describe(symbol),wordmark:describe(wordmark)};
+  });
+  expect(animation.symbol).toContainEqual(expect.objectContaining({name:'homeBrandMarkEntrance',state:'running',duration:480}));
+  expect(animation.wordmark).toContainEqual(expect.objectContaining({name:'homeBrandWordmarkEntrance',state:'running',duration:410}));
+});
+
+test('reduced-motion homepage logo entrance uses opacity-only keyframes', async ({ page }) => {
+  await prepare(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('#foodStart')).toBeVisible();
+  await expect.poll(() => page.locator('.app').getAttribute('data-home-logo-entrance-played')).toBe('true');
+  const names = await page.locator('.dinliminate-logo-symbol').evaluate(el => el.getAnimations().map(a => a.animationName));
+  expect(names).toContain('homeBrandFadeOnly');
+});
