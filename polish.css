@@ -1,45 +1,33 @@
-/* Quiet, consistent interaction feedback across Dinliminate.
-   Keep existing modal transitions and decoded-image handoffs untouched. */
+/* Reliable swipe-button feedback. Pressed state overrides legacy scale-down rules.
+   Reduced-motion users get an immediate visual state without transition animation. */
 @media (prefers-reduced-motion: no-preference) {
-  button {
-    transition: transform 120ms cubic-bezier(.2,.75,.25,1);
-  }
-
-  button:active {
-    transform: scale(.985);
-  }
-
-  /* Primary decisions respond to a tap without moving the action row. */
-  html:root .unified-swipe-actions .round-cut,
-  html:root .unified-swipe-actions .round-maybe {
-    transition: transform 150ms cubic-bezier(.2,.75,.25,1), box-shadow 150ms ease, filter 150ms ease;
-  }
-
-  html:root .unified-swipe-actions .round-cut:active,
-  html:root .unified-swipe-actions .round-maybe:active,
-  html:root .unified-swipe-actions .round-cut.is-pressed,
-  html:root .unified-swipe-actions .round-maybe.is-pressed {
-    transform: translateZ(0) scale(1.08);
-  }
-
-  /* Visible, short-lived feedback that matches each action's existing color. */
-  html:root .unified-swipe-actions .round-cut:active,
-  html:root .unified-swipe-actions .round-cut.is-pressed {
-    box-shadow: 0 10px 28px rgba(239,51,64,.32), 0 0 0 3px rgba(239,51,64,.24), 0 0 22px rgba(239,51,64,.28);
-    filter: saturate(1.12) brightness(1.08);
-  }
-  html:root .unified-swipe-actions .round-maybe:active,
-  html:root .unified-swipe-actions .round-maybe.is-pressed {
-    box-shadow: 0 10px 28px rgba(40,199,111,.30), 0 0 0 3px rgba(40,199,111,.23), 0 0 22px rgba(40,199,111,.27);
-    filter: saturate(1.12) brightness(1.08);
-  }
-
-  /* Enlarge the circle, not the glyph inside it. */
-  html:root .unified-swipe-actions .round-cut.is-pressed span,
-  html:root .unified-swipe-actions .round-maybe.is-pressed span {
-    transform: none;
-  }
+  button { transition: transform 120ms cubic-bezier(.2,.75,.25,1); }
+  button:active { transform: scale(.985); }
 }
+html:root .unified-swipe-actions .round-cut,
+html:root .unified-swipe-actions .round-maybe {
+  transition: transform 150ms cubic-bezier(.2,.75,.25,1), box-shadow 150ms ease, filter 150ms ease;
+  transform-origin: center center;
+}
+html:root .unified-swipe-actions .round-cut:active,
+html:root .unified-swipe-actions .round-maybe:active,
+html:root .unified-swipe-actions .round-cut.is-pressed,
+html:root .unified-swipe-actions .round-maybe.is-pressed {
+  transform: translateZ(0) scale(1.08) !important;
+  z-index: 2;
+}
+html:root .unified-swipe-actions .round-cut:active,
+html:root .unified-swipe-actions .round-cut.is-pressed {
+  box-shadow: 0 10px 28px rgba(239,51,64,.32), 0 0 0 3px rgba(239,51,64,.24), 0 0 22px rgba(239,51,64,.28);
+  filter: saturate(1.12) brightness(1.08);
+}
+html:root .unified-swipe-actions .round-maybe:active,
+html:root .unified-swipe-actions .round-maybe.is-pressed {
+  box-shadow: 0 10px 28px rgba(40,199,111,.30), 0 0 0 3px rgba(40,199,111,.23), 0 0 22px rgba(40,199,111,.27);
+  filter: saturate(1.12) brightness(1.08);
+}
+html:root .unified-swipe-actions .round-cut.is-pressed span,
+html:root .unified-swipe-actions .round-maybe.is-pressed span { transform: none !important; }
 
 /* Slightly larger invisible targets for small close and menu controls. */
 html:root .modal-close {
@@ -81,16 +69,8 @@ html:root #restaurant .location-main .radius-select option {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  button {
-    transition: none !important;
-  }
-  button:active {
-    transform: none !important;
-  }
-  html:root .unified-swipe-actions .round-cut.is-pressed,
-  html:root .unified-swipe-actions .round-maybe.is-pressed {
-    transform: none !important;
-    filter: none !important;
-    box-shadow: none !important;
-  }
+  button { transition: none !important; }
+  /* Do not animate the effect, but do keep its visible pressed state. */
+  html:root .unified-swipe-actions .round-cut,
+  html:root .unified-swipe-actions .round-maybe { transition: none !important; }
 }

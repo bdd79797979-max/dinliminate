@@ -1184,7 +1184,7 @@ function bindCardButton(id,handler){
  const clearPress=()=>{
   if(!premiumDecision)return;
   clearTimeout(pressTimer);
-  pressTimer=window.setTimeout(()=>el.classList.remove('is-pressed'),150);
+  pressTimer=window.setTimeout(()=>el.classList.remove('is-pressed'),280);
  };
  el.onpointerdown=e=>{
   if(el.disabled)return;

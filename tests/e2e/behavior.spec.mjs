@@ -2293,3 +2293,27 @@ test('CUT and MAYBE buttons visibly enlarge with matching color feedback while p
   expect(maybe.shadow).toContain('40, 199, 111');
   expect(maybe.filter).toContain('brightness(1.08)');
 });
+
+
+test('CUT and MAYBE remain visibly enlarged when reduced motion is enabled', async ({ page }) => {
+  await prepare(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedMeals(page, 4);
+  for (const [selector, expectedColor] of [
+    ['#foodCut', '239, 51, 64'],
+    ['#foodMaybe', '40, 199, 111']
+  ]) {
+    const button = page.locator(selector);
+    await button.dispatchEvent('pointerdown');
+    await expect(button).toHaveClass(/is-pressed/);
+    const state = await button.evaluate(el => {
+      const style = getComputedStyle(el);
+      const matrix = new DOMMatrixReadOnly(style.transform);
+      return {scale:Math.hypot(matrix.a,matrix.b),shadow:style.boxShadow,transition:style.transitionDuration};
+    });
+    expect(state.scale).toBeGreaterThanOrEqual(1.075);
+    expect(state.scale).toBeLessThanOrEqual(1.085);
+    expect(state.shadow).toContain(expectedColor);
+    expect(state.transition).toBe('0s');
+  }
+});
