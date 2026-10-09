@@ -14,9 +14,20 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(buildDate)) throw new Error('app-release.json bu
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const write = (file, value) => fs.writeFileSync(path.join(root, file), value);
 
+const SHELL_CACHE_NAME = 'dinliminate-shell-v1309';
+const listFiles = directory => fs.readdirSync(directory, { withFileTypes: true })
+  .flatMap(entry => {
+    const full = path.join(directory, entry.name);
+    return entry.isDirectory() ? listFiles(full) : [full];
+  })
+  .sort();
+const srcShellAssets = listFiles(path.join(root, 'src'))
+  .map(file => './' + path.relative(root, file).split(path.sep).join('/'));
+
 function stampLocalVersions(value) {
   let out = value.replace(/(\.\/[A-Za-z0-9_./-]+)\?v=\d+/g, '$1?v=' + build);
   out = out.replace(/\.\/src\/data\/restaurant-taxonomy\.js(?!\?v=\d+)/g, './src/data/restaurant-taxonomy.js?v=' + build);
+  out = out.replace(/(\.\/src\/[A-Za-z0-9_./-]+\.js)\?v=\d+/g, '$1');
   return out;
 }
 
@@ -27,8 +38,21 @@ const transforms = new Map([
     return out;
   }],
   ['index.html', stampLocalVersions],
-  ['sw.js', value => {
-    let out = stampLocalVersions(value).replace(/const CACHE='dinliminate-shell-v\d+';/, "const CACHE='dinliminate-shell-v" + build + "';");
+    ['sw.js', value => {
+    let out = stampLocalVersions(value).replace(/const CACHE='dinliminate-shell-v[^']+';/, "const CACHE='" + SHELL_CACHE_NAME + "';");
+    const shell = [
+      './api/_lib/imageHosts.js?v=' + build, './', './index.html', './boot.js?v=' + build, './viewport.js?v=' + build,
+      ...srcShellAssets,
+      './logo.svg?v=' + build, './data/foods.js', './data/foods.js?v=' + build,
+      './manifest.webmanifest', './app-release.json', './release-manifest.json',
+      './icon.svg?v=' + build, './app-icon.svg?v=' + build, './apple-touch-icon.png?v=' + build,
+      './fallback-food.svg', './fallback-restaurant.svg',
+      './tokens.css?v=' + build, './base.css?v=' + build, './chrome.css?v=' + build, './modal.css?v=' + build,
+      './swipe.css?v=' + build, './home.css?v=' + build, './meals.css?v=' + build, './restaurants.css?v=' + build,
+      './winner.css?v=' + build, './history.css?v=' + build, './family.css?v=' + build, './settings.css?v=' + build,
+      './tutorial.css?v=' + build
+    ];
+    out = out.replace(/const SHELL=\[[\s\S]*?\];/, 'const SHELL=' + JSON.stringify(shell) + ';');
     return out;
   }],
   ['manifest.webmanifest', stampLocalVersions],
