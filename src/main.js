@@ -393,46 +393,14 @@ function bindImageFallback(selector,fallback,finalFallback=FINAL_RESTAURANT_IMAG
 function swapImageWhenReady(img,url){
  if(!img||!url||!img.isConnected)return Promise.resolve(false);
  const nextUrl=String(url);
- const href=value=>{try{return new URL(String(value||''),document.baseURI).href;}catch{return String(value||'');}};
- const expected=href(nextUrl);
- const current=href(img.currentSrc||img.src||'');
- const alreadyReady=current===expected&&img.complete&&img.naturalWidth>0;
+ const current=img.currentSrc||img.src||'';
+ if(current===nextUrl)return Promise.resolve(true);
  return new Promise(resolve=>{
-  let settled=false,checking=false,timer=0,probe=null;
-  const cleanup=()=>{
-   clearTimeout(timer);
-   img.removeEventListener('load',onTargetLoad);
-   img.removeEventListener('error',onTargetError);
-   if(probe){probe.onload=null;probe.onerror=null;}
-  };
-  const finish=ok=>{if(settled)return;settled=true;cleanup();resolve(!!ok);};
-  const targetReady=()=>img.isConnected&&img.complete&&img.naturalWidth>0&&href(img.currentSrc||img.src)===expected;
-  const verify=async()=>{
-   if(settled||checking)return;
-   if(!img.isConnected){finish(false);return;}
-   if(!targetReady())return;
-   checking=true;
-   try{if(typeof img.decode==='function')await img.decode();}catch(error){console.error('Dinliminate image decode error',error);}
-   checking=false;
-   finish(targetReady());
-  };
-  const onTargetLoad=()=>{void verify();};
-  const onTargetError=()=>{if(href(img.currentSrc||img.src)===expected)finish(false);};
-  img.addEventListener('load',onTargetLoad);
-  img.addEventListener('error',onTargetError);
-  timer=window.setTimeout(()=>finish(false),2200);
-  if(alreadyReady){void verify();return;}
-  probe=new Image();
+  const probe=new Image();
   probe.decoding='async';
-  probe.referrerPolicy='no-referrer';
-  probe.onload=async()=>{
-   try{if(typeof probe.decode==='function')await probe.decode();}catch(error){console.error('Dinliminate image decode error',error);}
-   if(settled)return;
-   if(!img.isConnected){finish(false);return;}
-   if(targetReady()){void verify();return;}
-   try{img.src=nextUrl;}catch(error){console.error('Dinliminate image assignment error',error);finish(false);return;}
-   void verify();
-  };
+  let settled=false;
+  const finish=ok=>{if(settled)return;settled=true;resolve(!!ok);};
+  probe.onload=async()=>{try{await probe.decode?.();}catch(error){console.error('Dinliminate error',error)}if(img.isConnected)img.src=nextUrl;finish(true);};
   probe.onerror=()=>finish(false);
   probe.src=nextUrl;
  });
