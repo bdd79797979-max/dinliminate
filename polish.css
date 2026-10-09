@@ -1,0 +1,77 @@
+/* Quiet, consistent interaction feedback across Dinliminate.
+   Keep existing modal transitions and decoded-image handoffs untouched. */
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: transform 120ms cubic-bezier(.2,.75,.25,1);
+  }
+
+  button:active {
+    transform: scale(.985);
+  }
+
+  /* Primary decisions respond to a tap without moving the action row. */
+  html:root .unified-swipe-actions .round-cut,
+  html:root .unified-swipe-actions .round-maybe {
+    transition: transform 130ms cubic-bezier(.2,.75,.25,1), box-shadow 130ms ease, filter 130ms ease;
+  }
+
+  html:root .unified-swipe-actions .round-cut:active,
+  html:root .unified-swipe-actions .round-maybe:active,
+  html:root .unified-swipe-actions .round-cut.is-pressed,
+  html:root .unified-swipe-actions .round-maybe.is-pressed {
+    transform: scale(1.035);
+  }
+}
+
+/* Slightly larger invisible targets for small close and menu controls. */
+html:root .modal-close {
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+html:root .app-topbar #menu::after,
+html:root .modal-close::after,
+html:root #familyCloseTop::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: transparent;
+}
+
+/* Keep Radius dark in all interaction states, including the native option list. */
+html:root #restaurant .location-main .radius-control,
+html:root #restaurant .location-main .radius-control:hover,
+html:root #restaurant .location-main .radius-control:focus,
+html:root #restaurant .location-main .radius-control:focus-visible,
+html:root #restaurant .location-main .radius-control:focus-within,
+html:root #restaurant .location-main .radius-control:active {
+  background-color: #090909;
+  background-image: none;
+}
+html:root #restaurant .location-main .radius-select,
+html:root #restaurant .location-main .radius-select:hover,
+html:root #restaurant .location-main .radius-select:focus,
+html:root #restaurant .location-main .radius-select:focus-visible,
+html:root #restaurant .location-main .radius-select:active {
+  color-scheme: dark;
+  background-color: #090909;
+  background-image: none;
+  -webkit-tap-highlight-color: transparent;
+}
+html:root #restaurant .location-main .radius-select option {
+  background-color: #090909;
+  color: #eee7dc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none !important;
+  }
+  button:active {
+    transform: none !important;
+  }
+  html:root .unified-swipe-actions .round-cut.is-pressed,
+  html:root .unified-swipe-actions .round-maybe.is-pressed {
+    transform: none !important;
+    filter: none !important;
+  }
+}

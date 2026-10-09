@@ -2147,3 +2147,47 @@ test('phone panel close actions restore the main menu before the panel closes', 
   await expectNoPageErrors(errors);
 });
 
+
+
+test('app-wide interaction polish keeps decision feedback subtle and Radius dark', async ({ page }) => {
+  await prepare(page);
+  await seedMeals(page, 4);
+
+  const metrics = await page.evaluate(() => {
+    const cut = document.querySelector('#foodCut');
+    const maybe = document.querySelector('#foodMaybe');
+    const radius = document.querySelector('#radius');
+    const radiusControl = document.querySelector('.radius-control');
+    if (!cut || !maybe || !radius || !radiusControl) {
+      throw new Error('expected swipe actions and Radius control');
+    }
+    cut.classList.add('is-pressed');
+    maybe.classList.add('is-pressed');
+    const scaleOf = el => {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+      return Math.hypot(matrix.a, matrix.b);
+    };
+    return {
+      cutScale: scaleOf(cut),
+      maybeScale: scaleOf(maybe),
+      cutTransition: getComputedStyle(cut).transitionDuration,
+      radiusBg: getComputedStyle(radius).backgroundColor,
+      radiusControlBg: getComputedStyle(radiusControl).backgroundColor,
+      radiusOptionBg: getComputedStyle(radius.options[0]).backgroundColor,
+      menuHitArea: getComputedStyle(document.querySelector('#menu'), '::after').content,
+      closeHitArea: getComputedStyle(document.querySelector('#familyCloseTop'), '::after').content
+    };
+  });
+
+  expect(metrics.cutScale).toBeGreaterThanOrEqual(1.03);
+  expect(metrics.cutScale).toBeLessThanOrEqual(1.04);
+  expect(metrics.maybeScale).toBeGreaterThanOrEqual(1.03);
+  expect(metrics.maybeScale).toBeLessThanOrEqual(1.04);
+  expect(parseFloat(metrics.cutTransition)).toBeGreaterThanOrEqual(0.12);
+  expect(parseFloat(metrics.cutTransition)).toBeLessThanOrEqual(0.14);
+  expect(metrics.radiusBg).toBe('rgb(9, 9, 9)');
+  expect(metrics.radiusControlBg).toBe('rgb(9, 9, 9)');
+  expect(metrics.radiusOptionBg).toBe('rgb(9, 9, 9)');
+  expect(metrics.menuHitArea).not.toBe('none');
+  expect(metrics.closeHitArea).not.toBe('none');
+});
