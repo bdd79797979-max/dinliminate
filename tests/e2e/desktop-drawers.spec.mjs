@@ -93,7 +93,24 @@ async function openMenuFrom(page, triggerId) {
   await expect(drawer).toHaveClass(/is-open/);
   await waitForSettledTransform(drawer);
   expect(await drawer.getAttribute('data-menu-anchor-id')).toBe(triggerId);
-  await expectDrawerAnchored(page, '#drawer', triggerId, 'drawerClose');
+  // The shared menu backdrop begins at the viewport top, but the first menu
+  // window and its close control align with the hamburger row.
+  const geometry = await page.evaluate((id) => {
+    const trigger = document.getElementById(id).getBoundingClientRect();
+    const first = document.querySelector('#drawer .drawer-window').getBoundingClientRect();
+    const close = document.querySelector('#drawerClose').getBoundingClientRect();
+    return {
+      trigger:{top:trigger.top,bottom:trigger.bottom,right:trigger.right},
+      first:{top:first.top},
+      close:{top:close.top,right:close.right}
+    };
+  }, triggerId);
+  expect(Math.abs(geometry.first.top-geometry.trigger.bottom), 'first menu window starts next to its hamburger')
+    .toBeLessThanOrEqual(5);
+  expect(Math.abs(geometry.close.top-geometry.trigger.top), 'menu close control shares hamburger top')
+    .toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.close.right-geometry.trigger.right), 'menu close control shares hamburger right edge')
+    .toBeLessThanOrEqual(1);
 }
 
 async function openFamilyFrom(page, triggerId) {
@@ -125,7 +142,7 @@ async function openFamilyFrom(page, triggerId) {
   expect(layers.backdropInsideApp).toBe(true);
   expect(layers.backdropZ).toBeLessThan(layers.panelZ);
   expect(layers.triggerStillVisible).toBe(true);
-  expect(layers.width).toBeLessThanOrEqual(520);
+  expect(layers.width).toBeCloseTo(510, 0);
 }
 
 test('desktop shared menu anchors to the actual Home, Meals and Restaurant hamburger', async ({ page }) => {
@@ -207,6 +224,7 @@ test('CP1342 all four desktop windows share hamburger alignment, layering, and r
     const modal = page.locator('#' + item.modalId);
     await expect(modal).toBeVisible();
     await expect(modal.locator('.modal-head h3')).toHaveText(item.title);
+    await waitForSettledTransform(modal);
 
     const geometry = await page.evaluate(({ modalId }) => {
       const trigger = document.querySelector('#menu').getBoundingClientRect();

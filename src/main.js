@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1342';
+const APP_BUILD = '1343';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
