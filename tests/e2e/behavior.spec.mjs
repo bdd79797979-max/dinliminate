@@ -378,6 +378,80 @@ test('interrupted drag settles without committing a meal', async ({ page }) => {
   await expectNoPageErrors(errors);
 });
 
+test('swipe tint follows direction, reverses with the finger, and fills solid on commit', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 4);
+  const card = page.locator('#foodCard');
+
+  async function sampleDrag(direction, pointerId) {
+    const box = await card.boundingBox();
+    expect(box).toBeTruthy();
+    const sign = direction === 'left' ? -1 : 1;
+    return page.evaluate(async ({ x, y, sign, pointerId }) => {
+      const card = document.querySelector('#foodCard');
+      const fire = (type, clientX) => card.dispatchEvent(new PointerEvent(type, {
+        bubbles:true, cancelable:true, isPrimary:true, button:0, pointerId, clientX, clientY:y
+      }));
+      const frame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const sample = async distance => {
+        fire('pointermove', x + sign * distance);
+        await frame();
+        const style = getComputedStyle(card);
+        return {
+          direction:card.dataset.swipe,
+          alpha:Number(style.getPropertyValue('--swipe-tint-alpha')),
+          color:getComputedStyle(card,'::before').backgroundColor
+        };
+      };
+      fire('pointerdown', x);
+      const samples = [await sample(28), await sample(62), await sample(16)];
+      fire('pointercancel', x + sign * 16);
+      return samples;
+    }, { x:box.x + box.width / 2, y:box.y + box.height / 2, sign, pointerId });
+  }
+
+  const right = await sampleDrag('right', 31);
+  expect(right.map(sample => sample.direction)).toEqual(['maybe','maybe','maybe']);
+  expect(right.every(sample => sample.color === 'rgb(24, 134, 83)')).toBe(true);
+  expect(right[1].alpha).toBeGreaterThan(right[0].alpha);
+  expect(right[2].alpha).toBeLessThan(right[1].alpha);
+  await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 3000 }).toBe('idle');
+
+  const left = await sampleDrag('left', 32);
+  expect(left.map(sample => sample.direction)).toEqual(['cut','cut','cut']);
+  expect(left.every(sample => sample.color === 'rgb(255, 255, 255)')).toBe(true);
+  expect(left[1].alpha).toBeGreaterThan(left[0].alpha);
+  expect(left[2].alpha).toBeLessThan(left[1].alpha);
+  await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 3000 }).toBe('idle');
+
+  for (const [direction, expectedDirection, expectedColor] of [
+    ['right', 'maybe', 'rgb(24, 134, 83)'],
+    ['left', 'cut', 'rgb(255, 255, 255)']
+  ]) {
+    const box = await card.boundingBox();
+    expect(box).toBeTruthy();
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    const delta = Math.max(135, box.width * 0.44) * (direction === 'left' ? -1 : 1);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + delta, y, { steps: 8 });
+    await page.mouse.up();
+    await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 2000 }).toBe('committing');
+    const committed = await card.evaluate(el => ({
+      direction:el.dataset.swipe,
+      alpha:Number(el.style.getPropertyValue('--swipe-tint-alpha')),
+      filling:el.classList.contains('swipe-filling'),
+      color:getComputedStyle(el,'::before').backgroundColor
+    }));
+    expect(committed.direction).toBe(expectedDirection);
+    expect(committed.alpha).toBe(1);
+    expect(committed.filling).toBe(true);
+    expect(committed.color).toBe(expectedColor);
+    await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 7000 }).not.toBe('committing');
+  }
+  await expectNoPageErrors(errors);
+});
+
 async function openRestaurants(page) {
   await page.goto('/');
   await page.locator('#restStart').click();

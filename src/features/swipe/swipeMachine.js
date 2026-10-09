@@ -77,7 +77,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     const mediaPending=card.dataset.mediaPending==='true';
     const preserveSurface=mediaPending&&card.dataset.preserveMediaSurface==='true';
     const hideForMedia=mediaPending&&!preserveSurface;
-    card.classList.remove('swipe-active');
+    card.classList.remove('swipe-active','swipe-filling');
     card.style.willChange='';
     card.style.transition='none';
     card.style.transform='';
@@ -101,7 +101,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     const rotation=(dx<0?-1:1)*clamp((distance/width)*SWIPE_CONFIG.exitRotationDeg,0,SWIPE_CONFIG.exitRotationDeg);
     card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
     card.style.opacity='1';
-    card.style.setProperty('--swipe-tint-alpha',String(clamp(distance/(thresholdFor(card)*2.7),0,.26)));
+    card.style.setProperty('--swipe-tint-alpha',String(clamp(distance/(thresholdFor(card)*1.15),0,.94)));
     card.dataset.swipe=dx<0?'cut':dx>0?'maybe':'';
     return {rotation};
   };
@@ -172,6 +172,10 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     const source=String(meta.source||'gesture');
 
     releasePointer();
+    // Finish the color wash while the existing off-screen card flight continues.
+    card.classList.add('swipe-filling');
+    void card.offsetWidth;
+    card.style.setProperty('--swipe-tint-alpha','1');
     phase='committing';
     const localTransaction=++transactionId;
     activeTransaction=localTransaction;
@@ -300,6 +304,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     if(event.target?.closest?.('button,a,input,select,textarea'))return;
     downX=event.clientX;downY=event.clientY;lastX=event.clientX;lastMoveX=event.clientX;
     lastMoveTime=performance.now();velocityX=0;hapticTriggered=false;
+    card.classList.remove('swipe-filling');
     card.classList.add('swipe-active');
     card.style.touchAction='none';
     card.style.userSelect='none';
