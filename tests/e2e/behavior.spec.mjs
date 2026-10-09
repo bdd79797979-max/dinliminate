@@ -387,6 +387,31 @@ test('the last surviving meal can become the winner', async ({ page }) => {
   await expectNoPageErrors(errors);
 });
 
+test('meal and restaurant decision controls are visible and touch-sized at mobile widths', async ({ page }) => {
+  const errors = await prepare(page);
+  const viewport = page.viewportSize();
+  expect([360, 375, 390, 412]).toContain(viewport.width);
+
+  async function expectControls(ids) {
+    for (const id of ids) {
+      const control = page.locator('#' + id);
+      await expect(control, '#' + id + ' should be visible at ' + viewport.width + 'px').toBeVisible();
+      const box = await control.boundingBox();
+      expect(box, '#' + id + ' should have a rendered box').not.toBeNull();
+      expect(box.width, '#' + id + ' width at ' + viewport.width + 'px').toBeGreaterThanOrEqual(40);
+      expect(box.height, '#' + id + ' height at ' + viewport.width + 'px').toBeGreaterThanOrEqual(40);
+    }
+  }
+
+  await seedMeals(page, 2);
+  await expectControls(['foodBack', 'foodCut', 'foodMaybe', 'foodChoose']);
+
+  await openRestaurants(page);
+  await expectControls(['restBack', 'restCut', 'restMaybe', 'restChoose']);
+
+  await expectNoPageErrors(errors);
+});
+
 test('restaurant search displays the mocked API result', async ({ page }) => {
   const errors = await prepare(page);
   await openRestaurants(page);
