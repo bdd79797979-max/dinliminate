@@ -45,12 +45,42 @@ const DEFAULT_FOOD_IMAGE = '';
 const CHOCOLATE_COVERED_PEANUTS_ID = 'chocolate-covered-peanuts';
 const CHOCOLATE_COVERED_PEANUTS_PHOTO = "https://images.pexels.com/photos/38594567/pexels-photo-38594567.jpeg?auto=compress&cs=tinysrgb&w=1800";
 
+const SELECTED_BUILTIN_MEAL_PHOTOS = Object.freeze({
+  "jell-o": "https://images.pexels.com/photos/7428697/pexels-photo-7428697.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "protein-bar": "https://images.pexels.com/photos/3735187/pexels-photo-3735187.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "grilled-cheese": "https://images.pexels.com/photos/37395121/pexels-photo-37395121.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "salad-bowl": "https://images.pexels.com/photos/4101804/pexels-photo-4101804.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "pasta-alfredo": "https://images.pexels.com/photos/11220208/pexels-photo-11220208.jpeg?auto=compress&cs=tinysrgb&w=1800"
+});
+function normalizeSelectedBuiltInMealPhotos(){
+ let changed=false;
+ const apply=item=>{
+  const photo=SELECTED_BUILTIN_MEAL_PHOTOS[String(item?.id||'')];
+  if(!photo||!item)return;
+  if(item.image!==photo){item.image=photo;changed=true;}
+  if(!Array.isArray(item.images)||item.images.length!==1||item.images[0]!==photo){item.images=[photo];changed=true;}
+  for(const key of ['backupImage','officialImage']){
+   if(Object.prototype.hasOwnProperty.call(item,key)){delete item[key];changed=true;}
+  }
+ };
+ for(const collection of [S.custom,S.deletedCustomMeals,S.pool]){
+  if(!Array.isArray(collection))continue;
+  for(const item of collection)apply(item);
+ }
+ apply(S.winnerItem);
+ if(changed)save();
+ for(const [id,photo] of Object.entries(SELECTED_BUILTIN_MEAL_PHOTOS)){
+  storeMealPhotoSet(id,[photo]).catch(error=>console.error('Dinliminate selected meal photo cleanup failed',error));
+ }
+}
+
+
 const KEY = 'dinliminate:v1';
 const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1336';
+const APP_BUILD = '1337';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1502,6 +1532,7 @@ configureModal({mealTimesFor,restaurantFallbackImage,imageProxyUrl,mealImageUrl,
 
 bindMealPhotoCountControls();
 load();
+normalizeSelectedBuiltInMealPhotos();
 normalizeChocolateCoveredPeanutsPhoto();
 loadRestaurantWebsiteStore();
 renderLocationSource();

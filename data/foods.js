@@ -306,7 +306,7 @@ const FOODS = [
       "Pasta",
       "Italian"
     ],
-    "image": "https://images.pexels.com/photos/32640766/pexels-photo-32640766.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "image": "https://images.pexels.com/photos/11220208/pexels-photo-11220208.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "fettuccine",
       "butter",
@@ -336,7 +336,7 @@ const FOODS = [
     "quickCuts": [
       "Healthy"
     ],
-    "image": "https://images.pexels.com/photos/11906476/pexels-photo-11906476.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    "image": "https://images.pexels.com/photos/4101804/pexels-photo-4101804.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "mixed greens",
       "tomato",
@@ -427,7 +427,7 @@ const FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/33706245/pexels-photo-33706245.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    "image": "https://images.pexels.com/photos/37395121/pexels-photo-37395121.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "bread",
       "butter",
@@ -2539,7 +2539,7 @@ const FOODS = [
     "quickCuts": [
       "Healthy"
     ],
-    "image": "https://images.pexels.com/photos/13111782/pexels-photo-13111782.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "image": "https://images.pexels.com/photos/3735187/pexels-photo-3735187.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "milk proteins",
       "collagen hydrolysate",
@@ -3332,7 +3332,7 @@ const FOODS = [
     "quickCuts": [
       "American"
     ],
-    "image": "https://images.pexels.com/photos/8191227/pexels-photo-8191227.jpeg?auto=compress&cs=tinysrgb&w=1800",
+    "image": "https://images.pexels.com/photos/7428697/pexels-photo-7428697.jpeg?auto=compress&cs=tinysrgb&w=1800",
     "ingredients": [
       "gelatin dessert",
       "water"

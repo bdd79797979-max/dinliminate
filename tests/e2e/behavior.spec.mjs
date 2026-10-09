@@ -1398,3 +1398,80 @@ test('CP1334 phone discovery toolbars maximize their controls without wrapping',
   }
   await expectNoPageErrors(errors);
 });
+
+
+test('CP1337 uses the five exact selected Pexels photos and normalizes restored built-in copies', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+  const expected = {
+  "jell-o": "https://images.pexels.com/photos/7428697/pexels-photo-7428697.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "protein-bar": "https://images.pexels.com/photos/3735187/pexels-photo-3735187.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "grilled-cheese": "https://images.pexels.com/photos/37395121/pexels-photo-37395121.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "salad-bowl": "https://images.pexels.com/photos/4101804/pexels-photo-4101804.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  "pasta-alfredo": "https://images.pexels.com/photos/11220208/pexels-photo-11220208.jpeg?auto=compress&cs=tinysrgb&w=1800"
+};
+  const setup = await page.evaluate(async expectedPhotos => {
+    const { FOODS } = await import('/data/foods.js');
+    const key = Object.keys(localStorage).find(value => value.startsWith('dinliminate:v1'));
+    if (!key) throw new Error('Dinliminate saved state key not found');
+    const saved = JSON.parse(localStorage.getItem(key) || '{}');
+    const ids = new Set(Object.keys(expectedPhotos));
+    const defaults = Object.fromEntries(FOODS.filter(row => ids.has(String(row.id))).map(row => [String(row.id), row.image]));
+    const stale = FOODS.filter(row => ids.has(String(row.id))).map(row => ({
+      ...row,
+      image: 'https://images.pexels.com/photos/1000000/pexels-photo-1000000.jpeg',
+      images: ['https://images.pexels.com/photos/1000000/pexels-photo-1000000.jpeg'],
+      backupImage: 'https://images.pexels.com/photos/1000001/pexels-photo-1000001.jpeg',
+      officialImage: 'https://images.pexels.com/photos/1000002/pexels-photo-1000002.jpeg'
+    }));
+    saved.custom = [...(Array.isArray(saved.custom) ? saved.custom.filter(row => !ids.has(String(row.id))) : []), ...stale.map(row => ({...row}))];
+    saved.deletedCustomMeals = [...(Array.isArray(saved.deletedCustomMeals) ? saved.deletedCustomMeals.filter(row => !ids.has(String(row.id))) : []), ...stale.map(row => ({...row}))];
+    saved.pool = stale.map(row => ({...row}));
+    saved.winnerItem = {...stale[0]};
+    saved.winnerType = 'food';
+    saved.saved = true;
+    saved.screen = 'food';
+    localStorage.setItem(key, JSON.stringify(saved));
+    return { defaults, ids:[...ids], key };
+  }, expected);
+  expect(setup.defaults).toEqual(expected);
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
+  const restored = await page.evaluate(({ key, ids }) => {
+    const saved = JSON.parse(localStorage.getItem(key) || '{}');
+    const read = collection => Object.fromEntries(ids.map(id => {
+      const row = (Array.isArray(collection) ? collection : []).find(item => String(item?.id || '') === id);
+      return [id, row ? {
+        image: row.image,
+        images: Array.isArray(row.images) ? row.images : null,
+        hasBackup: Object.prototype.hasOwnProperty.call(row, 'backupImage'),
+        hasOfficial: Object.prototype.hasOwnProperty.call(row, 'officialImage')
+      } : null];
+    }));
+    return {
+      custom: read(saved.custom),
+      deleted: read(saved.deletedCustomMeals),
+      pool: read(saved.pool),
+      winner: saved.winnerItem ? {
+        id: String(saved.winnerItem.id),
+        image: saved.winnerItem.image,
+        images: saved.winnerItem.images,
+        hasBackup: Object.prototype.hasOwnProperty.call(saved.winnerItem, 'backupImage'),
+        hasOfficial: Object.prototype.hasOwnProperty.call(saved.winnerItem, 'officialImage')
+      } : null
+    };
+  }, setup);
+  for (const [id, photo] of Object.entries(expected)) {
+    for (const collection of ['custom', 'deleted', 'pool']) {
+      expect(restored[collection][id], collection + ' ' + id).toEqual({
+        image: photo, images: [photo], hasBackup: false, hasOfficial: false
+      });
+    }
+  }
+  expect(restored.winner).toEqual({
+    id: 'pasta-alfredo', image: expected['pasta-alfredo'], images: [expected['pasta-alfredo']],
+    hasBackup: false, hasOfficial: false
+  });
+  await expectNoPageErrors(errors);
+});
