@@ -305,3 +305,18 @@ html:root .app > #family .family-close-top:focus-visible{outline:2px solid #d6b7
   html:root .app > #family.family-screen{top:0;right:0;height:100dvh}
   html:root .app > #family .family-interior-nav{flex-basis:58px;height:58px;min-height:58px}
 }
+
+
+/* CP1342: Family Mode shares the exact desktop panel size, position, and layer
+   with Manage Meals, History, and Settings; phone layout remains untouched. */
+@media(min-width:601px){
+  html:root .app > #family.family-screen{
+    z-index:90;
+    width:min(91vw,510px);
+    height:calc(100dvh - var(--family-panel-top,0px) - 16px);
+    max-height:calc(100dvh - var(--family-panel-top,0px) - 16px);
+    border:1px solid #34302a;
+    border-radius:18px;
+    box-shadow:0 28px 90px #000c;
+  }
+}

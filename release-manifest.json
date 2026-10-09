@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1341,
-  "sourceBranch": "cp1341-desktop-menu-panels",
+  "build": 1342,
+  "sourceBranch": "cp1342-unify-desktop-drawers",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1341",
-  "deploymentTrigger": "cp1341-desktop-menu-panels",
+  "checkpoint": "CP1342",
+  "deploymentTrigger": "cp1342-unify-desktop-drawers",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -47,8 +47,8 @@
   "phoneSwipeControls": "CP1332 distributes Back, Cut, Maybe, and Choose across the available bottom row on phones (<=430px) without resizing their buttons. CP1336 keeps the same button dimensions and reduces excessive horizontal spread slightly.",
   "homeSloganOffset": "CP1332 moves only the Swipe Away Meal Indecision slogan upward by 2px at standard and narrow-phone breakpoints.",
   "phoneToolbarLayout": "CP1334 enlarges the Meals toolbar (Home arrow, Meal Times, Cuisine, All/Maybes count, Menu) and the Restaurant discovery row (Home arrow, Search, Cuisine, Open, All/Maybes count) up to the largest readable sizes that fit on one line at phone widths 320–430px. Desktop toolbar styling is unchanged.",
-  "drawerAudit": "CP1338: desktop shared menu aligns its header/close control with the actual hamburger; first menu window begins 2–5px below it. Family Mode close, backdrop, Escape, and no-winner Exit return to the shared menu. CP1341 places desktop Manage Meals, History, and Settings panels directly below the hamburger; phone layout unchanged.",
+  "drawerAudit": "CP1338: desktop shared menu aligns its header/close control with the actual hamburger; first menu window begins 2–5px below it. Family Mode close, backdrop, Escape, and no-winner Exit return to the shared menu. CP1341 places desktop Manage Meals, History, and Settings panels directly below the hamburger; phone layout unchanged. CP1342 unifies the desktop Family Mode, Manage Meals, History, and Settings windows with identical hamburger-based positioning, dimensions, overlay layering, motion, and return-to-menu behavior.",
   "uiSizingAudit": "CP1336-taller-meal-and-restaurant-cards",
   "mealCardVisibilityAudit": "CP1339 keeps the waiting Meal card hidden until its own photo readiness settles AND the active Meal card is visible. This prevents a later meal name from flashing through while Maybe advances to a meal with a delayed photo.",
-  "utilityPanelPosition": "Desktop utility panels calculate position from their originating hamburger, opening 4px below it and right-aligned; phone modal geometry unchanged."
+  "utilityPanelPosition": "CP1342 desktop: all four panels use the hamburger bottom + 4px, matching right edge and 510px width; backdrop/header/panel use shared in-app stacking; matching right slide animation and close-to-menu. Mobile layout unchanged."
 }

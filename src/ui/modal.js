@@ -84,10 +84,10 @@ const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].i
 const desktopUtilityModal=isDrawerUtilityModal&&window.matchMedia('(min-width: 601px)').matches;
 const bg=document.createElement('div');
 bg.id=id+'Bg';
-bg.className='modal-bg'+(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening')+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
+bg.className='modal-bg'+(desktopUtilityModal?' modal-bg-opening desktop-utility-bg':(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening'))+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
 const modal=document.createElement('section');
 modal.id=id;
-modal.className='modal'+(isDrawerUtilityModal?' modal-open':' modal-opening');
+modal.className='modal'+(desktopUtilityModal?' utility-panel-opening':(isDrawerUtilityModal?' modal-open':' modal-opening'));
 if(isDrawerUtilityModal)modal.classList.add('utility-modal');
 if(desktopUtilityModal){
  const drawer=$('drawer');
@@ -109,8 +109,16 @@ modal.setAttribute('aria-modal','true');
 modal.setAttribute('aria-labelledby',id+'Title');
 modal.setAttribute('tabindex','-1');
 modal.innerHTML='<div class="modal-head"><h3 id="'+esc(id)+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
-document.body.append(bg,modal);
-if(!isDrawerUtilityModal){
+const mount=desktopUtilityModal?document.querySelector('.app'):null;
+(mount||document.body).append(bg,modal);
+if(desktopUtilityModal){
+ requestAnimationFrame(()=>{
+  bg.classList.remove('modal-bg-opening');
+  bg.classList.add('modal-bg-open');
+  modal.classList.add('modal-open');
+  modal.classList.remove('utility-panel-opening');
+ });
+}else if(!isDrawerUtilityModal){
  requestAnimationFrame(()=>{
   bg.classList.add('modal-bg-open');
   modal.classList.add('modal-open');
@@ -133,11 +141,25 @@ const close=()=>{
  if(closed)return;
  closed=true;
  if(isDrawerUtilityModal){
-  returnToMenuWithoutFlash();
-  modal.remove();
-  bg.remove();
-  if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
-  if(id==='settingsModal')removeFoodOverlays();
+  if(desktopUtilityModal){
+   modal.classList.remove('modal-open');
+   modal.classList.add('modal-closing');
+   bg.classList.remove('modal-bg-open');
+   bg.classList.add('modal-bg-closing');
+   window.setTimeout(()=>{
+    modal.remove();
+    bg.remove();
+    returnToMenuWithoutFlash();
+    if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
+    if(id==='settingsModal')removeFoodOverlays();
+   },180);
+  }else{
+   returnToMenuWithoutFlash();
+   modal.remove();
+   bg.remove();
+   if(opener&&typeof opener.focus==='function')queueMicrotask(()=>opener.focus());
+   if(id==='settingsModal')removeFoodOverlays();
+  }
   return;
  }
  modal.classList.remove('modal-open');

@@ -56,7 +56,7 @@ async function waitForSettledTransform(locator) {
   })).toBe(true);
 }
 
-async function expectDrawerAnchored(page, panelSelector, triggerId, closeId) {
+async function expectDrawerAnchored(page, panelSelector, triggerId, closeId, maxWidth=400) {
   const geometry = await page.evaluate(({ panelSelector, triggerId, closeId }) => {
     const trigger = document.getElementById(triggerId);
     const panel = document.querySelector(panelSelector);
@@ -82,7 +82,7 @@ async function expectDrawerAnchored(page, panelSelector, triggerId, closeId) {
     .toBeLessThanOrEqual(1);
   expect(Math.abs(geometry.close.height - geometry.trigger.height), closeId+' height')
     .toBeLessThanOrEqual(1);
-  expect(geometry.panel.width).toBeLessThanOrEqual(400);
+  expect(geometry.panel.width).toBeLessThanOrEqual(maxWidth);
   expect(geometry.panel.width).toBeGreaterThanOrEqual(350);
   expect(geometry.panel.right).toBeLessThanOrEqual(geometry.viewport.width + 1);
 }
@@ -104,7 +104,28 @@ async function openFamilyFrom(page, triggerId) {
   await waitForSettledTransform(family);
   await expect(page.locator('#familyDrawerBg')).toHaveClass(/is-open/);
   await expect(page.locator('#drawer')).toBeHidden();
-  await expectDrawerAnchored(page, '#family', triggerId, 'familyCloseTop');
+  await expectDrawerAnchored(page, '#family', triggerId, 'familyCloseTop', 520);
+  const layers = await page.evaluate((id) => {
+    const app = document.querySelector('.app');
+    const family = document.querySelector('#family');
+    const backdrop = document.querySelector('#familyDrawerBg');
+    const trigger = document.getElementById(id);
+    const r = trigger.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return {
+      panelInsideApp:family.parentElement===app,
+      backdropInsideApp:backdrop.parentElement===app,
+      panelZ:Number(getComputedStyle(family).zIndex),
+      backdropZ:Number(getComputedStyle(backdrop).zIndex),
+      triggerStillVisible:hit?.closest?.('#'+id)===trigger,
+      width:family.getBoundingClientRect().width
+    };
+  }, triggerId);
+  expect(layers.panelInsideApp).toBe(true);
+  expect(layers.backdropInsideApp).toBe(true);
+  expect(layers.backdropZ).toBeLessThan(layers.panelZ);
+  expect(layers.triggerStillVisible).toBe(true);
+  expect(layers.width).toBeLessThanOrEqual(520);
 }
 
 test('desktop shared menu anchors to the actual Home, Meals and Restaurant hamburger', async ({ page }) => {
@@ -171,7 +192,7 @@ test('desktop Family Mode is a right-side drawer that closes without changing it
 });
 
 
-test('CP1341 desktop utility windows anchor below the hamburger instead of opening low', async ({ page }) => {
+test('CP1342 all four desktop windows share hamburger alignment, layering, and return-to-menu behavior', async ({ page }) => {
   const errors = await openApp(page);
   const items = [
     { menuId:'manage', modalId:'manageFoodsModal', title:'Manage Meals' },
@@ -205,6 +226,30 @@ test('CP1341 desktop utility windows anchor below the hamburger instead of openi
       .toBeLessThan(geometry.viewport.height * .2);
     expect(geometry.panel.bottom, item.title + ' stays inside the viewport')
       .toBeLessThanOrEqual(geometry.viewport.height + 1);
+    expect(geometry.panel.width, item.title + ' has the same desktop panel width as Family Mode')
+      .toBeCloseTo(510, 0);
+
+    const layering = await page.evaluate(() => {
+      const app = document.querySelector('.app');
+      const trigger = document.querySelector('#menu');
+      const bg = document.querySelector('#manageFoodsModalBg, #historyModalBg, #settingsModalBg');
+      const panel = document.querySelector('.utility-modal');
+      const r = trigger.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return {
+        appOwnsBackdrop:bg?.parentElement===app,
+        appOwnsPanel:panel?.parentElement===app,
+        backdropZ:Number(getComputedStyle(bg).zIndex),
+        headerZ:Number(getComputedStyle(document.querySelector('#appTopbar')).zIndex),
+        panelZ:Number(getComputedStyle(panel).zIndex),
+        hamburgerRemainsVisible:hit?.closest?.('#menu')===trigger
+      };
+    });
+    expect(layering.appOwnsBackdrop, item.title + ' uses the shared in-app overlay layer').toBe(true);
+    expect(layering.appOwnsPanel, item.title + ' uses the shared in-app panel layer').toBe(true);
+    expect(layering.backdropZ).toBeLessThan(layering.headerZ);
+    expect(layering.headerZ).toBeLessThan(layering.panelZ);
+    expect(layering.hamburgerRemainsVisible, item.title + ' keeps the hamburger visible above its backdrop').toBe(true);
 
     await modal.locator('[data-close]').click();
     await expect(modal).toHaveCount(0);
