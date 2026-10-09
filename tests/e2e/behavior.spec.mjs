@@ -505,7 +505,7 @@ test('Maybe review continuously cycles Restaurants after the last undecided resu
   await expectNoPageErrors(errors);
 });
 
-test('CP1336 phone swipe controls retain size with a tighter spread and verify address overlay/card height', async ({ page }) => {
+test('phone swipe controls and first-entry directions remain responsive', async ({ page }) => {
   const errors = await prepare(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await seedMeals(page, 3);
@@ -525,10 +525,10 @@ test('CP1336 phone swipe controls retain size with a tighter spread and verify a
     });
     expect(layout.buttons).toHaveLength(4);
     expect(layout.row.width).toBeGreaterThanOrEqual(layout.viewportWidth - 24);
-    expect(layout.buttons[0].left - layout.row.left).toBeGreaterThanOrEqual(22);
-    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(26);
-    expect(layout.row.right - layout.buttons[3].right).toBeGreaterThanOrEqual(22);
-    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(26);
+    expect(layout.buttons[0].left - layout.row.left).toBeGreaterThanOrEqual(30);
+    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(34);
+    expect(layout.row.right - layout.buttons[3].right).toBeGreaterThanOrEqual(30);
+    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(34);
     const spread = layout.buttons[3].center - layout.buttons[0].center;
     expect(spread).toBeGreaterThan(layout.row.width * 0.72);
     expect(spread).toBeLessThan(layout.row.width * 0.84);
@@ -563,6 +563,38 @@ test('CP1336 phone swipe controls retain size with a tighter spread and verify a
     expect(style.opacity).toBeGreaterThanOrEqual(0.5);
   }
 
+  async function expectCenteredFirstEntryCoach(cardSelector) {
+    const coachSelector = cardSelector + ' .swipe-card-coach';
+    await expect(page.locator(coachSelector)).toBeVisible();
+    const metrics = await page.locator(coachSelector).evaluate(coach => {
+      const card = coach.closest('.card');
+      const cardRect = card.getBoundingClientRect();
+      const coachRect = coach.getBoundingClientRect();
+      const style = getComputedStyle(coach);
+      return {
+        viewportWidth:window.innerWidth,
+        fontSize:parseFloat(style.fontSize),
+        display:style.display,
+        visibility:style.visibility,
+        opacity:parseFloat(style.opacity),
+        centerX:coachRect.left + coachRect.width / 2,
+        centerY:coachRect.top + coachRect.height / 2,
+        cardCenterX:cardRect.left + cardRect.width / 2,
+        cardCenterY:cardRect.top + cardRect.height / 2,
+        coachWidth:coachRect.width,
+        cardWidth:cardRect.width
+      };
+    });
+    const expectedFontSize = metrics.viewportWidth <= 390 ? 15.2 : 16;
+    expect(metrics.fontSize).toBeCloseTo(expectedFontSize, 1);
+    expect(metrics.display).not.toBe('none');
+    expect(metrics.visibility).not.toBe('hidden');
+    expect(metrics.opacity).toBeGreaterThan(0);
+    expect(Math.abs(metrics.centerX - metrics.cardCenterX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(metrics.centerY - metrics.cardCenterY)).toBeLessThanOrEqual(1);
+    expect(metrics.coachWidth).toBeLessThanOrEqual(metrics.cardWidth);
+  }
+
   async function expectSlightlyLargerCutMaybe(root) {
     const measured = await page.locator(root).evaluate(row => {
       const cut = row.querySelector(':scope > .round-cut');
@@ -572,15 +604,18 @@ test('CP1336 phone swipe controls retain size with a tighter spread and verify a
         const css = getComputedStyle(el);
         return { width:r.width, height:r.height, fontSize:parseFloat(getComputedStyle(el.querySelector('span')).fontSize), gap:css.gap };
       };
-      return { cut:rect(cut), maybe:rect(maybe), backWidth:row.querySelector(':scope > .round-back').getBoundingClientRect().width,
+      return { viewportWidth:window.innerWidth, cut:rect(cut), maybe:rect(maybe),
+        backWidth:row.querySelector(':scope > .round-back').getBoundingClientRect().width,
         chooseWidth:row.querySelector(':scope > .round-choose').getBoundingClientRect().width };
     });
-    expect(measured.cut.width).toBe(68);
-    expect(measured.cut.height).toBe(68);
-    expect(measured.maybe.width).toBe(68);
-    expect(measured.maybe.height).toBe(68);
-    expect(measured.cut.fontSize).toBe(22);
-    expect(measured.maybe.fontSize).toBe(22);
+    const expectedSize = measured.viewportWidth <= 390 ? 70 : 74;
+    const expectedIconSize = measured.viewportWidth <= 390 ? 23 : 24;
+    expect(measured.cut.width).toBe(expectedSize);
+    expect(measured.cut.height).toBe(expectedSize);
+    expect(measured.maybe.width).toBe(expectedSize);
+    expect(measured.maybe.height).toBe(expectedSize);
+    expect(measured.cut.fontSize).toBe(expectedIconSize);
+    expect(measured.maybe.fontSize).toBe(expectedIconSize);
     expect(measured.backWidth).toBe(42);
     expect(measured.chooseWidth).toBe(42);
   }
@@ -589,12 +624,24 @@ test('CP1336 phone swipe controls retain size with a tighter spread and verify a
   await expectSlightlyLargerCutMaybe('#food .unified-swipe-actions');
   await expectStyledBack('#foodBack');
   await expectTallerCard('#food .swipe-card-stack', '#foodCard');
+  await expectCenteredFirstEntryCoach('#foodCard');
+
+  await page.setViewportSize({ width: 412, height: 844 });
+  await expectFullWidthDecisionRow('#food .unified-swipe-actions');
+  await expectSlightlyLargerCutMaybe('#food .unified-swipe-actions');
+  await expectCenteredFirstEntryCoach('#foodCard');
 
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
   await expectSlightlyLargerCutMaybe('#restaurant .unified-swipe-actions');
   await expectStyledBack('#restBack');
+  await expectCenteredFirstEntryCoach('#restaurantCard');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
+  await expectSlightlyLargerCutMaybe('#restaurant .unified-swipe-actions');
+  await expectCenteredFirstEntryCoach('#restaurantCard');
   await expectTallerCard('#restaurant .restaurant-card-stack', '#restaurantCard');
 
   const overlay = await page.evaluate(() => {

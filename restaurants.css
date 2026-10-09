@@ -940,36 +940,62 @@ html:root #restaurant .restaurant-card-stack > .card{
 @media(max-width:390px){
   html:root .app #food .unified-swipe-actions,
   html:root .app #restaurant .unified-swipe-actions{
-    padding-inline:24px;
+    padding-inline:32px;
   }
   html:root .app #food .unified-swipe-actions > .round-cut,
   html:root .app #restaurant .unified-swipe-actions > .round-cut,
   html:root .app #food .unified-swipe-actions > .round-maybe,
   html:root .app #restaurant .unified-swipe-actions > .round-maybe{
-    width:68px;height:68px;min-width:68px;min-height:68px;
-  }
-  html:root .app #food .unified-swipe-actions > .round-cut span,
-  html:root .app #restaurant .unified-swipe-actions > .round-cut span,
-  html:root .app #food .unified-swipe-actions > .round-maybe span,
-  html:root .app #restaurant .unified-swipe-actions > .round-maybe span{
-    font-size:22px;
-  }
-}
-@media(min-width:391px) and (max-width:430px){
-  html:root .app #food .unified-swipe-actions,
-  html:root .app #restaurant .unified-swipe-actions{
-    padding-inline:24px;
-  }
-  html:root .app #food .unified-swipe-actions > .round-cut,
-  html:root .app #restaurant .unified-swipe-actions > .round-cut,
-  html:root .app #food .unified-swipe-actions > .round-maybe,
-  html:root .app #restaurant .unified-swipe-actions > .round-maybe{
-    width:72px;height:72px;min-width:72px;min-height:72px;
+    width:70px;height:70px;min-width:70px;min-height:70px;
   }
   html:root .app #food .unified-swipe-actions > .round-cut span,
   html:root .app #restaurant .unified-swipe-actions > .round-cut span,
   html:root .app #food .unified-swipe-actions > .round-maybe span,
   html:root .app #restaurant .unified-swipe-actions > .round-maybe span{
     font-size:23px;
+  }
+}
+@media(min-width:391px) and (max-width:430px){
+  html:root .app #food .unified-swipe-actions,
+  html:root .app #restaurant .unified-swipe-actions{
+    padding-inline:32px;
+  }
+  html:root .app #food .unified-swipe-actions > .round-cut,
+  html:root .app #restaurant .unified-swipe-actions > .round-cut,
+  html:root .app #food .unified-swipe-actions > .round-maybe,
+  html:root .app #restaurant .unified-swipe-actions > .round-maybe{
+    width:74px;height:74px;min-width:74px;min-height:74px;
+  }
+  html:root .app #food .unified-swipe-actions > .round-cut span,
+  html:root .app #restaurant .unified-swipe-actions > .round-cut span,
+  html:root .app #food .unified-swipe-actions > .round-maybe span,
+  html:root .app #restaurant .unified-swipe-actions > .round-maybe span{
+    font-size:24px;
+  }
+}
+
+
+/* Center and enlarge the first-entry swipe directions on phone cards only. */
+@media(max-width:430px){
+  html:root #food #foodCard .swipe-card-coach,
+  html:root #restaurant #restaurantCard .swipe-card-coach{
+    top:50%;
+    bottom:auto;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:calc(100% - 24px);
+    max-width:calc(100% - 24px);
+    font-size:16px;
+    text-shadow:0 2px 8px rgba(0,0,0,.95);
+  }
+  html:root #food #foodCard .swipe-card-coach.is-dismissing,
+  html:root #restaurant #restaurantCard .swipe-card-coach.is-dismissing{
+    transform:translate(-50%,-50%) translateY(3px);
+  }
+}
+@media(max-width:390px){
+  html:root #food #foodCard .swipe-card-coach,
+  html:root #restaurant #restaurantCard .swipe-card-coach{
+    font-size:15.2px;
   }
 }
