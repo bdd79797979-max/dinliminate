@@ -93,7 +93,7 @@ modal.setAttribute('role','dialog');
 modal.setAttribute('aria-modal','true');
 modal.setAttribute('aria-labelledby',id+'Title');
 modal.setAttribute('tabindex','-1');
-modal.innerHTML='<div class="modal-head"><h3 id="'+id+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
+modal.innerHTML='<div class="modal-head"><h3 id="'+esc(id)+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
 document.body.append(bg,modal);
 if(!isDrawerUtilityModal){
  requestAnimationFrame(()=>{
