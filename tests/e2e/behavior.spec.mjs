@@ -525,10 +525,10 @@ test('CP1336 phone swipe controls retain size with a tighter spread and verify a
     });
     expect(layout.buttons).toHaveLength(4);
     expect(layout.row.width).toBeGreaterThanOrEqual(layout.viewportWidth - 24);
-    expect(layout.buttons[0].left - layout.row.left).toBeGreaterThanOrEqual(18);
-    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(22);
-    expect(layout.row.right - layout.buttons[3].right).toBeGreaterThanOrEqual(18);
-    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(22);
+    expect(layout.buttons[0].left - layout.row.left).toBeGreaterThanOrEqual(22);
+    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(26);
+    expect(layout.row.right - layout.buttons[3].right).toBeGreaterThanOrEqual(22);
+    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(26);
     const spread = layout.buttons[3].center - layout.buttons[0].center;
     expect(spread).toBeGreaterThan(layout.row.width * 0.72);
     expect(spread).toBeLessThan(layout.row.width * 0.84);
@@ -563,13 +563,37 @@ test('CP1336 phone swipe controls retain size with a tighter spread and verify a
     expect(style.opacity).toBeGreaterThanOrEqual(0.5);
   }
 
+  async function expectSlightlyLargerCutMaybe(root) {
+    const measured = await page.locator(root).evaluate(row => {
+      const cut = row.querySelector(':scope > .round-cut');
+      const maybe = row.querySelector(':scope > .round-maybe');
+      const rect = el => {
+        const r = el.getBoundingClientRect();
+        const css = getComputedStyle(el);
+        return { width:r.width, height:r.height, fontSize:parseFloat(getComputedStyle(el.querySelector('span')).fontSize), gap:css.gap };
+      };
+      return { cut:rect(cut), maybe:rect(maybe), backWidth:row.querySelector(':scope > .round-back').getBoundingClientRect().width,
+        chooseWidth:row.querySelector(':scope > .round-choose').getBoundingClientRect().width };
+    });
+    expect(measured.cut.width).toBe(68);
+    expect(measured.cut.height).toBe(68);
+    expect(measured.maybe.width).toBe(68);
+    expect(measured.maybe.height).toBe(68);
+    expect(measured.cut.fontSize).toBe(22);
+    expect(measured.maybe.fontSize).toBe(22);
+    expect(measured.backWidth).toBe(42);
+    expect(measured.chooseWidth).toBe(42);
+  }
+
   await expectFullWidthDecisionRow('#food .unified-swipe-actions');
+  await expectSlightlyLargerCutMaybe('#food .unified-swipe-actions');
   await expectStyledBack('#foodBack');
   await expectTallerCard('#food .swipe-card-stack', '#foodCard');
 
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
+  await expectSlightlyLargerCutMaybe('#restaurant .unified-swipe-actions');
   await expectStyledBack('#restBack');
   await expectTallerCard('#restaurant .restaurant-card-stack', '#restaurantCard');
 

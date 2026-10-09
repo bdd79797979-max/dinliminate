@@ -934,3 +934,42 @@ html:root #restaurant .restaurant-card-stack > .card{
     max-height:min(71svh,calc(100svh - 265px));
   }
 }
+
+
+/* CP1354: a subtle phone-only size increase for Cut/Maybe and a tighter row spread. */
+@media(max-width:390px){
+  html:root .app #food .unified-swipe-actions,
+  html:root .app #restaurant .unified-swipe-actions{
+    padding-inline:24px;
+  }
+  html:root .app #food .unified-swipe-actions > .round-cut,
+  html:root .app #restaurant .unified-swipe-actions > .round-cut,
+  html:root .app #food .unified-swipe-actions > .round-maybe,
+  html:root .app #restaurant .unified-swipe-actions > .round-maybe{
+    width:68px;height:68px;min-width:68px;min-height:68px;
+  }
+  html:root .app #food .unified-swipe-actions > .round-cut span,
+  html:root .app #restaurant .unified-swipe-actions > .round-cut span,
+  html:root .app #food .unified-swipe-actions > .round-maybe span,
+  html:root .app #restaurant .unified-swipe-actions > .round-maybe span{
+    font-size:22px;
+  }
+}
+@media(min-width:391px) and (max-width:430px){
+  html:root .app #food .unified-swipe-actions,
+  html:root .app #restaurant .unified-swipe-actions{
+    padding-inline:24px;
+  }
+  html:root .app #food .unified-swipe-actions > .round-cut,
+  html:root .app #restaurant .unified-swipe-actions > .round-cut,
+  html:root .app #food .unified-swipe-actions > .round-maybe,
+  html:root .app #restaurant .unified-swipe-actions > .round-maybe{
+    width:72px;height:72px;min-width:72px;min-height:72px;
+  }
+  html:root .app #food .unified-swipe-actions > .round-cut span,
+  html:root .app #restaurant .unified-swipe-actions > .round-cut span,
+  html:root .app #food .unified-swipe-actions > .round-maybe span,
+  html:root .app #restaurant .unified-swipe-actions > .round-maybe span{
+    font-size:23px;
+  }
+}
