@@ -50,7 +50,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1332';
+const APP_BUILD = '1333';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1110,7 +1110,38 @@ function legacyRestaurantBack(){
  drawRestaurants();save();return true;
 }
 
+function closeFamilyDrawer(immediate=false) {
+ const family=$('family'),bg=$('familyDrawerBg');
+ family?.classList.remove('is-open');bg?.classList.remove('is-open');
+ S.familyDrawerOpen=false;
+ if(immediate){family?.classList.add('hidden');bg?.classList.add('hidden');return;}
+ window.setTimeout(()=>{if(!S.familyDrawerOpen){family?.classList.add('hidden');bg?.classList.add('hidden');}},180);
+}
+
 function show(screen) {
+if(screen==='family'){
+ const family=$('family'),bg=$('familyDrawerBg'),navDrawer=$('drawer');
+ if(!S.familyDrawerOpen){
+  if(S.screen==='family'){S.screen=S.familyDrawerReturnScreen||'home';$(S.screen)?.classList.remove('hidden');save();}
+  S.familyDrawerReturnScreen=S.screen||'home';
+ }
+ const anchorId=String(navDrawer?.dataset.menuAnchorId||'');
+ const trigger=(anchorId&&$(anchorId))||$('menu');
+ if(family&&trigger?.getBoundingClientRect){
+  const rect=trigger.getBoundingClientRect(),desktop=window.matchMedia('(min-width: 601px)').matches;
+  const panelTop=desktop?Math.max(0,rect.bottom+4):0;
+  family.style.setProperty('--family-panel-top',panelTop+'px');
+  family.style.setProperty('--family-trigger-top',Math.max(0,rect.top)+'px');
+  family.style.setProperty('--family-trigger-right',Math.max(0,window.innerWidth-rect.right)+'px');
+  family.style.setProperty('--family-trigger-width',rect.width+'px');
+  family.style.setProperty('--family-trigger-height',rect.height+'px');
+ }
+ family?.classList.remove('hidden');bg?.classList.remove('hidden');S.familyDrawerOpen=true;
+ window.requestAnimationFrame(()=>{family?.classList.add('is-open');bg?.classList.add('is-open');});
+ return;
+}
+if(S.familyDrawerOpen)closeFamilyDrawer(true);
+
 if(typeof tutorialModeEnabled==='function'&&typeof tutorialState!=='undefined'&&tutorialState.active&&tutorialState.screen&&tutorialState.screen!==screen){
  tutorialInvalidateTransition('screen-change');
 }
@@ -1249,7 +1280,7 @@ const showMenuHint=()=>{};
 const closeDrawer=(immediate=false)=>{
   clearTimeout(drawerCloseTimer);const drawer=$('drawer'),bg=$('drawerBg');
   drawer?.classList.remove('is-open');bg?.classList.remove('is-open');document.querySelector('#menuHint')?.remove();
-  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','false'));
   if(immediate){drawer?.classList.add('hidden');bg?.classList.add('hidden');return;}
   drawerCloseTimer=setTimeout(()=>{drawer?.classList.add('hidden');bg?.classList.add('hidden');},180);
 };
@@ -1260,6 +1291,8 @@ const openDrawer=(event)=>{
     const rect=trigger.getBoundingClientRect();
     const top=Math.max(0,rect.top);
     const right=Math.max(0,window.innerWidth-rect.right);
+    const desktop=window.matchMedia('(min-width: 601px)').matches;
+    drawer.style.setProperty('--drawer-panel-top',(desktop?Math.max(0,rect.bottom+4):0)+'px');
     drawer.style.setProperty('--drawer-trigger-top',top+'px');
     drawer.style.setProperty('--drawer-trigger-right',right+'px');
     drawer.style.setProperty('--drawer-trigger-width',rect.width+'px');
@@ -1268,7 +1301,7 @@ const openDrawer=(event)=>{
   }
   drawer?.classList.remove('hidden');bg?.classList.remove('hidden');
   requestAnimationFrame(()=>{drawer?.classList.add('is-open');bg?.classList.add('is-open');});
-  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu','#familyMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
+  ['#menu','#foodMenu','#restaurantMenu','#winnerMenu'].forEach(sel=>document.querySelector(sel)?.setAttribute('aria-expanded','true'));
 };
 function decisionBackHome(){
  S.familyNormalMode='idle';
@@ -1294,7 +1327,6 @@ $('menu')?.addEventListener('click',openDrawer);
 $('foodMenu')?.addEventListener('click',openDrawer);
 $('restaurantMenu')?.addEventListener('click',openDrawer);
 $('winnerMenu')?.addEventListener('click',openDrawer);
-$('familyMenu')?.addEventListener('click',openDrawer);
 $('manage').onclick = () => navigateFromDrawer(manageFoodsView);
 $('settings').onclick = () => navigateFromDrawer(settingsView);
 $('backToStart').onclick = () => navigateFromDrawer(home);
@@ -1462,6 +1494,6 @@ export { HISTORY_KEY };
 export { RESTAURANT_PHOTO_PREFETCH_COUNT, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE };
 
 
-export { foodQuickImage, foodPhoto, foodPhotoFallback, restaurantFallbackImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal, home, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, markMealImageUnavailable, loadMealPhotoCandidates, ensureMealCardPhotoPager, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, previewDecisionCount, familyHideWinnerMeta, APP_VERSION, APP_BUILD, APP_BUILD_DATE, DEFAULT_FOOD_IMAGE, FINAL_FOOD_IMAGE, FOOD_QUICK, DEFAULT_MEAL_TIME_DEFS, normKey, allFoods, foodQuickLabels, getDefaultFoods, MEAL_AUTOFILL_ENABLED, removeFoodOverlays, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, restaurantWebsiteCache, restaurantWebsiteInflight, restaurantPhotoCache, restaurantPhotoMissCache, restaurantPhotoInflight, resetRestaurantPhotoCaches, bindMealPhotoCountControls, hydrateMealPhotoGallery, navigateFromDrawer };
+export { foodQuickImage, foodPhoto, foodPhotoFallback, restaurantFallbackImage, bindImageFallbackAttrs, drawFood, imageProxyUrl, normalizeMealPhotoRef, dedupeMealPhotos, mealPhotoList, customQuickCutImage, show, startFood, openRestaurant, winner, closeDrawer, openModal, home, mealImageUrl, bindImageFallback, hydrateRestaurantPhoto, swapImageWhenReady, setRestaurantPhotoCredit, prefetchRestaurantPhotos, clearDecisionHistory, updateDecisionBackButtons, pushDecisionHistory, captureRestaurantDecisionState, restoreRestaurantDecisionState, legacyRestaurantBack, familyNormalBar, familyIsBrowseStage, familyBrowseNext, familyBrowsePrevious, familyBrowseBack, familyRoundStage, markMealImageUnavailable, loadMealPhotoCandidates, ensureMealCardPhotoPager, captureFoodDecisionState, restoreFoodDecisionState, legacyFoodBack, previewDecisionCount, familyHideWinnerMeta, APP_VERSION, APP_BUILD, APP_BUILD_DATE, DEFAULT_FOOD_IMAGE, FINAL_FOOD_IMAGE, FOOD_QUICK, DEFAULT_MEAL_TIME_DEFS, normKey, allFoods, foodQuickLabels, getDefaultFoods, MEAL_AUTOFILL_ENABLED, removeFoodOverlays, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, restaurantWebsiteCache, restaurantWebsiteInflight, restaurantPhotoCache, restaurantPhotoMissCache, restaurantPhotoInflight, resetRestaurantPhotoCaches, bindMealPhotoCountControls, hydrateMealPhotoGallery, navigateFromDrawer, closeFamilyDrawer };
 
 

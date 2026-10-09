@@ -206,3 +206,18 @@ html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
 @media(max-width:340px){
   html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack{font-size:10.5px}
 }
+
+
+/* CP1333: on desktop, anchor the full menu panel to the hamburger in the centered app. */
+@media(min-width:601px){
+  html:root .app > #drawer.drawer{
+    top:var(--drawer-panel-top,0px);
+    right:var(--drawer-trigger-right,0px);
+    height:calc(100dvh - var(--drawer-panel-top,0px));
+    padding-top:0;
+  }
+  html:root .app > #drawer .drawer-close{
+    top:0;
+    right:0;
+  }
+}

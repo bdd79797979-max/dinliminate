@@ -241,7 +241,10 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
 
   await page.locator('#foodMenu').click();
   await expect(page.locator('#drawer')).toBeVisible();
+  await expect.poll(() => page.locator('#drawer').evaluate(el => { const t=getComputedStyle(el).transform; return t==='none'||t==='matrix(1, 0, 0, 1, 0, 0)'||t==='matrix(1,0,0,1,0,0)'; })).toBe(true);
   const triggerBox = await page.locator('#foodMenu').boundingBox();
+  const drawerBox = await page.locator('#drawer').boundingBox();
+  const isDesktopDrawer = await page.evaluate(() => window.innerWidth > 600);
   const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
   const closeBox = await page.locator('#drawerClose').boundingBox();
   const rows = await page.locator('#drawer .drawer-window').evaluateAll(els => els.map(el => {
@@ -254,10 +257,18 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
   expect(closeBox).not.toBeNull();
   expect(firstMenuRow).not.toBeNull();
   expect(rows.map(r=>r.id)).toEqual(['familyMode','manage','history','settings']);
-  expect(Math.abs(closeBox.y-triggerBox.y)).toBeLessThanOrEqual(1);
+  expect(drawerBox).not.toBeNull();
+  if(isDesktopDrawer){
+    expect(Math.abs(drawerBox.y-(triggerBox.y+triggerBox.height+4))).toBeLessThanOrEqual(1);
+    expect(Math.abs((drawerBox.x+drawerBox.width)-(triggerBox.x+triggerBox.width))).toBeLessThanOrEqual(1);
+    expect(Math.abs(closeBox.y-drawerBox.y)).toBeLessThanOrEqual(1);
+  }else{
+    expect(Math.abs(closeBox.y-triggerBox.y)).toBeLessThanOrEqual(1);
+    expect(Math.abs((closeBox.x+closeBox.width)-(triggerBox.x+triggerBox.width))).toBeLessThanOrEqual(1);
+    expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeGreaterThanOrEqual(2);
+    expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeLessThanOrEqual(5);
+  }
   expect(Math.abs((closeBox.x+closeBox.width)-(triggerBox.x+triggerBox.width))).toBeLessThanOrEqual(1);
-  expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeGreaterThanOrEqual(2);
-  expect(firstMenuRow.y-(triggerBox.y+triggerBox.height)).toBeLessThanOrEqual(5);
   expect(Math.abs(closeBox.width-triggerBox.width)).toBeLessThanOrEqual(1);
   expect(Math.abs(closeBox.height-triggerBox.height)).toBeLessThanOrEqual(1);
   expect(rows.every(r=>r.isWindow && r.height===54 && r.radius==='10px' && r.border===rows[0].border && r.background===rows[0].background && r.padding===rows[0].padding)).toBe(true);
@@ -266,16 +277,24 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await page.locator('#restaurantMenu').click();
+  await expect.poll(() => page.locator('#drawer').evaluate(el => { const t=getComputedStyle(el).transform; return t==='none'||t==='matrix(1, 0, 0, 1, 0, 0)'||t==='matrix(1,0,0,1,0,0)'; })).toBe(true);
   const restaurantTriggerBox = await page.locator('#restaurantMenu').boundingBox();
+  const restaurantDrawerBox = await page.locator('#drawer').boundingBox();
   const restaurantCloseBox = await page.locator('#drawerClose').boundingBox();
   const restaurantFirstWindow = await page.locator('#drawer .drawer-window').first().boundingBox();
   expect(restaurantTriggerBox).not.toBeNull();
   expect(restaurantCloseBox).not.toBeNull();
   expect(restaurantFirstWindow).not.toBeNull();
-  expect(Math.abs(restaurantCloseBox.y-restaurantTriggerBox.y)).toBeLessThanOrEqual(1);
+  if(isDesktopDrawer){
+    expect(Math.abs(restaurantDrawerBox.y-(restaurantTriggerBox.y+restaurantTriggerBox.height+4))).toBeLessThanOrEqual(1);
+    expect(Math.abs((restaurantDrawerBox.x+restaurantDrawerBox.width)-(restaurantTriggerBox.x+restaurantTriggerBox.width))).toBeLessThanOrEqual(1);
+    expect(Math.abs(restaurantCloseBox.y-restaurantDrawerBox.y)).toBeLessThanOrEqual(1);
+  }else{
+    expect(Math.abs(restaurantCloseBox.y-restaurantTriggerBox.y)).toBeLessThanOrEqual(1);
+    expect(restaurantFirstWindow.y-(restaurantTriggerBox.y+restaurantTriggerBox.height)).toBeGreaterThanOrEqual(2);
+    expect(restaurantFirstWindow.y-(restaurantTriggerBox.y+restaurantTriggerBox.height)).toBeLessThanOrEqual(5);
+  }
   expect(Math.abs((restaurantCloseBox.x+restaurantCloseBox.width)-(restaurantTriggerBox.x+restaurantTriggerBox.width))).toBeLessThanOrEqual(1);
-  expect(restaurantFirstWindow.y-(restaurantTriggerBox.y+restaurantTriggerBox.height)).toBeGreaterThanOrEqual(2);
-  expect(restaurantFirstWindow.y-(restaurantTriggerBox.y+restaurantTriggerBox.height)).toBeLessThanOrEqual(5);
   await page.locator('#drawerClose').click();
   const restaurantVisuals = await page.evaluate(() => {
     const box = id => {
@@ -517,7 +536,9 @@ test('CP1332 phone swipe controls spread across the bottom width on Meals and Re
     });
     expect(layout.buttons).toHaveLength(4);
     expect(layout.row.width).toBeGreaterThanOrEqual(layout.viewportWidth - 24);
+    expect(layout.buttons[0].left - layout.row.left).toBeGreaterThanOrEqual(10);
     expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(14);
+    expect(layout.row.right - layout.buttons[3].right).toBeGreaterThanOrEqual(10);
     expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(14);
     expect(layout.buttons[3].center - layout.buttons[0].center).toBeGreaterThan(layout.row.width * 0.78);
     for (let i=1;i<layout.buttons.length;i++) {
@@ -1230,3 +1251,39 @@ test('Meal Details starts with the exact photo currently rendered on the card', 
   await expectNoPageErrors(errors);
 });
 
+
+
+test('CP1333 desktop menu and Family Mode drawers anchor beneath the centered-app hamburger', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.locator('#menu').click();
+  await expect(page.locator('#drawer')).toHaveClass(/is-open/);
+  await expect.poll(() => page.locator('#drawer').evaluate(el => { const t=getComputedStyle(el).transform; return t==='none'||t==='matrix(1, 0, 0, 1, 0, 0)'||t==='matrix(1,0,0,1,0,0)'; })).toBe(true);
+
+  const menuLayout = await page.evaluate(() => {
+    const t=document.querySelector('#menu').getBoundingClientRect();
+    const d=document.querySelector('#drawer').getBoundingClientRect();
+    return {trigger:{top:t.top,bottom:t.bottom,right:t.right},drawer:{top:d.top,right:d.right}};
+  });
+  expect(Math.abs(menuLayout.drawer.top-(menuLayout.trigger.bottom+4))).toBeLessThanOrEqual(1);
+  expect(Math.abs(menuLayout.drawer.right-menuLayout.trigger.right)).toBeLessThanOrEqual(1);
+
+  await page.locator('#familyMode').click();
+  await expect(page.locator('#family')).toHaveClass(/is-open/);
+  await expect.poll(() => page.locator('#family').evaluate(el => { const t=getComputedStyle(el).transform; return t==='none'||t==='matrix(1, 0, 0, 1, 0, 0)'||t==='matrix(1,0,0,1,0,0)'; })).toBe(true);
+  await expect(page.locator('#familyDrawerBg')).toBeVisible();
+  await expect(page.locator('#home')).toBeVisible();
+
+  const familyLayout = await page.evaluate(() => {
+    const t=document.querySelector('#menu').getBoundingClientRect();
+    const d=document.querySelector('#family').getBoundingClientRect();
+    return {trigger:{top:t.top,bottom:t.bottom,right:t.right},drawer:{top:d.top,right:d.right}};
+  });
+  expect(Math.abs(familyLayout.drawer.top-(familyLayout.trigger.bottom+4))).toBeLessThanOrEqual(1);
+  expect(Math.abs(familyLayout.drawer.right-familyLayout.trigger.right)).toBeLessThanOrEqual(1);
+
+  await page.locator('#familyCloseTop').click();
+  await expect(page.locator('#family')).toBeHidden();
+  await expect(page.locator('#home')).toBeVisible();
+  await expectNoPageErrors(errors);
+});

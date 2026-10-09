@@ -53,6 +53,13 @@ assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 218px);fon
 assert.ok(css('restaurants.css').includes('justify-content:space-between;'),'Phone swipe controls must span the full available row width');
 assert.ok(css('restaurants.css').includes('@media(max-width:430px){\n html:root #food .unified-swipe-actions,'),'Full-width swipe-control distribution must be phone-only');
 
+assert.ok(css('restaurants.css').includes('padding-inline:12px;'),'Phone swipe controls must sit slightly closer together than CP1332');
+assert.ok(main.includes("if(screen==='family')"),'Family Mode must open in its own drawer overlay without replacing the current screen');
+assert.ok(main.includes('function closeFamilyDrawer(immediate=false)'),'Family Mode drawer must have a shared close path');
+assert.ok(index.includes('id="familyDrawerBg"')&&index.includes('id="familyCloseTop"'),'Family drawer must have a backdrop and a close control');
+assert.ok(css('family.css').includes('--family-panel-top'),'Family drawer must use trigger-relative top positioning');
+assert.ok(css('menu.css').includes('@media(min-width:601px)'),'Desktop menu drawer positioning must be anchored below the hamburger');
+assert.ok(e2e.includes('CP1333 desktop menu and Family Mode drawers anchor beneath the centered-app hamburger'),'Desktop drawer geometry and Family overlay behavior must be tested');
 const tutorialSource=read('src/features/tutorial/index.js');
 for(const copy of ["Include this meal in your Maybes, or swipe right.","Exclude this meal, or swipe left.","Include this restaurant in your Maybes, or swipe right.","Exclude this restaurant, or swipe left."])assert.ok(tutorialSource.includes(copy),'Tour must explain the decision and swipe direction: '+copy);
 const foodsSource=read('data/foods.js');
