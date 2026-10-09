@@ -387,7 +387,7 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
     const box = await card.boundingBox();
     expect(box).toBeTruthy();
     const sign = direction === 'left' ? -1 : 1;
-    return page.evaluate(async ({ x, y, sign, pointerId }) => {
+    return page.evaluate(async ({ x, y, width, sign, pointerId }) => {
       const card = document.querySelector('#foodCard');
       const fire = (type, clientX) => card.dispatchEvent(new PointerEvent(type, {
         bubbles:true, cancelable:true, isPrimary:true, button:0, pointerId, clientX, clientY:y
@@ -404,16 +404,17 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
         };
       };
       fire('pointerdown', x);
-      const samples = [await sample(28), await sample(62), await sample(16)];
+      const samples = [await sample(28), await sample(Math.round(width * 0.5)), await sample(16)];
       fire('pointercancel', x + sign * 16);
       return samples;
-    }, { x:box.x + box.width / 2, y:box.y + box.height / 2, sign, pointerId });
+    }, { x:box.x + box.width / 2, y:box.y + box.height / 2, width:box.width, sign, pointerId });
   }
 
   const right = await sampleDrag('right', 31);
   expect(right.map(sample => sample.direction)).toEqual(['maybe','maybe','maybe']);
   expect(right.every(sample => sample.color === 'rgb(24, 134, 83)')).toBe(true);
   expect(right[1].alpha).toBeGreaterThan(right[0].alpha);
+  expect(right[1].alpha).toBeLessThan(0.6);
   expect(right[2].alpha).toBeLessThan(right[1].alpha);
   await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 3000 }).toBe('idle');
 
@@ -421,6 +422,7 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
   expect(left.map(sample => sample.direction)).toEqual(['cut','cut','cut']);
   expect(left.every(sample => sample.color === 'rgb(255, 255, 255)')).toBe(true);
   expect(left[1].alpha).toBeGreaterThan(left[0].alpha);
+  expect(left[1].alpha).toBeLessThan(0.6);
   expect(left[2].alpha).toBeLessThan(left[1].alpha);
   await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 3000 }).toBe('idle');
 
@@ -442,12 +444,16 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
       alpha:Number(el.style.getPropertyValue('--swipe-tint-alpha')),
       filling:el.classList.contains('swipe-filling'),
       transitionDuration:getComputedStyle(el,'::before').transitionDuration,
+      overlayOpacity:Number(getComputedStyle(el,'::before').opacity),
       color:getComputedStyle(el,'::before').backgroundColor
     }));
     expect(committed.direction).toBe(expectedDirection);
     expect(committed.alpha).toBe(1);
     expect(committed.filling).toBe(true);
-    expect(committed.transitionDuration).toBe('0.135s');
+    expect(parseFloat(committed.transitionDuration)).toBeGreaterThanOrEqual(0.24);
+    expect(parseFloat(committed.transitionDuration)).toBeLessThanOrEqual(0.3);
+    expect(committed.overlayOpacity).toBeGreaterThan(0.05);
+    expect(committed.overlayOpacity).toBeLessThan(0.98);
     expect(committed.color).toBe(expectedColor);
     await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 7000 }).not.toBe('committing');
     await expect.poll(() => card.evaluate(el => ({

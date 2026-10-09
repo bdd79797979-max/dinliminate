@@ -88,6 +88,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     card.style.visibility=hideForMedia?'hidden':'visible';
     card.style.pointerEvents=hideForMedia?'none':'auto';
     card.style.removeProperty('--swipe-tint-alpha');
+    card.style.removeProperty('--swipe-fill-duration');
     card.dataset.swipe='';
     card.dataset.swipeDirection='';
     card.dataset.swipeFinalTransform='';
@@ -101,7 +102,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     const rotation=(dx<0?-1:1)*clamp((distance/width)*SWIPE_CONFIG.exitRotationDeg,0,SWIPE_CONFIG.exitRotationDeg);
     card.style.transform='translate3d('+dx.toFixed(1)+'px,0,0) rotate('+rotation.toFixed(2)+'deg)';
     card.style.opacity='1';
-    card.style.setProperty('--swipe-tint-alpha',String(clamp(distance/(thresholdFor(card)*1.15),0,.94)));
+    // Build color against the whole card width, not the shorter commit threshold.
+    // This keeps the photo readable until the drag is well advanced.
+    card.style.setProperty('--swipe-tint-alpha',String(clamp(distance/(width*1.05),0,.86)));
     card.dataset.swipe=dx<0?'cut':dx>0?'maybe':'';
     return {rotation};
   };
@@ -172,10 +175,6 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     const source=String(meta.source||'gesture');
 
     releasePointer();
-    // Finish the color wash while the existing off-screen card flight continues.
-    card.classList.add('swipe-filling');
-    void card.offsetWidth;
-    card.style.setProperty('--swipe-tint-alpha','1');
     phase='committing';
     const localTransaction=++transactionId;
     activeTransaction=localTransaction;
@@ -206,6 +205,8 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
 
     const width=cardWidth(card);
     const from=dragVisual(fromDx);
+    // The selected action, including button-triggered swipes, owns the tint color.
+    card.dataset.swipe=normalized<0?'cut':'maybe';
     const fromTransform=fromDx===0
       ?'translate3d(0,0,0) rotate(0deg)'
       :card.style.transform;
@@ -223,6 +224,12 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
       SWIPE_CONFIG.exitDurationMaxMs
     ));
     card.dataset.swipeFinalTransform=targetTransform;
+    // Fill timing follows the actual exit duration, but uses a late-rising curve
+    // so white/green only approaches solid near the end of the card's flight.
+    card.style.setProperty('--swipe-fill-duration',duration+'ms');
+    card.classList.add('swipe-filling');
+    void card.offsetWidth;
+    card.style.setProperty('--swipe-tint-alpha','1');
     const exit=animate(
       [
         {transform:fromTransform,opacity:1},
