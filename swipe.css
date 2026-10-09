@@ -19,8 +19,8 @@
 .card[data-swipe="cut"]::after,.card[data-swipe="maybe"]::after{position:absolute;top:18px;padding:7px 10px;border:2px solid currentColor;border-radius:11px;font-size:12px;letter-spacing:.12em;font-weight:900;z-index:4;background:#090909cc;text-transform:uppercase}
 .card[data-swipe="cut"]::after{content:"CUT";left:50%;right:auto;transform:translateX(-50%) rotate(0deg);color:#e06a61;border-color:#b84c45;text-shadow:0 0 12px #b84c4538}
 .card[data-swipe="maybe"]::after{content:"MAYBE";left:50%;right:auto;transform:translateX(-50%) rotate(0deg);color:#79c892;border-color:#4e9c68;text-shadow:0 0 12px #4e9c6850}
-.card::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:var(--swipe-tint-alpha);background:transparent;transition:opacity 135ms cubic-bezier(.18,.68,.21,1)}
-.card.swipe-active:not(.swipe-filling)::before{transition:none}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:var(--swipe-tint-alpha);background:transparent;transition:none}
+.card.swipe-filling::before{transition:opacity 135ms cubic-bezier(.18,.68,.21,1)}
 .card[data-swipe="cut"]::before{background:#fff}
 .card[data-swipe="maybe"]::before{background:#188653}
 .card.swipe-filling[data-swipe="cut"]::after{color:#111;background:#fff;border-color:#111;text-shadow:none}

@@ -441,13 +441,20 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
       direction:el.dataset.swipe,
       alpha:Number(el.style.getPropertyValue('--swipe-tint-alpha')),
       filling:el.classList.contains('swipe-filling'),
+      transitionDuration:getComputedStyle(el,'::before').transitionDuration,
       color:getComputedStyle(el,'::before').backgroundColor
     }));
     expect(committed.direction).toBe(expectedDirection);
     expect(committed.alpha).toBe(1);
     expect(committed.filling).toBe(true);
+    expect(committed.transitionDuration).toBe('0.135s');
     expect(committed.color).toBe(expectedColor);
     await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 7000 }).not.toBe('committing');
+    await expect.poll(() => card.evaluate(el => ({
+      phase:el.getAttribute('data-swipe-phase'),
+      filling:el.classList.contains('swipe-filling'),
+      transition:getComputedStyle(el,'::before').transitionDuration
+    })), { timeout: 3000 }).toEqual({ phase:'idle', filling:false, transition:'0s' });
   }
   await expectNoPageErrors(errors);
 });
