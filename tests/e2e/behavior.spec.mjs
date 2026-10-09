@@ -2191,3 +2191,70 @@ test('app-wide interaction polish keeps decision feedback subtle and Radius dark
   expect(metrics.menuHitArea).not.toBe('none');
   expect(metrics.closeHitArea).not.toBe('none');
 });
+
+
+test('homepage tap targets track the door glass on phone and wider viewports', async ({ page }) => {
+  await prepare(page);
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+    { width: 768, height: 1024 }
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await expect(page.locator('#foodStart')).toBeVisible();
+    await expect.poll(() => page.locator('#foodStart').getAttribute('data-home-window-hit')).toBe('true');
+
+    const geometry = await page.evaluate(() => {
+      const home = document.querySelector('#home');
+      const food = document.querySelector('#foodStart');
+      const restaurant = document.querySelector('#restStart');
+      const box = el => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width * .5, r.top + r.height * .35);
+        return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,
+          clip:getComputedStyle(el).clipPath,centerHitsTarget:el.contains(hit),marked:el.dataset.homeWindowHit};
+      };
+      const homeRect = home.getBoundingClientRect();
+      return {home:{left:homeRect.left,right:homeRect.right,top:homeRect.top,bottom:homeRect.bottom},
+        food:box(food),restaurant:box(restaurant)};
+    });
+    for (const pane of [geometry.food, geometry.restaurant]) {
+      expect(pane.marked).toBe('true');
+      expect(pane.clip).toContain('polygon');
+      expect(pane.height).toBeGreaterThan(pane.width * 2.4);
+      expect(pane.left).toBeGreaterThanOrEqual(geometry.home.left - 1);
+      expect(pane.right).toBeLessThanOrEqual(geometry.home.right + 1);
+      expect(pane.top).toBeGreaterThanOrEqual(geometry.home.top - 1);
+      expect(pane.bottom).toBeLessThanOrEqual(geometry.home.bottom + 1);
+      expect(pane.centerHitsTarget).toBe(true);
+    }
+    expect(geometry.food.right).toBeLessThan(geometry.restaurant.left);
+  }
+});
+
+test('homepage press highlight, one-time logo entrance, and bottom controls stay consistent', async ({ page }) => {
+  await prepare(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('#foodStart')).toBeVisible();
+  await expect.poll(() => page.locator('.app').getAttribute('data-home-logo-entrance-played')).toBe('true');
+  await page.locator('#foodStart').dispatchEvent('pointerdown');
+  await expect(page.locator('#foodStart')).toHaveClass(/is-pressed/);
+  await expect.poll(() => page.locator('#foodStart').evaluate(el => Number(getComputedStyle(el, '::before').opacity))).toBeGreaterThan(.5);
+  await expect.poll(() => page.locator('#foodStart .home-choice-arrow').evaluate(el => new DOMMatrixReadOnly(getComputedStyle(el).transform).m41)).toBeGreaterThan(1.5);
+
+  const controls = await page.evaluate(() => ['addToPhone','shareApp','tutorialModeToggle'].map(id => {
+    const el = document.getElementById(id),icon = el.querySelector('.home-foot-icon').getBoundingClientRect();
+    const label = el.querySelector('.home-icon-label').getBoundingClientRect(),style = getComputedStyle(el);
+    return {iconCenter:icon.left+icon.width/2,labelCenter:label.left+label.width/2,
+      gridRows:style.gridTemplateRows,rowGap:style.rowGap,activeTransform:style.transformOrigin};
+  }));
+  for (const item of controls) {
+    expect(item.gridRows).toContain('22px');
+    expect(item.rowGap).toBe('4px');
+    expect(item.activeTransform).toContain('bottom');
+    expect(Math.abs(item.iconCenter-item.labelCenter)).toBeLessThan(1.5);
+  }
+  expect(Math.max(...controls.map(x=>x.iconCenter))-Math.min(...controls.map(x=>x.iconCenter))).toBeGreaterThan(80);
+});

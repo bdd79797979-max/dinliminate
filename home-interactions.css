@@ -1,0 +1,80 @@
+/* Homepage door-window interactions. Geometry follows the source art's centered cover crop. */
+html:root .app.home-active #home #foodStart.home-window-hit,
+html:root .app.home-active #home #restStart.home-window-hit {
+  position:absolute;left:var(--home-window-left);top:var(--home-window-top);right:auto;bottom:auto;
+  width:var(--home-window-width);height:var(--home-window-height);min-width:0;max-width:none;
+  margin:0;padding:0;display:block;overflow:visible;transform:none;
+  clip-path:var(--home-window-clip);-webkit-clip-path:var(--home-window-clip);
+  background:transparent;border:0;border-radius:0;box-shadow:none;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+html:root .app.home-active #home #foodStart.home-window-hit::before,
+html:root .app.home-active #home #restStart.home-window-hit::before {
+  content:"";display:block;position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;
+  background:linear-gradient(135deg,rgba(255,246,218,.12),rgba(231,204,145,.045) 55%,rgba(255,246,218,.10));
+  transition:opacity 125ms ease;
+}
+html:root .app.home-active #home #foodStart.home-window-hit.is-pressed::before,
+html:root .app.home-active #home #restStart.home-window-hit.is-pressed::before,
+html:root .app.home-active #home #foodStart.home-window-hit:active::before,
+html:root .app.home-active #home #restStart.home-window-hit:active::before { opacity:1; }
+html:root .app.home-active #home #foodStart.home-window-hit:focus-visible,
+html:root .app.home-active #home #restStart.home-window-hit:focus-visible {
+  outline:2px solid rgba(231,204,145,.78);outline-offset:-5px;
+}
+html:root .app.home-active #home #foodStart.home-window-hit .home-choice-content,
+html:root .app.home-active #home #restStart.home-window-hit .home-choice-content {
+  position:absolute;left:var(--home-choice-label-center);top:var(--home-choice-label-top);z-index:1;
+  display:inline-flex;margin:0;transform:translateX(-50%);pointer-events:none;
+  background:transparent;border:0;box-shadow:none;
+}
+html:root .app.home-active #home #foodStart.home-window-hit .home-choice-arrow,
+html:root .app.home-active #home #restStart.home-window-hit .home-choice-arrow { transition:transform 125ms ease,color 125ms ease; }
+html:root .app.home-active #home #foodStart.home-window-hit.is-pressed .home-choice-arrow,
+html:root .app.home-active #home #foodStart.home-window-hit:active .home-choice-arrow,
+html:root .app.home-active #home #restStart.home-window-hit.is-pressed .home-choice-arrow,
+html:root .app.home-active #home #restStart.home-window-hit:active .home-choice-arrow {
+  transform:translateX(2px);color:#f5dfaa;
+}
+@keyframes homeBrandMarkEntrance {
+  from { opacity:0;transform:translateY(3px) scale(.99); }
+  to { opacity:1;transform:translateY(0) scale(1); }
+}
+@keyframes homeBrandWordmarkEntrance {
+  from { opacity:0;transform:translateY(4px); }
+  to { opacity:1;transform:translateY(0); }
+}
+html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-symbol {
+  animation:homeBrandMarkEntrance 260ms cubic-bezier(.2,.75,.25,1) both;
+}
+html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-wordmark {
+  animation:homeBrandWordmarkEntrance 230ms ease-out 35ms both;
+}
+/* Keep Add / Share / Tour icon and label baselines consistent. */
+html:root .app.home-active #home .home-foot-actions { align-items:flex-end; }
+html:root .app.home-active #home .home-icon-action {
+  box-sizing:border-box;display:grid;grid-template-rows:24px 10px;grid-auto-flow:row;
+  align-content:center;justify-items:center;align-items:center;row-gap:4px;border-radius:10px;
+  transform-origin:center bottom;transition:transform 120ms cubic-bezier(.2,.75,.25,1),color 120ms ease;
+  -webkit-tap-highlight-color:transparent;
+}
+html:root .app.home-active #home .home-icon-action .home-foot-icon {
+  grid-row:1;align-self:center;justify-self:center;margin:0;object-fit:contain;
+}
+html:root .app.home-active #home .home-icon-action .home-icon-label {
+  grid-row:2;align-self:center;justify-self:center;display:block;margin:0;line-height:1;text-align:center;
+}
+html:root .app.home-active #home .home-icon-action:active { transform:scale(.97); }
+@media(max-width:390px) {
+  html:root .app.home-active #home .home-icon-action { grid-template-rows:22px 9px;row-gap:4px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-symbol,
+  html:root .app.home-active.home-logo-entrance .app-topbar .dinliminate-logo-wordmark { animation:none; }
+  html:root .app.home-active #home #foodStart.home-window-hit::before,
+  html:root .app.home-active #home #restStart.home-window-hit::before,
+  html:root .app.home-active #home #foodStart.home-window-hit .home-choice-arrow,
+  html:root .app.home-active #home #restStart.home-window-hit .home-choice-arrow,
+  html:root .app.home-active #home .home-icon-action { transition:none; }
+  html:root .app.home-active #home .home-icon-action:active { transform:none; }
+}

@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1362';
+const APP_BUILD = '1363';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1205,6 +1205,68 @@ function familyDrawerKeydown(event){
 }
 document.addEventListener('keydown',familyDrawerKeydown,true);
 
+const HOME_DOOR_SOURCE_WIDTH=720;
+const HOME_DOOR_SOURCE_HEIGHT=1280;
+const HOME_DOOR_PANES=[
+ {id:'foodStart',points:[[132,190],[319,190],[317,856],[130,856]]},
+ {id:'restStart',points:[[414,190],[600,188],[603,856],[412,856]]}
+];
+let homeWindowLayoutFrame=0;
+let homeLogoEntrancePlayed=false;
+function syncHomeWindowHitAreas(){
+ const home=$('home'),app=document.querySelector('.app');
+ if(!home||!app?.classList.contains('home-active'))return;
+ const width=home.clientWidth,height=home.clientHeight;
+ if(width<1||height<1)return;
+ const scale=Math.max(width/HOME_DOOR_SOURCE_WIDTH,height/HOME_DOOR_SOURCE_HEIGHT);
+ const offsetX=(width-HOME_DOOR_SOURCE_WIDTH*scale)/2,offsetY=(height-HOME_DOOR_SOURCE_HEIGHT*scale)/2;
+ const compact=window.matchMedia('(max-width:390px)').matches;
+ for(const pane of HOME_DOOR_PANES){
+  const button=$(pane.id);if(!button)continue;
+  const mapped=pane.points.map(([x,y])=>({x:offsetX+x*scale,y:offsetY+y*scale}));
+  const xs=mapped.map(p=>p.x),ys=mapped.map(p=>p.y);
+  const left=Math.min(...xs),top=Math.min(...ys),right=Math.max(...xs),bottom=Math.max(...ys);
+  const paneWidth=Math.max(1,right-left),paneHeight=Math.max(1,bottom-top);
+  const oldButtonLeft=pane.id==='foodStart'?width*.18+(compact?-3:-4):width*(compact?.60:.57)+(compact?3:4);
+  const oldButtonWidth=width*.30;
+  const contentNudge=pane.id==='foodStart'?(compact?-3:-5):(compact?2:3);
+  const labelCenter=oldButtonLeft+oldButtonWidth/2+contentNudge;
+  const labelTop=height*.42+(compact?width*.06:3)-1;
+  const polygon=mapped.map(p=>(((p.x-left)/paneWidth)*100).toFixed(3)+'% '+(((p.y-top)/paneHeight)*100).toFixed(3)+'%').join(',');
+  button.style.setProperty('--home-window-left',left+'px');
+  button.style.setProperty('--home-window-top',top+'px');
+  button.style.setProperty('--home-window-width',paneWidth+'px');
+  button.style.setProperty('--home-window-height',paneHeight+'px');
+  button.style.setProperty('--home-window-clip','polygon('+polygon+')');
+  button.style.setProperty('--home-choice-label-center',(labelCenter-left)+'px');
+  button.style.setProperty('--home-choice-label-top',(labelTop-top)+'px');
+  button.dataset.homeWindowHit='true';
+  button.style.left='var(--home-window-left)';button.style.top='var(--home-window-top)';
+  button.style.right='auto';button.style.bottom='auto';
+  button.style.width='var(--home-window-width)';button.style.height='var(--home-window-height)';
+  button.style.padding='0';button.style.transform='none';
+  button.style.clipPath='var(--home-window-clip)';button.style.webkitClipPath='var(--home-window-clip)';
+  button.classList.add('home-window-hit');
+ }
+}
+function scheduleHomeWindowLayout(){
+ if(homeWindowLayoutFrame)return;
+ homeWindowLayoutFrame=window.requestAnimationFrame(()=>{homeWindowLayoutFrame=0;syncHomeWindowHitAreas();});
+}
+function maybePlayInitialHomeLogoEntrance(){
+ if(homeLogoEntrancePlayed||!document.documentElement.classList.contains('dinliminate-ready'))return;
+ const app=document.querySelector('.app');
+ if(!app?.classList.contains('home-active'))return;
+ homeLogoEntrancePlayed=true;app.dataset.homeLogoEntrancePlayed='true';app.classList.add('home-logo-entrance');
+ const finish=()=>app.classList.remove('home-logo-entrance');
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){finish();return;}
+ window.setTimeout(finish,420);
+}
+const homeLogoReadyObserver=new MutationObserver(()=>maybePlayInitialHomeLogoEntrance());
+homeLogoReadyObserver.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+window.addEventListener('resize',scheduleHomeWindowLayout,{passive:true});
+window.addEventListener('orientationchange',scheduleHomeWindowLayout,{passive:true});
+window.visualViewport?.addEventListener('resize',scheduleHomeWindowLayout,{passive:true});
 function show(screen) {
 if(screen==='family'){
  const family=$('family'),bg=$('familyDrawerBg'),navDrawer=$('drawer');
@@ -1216,6 +1278,7 @@ if(screen==='family'){
    $(returnScreen)?.classList.remove('hidden');
    S.screen=returnScreen;save();
    document.querySelector('.app')?.classList.toggle('home-active',returnScreen==='home');
+   if(returnScreen==='home'){scheduleHomeWindowLayout();maybePlayInitialHomeLogoEntrance();}
    $('appTopbar')?.classList.toggle('hidden',returnScreen==='food'||returnScreen==='restaurant'||returnScreen==='winner');
   }
   S.familyDrawerReturnScreen=S.screen||'home';
@@ -1259,6 +1322,7 @@ document.querySelectorAll('.screen').forEach(x => x.classList.add('hidden'));
 $(screen)?.classList.remove('hidden');
 const screenChanged=S.screen!==screen;S.screen=screen;if(screenChanged)save();
 document.querySelector('.app')?.classList.toggle('home-active',screen === 'home');
+if(screen==='home'){scheduleHomeWindowLayout();maybePlayInitialHomeLogoEntrance();}
 // CP1311: critical-boot route selectors are one-shot hints. Leaving them on
 // would override .hidden and let a previous screen flash back after navigation.
 document.documentElement.classList.remove('dinliminate-start-food','dinliminate-start-restaurant','dinliminate-start-winner','dinliminate-start-family');
