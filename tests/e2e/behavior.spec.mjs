@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1314 decision colors, stronger gold arrowhead, aligned Maybes controls, and higher menu rows', async ({ page }) => {
+test('CP1315 decision colors, transparent gold back arrowheads, aligned controls, and menu rows below the header', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -214,6 +214,9 @@ test('CP1314 decision colors, stronger gold arrowhead, aligned Maybes controls, 
       cut: color('foodCut'),
       maybe: color('foodMaybe'),
       arrowColor: getComputedStyle(document.querySelector('#foodHomeBack')).color,
+      backBackground: getComputedStyle(document.querySelector('#foodHomeBack')).backgroundColor,
+      backBorder: getComputedStyle(document.querySelector('#foodHomeBack')).borderWidth,
+      backRadius: getComputedStyle(document.querySelector('#foodHomeBack')).borderRadius,
       arrowHasCircle: Boolean(arrow?.querySelector('circle')),
       arrowPath: arrow?.querySelector('path')?.getAttribute('d') || '',
       mealTime: box('foodMealTimeToggle'),
@@ -224,6 +227,9 @@ test('CP1314 decision colors, stronger gold arrowhead, aligned Maybes controls, 
   expect(mealVisuals.cut).toBe('rgb(239, 51, 64)');
   expect(mealVisuals.maybe).toBe('rgb(40, 199, 111)');
   expect(mealVisuals.arrowColor).toBe('rgb(216, 182, 106)');
+  expect(mealVisuals.backBackground).toBe('rgba(0, 0, 0, 0)');
+  expect(mealVisuals.backBorder).toBe('0px');
+  expect(mealVisuals.backRadius).toBe('0px');
   expect(mealVisuals.arrowHasCircle).toBe(false);
   expect(mealVisuals.arrowPath).toBe('M16.5 3.5 7 12l9.5 8.5');
   expect(await page.locator('#foodHomeBack svg').getAttribute('class')).toBe('home-back-arrowhead');
@@ -233,9 +239,13 @@ test('CP1314 decision colors, stronger gold arrowhead, aligned Maybes controls, 
 
   await page.locator('#foodMenu').click();
   await expect(page.locator('#drawer')).toBeVisible();
+  const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
   const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
+  expect(drawerHead).not.toBeNull();
   expect(firstMenuRow).not.toBeNull();
-  expect(firstMenuRow.y).toBeLessThan(115);
+  expect(firstMenuRow.y).toBeGreaterThanOrEqual(drawerHead.y + drawerHead.height - 1);
+  expect(firstMenuRow.y - (drawerHead.y + drawerHead.height)).toBeLessThan(40);
+  expect(firstMenuRow.y).toBeLessThan(135);
   await page.locator('#drawerClose').click();
 
   await page.evaluate(() => localStorage.clear());
@@ -254,6 +264,14 @@ test('CP1314 decision colors, stronger gold arrowhead, aligned Maybes controls, 
   });
   expect(restaurantVisuals.cut).toBe('rgb(239, 51, 64)');
   expect(restaurantVisuals.maybe).toBe('rgb(40, 199, 111)');
+  const restaurantBackStyles = await page.locator('#restaurantHomeBack').evaluate(el => {
+    const css = getComputedStyle(el);
+    return { color: css.color, background: css.backgroundColor, border: css.borderWidth, radius: css.borderRadius };
+  });
+  expect(restaurantBackStyles.color).toBe('rgb(216, 182, 106)');
+  expect(restaurantBackStyles.background).toBe('rgba(0, 0, 0, 0)');
+  expect(restaurantBackStyles.border).toBe('0px');
+  expect(restaurantBackStyles.radius).toBe('0px');
   expect(Math.abs(restaurantVisuals.cuisine.centerY - restaurantVisuals.maybes.centerY)).toBeLessThanOrEqual(3);
   await expectNoPageErrors(errors);
 });

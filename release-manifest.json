@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1314,
+  "build": 1315,
   "sourceBranch": "main",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1314",
-  "deploymentTrigger": "CP1314-bolder-tail-free-gold-arrow-and-higher-menu-rows",
+  "checkpoint": "CP1315",
+  "deploymentTrigger": "CP1315-force-gold-back-icon-transparent-and-menu-rows-below-header",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -38,6 +38,6 @@
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; only Reset receives color emphasis",
   "swipeAudit": "CP1312 preserves terminal swipe transforms to prevent card reappearance, clears one-shot refresh route selectors, and waits for the live Meal image before revealing reused cards.",
-  "automatedRC": "CP1314 bold shaft-free gold arrowhead and higher menu action list; carries CP1313 CUT/MAYBE colors and header alignment, plus CP1312 swipe/boot/Details regression coverage.",
-  "visualCorrections": "CP1314 makes the tail-free gold back arrowhead visibly bolder and moves the menu action list a further 30px upward from CP1313."
+  "automatedRC": "CP1315 asserts both Back to Home controls have transparent background, no radius, gold arrowhead, and first menu action row below the header with tighter vertical placement.",
+  "visualCorrections": "CP1315 forces both Back to Home controls to be borderless/transparent gold arrowheads with no circular backing. Drawer menu rows sit just below the drawer header and remain materially higher than the original CP1312 layout."
 }

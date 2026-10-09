@@ -826,3 +826,65 @@ html:root .drawer .drawer-nav{
   margin-top:0;
   padding-top:0;
 }
+
+
+/* CP1315: explicit high-specificity treatment for the two Home back controls. */
+html:root .app #food #foodHomeBack.discovery-home-back,
+html:root .app #restaurant #restaurantHomeBack.discovery-home-back{
+  appearance:none;
+  -webkit-appearance:none;
+  display:inline-flex;
+  flex:0 0 30px;
+  align-items:center;
+  justify-content:center;
+  width:30px;
+  min-width:30px;
+  max-width:30px;
+  height:30px;
+  min-height:30px;
+  margin:0 1px 0 0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  background-color:transparent;
+  background-image:none;
+  box-shadow:none;
+  color:#d8b66a;
+  text-shadow:none;
+  overflow:visible;
+}
+html:root .app #food #foodHomeBack.discovery-home-back > span,
+html:root .app #restaurant #restaurantHomeBack.discovery-home-back > span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:30px;
+  height:30px;
+  line-height:1;
+  transform:none;
+  text-shadow:none;
+}
+html:root .app #food #foodHomeBack .home-back-arrowhead,
+html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
+  display:block;
+  width:25px;
+  height:25px;
+  flex:0 0 25px;
+  overflow:visible;
+}
+@media(max-width:390px){
+  html:root .app #food #foodHomeBack.discovery-home-back,
+  html:root .app #restaurant #restaurantHomeBack.discovery-home-back{
+    flex-basis:28px;
+    width:28px;
+    min-width:28px;
+    max-width:28px;
+  }
+  html:root .app #food #foodHomeBack .home-back-arrowhead,
+  html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
+    width:24px;
+    height:24px;
+    flex-basis:24px;
+  }
+}
