@@ -1887,6 +1887,52 @@ test('Tour button and first guidance bubble use Tour wording', async ({ page }) 
 });
 
 
+
+test('Radius control stays black in resting, hover, focus, and post-click states', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible({ timeout: 10000 });
+  const radius = page.locator('#radius');
+  const control = page.locator('#radius').locator('..');
+
+  const readBackgrounds = () => page.evaluate(() => {
+    const select = document.querySelector('#radius');
+    const control = select?.parentElement;
+    const selectStyle = select ? getComputedStyle(select) : null;
+    const controlStyle = control ? getComputedStyle(control) : null;
+    return {
+      select: selectStyle?.backgroundColor,
+      control: controlStyle?.backgroundColor,
+      selectImage: selectStyle?.backgroundImage,
+      controlImage: controlStyle?.backgroundImage
+    };
+  });
+  const expectBlack = async state => {
+    const styles = await readBackgrounds();
+    expect(styles.select, state + ': Radius select background').toBe('rgb(9, 9, 9)');
+    expect(styles.control, state + ': Radius container background').toBe('rgb(9, 9, 9)');
+    expect(styles.selectImage, state + ': Radius select has no gray gradient').toBe('none');
+    expect(styles.controlImage, state + ': Radius container has no gray gradient').toBe('none');
+  };
+
+  await expect(radius).toBeVisible();
+  await expectBlack('resting');
+  await control.hover();
+  await expectBlack('hover');
+  await radius.focus();
+  await expectBlack('focused');
+
+  const priorValue = await radius.inputValue();
+  await radius.click();
+  await page.keyboard.press('Escape').catch(() => {});
+  await expectBlack('after click');
+  await expect(radius).toHaveValue(priorValue);
+  await expectNoPageErrors(errors);
+});
+
 test('phone panel close actions restore the main menu before the panel closes', async ({ page }) => {
   const errors = await prepare(page);
   await page.setViewportSize({ width: 390, height: 844 });

@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1353,
-  "sourceBranch": "cp1353-panel-close-handoff",
+  "build": 1354,
+  "sourceBranch": "cp1354-radius-select-background",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1353",
-  "deploymentTrigger": "cp1353-panel-close-handoff",
+  "checkpoint": "CP1354",
+  "deploymentTrigger": "cp1354-radius-select-background",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -57,5 +57,6 @@
   "backRestoreAudit": "CP1348 keeps restored card photos and titles paired on Back, persists Restaurant photo identity in decision history, and tests Back while the next Meal photo request is held.",
   "menuTransitionAudit": "CP1350 uses a time-ordered menu cover handoff and regression checks that the prior screen's full-screen backdrop remains opaque until destination panel covers are ready.",
   "tourTerminologyAudit": "Visible help and status copy uses Tour wording: the first bubble title is TOUR and on/off status copy says Tour Mode. The first guide bubble/body and existing toggle behavior are covered by the regression test.",
-  "panelCloseHandoffAudit": "Family Mode now opens the main menu and its opaque cover before the family panel begins closing. Manage Meals, History, and Settings restore the main menu synchronously before their panel/backdrop close transitions. This prevents a frame of the previous screen becoming visible on phone close."
+  "panelCloseHandoffAudit": "Family Mode now opens the main menu and its opaque cover before the family panel begins closing. Manage Meals, History, and Settings restore the main menu synchronously before their panel/backdrop close transitions. This prevents a frame of the previous screen becoming visible on phone close.",
+  "radiusControlAudit": "The Radius control and enclosing field use a forced #090909 background with no image in resting, hover, focus, focus-visible, active, and focus-within states. Options use the same black background and light text. A phone-width regression verifies computed background colors and unchanged selection after opening/dismissing the control."
 }
