@@ -759,7 +759,7 @@ test('a restored Restaurants route clears its one-shot boot selector before norm
     document.documentElement.classList.contains('dinliminate-start-restaurant')
   )).toBe(false);
 
-  await page.locator('#restaurantBackTop').click();
+  await page.locator('#restaurantHomeBack').click();
   await expect(page.locator('#home')).toBeVisible();
   const screens = await page.evaluate(() => [...document.querySelectorAll('.screen')]
     .filter(el => getComputedStyle(el).display !== 'none')
