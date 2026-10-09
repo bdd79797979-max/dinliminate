@@ -34,6 +34,7 @@ for (const file of syntaxFiles) {
 }
 
 const release=JSON.parse(read('app-release.json'));
+const build=Number(release.build);
 const releaseManifest=JSON.parse(read('release-manifest.json'));
 const manifest=JSON.parse(read('manifest.webmanifest'));
 const index=read('index.html');
@@ -58,7 +59,6 @@ assert.doesNotMatch(homeCss,/\.app\.home-active\{[^}]*url\(/,'app shell must not
 const swipeFeatureSource=read('src/features/swipe/index.js');
 assert.ok(swipeFeatureSource.includes("foodCard.dataset.mediaPending='true'"),'Meal redraw must mark a pending media handoff');
 const vercel=read('vercel.json');
-const build=Number(release.build);
 const styleFiles=['tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','menu.css'];
 for(const file of styleFiles){const css=read(file);let depth=0;for(const ch of css){if(ch==='{')depth++;else if(ch==='}')depth--;};assert.equal(depth,0,'CSS braces must balance: '+file);assert.equal(css.includes('!important'),false,'CSS must not contain !important: '+file);}
 for(const file of styleFiles)assert.ok(index.includes('./'+file+'?v='+build),'index.html missing stylesheet: '+file);
