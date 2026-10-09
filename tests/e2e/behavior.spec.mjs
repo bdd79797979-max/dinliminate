@@ -241,6 +241,10 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
 
   await page.locator('#foodMenu').click();
   await expect(page.locator('#drawer')).toBeVisible();
+  await expect.poll(() => page.locator('#drawer').evaluate(el => {
+    const t=getComputedStyle(el).transform;
+    return t==='none'||t==='matrix(1, 0, 0, 1, 0, 0)'||t==='matrix(1,0,0,1,0,0)';
+  })).toBe(true);
   const triggerBox = await page.locator('#foodMenu').boundingBox();
   const drawerHead = await page.locator('#drawer .drawer-head').boundingBox();
   const closeBox = await page.locator('#drawerClose').boundingBox();
@@ -266,6 +270,10 @@ test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned unifo
   await page.evaluate(() => localStorage.clear());
   await openRestaurants(page);
   await page.locator('#restaurantMenu').click();
+  await expect.poll(() => page.locator('#drawer').evaluate(el => {
+    const t=getComputedStyle(el).transform;
+    return t==='none'||t==='matrix(1, 0, 0, 1, 0, 0)'||t==='matrix(1,0,0,1,0,0)';
+  })).toBe(true);
   const restaurantTriggerBox = await page.locator('#restaurantMenu').boundingBox();
   const restaurantCloseBox = await page.locator('#drawerClose').boundingBox();
   const restaurantFirstWindow = await page.locator('#drawer .drawer-window').first().boundingBox();

@@ -1,0 +1,157 @@
+import { test, expect } from '@playwright/test';
+
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64'
+);
+const TINY_PNG_DATA = 'data:image/png;base64,' + TINY_PNG.toString('base64');
+
+async function openApp(page) {
+  const errors = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  await page.route('**/api/restaurants*', async route => {
+    const url = new URL(route.request().url());
+    const body = url.searchParams.get('mode') === 'reverse'
+      ? { ok:true, display:'Clarksville, TN', lat:36.53, lon:-87.36 }
+      : {
+          ok:true, display:'Clarksville, TN', lat:36.53, lon:-87.36,
+          radiusMiles:10, searchLatencyMs:2, hoursTimeZone:'America/Chicago',
+          providerErrors:[], results:[]
+        };
+    await route.fulfill({ status:200, contentType:'application/json', body:JSON.stringify(body) });
+  });
+  await page.route('**/api/restaurant-photo*', async route => {
+    await route.fulfill({
+      status:200, contentType:'application/json',
+      body:JSON.stringify({ ok:true, url:TINY_PNG_DATA, attributions:[] })
+    });
+  });
+  await page.route('**/api/image*', async route => {
+    await route.fulfill({ status:200, contentType:'image/png', body:TINY_PNG });
+  });
+  await page.goto('/');
+  await expect(page.locator('#home')).toBeVisible();
+  return errors;
+}
+
+async function waitForSettledTransform(locator) {
+  await expect.poll(() => locator.evaluate(el => {
+    const transform = getComputedStyle(el).transform;
+    return transform === 'none'
+      || transform === 'matrix(1, 0, 0, 1, 0, 0)'
+      || transform === 'matrix(1,0,0,1,0,0)';
+  })).toBe(true);
+}
+
+async function expectDrawerAnchored(page, panelSelector, triggerId, closeId) {
+  const geometry = await page.evaluate(({ panelSelector, triggerId, closeId }) => {
+    const trigger = document.getElementById(triggerId);
+    const panel = document.querySelector(panelSelector);
+    const close = document.getElementById(closeId);
+    const t = trigger.getBoundingClientRect(), p = panel.getBoundingClientRect(), c = close.getBoundingClientRect();
+    return {
+      trigger:{ left:t.left, top:t.top, bottom:t.bottom, right:t.right, width:t.width, height:t.height },
+      panel:{ top:p.top, right:p.right, left:p.left, width:p.width, height:p.height },
+      close:{ top:c.top, right:c.right, width:c.width, height:c.height },
+      viewport:{ width:window.innerWidth, height:window.innerHeight }
+    };
+  }, { panelSelector, triggerId, closeId });
+
+  expect(geometry.panel.top, panelSelector+' begins 4px beneath its hamburger')
+    .toBeCloseTo(geometry.trigger.bottom + 4, 0);
+  expect(Math.abs(geometry.panel.right - geometry.trigger.right), panelSelector+' right edge')
+    .toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.close.right - geometry.trigger.right), closeId+' right edge')
+    .toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.close.top - geometry.panel.top), closeId+' top edge')
+    .toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.close.width - geometry.trigger.width), closeId+' width')
+    .toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.close.height - geometry.trigger.height), closeId+' height')
+    .toBeLessThanOrEqual(1);
+  expect(geometry.panel.left).toBeGreaterThanOrEqual(geometry.viewport.width - 400);
+  expect(geometry.panel.right).toBeLessThanOrEqual(geometry.viewport.width + 1);
+}
+
+async function openMenuFrom(page, triggerId) {
+  await page.locator('#' + triggerId).click();
+  const drawer = page.locator('#drawer');
+  await expect(drawer).toHaveClass(/is-open/);
+  await waitForSettledTransform(drawer);
+  expect(await drawer.getAttribute('data-menu-anchor-id')).toBe(triggerId);
+  await expectDrawerAnchored(page, '#drawer', triggerId, 'drawerClose');
+}
+
+async function openFamilyFrom(page, triggerId) {
+  await openMenuFrom(page, triggerId);
+  await page.locator('#familyMode').click();
+  const family = page.locator('#family');
+  await expect(family).toHaveClass(/is-open/);
+  await waitForSettledTransform(family);
+  await expect(page.locator('#familyDrawerBg')).toHaveClass(/is-open/);
+  await expect(page.locator('#drawer')).toBeHidden();
+  await expectDrawerAnchored(page, '#family', triggerId, 'familyCloseTop');
+}
+
+test('desktop shared menu anchors to the actual Home, Meals and Restaurant hamburger', async ({ page }) => {
+  const errors = await openApp(page);
+
+  await openMenuFrom(page, 'menu');
+  await page.locator('#drawerClose').click();
+  await expect(page.locator('#drawer')).toBeHidden();
+
+  await page.locator('#foodStart').click();
+  await expect(page.locator('#food')).toBeVisible();
+  await openMenuFrom(page, 'foodMenu');
+  await page.locator('#drawerClose').click();
+  await expect(page.locator('#drawer')).toBeHidden();
+
+  await page.locator('#foodHomeBack').click();
+  await expect(page.locator('#home')).toBeVisible();
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await openMenuFrom(page, 'restaurantMenu');
+  await page.locator('#drawerClose').click();
+  await expect(page.locator('#drawer')).toBeHidden();
+
+  expect(errors).toEqual([]);
+});
+
+test('desktop Family Mode is a right-side drawer that closes without changing its underlying screen', async ({ page }) => {
+  const errors = await openApp(page);
+
+  await openFamilyFrom(page, 'menu');
+  await expect(page.locator('#home')).toBeVisible();
+  await page.locator('#familyCloseTop').click();
+  await expect(page.locator('#family')).toBeHidden();
+  await expect(page.locator('#home')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe('menu');
+
+  await page.locator('#foodStart').click();
+  await expect(page.locator('#food')).toBeVisible();
+  await openFamilyFrom(page, 'foodMenu');
+  await expect(page.locator('#food')).toBeVisible();
+  await page.locator('#familyDrawerBg').click({ position:{ x:20, y:450 } });
+  await expect(page.locator('#family')).toBeHidden();
+  await expect(page.locator('#food')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe('foodMenu');
+
+  await page.locator('#foodHomeBack').click();
+  await expect(page.locator('#home')).toBeVisible();
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await openFamilyFrom(page, 'restaurantMenu');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#family')).toBeHidden();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe('restaurantMenu');
+
+  await openFamilyFrom(page, 'restaurantMenu');
+  await page.locator('#familyCloseTop').focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect.poll(() => page.locator('#family').evaluate(el => el.contains(document.activeElement))).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#family')).toBeHidden();
+
+  expect(errors).toEqual([]);
+});

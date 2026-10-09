@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 
 const root = path.resolve(__dirname, '..', '..');
 const requiredFiles = [
-  'index.html','boot.js','tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','menu.css','src/main.js','viewport.js','sw.js',
+  'index.html','tests/e2e/desktop-drawers.spec.mjs','boot.js','tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','menu.css','src/main.js','viewport.js','sw.js',
   'manifest.webmanifest','logo.svg','icon.svg','app-release.json','api/_lib/http.js','api/_lib/rateLimit.js','api/_lib/ssrf.js','api/_lib/imageHosts.js',
   'release-manifest.json','package.json','scripts/stamp.mjs','api/restaurants.js',
   'api/restaurant-photo.js','api/google-restaurant-photo.js',
@@ -52,6 +52,12 @@ assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 238px)'),'
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 218px);font-size:10.5px'),'Home slogan must move upward by 2px on narrow phones');
 assert.ok(css('restaurants.css').includes('justify-content:space-between;'),'Phone swipe controls must span the full available row width');
 assert.ok(css('menu.css').includes('CP1334: maximize phone discovery toolbar controls without wrapping'),'Phone discovery toolbar controls must use the responsive no-wrap layout');
+assert.ok(css('menu.css').includes('CP1335: desktop drawer geometry is tied to the actual hamburger'),'Desktop menu panel must align beneath the triggering hamburger');
+assert.ok(css('family.css').includes('CP1335: Family Mode is a right-side dialog drawer'),'Family Mode must use the anchored overlay drawer styles');
+assert.ok(main.includes('function closeFamilyDrawer')&&main.includes('function familyDrawerKeydown'),'Family Mode must support close, focus return, Escape, and focus trapping');
+assert.ok(index.includes('id="familyDrawerBg"')&&index.includes('id="familyCloseTop"')&&index.includes('aria-modal="true"'),'Family drawer must expose a backdrop, close button, and dialog semantics');
+assert.ok(e2e.includes('CP1329 decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows'),'Mobile drawer alignment regression test must remain present');
+assert.ok(fs.existsSync(path.join(root,'tests/e2e/desktop-drawers.spec.mjs'))&&fs.existsSync(path.join(root,'playwright.config.mjs')),'Desktop drawer regression test and project config must exist');
 assert.ok(e2e.includes('CP1334 phone discovery toolbars maximize their controls without wrapping'),'Release audit must cover enlarged Meals/Restaurant toolbars at phone widths');
 assert.ok(css('restaurants.css').includes('@media(max-width:430px){\n html:root #food .unified-swipe-actions,'),'Full-width swipe-control distribution must be phone-only');
 

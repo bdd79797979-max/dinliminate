@@ -262,3 +262,46 @@ html:root .menu span, html:root .decision-menu span, html:root .winner-menu span
 html:root .menu::before, html:root .menu::after, html:root .decision-menu::before, html:root .decision-menu::after, html:root .winner-menu::before, html:root .winner-menu::after, html:root #menu::before, html:root #menu::after, html:root #familyMenu::before, html:root #familyMenu::after, html:root #foodMenu::before, html:root #foodMenu::after, html:root #restaurantMenu::before, html:root #restaurantMenu::after, html:root #winnerMenu::before, html:root #winnerMenu::after, html:root .interior-menu::after{content:none;display:none}
 html:root .menu:hover, html:root .menu:active, html:root .decision-menu:hover, html:root .decision-menu:active, html:root .winner-menu:hover, html:root .winner-menu:active, html:root #menu:hover, html:root #menu:active, html:root #familyMenu:hover, html:root #familyMenu:active, html:root #foodMenu:hover, html:root #foodMenu:active, html:root #restaurantMenu:hover, html:root #restaurantMenu:active, html:root #winnerMenu:hover, html:root #winnerMenu:active{background:transparent;border:0;box-shadow:none}
 html:root .menu:active, html:root .decision-menu:active, html:root .winner-menu:active, html:root #menu:active, html:root #familyMenu:active, html:root #foodMenu:active, html:root #restaurantMenu:active, html:root #winnerMenu:active{transform:scale(.94)}
+
+
+/* CP1335: Family Mode is a right-side dialog drawer layered over its originating screen. */
+.family-drawer-bg{
+  position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:opacity .18s ease;
+}
+.family-drawer-bg.is-open{opacity:1}
+html:root .app > #family.family-screen{
+  position:fixed;left:auto;right:var(--family-trigger-right,0px);top:var(--family-panel-top,0px);bottom:auto;
+  z-index:71;width:min(91vw,390px);max-width:none;height:calc(100dvh - var(--family-panel-top,0px));
+  min-height:0;max-height:100dvh;margin:0;padding:0;overflow:hidden;box-sizing:border-box;
+  background:radial-gradient(120% 80% at 100% 0%,#1c2a35 0%,rgba(28,42,53,0) 56%),linear-gradient(165deg,#151515 0%,#0d0d0c 100%);
+  border-left:1px solid #34302a;box-shadow:-24px 0 70px #000a;
+  transform:translateX(104%);opacity:.72;transition:transform .18s cubic-bezier(.22,.8,.22,1),opacity .18s ease;
+}
+html:root .app > #family.family-screen.is-open{transform:translateX(0);opacity:1}
+html:root .app > #family .family-interior-nav{
+  position:relative;display:flex;flex:0 0 58px;align-items:center;justify-content:center;
+  width:100%;height:58px;min-height:58px;margin:0;padding:0;box-sizing:border-box;
+}
+html:root .app > #family .family-close-top{
+  appearance:none;-webkit-appearance:none;position:absolute;top:var(--family-trigger-top,9px);right:var(--family-trigger-right,0px);
+  display:grid;place-items:center;box-sizing:border-box;width:var(--family-trigger-width,40px);min-width:var(--family-trigger-width,40px);
+  height:var(--family-trigger-height,40px);min-height:var(--family-trigger-height,40px);margin:0;padding:0;
+  border:1px solid #40392e;border-radius:50%;background:rgba(15,15,15,.24);color:#d6b778;
+  font-size:24px;line-height:1;box-shadow:inset 0 1px 0 rgba(255,248,226,.12),0 4px 12px rgba(0,0,0,.18);
+}
+html:root .app > #family .family-page{
+  flex:1 1 auto;min-height:0;width:100%;max-width:none;margin:0;padding:1vh 10px 24px;
+  overflow:auto;overscroll-behavior:contain;box-sizing:border-box;
+}
+html:root .app > #family .family-close-top:focus-visible{outline:2px solid #d6b778;outline-offset:2px}
+@media(min-width:601px){
+  html:root .app > #family.family-screen{position:fixed}
+  html:root .app > #family .family-interior-nav{flex-basis:40px;height:40px;min-height:40px}
+  html:root .app > #family .family-close-top{top:0;right:0}
+  html:root .app > #family .family-page{padding-top:14px}
+}
+@media(max-width:600px){
+  html:root .app > #family.family-screen{top:0;right:0;height:100dvh}
+  html:root .app > #family .family-interior-nav{flex-basis:58px;height:58px;min-height:58px}
+}

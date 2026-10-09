@@ -286,3 +286,27 @@ html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
     font-size:clamp(9px,2.8vw,11px);line-height:1;white-space:nowrap;
   }
 }
+
+
+/* CP1335: desktop drawer geometry is tied to the actual hamburger, not the centered app's width. */
+@media(min-width:601px){
+  html:root .app > #drawer.drawer{
+    position:fixed;top:var(--drawer-panel-top,0px);right:var(--drawer-trigger-right,0px);
+    left:auto;bottom:auto;width:min(91vw,390px);
+    height:calc(100dvh - var(--drawer-panel-top,0px));padding-top:0;
+  }
+  html:root .app > #drawer .drawer-close{
+    top:0;right:0;width:var(--drawer-trigger-width,40px);min-width:var(--drawer-trigger-width,40px);
+    height:var(--drawer-trigger-height,40px);min-height:var(--drawer-trigger-height,40px);
+  }
+}
+
+/* The gold back arrow scales with the neighboring toolbar label on phones. */
+@media(max-width:430px){
+  html:root .app #food #foodHomeBack.discovery-home-back,
+  html:root .app #restaurant #restaurantHomeBack.discovery-home-back{font-size:clamp(10px,3.5vw,14px)}
+  html:root .app #food #foodHomeBack .home-back-arrowhead,
+  html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
+    flex:0 0 1em;width:1em;min-width:1em;max-width:1em;height:1em;min-height:1em;max-height:1em;
+  }
+}
