@@ -6,6 +6,10 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..', '..');
 const port = Number(process.env.PORT || 4173);
+const vercelConfig = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+const csp = vercelConfig.headers?.flatMap(rule => rule.headers || [])
+  .find(header => String(header.key || '').toLowerCase() === 'content-security-policy')?.value;
+if (typeof csp !== 'string' || !csp) throw new Error('vercel.json is missing Content-Security-Policy');
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -24,6 +28,16 @@ const mime = {
 const server = http.createServer((req, res) => {
   try {
     const rawPath = decodeURIComponent(String(req.url || '/').split('?')[0]);
+    if (rawPath === '/api/image') {
+      const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'no-store',
+        'Content-Security-Policy': csp
+      });
+      res.end(pixel);
+      return;
+    }
     const relative = rawPath === '/' ? 'index.html' : rawPath.replace(/^\/+/, '');
     const file = path.resolve(root, relative);
     if (!file.startsWith(root + path.sep) && file !== root) {
@@ -38,7 +52,8 @@ const server = http.createServer((req, res) => {
     }
     res.writeHead(200, {
       'Content-Type': mime[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': 'no-store'
+      'Cache-Control': 'no-store',
+      'Content-Security-Policy': csp
     });
     fs.createReadStream(file).pipe(res);
   } catch {
