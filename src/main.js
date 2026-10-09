@@ -1284,7 +1284,9 @@ if ('serviceWorker' in navigator) window.addEventListener('load', async () => {
       return script && !script.endsWith(desiredSuffix) ? reg.unregister() : Promise.resolve(false);
     }));
     const reg = await navigator.serviceWorker.register(`./sw.js${desiredSuffix}`, { updateViaCache: 'none' });
-    await reg.update().catch(error=>{console.error('Dinliminate async operation failed',error);});
+    if (typeof reg?.update === 'function') {
+      await reg.update().catch(error => console.warn('Dinliminate service-worker update check failed', error));
+    }
   } catch(error){console.error('Dinliminate error',error)}
 });
 configureStorage({$,restaurantCanonicalId,allFoods,normKey,mealPhotoList,dedupeMealPhotos,DEFAULT_FOOD_IMAGE,ensureMealTimeSettings,mealTimeNames,currentMealTimeName,STORAGE_VERSION,KEY});
