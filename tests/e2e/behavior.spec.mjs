@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1313 decision colors, gold chevron, inline Maybes controls, and menu spacing', async ({ page }) => {
+test('CP1314 decision colors, stronger gold arrowhead, aligned Maybes controls, and higher menu rows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -225,7 +225,9 @@ test('CP1313 decision colors, gold chevron, inline Maybes controls, and menu spa
   expect(mealVisuals.maybe).toBe('rgb(40, 199, 111)');
   expect(mealVisuals.arrowColor).toBe('rgb(216, 182, 106)');
   expect(mealVisuals.arrowHasCircle).toBe(false);
-  expect(mealVisuals.arrowPath).toMatch(/^M15 5\.5 8\.5 12l6\.5 6\.5$/);
+  expect(mealVisuals.arrowPath).toBe('M16.5 3.5 7 12l9.5 8.5');
+  expect(await page.locator('#foodHomeBack svg').getAttribute('class')).toBe('home-back-arrowhead');
+  expect(await page.locator('#foodHomeBack svg').boundingBox().then(box => box.width)).toBeGreaterThanOrEqual(24);
   expect(Math.max(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)
     - Math.min(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)).toBeLessThanOrEqual(3);
 
@@ -233,7 +235,7 @@ test('CP1313 decision colors, gold chevron, inline Maybes controls, and menu spa
   await expect(page.locator('#drawer')).toBeVisible();
   const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
   expect(firstMenuRow).not.toBeNull();
-  expect(firstMenuRow.y).toBeLessThan(145);
+  expect(firstMenuRow.y).toBeLessThan(115);
   await page.locator('#drawerClose').click();
 
   await page.evaluate(() => localStorage.clear());

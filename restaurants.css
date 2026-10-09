@@ -778,3 +778,51 @@ html:root #restaurant .restaurant-choice-management .restaurant-refine-tabs{
   gap:7px;
   flex-wrap:nowrap;
 }
+
+
+/* CP1314: make the back arrowhead unmistakable while keeping the icon shaft-free. */
+html:root .discovery-home-back{
+  flex-basis:30px;
+  width:30px;
+  min-width:30px;
+  max-width:30px;
+  height:30px;
+  min-height:30px;
+  line-height:30px;
+  color:#d8b66a;
+}
+html:root .discovery-home-back span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:30px;
+  line-height:30px;
+}
+html:root .discovery-home-back .home-back-arrowhead{
+  display:block;
+  width:25px;
+  height:25px;
+  flex:0 0 25px;
+  overflow:visible;
+}
+@media(max-width:390px){
+  html:root .discovery-home-back{
+    flex-basis:28px;
+    width:28px;
+    min-width:28px;
+    max-width:28px;
+  }
+  html:root .discovery-home-back .home-back-arrowhead{
+    width:24px;
+    height:24px;
+    flex-basis:24px;
+  }
+}
+/* The drawer items sit closer beneath the drawer header, not halfway down the panel. */
+html:root .drawer .drawer-section-label{
+  margin-top:0;
+}
+html:root .drawer .drawer-nav{
+  margin-top:0;
+  padding-top:0;
+}
