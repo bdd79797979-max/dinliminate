@@ -31,6 +31,9 @@ async function openApp(page) {
   });
   await page.goto('/');
   await expect(page.locator('#home')).toBeVisible();
+  if (page.viewportSize()?.width > 600) {
+    await expect.poll(() => page.locator('.app').evaluate(el => getComputedStyle(el).transform)).toBe('none');
+  }
   return errors;
 }
 

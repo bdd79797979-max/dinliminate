@@ -67,3 +67,15 @@ html:root .app.home-active #home .home-choice-arrow{font-size:21px}
 html:root .app.home-active #home .home-choice-content{padding:6px 10px 7px;gap:7px;border-radius:4px}
 }
 html:root .app.home-active #home .home-choice-zone, html:root .app.home-active #home .home-choice-zone:hover, html:root .app.home-active #home .home-choice-zone:active, html:root .app.home-active #home .home-choice-zone:focus, html:root .app.home-active #home .home-choice-zone:focus-visible, html:root .app.home-active #home .home-choice-content, html:root .app.home-active #home .home-choice-content:hover, html:root .app.home-active #home .home-choice-content:active, html:root .app.home-active #home .home-choice-content:focus, html:root .app.home-active #home .home-choice-content:focus-visible{background:transparent;background-color:transparent;background-image:none;border-color:transparent;box-shadow:none}
+
+
+/* CP1335: don't let the centered Home transform become the containing block for fixed drawers. */
+@media(min-width:601px){
+  html:root .app.home-active{
+    left:0;
+    right:0;
+    margin-left:auto;
+    margin-right:auto;
+    transform:none;
+  }
+}

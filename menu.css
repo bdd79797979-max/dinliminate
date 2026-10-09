@@ -310,3 +310,23 @@ html:root .app #restaurant #restaurantHomeBack .home-back-arrowhead{
     flex:0 0 1em;width:1em;min-width:1em;max-width:1em;height:1em;min-height:1em;max-height:1em;
   }
 }
+
+
+/* CP1335 follow-up: match the gold arrow exactly to adjacent phone toolbar label sizing. */
+@media(max-width:430px){
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack.discovery-home-back,
+  html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack.discovery-home-back{
+    font-size:clamp(10px,3.5vw,14px);
+  }
+  html:root .app #food .food-interior-nav .food-refine-tabs #foodHomeBack .home-back-arrowhead,
+  html:root .app #restaurant .restaurant-refine-tabs #restaurantHomeBack .home-back-arrowhead{
+    display:block;
+    flex:0 0 clamp(10px,3.5vw,14px);
+    width:clamp(10px,3.5vw,14px);
+    min-width:clamp(10px,3.5vw,14px);
+    max-width:clamp(10px,3.5vw,14px);
+    height:clamp(10px,3.5vw,14px);
+    min-height:clamp(10px,3.5vw,14px);
+    max-height:clamp(10px,3.5vw,14px);
+  }
+}
