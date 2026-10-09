@@ -444,6 +444,94 @@ test('Maybe button marks the active meal and advances', async ({ page }) => {
   await expectNoPageErrors(errors);
 });
 
+
+test('Maybe review continuously cycles Meals after the last undecided card', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+  const ids = await page.evaluate(async () => {
+    const { store } = await import('/src/state/store.js');
+    return store.get().pool.map(row => String(row.id));
+  });
+  expect(ids.length).toBe(3);
+
+  for (let index = 0; index < 3; index++) {
+    await page.locator('#foodMaybe').click();
+    await waitForDecisionIdle(page, '#foodCard');
+    await expect.poll(() => page.locator('#foodCard').getAttribute('data-meal-id'), { timeout: 7000 })
+      .toBe(ids[(index + 1) % 3]);
+  }
+
+  // All three are retained, so reviewing MAYBES now wraps continuously A → B → C → A.
+  await expect(page.locator('#foodMaybeDeck')).toHaveAttribute('data-maybe-count', '3');
+  for (const expectedId of [ids[1], ids[2], ids[0], ids[1]]) {
+    await page.locator('#foodMaybe').click();
+    await waitForDecisionIdle(page, '#foodCard');
+    await expect.poll(() => page.locator('#foodCard').getAttribute('data-meal-id'), { timeout: 7000 })
+      .toBe(expectedId);
+    await expect(page.locator('#winner')).toBeHidden();
+  }
+  await expectNoPageErrors(errors);
+});
+
+test('Maybe review continuously cycles Restaurants after the last undecided result', async ({ page }) => {
+  const errors = await prepare(page);
+  await openRestaurants(page);
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
+
+  await page.locator('#restMaybe').click();
+  await waitForDecisionIdle(page, '#restaurantCard');
+  await expect.poll(() => page.locator('#restaurantCard h3').innerText(), { timeout: 12000 })
+    .toBe('Mock Taco House');
+  await page.locator('#restMaybe').click();
+  await waitForDecisionIdle(page, '#restaurantCard');
+  await expect.poll(() => page.locator('#restaurantCard h3').innerText(), { timeout: 12000 })
+    .toBe('Mock Pizza Kitchen');
+
+  for (const expectedName of ['Mock Taco House', 'Mock Pizza Kitchen', 'Mock Taco House']) {
+    await page.locator('#restMaybe').click();
+    await waitForDecisionIdle(page, '#restaurantCard');
+    await expect.poll(() => page.locator('#restaurantCard h3').innerText(), { timeout: 12000 })
+      .toBe(expectedName);
+    await expect(page.locator('#winner')).toBeHidden();
+  }
+  await expectNoPageErrors(errors);
+});
+
+test('CP1332 phone swipe controls spread across the bottom width on Meals and Restaurants', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedMeals(page, 3);
+
+  async function expectFullWidthDecisionRow(selector) {
+    const layout = await page.locator(selector).evaluate(el => {
+      const row = el.getBoundingClientRect();
+      const buttons = [...el.querySelectorAll(':scope > .round-action')].map(button => {
+        const r = button.getBoundingClientRect();
+        return { left:r.left, right:r.right, center:r.left+r.width/2, width:r.width };
+      });
+      return {
+        row:{left:row.left,right:row.right,width:row.width},
+        viewportWidth:window.innerWidth,
+        buttons
+      };
+    });
+    expect(layout.buttons).toHaveLength(4);
+    expect(layout.row.width).toBeGreaterThanOrEqual(layout.viewportWidth - 24);
+    expect(layout.buttons[0].left - layout.row.left).toBeLessThanOrEqual(14);
+    expect(layout.row.right - layout.buttons[3].right).toBeLessThanOrEqual(14);
+    expect(layout.buttons[3].center - layout.buttons[0].center).toBeGreaterThan(layout.row.width * 0.78);
+    for (let i=1;i<layout.buttons.length;i++) {
+      expect(layout.buttons[i].left).toBeGreaterThanOrEqual(layout.buttons[i-1].right - 1);
+    }
+  }
+
+  await expectFullWidthDecisionRow('#food .unified-swipe-actions');
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  await expectFullWidthDecisionRow('#restaurant .unified-swipe-actions');
+  await expectNoPageErrors(errors);
+});
+
 test('decision counts track Cut and Maybe independently', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);

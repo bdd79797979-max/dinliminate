@@ -838,3 +838,31 @@ html:root .app #restaurant #restaurantHomeBack.discovery-home-back > span{
     max-width:28px;
   }
 }
+
+
+/* CP1332: distribute all four decision controls across the available phone width. */
+@media(max-width:430px){
+ html:root #food .unified-swipe-actions,
+ html:root #restaurant .unified-swipe-actions{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:0;
+  width:100%;
+  max-width:none;
+  margin-left:0;
+  margin-right:0;
+  padding-inline:8px;
+  box-sizing:border-box;
+ }
+ html:root #food .unified-swipe-actions > .round-action,
+ html:root #restaurant .unified-swipe-actions > .round-action{
+  position:static;
+  inset:auto;
+  margin:0;
+  flex:0 0 auto;
+  transform:none;
+ }
+}

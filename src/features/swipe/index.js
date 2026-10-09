@@ -238,10 +238,14 @@ function foodMaybe(item=S.pool[S.index],options={}){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='meal'&&familyRoundStage()!==1){familyBrowseNext('meal');return;}
  if(!item)return;
- if(S.pool.length===1){foodCommit('maybe',item);winner(item);return;}
  foodCommit('maybe',item);S.maybe.add(item.id);
- // drawFood() owns the single post-decision selection step. Do not advance
- // S.index here as well, or the active deck can skip/re-enter cards.
+ const recyclesMaybeRound=!!S.maybeDeck||!!S.foodMaybeRound;
+ if(recyclesMaybeRound){
+  // Advance before redraw so an already-kept Meal never pins the active card.
+  // Modulo wrap intentionally lets a one-card Maybe round repeat continuously.
+  const nextIndex=foodChoiceIndex(S.pool,(S.index+1)%Math.max(1,S.pool.length),true);
+  if(nextIndex>=0)S.index=nextIndex;
+ }
  drawFood({swipeHandoff:!!options.fromSwipe});save();
 }
 function resolveFoodAfterDecision(options={}){

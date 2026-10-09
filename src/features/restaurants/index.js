@@ -1134,9 +1134,12 @@ async function restaurantCut(row,options={}){
 async function restaurantMaybe(row,options={}){
  dismissSwipeHint();
  if(S.familyNormalMode==='decision'&&S.familyDecisionType==='restaurant'&&familyRoundStage()!==1){familyBrowseNext('restaurant');return;}
- if(!row)return;const rows=restaurantPoolFiltered();if(rows.length===1){pushDecisionHistory('restaurant',captureRestaurantDecisionState());winner(row);return;}
+ if(!row)return;
+ const recyclesMaybeRound=!!S.maybeDeck||!!S.restaurantMaybeRound;
  pushDecisionHistory('restaurant',captureRestaurantDecisionState());
- const wasRecycle=S.restaurantMaybeRound;S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});row._maybe=true;
+ const wasRecycle=recyclesMaybeRound;
+ S.restaurantActions.push({type:'maybe',id:row.id,index:S.restaurantIndex,maybeRound:wasRecycle,hadMaybe:!!row._maybe});
+ row._maybe=true;
  const remaining=restaurantPoolFiltered(),next=restaurantChoiceIndex(remaining,(S.restaurantIndex+1)%Math.max(1,remaining.length),wasRecycle);
  if(next>=0)S.restaurantIndex=next;else{S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(remaining,0,true);}
  await drawRestaurants({swipeHandoff:!!options.fromSwipe});save();

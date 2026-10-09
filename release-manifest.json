@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1331,
-  "sourceBranch": "cp1331-tour-swipe-directions-chocolate-single-photo",
+  "build": 1332,
+  "sourceBranch": "cp1332-continuous-maybe-loop-phone-controls",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1331",
-  "deploymentTrigger": "CP1331-tour-swipe-directions-chocolate-single-photo",
+  "checkpoint": "CP1332",
+  "deploymentTrigger": "CP1332-continuous-maybe-loop-phone-controls",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -42,5 +42,8 @@
   "visualCorrections": "CP1329 applies one outer class (drawer-window) to Family Mode, Manage Meals, History, and Settings, preventing legacy .drawer-row cascade interference; moves all menu windows directly beneath the originating hamburger by fixing the close-control containing block and setting the navigation gap to 2px. Preserves gold back arrows sized to Meal Times/Cuisine labels.",
   "currentBaseline": "CP1300 visual baseline with CP1312 swipe/refresh/Details fixes, CP1317/1318 async card safeguards, CP1320 sequential Restaurant handoff checks, CP1323 menu/arrow checks, CP1324/1325 waiting Meal-card guards, CP1326/1327 unified menu stylesheet and dynamic anchoring, CP1328 waiting-card render sequencing and label-sized arrows, CP1329 single-class menu windows and corrected drawer close-control containing block.",
   "buildDate": "2026-10-09",
-  "tourCopyAudit": "CP1331 clarifies both Tour decision prompts: MAYBE tells users to include the item in Maybes or swipe right; CUT tells users to exclude the item or swipe left, for Meals and Restaurants."
+  "tourCopyAudit": "CP1331 clarifies both Tour decision prompts: MAYBE tells users to include the item in Maybes or swipe right; CUT tells users to exclude the item or swipe left, for Meals and Restaurants.",
+  "swipeLoop": "CP1332 makes Meals and Restaurants Maybe review rounds advance to the next retained card, wrap at the end, and remain in a one-card loop; Choose remains the explicit winner action and Cut removes a card.",
+  "phoneSwipeControls": "CP1332 distributes Back, Cut, Maybe, and Choose across the available bottom row on phones (<=430px) without resizing their buttons.",
+  "homeSloganOffset": "CP1332 moves only the Swipe Away Meal Indecision slogan upward by 2px at standard and narrow-phone breakpoints."
 }

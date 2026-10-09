@@ -46,6 +46,12 @@ const e2e=read('tests/e2e/behavior.spec.mjs');
 const homeCss=read('home.css');
 const menuCss=read('menu.css');
 assert.ok(index.indexOf('./menu.css?v='+build)>index.indexOf('./tutorial.css?v='+build),'menu.css must load last');
+assert.ok(read('src/features/swipe/index.js').includes('const recyclesMaybeRound=!!S.maybeDeck||!!S.foodMaybeRound;'),'Meal Maybe review must recycle continuously');
+assert.ok(read('src/features/restaurants/index.js').includes('const recyclesMaybeRound=!!S.maybeDeck||!!S.restaurantMaybeRound;'),'Restaurant Maybe review must recycle continuously');
+assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 238px)'),'Home slogan must move upward by 2px on standard phone widths');
+assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 218px);font-size:10.5px'),'Home slogan must move upward by 2px on narrow phones');
+assert.ok(css('restaurants.css').includes('justify-content:space-between;'),'Phone swipe controls must span the full available row width');
+assert.ok(css('restaurants.css').includes('@media(max-width:430px){\n html:root #food .unified-swipe-actions,'),'Full-width swipe-control distribution must be phone-only');
 
 const tutorialSource=read('src/features/tutorial/index.js');
 for(const copy of ["Include this meal in your Maybes, or swipe right.","Exclude this meal, or swipe left.","Include this restaurant in your Maybes, or swipe right.","Exclude this restaurant, or swipe left."])assert.ok(tutorialSource.includes(copy),'Tour must explain the decision and swipe direction: '+copy);
