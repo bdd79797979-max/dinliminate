@@ -225,7 +225,7 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
     ));
     card.dataset.swipeFinalTransform=targetTransform;
     // Fill timing follows the actual exit duration, but uses a late-rising curve
-    // so white/green only approaches solid near the end of the card's flight.
+    // so the white Cut tint only approaches solid near the end of the card's flight.
     card.style.setProperty('--swipe-fill-duration',duration+'ms');
     card.classList.add('swipe-filling');
     void card.offsetWidth;
