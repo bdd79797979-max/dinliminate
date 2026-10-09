@@ -33,6 +33,16 @@ async function openApp(page) {
   await expect(page.locator('#home')).toBeVisible();
   if (page.viewportSize()?.width > 600) {
     await expect.poll(() => page.locator('.app').evaluate(el => getComputedStyle(el).transform)).toBe('none');
+    // Emulate Windows classic scrollbars: innerWidth can be 16px wider than
+    // the CSS positioning viewport and must not offset fixed drawers.
+    await page.evaluate(() => {
+      const cssViewportWidth = document.documentElement.clientWidth;
+      Object.defineProperty(window, 'innerWidth', {
+        configurable:true,
+        value:cssViewportWidth + 16
+      });
+    });
+    await expect.poll(() => page.evaluate(() => window.innerWidth - document.documentElement.clientWidth)).toBe(16);
   }
   return errors;
 }
@@ -56,7 +66,7 @@ async function expectDrawerAnchored(page, panelSelector, triggerId, closeId) {
       trigger:{ left:t.left, top:t.top, bottom:t.bottom, right:t.right, width:t.width, height:t.height },
       panel:{ top:p.top, right:p.right, left:p.left, width:p.width, height:p.height },
       close:{ top:c.top, right:c.right, width:c.width, height:c.height },
-      viewport:{ width:window.innerWidth, height:window.innerHeight }
+      viewport:{ width:document.documentElement.clientWidth, height:window.innerHeight }
     };
   }, { panelSelector, triggerId, closeId });
 

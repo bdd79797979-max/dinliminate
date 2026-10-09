@@ -1178,7 +1178,7 @@ if(screen==='family'){
   const panelTop=desktop?Math.max(0,rect.bottom+4):0;
   family?.style.setProperty('--family-panel-top',panelTop+'px');
   family?.style.setProperty('--family-trigger-top',Math.max(0,rect.top)+'px');
-  family?.style.setProperty('--family-trigger-right',Math.max(0,window.innerWidth-rect.right)+'px');
+  family?.style.setProperty('--family-trigger-right',Math.max(0,(document.documentElement.clientWidth||window.innerWidth)-rect.right)+'px');
   family?.style.setProperty('--family-trigger-width',rect.width+'px');
   family?.style.setProperty('--family-trigger-height',rect.height+'px');
   familyDrawerReturnFocus=trigger;
@@ -1343,7 +1343,7 @@ const openDrawer=(event)=>{
   if(drawer&&trigger&&typeof trigger.getBoundingClientRect==='function'){
     const rect=trigger.getBoundingClientRect();
     const top=Math.max(0,rect.top);
-    const right=Math.max(0,window.innerWidth-rect.right);
+    const right=Math.max(0,(document.documentElement.clientWidth||window.innerWidth)-rect.right);
     const desktop=window.matchMedia('(min-width: 601px)').matches;
     drawer.style.setProperty('--drawer-panel-top',(desktop?Math.max(0,rect.bottom+4):0)+'px');
     drawer.style.setProperty('--drawer-trigger-top',top+'px');
