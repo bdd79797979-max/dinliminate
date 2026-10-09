@@ -1,10 +1,10 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1312,
+  "build": 1313,
   "sourceBranch": "main",
-  "checkpoint": "CP1312",
-  "deploymentTrigger": "CP1312-cp1300-visual-transition-details-final",
+  "checkpoint": "CP1313",
+  "deploymentTrigger": "CP1313-visual-controls-header-alignment-menu-spacing",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1312 preserves terminal swipe transforms to prevent card reappearance, clears one-shot refresh route selectors, and waits for the live Meal image before revealing reused cards.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
@@ -32,7 +32,7 @@
   "iphoneCertification": "viewport-fit=cover; edge-to-edge fixed shell; 100vh fallback before 100dvh; active-screen geometry diagnosis",
   "launchCandidate": "CP1262 true previous-decision history; one deployment reserved for candidate verification",
   "radiusEngine": "CP1191 Radius Engine v2 foundation: deterministic geographic coverage grid + exact-distance filtering + provider-agnostic adapter contract; integration deferred to subsequent checkpoint",
-  "currentBaseline": "CP1300 visual baseline with CP1312 swipe, refresh-route, and Details photo fixes.",
+  "currentBaseline": "CP1300 visual baseline with CP1312 swipe, refresh-route, and Details photo fixes, plus CP1313 control styling corrections.",
   "mealImageSystem": "CP1253 tested additional free Unsplash candidates; replaced Meatloaf, Peanut Butter & Jelly, BLT, Ham Dinner, Roast Beef Sandwich, and Southern Vegetable Beef Soup where the Unsplash candidate was a clearly better or more faithful match; retained the other requested meals where no clearly better free Unsplash match was found",
   "tourAudit": "CP1299 Tour remembers starting side; second decision screen finishes to Home; Tour button cancels and closes cleanly in both direct and capture handlers",
   "uiSizingAudit": "CP1236-restaurant-card-location-distance-50-percent",
@@ -50,5 +50,6 @@
   "cacheSync": "CP1312 app/index/service-worker asset URLs and shell cache synchronized.",
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start remains separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; normal Settings actions share one visual treatment; Reset is the only color-emphasized destructive action",
-  "buildDate": "2026-10-08"
+  "buildDate": "2026-10-08",
+  "visualCorrections": "CUT red (#ef3340), MAYBE green (#28c76f), gold chevron-only Back to Home arrow, All/Maybes count aligned inline with refine controls, and menu rows moved upward."
 }

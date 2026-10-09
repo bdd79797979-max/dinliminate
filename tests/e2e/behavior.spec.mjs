@@ -198,6 +198,64 @@ async function swipeMeal(page, direction) {
   return before;
 }
 
+
+test('CP1313 decision colors, gold chevron, inline Maybes controls, and menu spacing', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+
+  const mealVisuals = await page.evaluate(() => {
+    const box = id => {
+      const r = document.querySelector('#' + id).getBoundingClientRect();
+      return { x:r.x, y:r.y, width:r.width, height:r.height, centerY:r.y+r.height/2 };
+    };
+    const color = id => getComputedStyle(document.querySelector('#' + id)).backgroundColor;
+    const arrow = document.querySelector('#foodHomeBack svg');
+    return {
+      cut: color('foodCut'),
+      maybe: color('foodMaybe'),
+      arrowColor: getComputedStyle(document.querySelector('#foodHomeBack')).color,
+      arrowHasCircle: Boolean(arrow?.querySelector('circle')),
+      arrowPath: arrow?.querySelector('path')?.getAttribute('d') || '',
+      mealTime: box('foodMealTimeToggle'),
+      cuisine: box('foodQuickToggle'),
+      maybes: box('foodMaybeDeck')
+    };
+  });
+  expect(mealVisuals.cut).toBe('rgb(239, 51, 64)');
+  expect(mealVisuals.maybe).toBe('rgb(40, 199, 111)');
+  expect(mealVisuals.arrowColor).toBe('rgb(216, 182, 106)');
+  expect(mealVisuals.arrowHasCircle).toBe(false);
+  expect(mealVisuals.arrowPath).toMatch(/^M15 5\.5 8\.5 12l6\.5 6\.5$/);
+  expect(Math.max(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)
+    - Math.min(mealVisuals.mealTime.centerY, mealVisuals.cuisine.centerY, mealVisuals.maybes.centerY)).toBeLessThanOrEqual(3);
+
+  await page.locator('#foodMenu').click();
+  await expect(page.locator('#drawer')).toBeVisible();
+  const firstMenuRow = await page.locator('#drawer .drawer-row').first().boundingBox();
+  expect(firstMenuRow).not.toBeNull();
+  expect(firstMenuRow.y).toBeLessThan(145);
+  await page.locator('#drawerClose').click();
+
+  await page.evaluate(() => localStorage.clear());
+  await openRestaurants(page);
+  const restaurantVisuals = await page.evaluate(() => {
+    const box = id => {
+      const r = document.querySelector('#' + id).getBoundingClientRect();
+      return { centerY:r.y+r.height/2 };
+    };
+    return {
+      cut: getComputedStyle(document.querySelector('#restCut')).backgroundColor,
+      maybe: getComputedStyle(document.querySelector('#restMaybe')).backgroundColor,
+      cuisine: box('restaurantQuickToggle'),
+      maybes: box('restaurantMaybeDeck')
+    };
+  });
+  expect(restaurantVisuals.cut).toBe('rgb(239, 51, 64)');
+  expect(restaurantVisuals.maybe).toBe('rgb(40, 199, 111)');
+  expect(Math.abs(restaurantVisuals.cuisine.centerY - restaurantVisuals.maybes.centerY)).toBeLessThanOrEqual(3);
+  await expectNoPageErrors(errors);
+});
+
 test('swipe machine rejects rapid double-swipes as one transaction', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
