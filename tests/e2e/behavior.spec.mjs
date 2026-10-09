@@ -199,7 +199,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1321 decision colors, label-sized gold arrows, and uniform elevated menu windows', async ({ page }) => {
+test('CP1323 decision colors, label-sized gold arrows, and uniform elevated menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -231,7 +231,7 @@ test('CP1321 decision colors, label-sized gold arrows, and uniform elevated menu
   expect(mealVisuals.backBorder).toBe('0px');
   expect(mealVisuals.backRadius).toBe('0px');
   expect(mealVisuals.arrowHasCircle).toBe(false);
-  expect(mealVisuals.arrowPath).toBe('M16.5 3.5 7 12l9.5 8.5');
+  expect(mealVisuals.arrowPath).toBe('M8.5 1.5 3.5 6l5 4.5');
   expect(await page.locator('#foodHomeBack svg').getAttribute('class')).toBe('home-back-arrowhead');
   const mealArrowBox = await page.locator('#foodHomeBack svg').boundingBox();
   expect(Math.abs(mealArrowBox.width - mealVisuals.mealTime.fontSize)).toBeLessThanOrEqual(0.6);
