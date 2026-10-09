@@ -81,15 +81,15 @@ const opener=document.activeElement;
 $(id)?.remove();
 $(id+'Bg')?.remove();
 const isDrawerUtilityModal=['manageFoodsModal','historyModal','settingsModal'].includes(id);
-const desktopUtilityModal=isDrawerUtilityModal&&window.matchMedia('(min-width: 601px)').matches;
+const anchoredUtilityModal=isDrawerUtilityModal;
 const bg=document.createElement('div');
 bg.id=id+'Bg';
-bg.className='modal-bg'+(desktopUtilityModal?' modal-bg-opening desktop-utility-bg':(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening'))+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
+bg.className='modal-bg'+(anchoredUtilityModal?' modal-bg-opening utility-panel-bg':(isDrawerUtilityModal?' modal-bg-open':' modal-bg-opening'))+(id==='manageFoodsModal'?' manage-foods-modal-bg':'');
 const modal=document.createElement('section');
 modal.id=id;
-modal.className='modal'+(desktopUtilityModal?' utility-panel-opening':(isDrawerUtilityModal?' modal-open':' modal-opening'));
+modal.className='modal'+(anchoredUtilityModal?' utility-panel-opening':(isDrawerUtilityModal?' modal-open':' modal-opening'));
 if(isDrawerUtilityModal)modal.classList.add('utility-modal');
-if(desktopUtilityModal){
+if(anchoredUtilityModal){
  const drawer=$('drawer');
  const anchorId=String(drawer?.dataset.menuAnchorId||'menu');
  const anchor=$(anchorId);
@@ -109,9 +109,9 @@ modal.setAttribute('aria-modal','true');
 modal.setAttribute('aria-labelledby',id+'Title');
 modal.setAttribute('tabindex','-1');
 modal.innerHTML='<div class="modal-head"><h3 id="'+esc(id)+'Title">'+esc(title)+'</h3><button class="modal-close" data-close aria-label="Close '+esc(title)+'">×</button></div>'+body;
-const mount=desktopUtilityModal?document.querySelector('.app'):null;
+const mount=anchoredUtilityModal?document.querySelector('.app'):null;
 (mount||document.body).append(bg,modal);
-if(desktopUtilityModal){
+if(anchoredUtilityModal){
  requestAnimationFrame(()=>{
   bg.classList.remove('modal-bg-opening');
   bg.classList.add('modal-bg-open');
@@ -141,7 +141,7 @@ const close=()=>{
  if(closed)return;
  closed=true;
  if(isDrawerUtilityModal){
-  if(desktopUtilityModal){
+  if(anchoredUtilityModal){
    modal.classList.remove('modal-open');
    modal.classList.add('modal-closing');
    bg.classList.remove('modal-bg-open');

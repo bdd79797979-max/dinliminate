@@ -320,3 +320,29 @@ html:root .app > #family .family-close-top:focus-visible{outline:2px solid #d6b7
     box-shadow:0 28px 90px #000c;
   }
 }
+
+
+/* CP1344: Family Mode uses the same hamburger-relative geometry on every viewport. */
+html:root .app > .family-drawer-bg{
+  position:fixed;top:var(--family-panel-top,54px);right:0;bottom:0;left:0;z-index:60;
+  background:rgba(0,0,0,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:opacity .18s ease;
+}
+html:root .app > #family.family-screen{
+  position:fixed;top:var(--family-panel-top,54px);right:var(--family-trigger-right,2px);
+  left:auto;bottom:auto;z-index:90;width:min(91vw,510px);max-width:none;
+  height:calc(100dvh - var(--family-panel-top,54px) - 16px);min-height:0;
+  max-height:calc(100dvh - var(--family-panel-top,54px) - 16px);margin:0;padding:0;
+  overflow:hidden;box-sizing:border-box;border:1px solid #34302a;border-radius:18px;
+  box-shadow:0 28px 90px #000c;transform:translateX(104%);opacity:.72;
+  transition:transform .18s cubic-bezier(.22,.8,.36,1),opacity .18s ease;
+}
+html:root .app > #family.family-screen.is-open{transform:translateX(0);opacity:1}
+html:root .app > #family .family-interior-nav{flex:0 0 40px;height:40px;min-height:40px}
+html:root .app > #family .family-close-top{
+  top:0;right:0;width:40px;min-width:40px;height:40px;min-height:40px;
+}
+@media(prefers-reduced-motion:reduce){
+  html:root .app > #family.family-screen,html:root .app > #family.family-screen.is-open,
+  html:root .app > .family-drawer-bg{transition:none}
+}

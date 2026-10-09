@@ -245,3 +245,35 @@ html:root .modal-bg.modal-bg-opening{opacity:1;background:#000c;transition:none}
     margin-right:-18px;
   }
 }
+
+
+/* CP1344: utility panels share Family Mode's hamburger-anchored drawer geometry
+   on phone and desktop; the top header row stays outside the dim/blur layer. */
+html:root .app > .utility-panel-bg{
+  position:fixed;top:var(--utility-modal-top,54px);right:0;bottom:0;left:0;
+  z-index:60;background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:opacity .18s ease;
+}
+html:root .app > .utility-panel-bg.modal-bg-opening{opacity:0;background:rgba(0,0,0,.68)}
+html:root .app > .utility-modal{
+  position:fixed;top:var(--utility-modal-top,54px);right:var(--utility-modal-right,2px);
+  left:auto;bottom:auto;z-index:90;width:min(91vw,510px);max-width:none;height:auto;
+  max-height:calc(100dvh - var(--utility-modal-top,54px) - 16px);margin:0;padding:0 18px 20px;
+  overflow:auto;overscroll-behavior:contain;box-sizing:border-box;border:1px solid #34302a;
+  border-radius:18px;transform:translateX(104%);opacity:.72;
+  transition:transform .18s cubic-bezier(.22,.8,.36,1),opacity .18s ease;
+}
+html:root .app > .utility-modal.modal-open{transform:translateX(0);opacity:1}
+html:root .app > .utility-modal.modal-closing{transform:translateX(104%);opacity:.72}
+html:root .app > .utility-modal .modal-head{
+  display:flex;align-items:center;justify-content:space-between;height:40px;min-height:40px;
+  padding:0;margin:0 0 12px;box-sizing:border-box;
+}
+html:root .app > .utility-modal .modal-head [data-close]{
+  flex:0 0 40px;width:40px;height:40px;min-width:40px;margin-right:-19px;
+}
+@media(prefers-reduced-motion:reduce){
+  html:root .app > .utility-modal,html:root .app > .utility-modal.modal-open,
+  html:root .app > .utility-modal.modal-closing,html:root .app > .utility-panel-bg{transition:none}
+}
