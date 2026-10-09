@@ -74,13 +74,16 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
   };
   const resetVisuals=()=>{
     cancelMoveFrame();
+    const mediaPending=card.dataset.mediaPending==='true';
     card.classList.remove('swipe-active');
     card.style.willChange='';
     card.style.transition='none';
     card.style.transform='';
-    card.style.opacity='1';
-    card.style.visibility='visible';
-    card.style.pointerEvents='auto';
+    // Drawing the next meal can deliberately keep this shared card hidden
+    // until the next image is ready. Never let swipe cleanup reveal it early.
+    card.style.opacity=mediaPending?'0':'1';
+    card.style.visibility=mediaPending?'hidden':'visible';
+    card.style.pointerEvents=mediaPending?'none':'auto';
     card.style.removeProperty('--swipe-tint-alpha');
     card.dataset.swipe='';
     card.dataset.swipeDirection='';
@@ -357,6 +360,9 @@ function makeMachine(card,{onCut=()=>{},onMaybe=()=>{},onPreview=()=>{},onHaptic
       card.removeEventListener('pointercancel',onPointerCancel);
       card.removeEventListener('lostpointercapture',onLostPointerCapture);
       card.removeEventListener('click',onClick);
+      // A Meal redraw reuses #foodCard. Clean the outgoing gesture before
+      // binding its next transaction, while respecting a pending photo handoff.
+      resetVisuals();
       if(machines.get(card)===api)machines.delete(card);
     }
   };
