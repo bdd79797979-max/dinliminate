@@ -48,9 +48,9 @@ function stopTutorialMode(){
 function setTutorialMode(enabled,showNotice=true){
  const on=!!enabled;
  S.tutorialMode=on;
- if(!on){stopTutorialMode();if(showNotice)tutorialToast('Tutorial Mode OFF');return;}
+ if(!on){stopTutorialMode();if(showNotice)tutorialToast('Tour Mode OFF');return;}
  ensureTutorialUI();
- if(showNotice)tutorialToast('Tutorial Mode ON');
+ if(showNotice)tutorialToast('Tour Mode ON');
  startTutorialFromHome();
 }
 function startTutorialFromHome(){
@@ -74,7 +74,7 @@ function startTutorialFromHome(){
 }
 function tutorialStepsForScreen(screen){
  if(screen==='home')return[
-  {target:'#tutorialModeToggle',title:'TUTORIAL',body:'Tap this bubble to move to the next step.',avoid:['#home .home-foot']},
+  {target:'#tutorialModeToggle',title:'TOUR',body:'Tap this bubble to move to the next step.',avoid:['#home .home-foot']},
   {target:'#home-slogan',title:'DINLIMINATE',body:'Swipe meals or restaurants to narrow down your choices until you have a decision.',avoid:['#home .home-foot','#foodStart','#restStart','#menu']},
   {targets:['#foodStart .home-choice-content','#restStart .home-choice-content'],title:'GET STARTED',body:'Tap At Home or Restaurant to get started.',action:'home-choice',avoid:['#home .home-foot','#menu']}
  ];
