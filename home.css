@@ -79,3 +79,86 @@ html:root .app.home-active #home .home-choice-zone, html:root .app.home-active #
     transform:none;
   }
 }
+
+
+/* CP1340: restrained luxury lighting for the homepage. */
+html:root .app.home-active #home::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 8%,rgba(255,224,160,.105),transparent 36%),
+    radial-gradient(ellipse at 29% 45%,rgba(255,211,125,.048),transparent 27%),
+    radial-gradient(ellipse at 71% 45%,rgba(255,211,125,.048),transparent 27%);
+  opacity:.72;
+}
+html:root .app.home-active .app-topbar .brand-mark{
+  position:relative;
+  isolation:isolate;
+}
+html:root .app.home-active .app-topbar .brand-mark::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  background:linear-gradient(
+    112deg,
+    transparent 34%,
+    rgba(255,244,203,.06) 42%,
+    rgba(255,236,177,.42) 49%,
+    rgba(255,251,224,.74) 51%,
+    rgba(255,225,146,.24) 54%,
+    transparent 62%
+  );
+  transform:translateX(-145%) skewX(-16deg);
+  opacity:0;
+  mix-blend-mode:screen;
+  animation:dinliminate-home-gold-sweep 1.35s cubic-bezier(.22,.61,.36,1) .32s 1 both;
+}
+@keyframes dinliminate-home-gold-sweep{
+  0%{transform:translateX(-145%) skewX(-16deg);opacity:0}
+  24%{opacity:.95}
+  72%{opacity:.9}
+  100%{transform:translateX(145%) skewX(-16deg);opacity:0}
+}
+html:root .app.home-active #home .home-choice-zone::before{
+  content:"";
+  display:block;
+  position:absolute;
+  z-index:0;
+  inset:0;
+  pointer-events:none;
+  border:1px solid rgba(231,204,145,.12);
+  border-radius:2px;
+  background:linear-gradient(125deg,rgba(255,226,150,.035),transparent 33%,transparent 69%,rgba(255,226,150,.025));
+  box-shadow:inset 0 0 15px rgba(231,204,145,.045),0 0 8px rgba(231,204,145,.035);
+  opacity:.58;
+  transition:opacity .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+html:root .app.home-active #home .home-choice-zone>.home-choice-content{
+  position:relative;
+  z-index:1;
+}
+html:root .app.home-active #home .home-choice-zone:hover::before,
+html:root .app.home-active #home .home-choice-zone:focus-visible::before{
+  opacity:.84;
+  border-color:rgba(242,216,157,.31);
+  box-shadow:inset 0 0 17px rgba(231,204,145,.075),0 0 11px rgba(231,204,145,.09);
+}
+html:root .app.home-active #home .home-choice-zone:active::before{
+  opacity:1;
+  border-color:rgba(248,224,169,.46);
+  box-shadow:inset 0 0 18px rgba(231,204,145,.10),0 0 14px rgba(231,204,145,.14);
+}
+@media(prefers-reduced-motion:reduce){
+  html:root .app.home-active .app-topbar .brand-mark::after{
+    content:none;
+    animation:none;
+  }
+  html:root .app.home-active #home .home-choice-zone::before{
+    transition:none;
+  }
+}
