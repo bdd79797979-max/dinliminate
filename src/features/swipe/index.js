@@ -174,6 +174,7 @@ function drawFood(options={}){
    foodCard.style.opacity='0';
    foodCard.style.visibility='hidden';
    foodCard.style.pointerEvents='none';
+   syncFoodNextCardVisibility();
  }
  img.dataset.imageFallback='false';
  img.dataset.mealPhotoLoaded='false';
@@ -191,6 +192,7 @@ function drawFood(options={}){
     foodCard.style.opacity='1';
     foodCard.style.visibility='visible';
     foodCard.style.pointerEvents='auto';
+    syncFoodNextCardVisibility();
    }
   }else{
    mealReadyResolve(false);
@@ -461,6 +463,18 @@ function ensurePreparedFoodNextCardMarkup(nextCard){
  return {img,nameEl,catEl};
 }
 
+function syncFoodNextCardVisibility(){
+ const nextCard=$('foodNextCard'),activeCard=$('foodCard');
+ if(!nextCard||!activeCard)return;
+ const previewSettled=nextCard.dataset.foodReady==='1'||nextCard.dataset.foodReady==='-1';
+ const activeScreen=activeCard.closest('.screen');
+ const activeVisible=activeCard.dataset.mediaPending!=='true'
+  &&activeCard.style.visibility!=='hidden'
+  &&activeCard.style.opacity!=='0'
+  &&!activeScreen?.classList.contains('hidden');
+ nextCard.style.visibility=previewSettled&&activeVisible?'visible':'hidden';
+}
+
 function setFoodNextCardImage(nextCard,view){
  const parts=ensurePreparedFoodNextCardMarkup(nextCard);
  const img=parts?.img;
@@ -487,7 +501,6 @@ function setFoodNextCardImage(nextCard,view){
  // Reused Meal cards must never expose the previous meal's decoded bitmap.
  // The current image becomes visible only after its own source is preloaded/decoded.
  img.style.visibility='hidden';
- nextCard.style.visibility='visible';
  if(!primary&&!backup)markMealImageUnavailable(img);
  nextCard.style.pointerEvents='none';
  const promise=loadMealPhotoCandidates(img,[primary,backup],nextCard).then(ok=>{
@@ -537,7 +550,7 @@ function populateFoodNextCard(view){
  return setFoodNextCardImage(nextCard,view).then(ok=>{
   if(nextCard.dataset.previewRenderSequence!==renderSequence||nextCard.dataset.mealId!==view.id)return false;
   nextCard.dataset.foodReady=ok?'1':'-1';
-  nextCard.style.visibility='visible';
+  syncFoodNextCardVisibility();
   return ok;
  });
 }
