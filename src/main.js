@@ -1375,7 +1375,7 @@ $('menu')?.addEventListener('click',openDrawer);
 $('foodMenu')?.addEventListener('click',openDrawer);
 $('restaurantMenu')?.addEventListener('click',openDrawer);
 $('winnerMenu')?.addEventListener('click',openDrawer);
-$('familyMenu')?.addEventListener('click',openDrawer);
+
 $('manage').onclick = () => navigateFromDrawer(manageFoodsView);
 $('settings').onclick = () => navigateFromDrawer(settingsView);
 $('backToStart').onclick = () => navigateFromDrawer(home);
