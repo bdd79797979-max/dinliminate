@@ -1,6 +1,6 @@
 importScripts('./api/_lib/imageHosts.js?v=1308');
 // CP1306: shell/cache version bump for Meal deck selection.
-const CACHE='dinliminate-shell-v1309';
+const CACHE='dinliminate-shell-v1308';
 const IMAGE_CACHE='dinliminate-images-v5';
 
 // CP1077 — Google usage tracker + release shell cache bump
