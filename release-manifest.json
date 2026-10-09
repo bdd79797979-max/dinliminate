@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1317,
+  "build": 1318,
   "sourceBranch": "main",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1317",
-  "deploymentTrigger": "CP1317-stop-stale-card-image-swaps-and-repeated-rows",
+  "checkpoint": "CP1318",
+  "deploymentTrigger": "CP1318-fence-stale-card-swaps-and-dedupe-restored-decks",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -37,8 +37,9 @@
   "tourAudit": "CP1299 starting-side aware Tour; second decision screen returns Home and ends; Tour button cancels at capture phase",
   "menuAudit": "Family Mode > Manage Meals > History > Settings; Back to Start separated in footer",
   "settingsAudit": "Update > Privacy > Restore > Diagnosis > Reset; only Reset receives color emphasis",
-  "swipeAudit": "CP1317 keeps an async image callback from painting an old card after the shared card element has advanced, guards the restaurant handoff by render sequence and row ID, and deduplicates meal rows by stable ID. CP1312 outgoing transform and decoded-image handoff safeguards remain.",
-  "automatedRC": "CP1317 intentionally delayed stale-image regression + existing multi-swipe no-repeat Meal deck test + Restaurant swipe/handoff and mobile viewport suite.",
+  "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained.",
+  "automatedRC": "CP1318 delayed stale-image race + restored duplicate-Meal-ID normalization + successive Meal swipes never reintroduce a Cut card + restaurant handoff/mobile suite.",
   "visualCorrections": "CP1316 removes the shared .drawer-head/.modal-head padding conflict; compacts drawer brand spacing; puts navigation rows directly below a small NAVIGATION label, targeting a first row top under 100px.",
-  "currentBaseline": "CP1300 visual baseline with CP1317 stale async card/image handoff guards and duplicate meal-row identity protection, alongside CP1316 drawer placement fix."
+  "currentBaseline": "CP1300 visual baseline plus CP1318 async card-image ownership guards, restored Meal deck stable-ID normalization, and captured swipe-row decisions, on top of CP1316 drawer placement.",
+  "buildDate": "2026-10-09"
 }

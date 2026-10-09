@@ -804,7 +804,33 @@ test('a committed Meal swipe never paints the outgoing photo over the next card'
   await expectNoPageErrors(errors);
 });
 
-test('CP1317 a stale image load cannot repaint a reused decision card', async ({ page }) => {
+test('CP1318 restores only one active Meal row per stable ID', async ({ page }) => {
+  const errors = await prepare(page);
+  await seedMeals(page, 3);
+  const result = await page.evaluate(async () => {
+    const { store } = await import('/src/state/store.js');
+    const { drawFood } = await import('/src/main.js');
+    const state = store.get();
+    const first = state.pool[0];
+    const second = state.pool[1];
+    state.pool = [first, { ...first }, second, { ...second }];
+    state.index = 3;
+    drawFood();
+    const ids = state.pool.map(row => String(row.id));
+    return {
+      ids,
+      uniqueIds: new Set(ids).size,
+      activeId: String(state.pool[state.index]?.id || ''),
+      expectedActiveId: String(second?.id || '')
+    };
+  });
+  expect(result.ids.length).toBe(2);
+  expect(result.uniqueIds).toBe(2);
+  expect(result.activeId).toBe(result.expectedActiveId);
+  await expectNoPageErrors(errors);
+});
+
+test('CP1318 a stale image load cannot repaint a reused decision card', async ({ page }) => {
   const errors = await prepare(page);
   await page.route(url => url.pathname.startsWith('/__swap-race-'), async route => {
     const url = new URL(route.request().url());

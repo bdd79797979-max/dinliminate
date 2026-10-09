@@ -96,7 +96,25 @@ function foodChoiceIndex(rows,start,keepState=false){
  }
  return -1;
 }
+function normalizeFoodPoolIdentities(){
+ const source=Array.isArray(S.pool)?S.pool:[];
+ const oldIndex=Math.max(0,Math.min(Number(S.index)||0,Math.max(0,source.length-1)));
+ const selectedId=String(source[oldIndex]?.id||'');
+ const seen=new Set(),unique=[];
+ for(const item of source){
+  const id=String(item?.id||'').trim();
+  if(!id||seen.has(id))continue;
+  seen.add(id);unique.push(item);
+ }
+ if(unique.length!==source.length){
+  S.pool=unique;
+  const selectedIndex=selectedId?unique.findIndex(item=>String(item?.id||'')===selectedId):-1;
+  S.index=selectedIndex>=0?selectedIndex:Math.max(0,Math.min(oldIndex,Math.max(0,unique.length-1)));
+ }
+ return S.pool;
+}
 function drawFood(options={}){
+ normalizeFoodPoolIdentities();
  // The live Meal card is the only authoritative decision card. The waiting card
  // is pointer-inert and must never be used as a source for active-card selection.
  if(!S.pool.length){winner({name:'Nothing left — hungry mode',image:HUNGRY_IMAGE,category:'Hungry'});return;}
@@ -616,5 +634,5 @@ function bindRestaurantPhotoPinch(target){
   surface.addEventListener('pointercancel',finishPointer,{passive:true});
 }
 
-function bindFoodSwipe(){bindSwipeCard('foodCard',()=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(undefined,{fromSwipe:true}),()=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(undefined,{fromSwipe:true}),{kind:'food',getContext:()=>{const item=S.pool[S.index];return {id:String(item?.id||''),row:item,wasMaybe:!!item&&S.maybe.has(item.id)};},onPreview:context=>previewDecisionCount('food',context.direction,context.wasMaybe)});}
+function bindFoodSwipe(){bindSwipeCard('foodCard',context=>familyIsBrowseStage('meal')?familyBrowseNext('meal'):foodCut(context?.row||S.pool[S.index],{fromSwipe:true}),context=>familyIsBrowseStage('meal')?familyBrowsePrevious('meal'):foodMaybe(context?.row||S.pool[S.index],{fromSwipe:true}),{kind:'food',getContext:()=>{const item=S.pool[S.index];return {id:String(item?.id||''),row:item,wasMaybe:!!item&&S.maybe.has(item.id)};},onPreview:context=>previewDecisionCount('food',context.direction,context.wasMaybe)});}
 export { clearLegacySwipeInstructions, dismissSwipeHint, maybeShowInCardSwipeCoach, setChoiceCount, foodChoiceIndex, drawFood, foodCommit, foodCut, foodMaybe, resolveFoodAfterDecision, foodBack, waitForSwipeImage, stageSwipePreview, nextFoodIndexList, buildPreparedFoodCard, cachePreparedFoodCards, ensurePreparedFoodNextCardMarkup, setFoodNextCardImage, populateFoodNextCard, prepareFoodNextCard, preloadSwipeImage, waitForVisualImage, primeFoodSwipeMedia, bindRestaurantPhotoPinch, bindSwipeCard, getSwipeMachine, triggerSwipeHaptic, bindFoodSwipe, startFood, waitForNextPaints };
