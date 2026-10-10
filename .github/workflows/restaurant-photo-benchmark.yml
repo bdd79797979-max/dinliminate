@@ -1,5 +1,6 @@
 name: Restaurant photo benchmark
 # One-shot baseline execution is gated on a push commit containing [run-photo-baseline].
+# Preview deployments may lag environment updates; the health fallback requires no Google Places key.
 
 on:
   push:
