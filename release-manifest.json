@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1391,
+  "build": 1392,
   "sourceBranch": "fix/restaurant-photo-budget-no-photo-state",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1391",
+  "checkpoint": "CP1392",
   "deploymentTrigger": "fix/restaurant-photo-budget-no-photo-state",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "Durable Neon SKU accounting surfaced in Settings; read-only /api/google-usage; eight SKU-specific monthly caps; Settings refresh does not call Google APIs.",
@@ -67,5 +67,6 @@
   "photoPolicy": "Google image content not cached; Place IDs retained; active-card-only photo resolution; fallback card stays stable when photo is unavailable",
   "googleHardStops": "photos:900; text-search-pro:4500; nearby-search-pro:4500; text-search-enterprise:900; nearby-search-enterprise:900; place-details-enterprise:900; place-details-pro:4500; place-details-essentials:9000",
   "restaurantDeckUX": "CP1385 prepares one actionable Restaurant waiting card's image, promotes the already-staged card through swipe handoff, suppresses branded no-photo art while a lookup is pending, and wraps the waiting card to the next actionable choice. CP1386 exports and imports the photo decode helper used by that flow. CP1387 retains the pending-image suppression without !important to satisfy the CSS quality gate.",
-  "googleUsageSettings": "Monthly per-SKU usage, cap, remaining, percent, warning/disabled status, durable tracker health, and Pacific-time reset date; unavailable tracking is explicit and never represented as zero."
+  "googleUsageSettings": "Monthly per-SKU usage, cap, remaining, percent, warning/disabled status, durable tracker health, and Pacific-time reset date; unavailable tracking is explicit and never represented as zero.",
+  "nearbySearchBudgetPolicy": "Routine nearby discovery uses Pro-tier fields with no opening-hours fields; targeted hours enrichment remains budgeted separately. Home startup does not request an unused restaurant photo."
 }

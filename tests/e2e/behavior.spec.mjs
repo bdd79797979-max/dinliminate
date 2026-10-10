@@ -2799,3 +2799,21 @@ test('Settings Google Usage tracker reports unavailable counts instead of false 
   await expect(page.locator('[data-google-sku="place-photo"]')).not.toContainText('0 / 900');
   await expectNoPageErrors(errors);
 });
+
+test('Home startup does not request an unused restaurant photo', async ({ page }) => {
+  const photoRequests = [];
+  page.on('request', request => {
+    try {
+      if (new URL(request.url()).pathname === '/api/restaurant-photo') photoRequests.push(request.url());
+    } catch {}
+  });
+
+  await prepare(page);
+  await page.goto('/');
+  await expect(page.locator('#home')).toBeVisible();
+  await expect.poll(() => page.evaluate(() =>
+    document.documentElement.classList.contains('dinliminate-ready')
+  )).toBe(true);
+
+  expect(photoRequests).toEqual([]);
+});
