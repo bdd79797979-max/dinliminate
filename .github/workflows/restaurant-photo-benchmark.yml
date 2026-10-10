@@ -1,6 +1,9 @@
 name: Restaurant photo benchmark
 
 on:
+  push:
+    branches:
+      - qa/restaurant-photo-step0-benchmark
   workflow_dispatch:
     inputs:
       base:
@@ -33,6 +36,7 @@ permissions:
 
 jobs:
   benchmark:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-photo-baseline]')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -47,14 +51,39 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Format benchmark script
         run: npx prettier --write scripts/benchmark-restaurant-photos.mjs
+      - name: Wait for branch preview with Google photos disabled
+        env:
+          BASE: ${{ inputs.base || 'https://dinliminate-git-qa-restaurant-photo-step0-benchmark-c-9ad9.vercel.app' }}
+        run: |
+          BASE="${BASE%/}"
+          for attempt in $(seq 1 60); do
+            headers="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 8 --dump-header "$headers" --output /dev/null --write-out '%{http_code}' "$BASE/api/restaurant-photo" 2>/dev/null || true)"
+            if [ "$status" = "400" ] && grep -Eiq '^x-restaurant-photo-google:[[:space:]]*disabled' "$headers"; then
+              echo "Preview serves the photo endpoint and explicitly reports Google photos disabled."
+              rm -f "$headers"
+              exit 0
+            fi
+            echo "Preview not ready (attempt $attempt/60; HTTP ${status:-no response}); waiting for the latest branch deployment and disabled header."
+            rm -f "$headers"
+            sleep 10
+          done
+          echo "Preview did not pass the routing/runtime/Google-disabled readiness check."
+          exit 1
       - name: Run restaurant photo benchmark
+        env:
+          BASE: ${{ inputs.base || 'https://dinliminate-git-qa-restaurant-photo-step0-benchmark-c-9ad9.vercel.app' }}
+          COUNT: ${{ inputs.count || 200 }}
+          RADIUS: ${{ inputs.radius || 10 }}
+          LAT: ${{ inputs.lat || '36.5298' }}
+          LON: ${{ inputs.lon || '-87.3595' }}
         run: >-
           node scripts/benchmark-restaurant-photos.mjs
-          --base "${{ inputs.base }}"
-          --count "${{ inputs.count }}"
-          --radius "${{ inputs.radius }}"
-          --lat "${{ inputs.lat }}"
-          --lon "${{ inputs.lon }}"
+          --base "$BASE"
+          --count "$COUNT"
+          --radius "$RADIUS"
+          --lat "$LAT"
+          --lon "$LON"
           --out artifacts/restaurant-photo-baseline
       - name: Upload full report folder
         if: always()
