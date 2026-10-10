@@ -56,10 +56,10 @@ function photoUrl(r) {
   }
   return base + "/api/restaurant-photo?" + q;
 }
-async function measure(r, i) {
+async function measure(r, i, prefetched = null) {
   const start = performance.now(), web = webInfo(r);
   try {
-    const { response, msToHeaders } = await fetchTimed(photoUrl(r));
+    const { response, msToHeaders } = prefetched || await fetchTimed(photoUrl(r));
     const type = (response.headers.get("content-type") || "").split(";")[0].toLowerCase();
     if (!response.ok || !type.startsWith("image/")) {
       const raw = (await response.text()).slice(0, 350);
@@ -138,21 +138,23 @@ async function main() {
   const probe = unique[0];
   if (!probe) { const s = stats([], notes, searchMs); await report([], s); console.log(JSON.stringify(s, null, 2)); process.exitCode = 1; return; }
   const probeUrl = photoUrl(probe);
-  const { response: probeResponse } = await fetchTimed(probeUrl);
+  const probeResult = await fetchTimed(probeUrl);
+  const probeResponse = probeResult.response;
   const googleHeader = String(probeResponse.headers.get("X-Restaurant-Photo-Google") || "").toLowerCase();
   if (googleHeader !== "disabled" && !v["allow-google"]) {
     notes.push("Stopped before sampling: probe did not return X-Restaurant-Photo-Google: disabled (got " + (googleHeader || "missing") + "). Use --allow-google only if Google photo calls are explicitly approved.");
     const s = stats([], notes, searchMs); s.googleHeader = googleHeader || null; await report([], s); console.log(JSON.stringify(s, null, 2)); process.exitCode = 2; return;
   }
   const probeType = (probeResponse.headers.get("content-type") || "").split(";")[0].toLowerCase();
-  if (!probeResponse.ok || !probeType.startsWith("image/")) {
+  if (probeResponse.status !== 404 && (!probeResponse.ok || !probeType.startsWith("image/"))) {
     const raw = (await probeResponse.text()).slice(0, 250);
     notes.push("Photo endpoint probe failed (" + probeResponse.status + "): " + raw);
     const s = stats([], notes, searchMs); s.probeStatus = probeResponse.status; await report([], s); console.log(JSON.stringify(s, null, 2)); process.exitCode = 1; return;
   }
-  // Reuse the probe bytes by recording the first restaurant normally; subsequent calls run at bounded concurrency.
+  if (probeResponse.status === 404) notes.push("Probe restaurant had no verified photo (HTTP 404); recorded as a normal sample miss.");
+  // The probe is also sample 1, avoiding a duplicate source-discovery request.
   const rows = new Array(unique.length);
-  rows[0] = await measure(unique[0], 0);
+  rows[0] = await measure(unique[0], 0, probeResult);
   let next = 1;
   await Promise.all(Array.from({ length: Math.min(concurrency, Math.max(0, unique.length - 1)) }, async () => {
     while (true) { const i = next++; if (i >= unique.length) return; rows[i] = await measure(unique[i], i); }
