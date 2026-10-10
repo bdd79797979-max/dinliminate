@@ -472,18 +472,32 @@ async function main() {
   const googleHeader = String(
     probeResponse.headers.get('X-Restaurant-Photo-Google') || '',
   ).toLowerCase();
+  let googlePlacesConfigured = null;
   if (googleHeader !== 'disabled' && !v['allow-google']) {
-    notes.push(
-      'Stopped before sampling: probe did not return X-Restaurant-Photo-Google: disabled (got ' +
-        (googleHeader || 'missing') +
-        '). Use --allow-google only if Google photo calls are explicitly approved.',
-    );
-    const s = stats([], notes, searchMs);
-    s.googleHeader = googleHeader || null;
-    await report([], s);
-    console.log(JSON.stringify(s, null, 2));
-    process.exitCode = 2;
-    return;
+    // A preview may default the feature flag to enabled but have no Places API key.
+    // In that case tryGoogleRestaurantPhoto returns before any outbound request.
+    try {
+      const healthUrl = new URL('/api/google-restaurant-photo?mode=health', base);
+      const { response: healthResponse } = await fetchTimed(healthUrl);
+      if (healthResponse.ok) {
+        const health = await healthResponse.json();
+        googlePlacesConfigured = health.googlePlacesConfigured === true;
+      }
+    } catch {}
+    if (googlePlacesConfigured !== false) {
+      notes.push(
+        'Stopped before sampling: probe did not return X-Restaurant-Photo-Google: disabled (got ' +
+          (googleHeader || 'missing') +
+          '), and Google Places health did not prove the API key is absent. Use --allow-google only if Google photo calls are explicitly approved.',
+      );
+      const s = stats([], notes, searchMs);
+      s.googleHeader = googleHeader || null;
+      s.googlePlacesConfigured = googlePlacesConfigured;
+      await report([], s);
+      console.log(JSON.stringify(s, null, 2));
+      process.exitCode = 2;
+      return;
+    }
   }
   const probeType = (probeResponse.headers.get('content-type') || '').split(';')[0].toLowerCase();
   if (probeResponse.status !== 404 && (!probeResponse.ok || !probeType.startsWith('image/'))) {
@@ -515,6 +529,7 @@ async function main() {
   );
   const s = stats(rows, notes, searchMs);
   s.googleHeader = googleHeader;
+  s.googlePlacesConfigured = googlePlacesConfigured;
   s.searchReturned = payload.results.length;
   await report(rows, s);
   console.log(JSON.stringify(s, null, 2));
