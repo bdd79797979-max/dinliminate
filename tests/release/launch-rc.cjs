@@ -121,10 +121,10 @@ assert.match(storeSource,/export const store=Object\.freeze\(\{/,'store module m
 assert.match(storeSource,/get\(key\)/,'central store must expose get');
 assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
 assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
-const radiusOptionsMarkup=index.match(/<select id="radius"[^>]*>([\\s\\S]*?)<\\/select>/)?.[1]||'';
+const radiusOptionsMarkup=index.match(/<select id="radius"[^>]*>([\s\S]*?)<\/select>/)?.[1]||'';
 assert.ok(radiusOptionsMarkup,'Restaurant radius selector must exist');
-assert.deepEqual([...radiusOptionsMarkup.matchAll(/<option value="(\\d+)"/g)].map(match=>Number(match[1])),[1,3,5,10,15,25,50,100],'Restaurant radius options must remain ordered from 1 to 100 miles and include 15');
-assert.match(radiusOptionsMarkup,/<option value="5" selected>5 mi<\\/option>/,'Restaurant radius must default to 5 miles');
+assert.deepEqual([...radiusOptionsMarkup.matchAll(/<option value="(\d+)"/g)].map(match=>Number(match[1])),[1,3,5,10,15,25,50,100],'Restaurant radius options must remain ordered from 1 to 100 miles and include 15');
+assert.match(radiusOptionsMarkup,/<option value="5" selected>5 mi<\/option>/,'Restaurant radius must default to 5 miles');
 assert.match(storeSource,/restaurantSearchRadius:5/,'New app state must default the radius to 5 miles');
 assert.ok(main.includes('restaurantSearchRadius:Number(S.restaurantSearchRadius)||5'),'Main state snapshot must default radius to 5 miles');
 assert.ok(main.includes('Number(state.restaurantSearchRadius)||5'),'Restored radius state fallback must be 5 miles');
