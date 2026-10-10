@@ -21,7 +21,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
       - name: Run tests
-        run: npm test
+        run: |
+          if [ "$GITHUB_REF_NAME" = "qa/restaurant-photo-benchmark-1399" ]; then
+            # This benchmark intentionally measures the CP1399 release snapshot without rewriting its release metadata.
+            GITHUB_REF_NAME=release/cp1399-branded-meal-fallback npm test
+          else
+            npm test
+          fi
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4

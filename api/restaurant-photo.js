@@ -1064,7 +1064,7 @@ module.exports=async function handler(req,res){
   res.setHeader?.('X-Content-Type-Options','nosniff');
   res.setHeader?.('Referrer-Policy','no-referrer');
   const googlePhotosEnabled=String(process.env.GOOGLE_PHOTOS_ENABLED??'true').trim().toLowerCase()!=='false';
-  res.setHeader?.('X-Restaurant-Photo-Google',googlePhotosEnabled?'enabled':'disabled');
+  res.setHeader?.('X-Restaurant-Photo-Google', googlePhotosEnabled ? 'enabled' : 'disabled');
   if(String(req?.method||'GET').toUpperCase()!=='GET')return json(res,405,{ok:false,error:'GET required'});
   
   const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
