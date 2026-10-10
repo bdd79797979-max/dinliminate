@@ -209,7 +209,7 @@ test('desktop Family Mode is a right-side drawer that closes without changing it
 });
 
 
-test('CP1342 all four desktop windows share hamburger alignment, layering, and return-to-menu behavior', async ({ page }) => {
+test(' all four desktop windows share hamburger alignment, layering, and return-to-menu behavior', async ({ page }) => {
   const errors = await openApp(page);
   const items = [
     { menuId:'manage', modalId:'manageFoodsModal', title:'Manage Meals' },
