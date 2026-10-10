@@ -51,7 +51,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Format benchmark script
         run: npx prettier --write scripts/benchmark-restaurant-photos.mjs
-      - name: Wait for branch preview with Google photos disabled
+      - name: Wait for working preview and no Google photo requests
         env:
           BASE: ${{ inputs.base || 'https://dinliminate-git-qa-restaurant-photo-step0-benchmark-c-9ad9.vercel.app' }}
         run: |
@@ -59,12 +59,26 @@ jobs:
           for attempt in $(seq 1 60); do
             headers="$(mktemp)"
             status="$(curl --silent --show-error --max-time 8 --dump-header "$headers" --output /dev/null --write-out '%{http_code}' "$BASE/api/restaurant-photo" 2>/dev/null || true)"
-            if [ "$status" = "400" ] && grep -Eiq '^x-restaurant-photo-google:[[:space:]]*disabled' "$headers"; then
+            google_header="$(awk 'BEGIN { IGNORECASE=1 } /^x-restaurant-photo-google:/ { gsub("\\r",""); sub(/^[^:]*:[[:space:]]*/, ""); print tolower($0) }' "$headers" | tail -1)"
+            if [ "$status" = "400" ] && [ "$google_header" = "disabled" ]; then
               echo "Preview serves the photo endpoint and explicitly reports Google photos disabled."
               rm -f "$headers"
               exit 0
             fi
-            echo "Preview not ready (attempt $attempt/60; HTTP ${status:-no response}); waiting for the latest branch deployment and disabled header."
+            # If a current deployment predates the environment-variable update,
+            # permit a safe baseline only when the dedicated Google endpoint proves
+            # there is no Places API key and therefore cannot make Google requests.
+            if [ "$status" = "400" ]; then
+              health_body="$(mktemp)"
+              health_status="$(curl --silent --show-error --max-time 8 --output "$health_body" --write-out '%{http_code}' "$BASE/api/google-restaurant-photo?mode=health" 2>/dev/null || true)"
+              if [ "$health_status" = "200" ] && grep -Eiq '"googlePlacesConfigured"[[:space:]]*:[[:space:]]*false' "$health_body"; then
+                echo "Preview photo route is healthy. Header is '${google_header:-missing}', but Google Places is unconfigured; the Google photo provider cannot make API calls."
+                rm -f "$headers" "$health_body"
+                exit 0
+              fi
+              rm -f "$health_body"
+            fi
+            echo "Preview not ready (attempt $attempt/60; photo HTTP ${status:-no response}; Google header '${google_header:-missing}'); waiting for endpoint health and a provably disabled/unconfigured Google provider."
             rm -f "$headers"
             sleep 10
           done
