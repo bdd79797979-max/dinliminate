@@ -251,7 +251,7 @@ async function swipeMeal(page, direction) {
 }
 
 
-test('CP1329 decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows', async ({ page }) => {
+test(' decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
 
@@ -1107,7 +1107,7 @@ test('Meal and Restaurant decision controls stay aligned, visible, and styled ac
   await expectNoPageErrors(errors);
 });
 
-test('CP1325 active and waiting Meal cards advance together without repeating previews', async ({ page }) => {
+test(' active and waiting Meal cards advance together without repeating previews', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 5);
   const expectedIds = await page.evaluate(async () => {
@@ -1168,7 +1168,7 @@ test('CP1325 active and waiting Meal cards advance together without repeating pr
 });
 
 
-test('CP1328 waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
+test(' waiting Meal window advances before a slow active-card photo resolves', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   const target = await page.evaluate(() => {
@@ -1563,7 +1563,7 @@ test('Standalone Restaurant waiting card is promoted after its photo is decoded'
   await expectNoPageErrors(errors);
 });
 
-test('CP1320 Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
+test(' Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
   const errors = await prepare(page);
   await openRestaurants(page);
   await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
@@ -1594,7 +1594,7 @@ test('CP1320 Restaurant swipe advances to the next result and resets the outgoin
   await expectNoPageErrors(errors);
 });
 
-test('CP1320 successive Restaurant swipes never repeat a cut result or leave a blank card', async ({ page }) => {
+test(' successive Restaurant swipes never repeat a cut result or leave a blank card', async ({ page }) => {
   const errors = await prepare(page);
   await page.route(url => url.pathname === '/api/restaurants' && url.searchParams.get('mode') === 'search', async route => {
     const third = {
@@ -1720,7 +1720,7 @@ test('a committed Meal swipe never paints the outgoing photo over the next card'
   await expectNoPageErrors(errors);
 });
 
-test('CP1318 restores only one active Meal row per stable ID', async ({ page }) => {
+test(' restores only one active Meal row per stable ID', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
   const result = await page.evaluate(async () => {
@@ -1746,7 +1746,7 @@ test('CP1318 restores only one active Meal row per stable ID', async ({ page }) 
   await expectNoPageErrors(errors);
 });
 
-test('CP1318 a stale image load cannot repaint a reused decision card', async ({ page }) => {
+test(' a stale image load cannot repaint a reused decision card', async ({ page }) => {
   const errors = await prepare(page);
   await page.route(url => url.pathname.startsWith('/__swap-race-'), async route => {
     const url = new URL(route.request().url());
@@ -1857,7 +1857,7 @@ test('Meal Details starts with the exact photo currently rendered on the card', 
 
 
 
-test('CP1334 phone discovery toolbars maximize their controls without wrapping', async ({ page }) => {
+test(' phone discovery toolbars maximize their controls without wrapping', async ({ page }) => {
   const errors = await prepare(page);
   const widths = [320, 340, 360, 375, 390, 412, 430];
 
@@ -1942,7 +1942,7 @@ test('CP1334 phone discovery toolbars maximize their controls without wrapping',
 });
 
 
-test('CP1337 uses the five exact selected Pexels photos and normalizes restored built-in copies', async ({ page }) => {
+test(' uses the five exact selected Pexels photos and normalizes restored built-in copies', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 3);
   const expected = {
@@ -2019,7 +2019,7 @@ test('CP1337 uses the five exact selected Pexels photos and normalizes restored 
 });
 
 
-test('CP1338 keeps the shared menu directly under its hamburger and Family Mode exits to the menu', async ({ page }) => {
+test(' keeps the shared menu directly under its hamburger and Family Mode exits to the menu', async ({ page }) => {
   const errors = await prepare(page);
   await page.goto('/');
   await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
@@ -2051,7 +2051,7 @@ test('CP1338 keeps the shared menu directly under its hamburger and Family Mode 
 });
 
 
-test('CP1348 pending-photo Maybe keeps card copy visible and Back restores the decoded photo', async ({ page }) => {
+test(' pending-photo Maybe keeps card copy visible and Back restores the decoded photo', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   const target = await page.evaluate(() => {
@@ -2144,7 +2144,7 @@ test('CP1348 pending-photo Maybe keeps card copy visible and Back restores the d
 });
 
 
-test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
+test(' homepage has no gold shine effects', async ({ page }) => {
   const errors = await prepare(page);
   await page.goto('/');
   await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
@@ -2167,7 +2167,7 @@ test('CP1345 homepage has no CP1340 gold shine effects', async ({ page }) => {
 });
 
 
-test('CP1346 Maybe and Back restore the exact Meal immediately without a card flash', async ({ page }) => {
+test(' Maybe and Back restore the exact Meal immediately without a card flash', async ({ page }) => {
   const errors = await prepare(page);
   await seedMeals(page, 4);
   await expect.poll(() => page.locator('#foodImg').evaluate(img =>
@@ -2241,7 +2241,7 @@ test('CP1346 Maybe and Back restore the exact Meal immediately without a card fl
   await expectNoPageErrors(errors);
 });
 
-test('CP1348 Restaurant Maybe and Back reuse the prior photo on restore', async ({ page }) => {
+test(' Restaurant Maybe and Back reuse the prior photo on restore', async ({ page }) => {
   const errors = await prepare(page);
   await openRestaurants(page);
   // Seed a decoded, row-matched photo so this test does not depend on live
@@ -2329,7 +2329,7 @@ test('CP1348 Restaurant Maybe and Back reuse the prior photo on restore', async 
 });
 
 
-test('CP1350 menu navigation retains the full-screen handoff cover until the destination backdrop is ready', async ({ page }) => {
+test(' menu navigation retains the full-screen handoff cover until the destination backdrop is ready', async ({ page }) => {
   const errors = await prepare(page);
   await page.goto('/');
   await expect(page.locator('html.dinliminate-ready')).toBeAttached({ timeout: 10000 });
