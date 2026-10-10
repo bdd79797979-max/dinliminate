@@ -1,5 +1,6 @@
 'use strict';
 
+const {json}=require('./_lib/http');
 const {safeFetch,readResponseBody}=require('./_lib/ssrf');
 
 const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
