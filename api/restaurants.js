@@ -6,7 +6,7 @@ const taxonomyModule=require('../data/restaurant-taxonomy.cjs');
 const RESTAURANT_TAXONOMY=taxonomyModule?.default||taxonomyModule;
 const {runRadiusEngine}=require('../lib/radius-engine');
 const MAX_RADIUS=100;
-const API_VERSION='r49';
+const API_VERSION='r50';
 const DEFAULT_RADIUS=10;
 const DINING_AMENITIES='restaurant|fast_food';
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
@@ -1678,6 +1678,32 @@ if(mode==='website'){
  const result=await resolveOfficialWebsite({name,address,brand,website:providerWebsite,phone});
  if(res.setHeader)res.setHeader('Cache-Control','public, max-age=300, s-maxage=300, stale-while-revalidate=600');
  return res.status(200).json({ok:true,website:result.website||'',officialPage:result.officialPage||'',source:result.source||'none'});
+}
+if(mode==='hours'){
+ const method=String(req?.method||'GET').toUpperCase();
+ if(method!=='POST'){
+  if(res.setHeader)res.setHeader('Allow','POST');
+  if(res.setHeader)res.setHeader('Cache-Control','no-store');
+  return res.status(405).json({ok:false,message:'POST is required for opening-hours enrichment.'});
+ }
+ let payload;
+ try{payload=await requestJsonBody(req,260000);}
+ catch(error){
+  if(res.setHeader)res.setHeader('Cache-Control','no-store');
+  return res.status(400).json({ok:false,message:String(error?.message||'Hours request body is invalid.')});
+ }
+ if(!payload||typeof payload!=='object'||Array.isArray(payload)||!Array.isArray(payload.rows)){
+  if(res.setHeader)res.setHeader('Cache-Control','no-store');
+  return res.status(400).json({ok:false,message:'Hours request payload must include a rows array.'});
+ }
+ const rows=payload.rows.filter(row=>row&&typeof row==='object'&&!Array.isArray(row)).slice(0,90);
+ const requested=Number(payload.maxGoogleCalls);
+ const maxGoogleCalls=Number.isFinite(requested)
+  ?Math.max(1,Math.min(OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS,Math.floor(requested)))
+  :OPEN_NOW_ENRICH_MAX_GOOGLE_CALLS;
+ if(res.setHeader)res.setHeader('Cache-Control','no-store');
+ const data=await enrichOpenNowHours(rows,{maxGoogleCalls});
+ return res.status(200).json({...data,submittedRows:payload.rows.length,processedRows:rows.length});
 }
 if(mode==='search'){
  const startedAt=Date.now();

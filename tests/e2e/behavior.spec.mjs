@@ -59,6 +59,36 @@ async function prepare(page) {
         });
         return;
       }
+      if (mode === 'details') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            name: url.searchParams.get('name') || 'Mock Pizza Kitchen',
+            address: '123 Main St, Clarksville, TN 37040',
+            phone: '931-555-0147',
+            website: 'https://mock-pizza.example',
+            opening_hours: 'Monday–Sunday: 10:00 AM–9:00 PM',
+            openNow: true,
+            businessStatus: 'OPERATIONAL'
+          })
+        });
+        return;
+      }
+      if (mode === 'website') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            website: 'https://mock-pizza.example',
+            officialPage: '',
+            source: 'mock-official-site'
+          })
+        });
+        return;
+      }
       if (mode === 'search') {
         await route.fulfill({
           status: 200,
@@ -876,6 +906,31 @@ test('restaurant search displays the mocked API result', async ({ page }) => {
   await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
   await expect(page.locator('#restaurantMaybeDeck')).toHaveAttribute('data-all-count', '1');
 
+  await expectNoPageErrors(errors);
+});
+
+test('Restaurant Details fetches missing contact and hours when opened', async ({ page }) => {
+  const errors = await prepare(page);
+  const detailRequests = [];
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (url.pathname === '/api/restaurants' && url.searchParams.get('mode') === 'details') {
+      detailRequests.push(url);
+    }
+  });
+
+  await openRestaurants(page);
+  await page.locator('#restaurantSearchToggle').click();
+  await page.locator('#restaurantQuery').fill('Pizza');
+  await page.locator('#restaurantQuery').press('Enter');
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
+  await page.locator('#restDetails').click();
+
+  await expect(page.locator('#detailsModal')).toBeVisible();
+  await expect(page.locator('#restaurantDetailPhoneLabel')).toHaveText('931-555-0147');
+  await expect(page.locator('#restaurantDetailHours')).not.toHaveClass(/hidden/);
+  await expect(page.locator('#restaurantDetailHoursText')).toContainText('10:00 AM–9:00 PM');
+  expect(detailRequests).toHaveLength(1);
   await expectNoPageErrors(errors);
 });
 

@@ -50,7 +50,7 @@ import { store } from '../state/store.js';
 const S = store.get();
 import { itemNote, setItemNote, saveItemNotes } from '../state/storage.js';
 const modalDeps=Object.create(null);
-let mealTimesFor, restaurantFallbackImage, imageProxyUrl, mealImageUrl, mealPhotoList, foodPhoto, foodPhotoFallback, hydrateMealPhotoGallery, restaurantWebsitePresentation, hydrateRestaurantWebsite, restaurantPhoneSearchUrl, restaurantDirectionsUrl, bindImageFallback, swapImageWhenReady, phoneHref, show, foodHideItem, HUNGRY_IMAGE, FINAL_FOOD_IMAGE, FINAL_RESTAURANT_IMAGE;
+let mealTimesFor, restaurantFallbackImage, imageProxyUrl, mealImageUrl, mealPhotoList, foodPhoto, foodPhotoFallback, hydrateMealPhotoGallery, restaurantWebsitePresentation, hydrateRestaurantWebsite, hydrateRestaurantDetails, restaurantPhoneSearchUrl, restaurantDirectionsUrl, bindImageFallback, swapImageWhenReady, phoneHref, show, foodHideItem, HUNGRY_IMAGE, FINAL_FOOD_IMAGE, FINAL_RESTAURANT_IMAGE;
 export function configureModal(next={}){
   Object.assign(modalDeps,next);
   mealTimesFor=modalDeps.mealTimesFor;
@@ -63,6 +63,7 @@ export function configureModal(next={}){
   hydrateMealPhotoGallery=modalDeps.hydrateMealPhotoGallery;
   restaurantWebsitePresentation=modalDeps.restaurantWebsitePresentation;
   hydrateRestaurantWebsite=modalDeps.hydrateRestaurantWebsite;
+  hydrateRestaurantDetails=modalDeps.hydrateRestaurantDetails;
   restaurantPhoneSearchUrl=modalDeps.restaurantPhoneSearchUrl;
   restaurantDirectionsUrl=modalDeps.restaurantDirectionsUrl;
   bindImageFallback=modalDeps.bindImageFallback;
@@ -394,6 +395,7 @@ const body='<div class="detail-unified detail-meal">'+detailHero+photoCredit+'<d
  const detailHideRestaurant=$('detailHideRestaurant');
  if(detailHideRestaurant)detailHideRestaurant.onclick=async()=>{const hidden=await restaurantHide(item);if(hidden){modal.remove();$('detailsModalBg')?.remove();}};
  hydrateRestaurantWebsite(item,'#detailsModal');
+ hydrateRestaurantDetails?.(item,modal);
 }
 
 
