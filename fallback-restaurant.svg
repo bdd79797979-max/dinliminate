@@ -1,1 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900"><rect width="1200" height="900" fill="#11161a"/><rect x="245" y="300" width="710" height="330" rx="24" fill="#1d252b" stroke="#bfa16b" stroke-width="14"/><path d="M220 300h760l-65-130H285z" fill="#2c2118" stroke="#ead9b8" stroke-width="14"/><rect x="330" y="370" width="160" height="150" rx="10" fill="#0a0a0a"/><rect x="710" y="370" width="160" height="150" rx="10" fill="#0a0a0a"/><rect x="545" y="430" width="115" height="200" rx="8" fill="#bfa16b"/><text x="600" y="760" text-anchor="middle" fill="#bfa16b" font-family="Arial,sans-serif" font-size="54" font-weight="700" letter-spacing="5">RESTAURANT</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Restaurant photo unavailable">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#171512"/><stop offset=".5" stop-color="#090909"/><stop offset="1" stop-color="#1b1710"/></linearGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#ad8d53" stop-opacity=".16"/><stop offset="1" stop-color="#ad8d53" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0dcad"/><stop offset=".48" stop-color="#b89a62"/><stop offset="1" stop-color="#846639"/></linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <ellipse cx="600" cy="390" rx="520" ry="470" fill="url(#glow)"/>
+  <rect x="205" y="130" width="790" height="570" rx="28" fill="none" stroke="#c4a36a" stroke-opacity=".2" stroke-width="2"/>
+  <rect x="225" y="150" width="750" height="530" rx="18" fill="none" stroke="#e1c58d" stroke-opacity=".08" stroke-width="2"/>
+  <g transform="translate(600 365)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-112" y="-92" width="224" height="184" rx="22" stroke-width="5" stroke-opacity=".78"/>
+    <circle cx="58" cy="-48" r="16" stroke-width="4" stroke-opacity=".86"/>
+    <path d="M-82 57l58-60 44 42 28-27 38 45" stroke-width="5" stroke-opacity=".86"/>
+    <path d="M-154-128h45M-154-128v45M154-128h-45M154-128v45M-154 128h45M-154 128v-45M154 128h-45M154 128v-45" stroke-width="2.5" stroke-opacity=".32"/>
+  </g>
+  <path d="M390 557h420" stroke="#c4a36a" stroke-opacity=".25" stroke-width="1.5"/>
+  <text x="600" y="610" text-anchor="middle" fill="#e7d1a2" fill-opacity=".86" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="600" letter-spacing="8">PHOTO UNAVAILABLE</text>
+  <text x="600" y="650" text-anchor="middle" fill="#b89a62" fill-opacity=".72" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" letter-spacing="7">DINLIMINATE</text>
+</svg>

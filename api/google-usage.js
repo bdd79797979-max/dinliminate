@@ -17,6 +17,7 @@ const HARD_LIMITS = Object.freeze({
   'nearby-search-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_NEARBY_SEARCH_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'text-search-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_TEXT_SEARCH_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
   'place-details-enterprise': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ENTERPRISE_HARD_LIMIT || '900', 10) || 900),
+  'place-details-pro': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_PRO_HARD_LIMIT || '4500', 10) || 4500),
   'place-details-essentials': Math.max(1, Number.parseInt(process.env.GOOGLE_PLACE_DETAILS_ESSENTIALS_HARD_LIMIT || '9000', 10) || 9000),
   'place-photo': Math.max(1, Number.parseInt(process.env.GOOGLE_PHOTO_MONTHLY_HARD_LIMIT || process.env.GOOGLE_PLACE_PHOTO_HARD_LIMIT || '900', 10) || 900)
 });

@@ -104,7 +104,7 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
   try{
     data=await googleJson('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location'},body:JSON.stringify(body)});
   }catch(err){
-    if(Number(err?.status)===403||Number(err?.status)===429)await disableGoogleSkuForMonth('text-search-pro');
+    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleSkuForMonth('text-search-pro');
     throw err;
   }
   const candidates=Array.isArray(data.places)?data.places:[];
@@ -114,9 +114,9 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
 }
 async function getPlaceDetails(placeId){
   if(!placeId)return null;
-  const budget=await reserveGoogleSku('place-details-essentials',HARD_LIMITS['place-details-essentials']);
+  const budget=await reserveGoogleSku('place-details-pro',HARD_LIMITS['place-details-pro']);
   if(!budget.ok){
-    console.warn('dinliminate-google-place-details-budget-block',{reason:budget.reason,count:budget.count||0,limit:budget.limit||HARD_LIMITS['place-details-essentials']});
+    console.warn('dinliminate-google-place-details-pro-budget-block',{reason:budget.reason,count:budget.count||0,limit:budget.limit||HARD_LIMITS['place-details-pro']});
     return null;
   }
   try{
@@ -125,7 +125,7 @@ async function getPlaceDetails(placeId){
       headers:{'X-Goog-FieldMask':'id,displayName,formattedAddress,location,photos'}
     });
   }catch(err){
-    if(Number(err?.status)===403||Number(err?.status)===429)await disableGoogleSkuForMonth('place-details-essentials');
+    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleSkuForMonth('place-details-pro');
     throw err;
   }
 }
@@ -154,7 +154,7 @@ async function tryGoogleRestaurantPhoto(input){
       return null;
     }
     const ranked=photos.map((p,i)=>({photo:p,score:photoQuality(p,i)})).filter(x=>x.score>-500).sort((a,b)=>b.score-a.score);
-    for(const item of ranked.slice(0,2)){
+    for(const item of ranked.slice(0,1)){
       const photo=item.photo,media=await googlePhotoMedia(photo.name);if(!media)continue;
       const author=Array.isArray(photo.authorAttributions)?photo.authorAttributions.map(a=>({displayName:clean(a?.displayName,120),uri:clean(a?.uri,600)})).filter(a=>a.displayName&&/^https:\/\//i.test(a.uri)).slice(0,3):[];
       const googleMapsUri=clean(photo.googleMapsUri,800);
@@ -169,7 +169,6 @@ async function tryGoogleRestaurantPhoto(input){
       body:err?.body||null,
       message:String(err?.message||err||'unknown')
     });
-    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleSkuForMonth('place-photo');
   }
   return null;
 }

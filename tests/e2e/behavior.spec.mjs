@@ -905,6 +905,24 @@ test('restaurant search displays the mocked API result', async ({ page }) => {
   await expectNoPageErrors(errors);
 });
 
+test('restaurant cards keep a designed image when restaurant photo lookup fails', async ({ page }) => {
+  const errors = await prepare(page);
+  await openRestaurants(page);
+
+  const activeImage = page.locator('#restaurantCard img[data-restaurant-photo-key]');
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Pizza Kitchen');
+  await expect(activeImage).toHaveAttribute('src', /fallback-restaurant\.svg/);
+  await expect.poll(() => activeImage.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+
+  const waitingImage = page.locator('#restaurantNextCard img[data-restaurant-photo-key]');
+  await expect(waitingImage).toHaveAttribute('src', /fallback-restaurant\.svg/);
+
+  await page.locator('#restCut').click();
+  await expect(page.locator('#restaurantCard h3')).toHaveText('Mock Taco House');
+  await expect(page.locator('#restaurantCard img[data-restaurant-photo-key]')).toHaveAttribute('src', /fallback-restaurant\.svg/);
+  await expectNoPageErrors(errors);
+});
+
 test('Restaurant Details fetches missing contact and hours when opened', async ({ page }) => {
   const errors = await prepare(page);
   const detailRequests = [];

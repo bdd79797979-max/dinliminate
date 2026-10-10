@@ -9,9 +9,9 @@
 3. Official restaurant website, gallery, or exact location page
 4. Exact public venue page
 5. Exact OpenStreetMap/POI venue image
-6. No card
+6. A branded, non-photographic no-photo state; the restaurant stays in the deck
 
-A generic restaurant/category image is not a valid Restaurant swipe fallback.
+A generic restaurant/category image is not a valid Restaurant swipe fallback. If every permitted source fails, show the branded no-photo state instead of a broken or empty image; photo availability never removes a restaurant from the decision deck.
 
 ### Verification
 
