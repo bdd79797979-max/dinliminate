@@ -427,8 +427,12 @@ function stageSwipePreview(card,img,src,key){
  card.style.visibility='hidden';
  img.decoding='async';
  img.dataset.swipePreviewSrc=String(src);
- img.src=String(src);
+ // Remove the previous decoded source while the waiting card is hidden, then
+ // install listeners before starting the new request. This closes the race
+ // where a cached image completes before listeners attach.
+ img.removeAttribute('src');
  const ready=waitForSwipeImage(img,card,previewKey);
+ img.src=String(src);
  card.__swipePreviewReadyPromise=ready;
  ready.then(ok=>{
   if(String(card.dataset.swipePreviewToken||'')!==nextToken)return;

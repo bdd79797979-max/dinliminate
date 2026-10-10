@@ -13,7 +13,7 @@ import { openModal, detailsSheet, appConfirm } from '../../ui/modal.js';
 import { winner } from '../winner/index.js';
 import { familyEnterMaybes, familyPickSingle } from '../family/index.js';
 import { tutorialModeEnabled, tutorialState, tutorialEnterDecisionScreen, tutorialMarkChoose } from '../tutorial/index.js';
-import { normKey, primeRestaurantPhotosBeforeFirstPaint, restaurantImmediatePhoto, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
+import { normKey, restaurantImmediatePhoto, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
 
 let restaurantBackBusy=false;
 const REST_QUICK=[...RESTAURANT_TAXONOMY.tags];
@@ -931,12 +931,7 @@ if(S.restaurantPool.length) {
 }
 restaurantQuick();
 renderRestaurantHours();
-if(S.restaurantPool.length){
-  $('restStage')?.setAttribute('data-photo-state','preparing');
-  await primeRestaurantPhotosBeforeFirstPaint(S.restaurantPool, S.restaurantIndex);
-}
 await drawRestaurants();
-$('restStage')?.removeAttribute('data-photo-state');
 save();
 } catch (err) {
 if (err?.name==='AbortError' || searchSeq !== restaurantSearchSeq) return;
@@ -1019,9 +1014,6 @@ const restoreExact=!!S.restaurantRestoreExact;
 S.restaurantRestoreExact=false;
 S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
-if(!options.startup&&!options.swipeHandoff){
- primeRestaurantPhotosBeforeFirstPaint(rows,S.restaurantIndex).catch(()=>null);
-}
 if(drawSeq!==restaurantDrawSeq)return;
 rows=restaurantPoolFiltered();
 if(S.restaurantIndex<0||S.restaurantIndex>=rows.length)S.restaurantIndex=0;
