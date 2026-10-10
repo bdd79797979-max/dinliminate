@@ -46,6 +46,7 @@ const transforms = new Map([
       './logo.svg?v=' + build, './data/foods.js', './data/foods.js?v=' + build,
       './manifest.webmanifest', './app-release.json', './release-manifest.json',
       './icon.svg?v=' + build, './app-icon.svg?v=' + build, './apple-touch-icon.png?v=' + build,
+      './assets/home-door.jpg?v=' + build,
       './fallback-food.svg', './fallback-restaurant.svg',
       './tokens.css?v=' + build, './base.css?v=' + build, './chrome.css?v=' + build, './modal.css?v=' + build,
       './swipe.css?v=' + build, './home.css?v=' + build, './meals.css?v=' + build, './restaurants.css?v=' + build,

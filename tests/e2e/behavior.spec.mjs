@@ -400,7 +400,8 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
         return {
           direction:card.dataset.swipe,
           alpha:Number(style.getPropertyValue('--swipe-tint-alpha')),
-          color:getComputedStyle(card,'::before').backgroundColor
+          color:getComputedStyle(card,'::before').backgroundColor,
+          pill:(()=>{const p=getComputedStyle(card,'::after');return {content:p.content,color:p.color,borderColor:p.borderTopColor,backgroundColor:p.backgroundColor,textShadow:p.textShadow};})()
         };
       };
       fire('pointerdown', x);
@@ -413,6 +414,11 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
   const right = await sampleDrag('right', 31);
   expect(right.map(sample => sample.direction)).toEqual(['maybe','maybe','maybe']);
   expect(right.every(sample => sample.color === 'rgb(24, 134, 83)')).toBe(true);
+  expect(right.every(sample => sample.pill.content === '"MAYBE"')).toBe(true);
+  expect(right.every(sample => sample.pill.color === 'rgb(121, 200, 146)')).toBe(true);
+  expect(right.every(sample => sample.pill.borderColor === 'rgb(121, 200, 146)')).toBe(true);
+  expect(right.every(sample => sample.pill.backgroundColor === 'rgba(16, 27, 20, 0.92)')).toBe(true);
+  expect(right.every(sample => sample.pill.textShadow.includes('121, 200, 146'))).toBe(true);
   expect(right[1].alpha).toBeGreaterThan(right[0].alpha);
   expect(right[1].alpha).toBeLessThan(0.6);
   expect(right[2].alpha).toBeLessThan(right[1].alpha);
@@ -445,7 +451,8 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
       filling:el.classList.contains('swipe-filling'),
       transitionDuration:getComputedStyle(el,'::before').transitionDuration,
       overlayOpacity:Number(getComputedStyle(el,'::before').opacity),
-      color:getComputedStyle(el,'::before').backgroundColor
+      color:getComputedStyle(el,'::before').backgroundColor,
+      pill:(()=>{const p=getComputedStyle(el,'::after');return {content:p.content,color:p.color,borderColor:p.borderTopColor,backgroundColor:p.backgroundColor,textShadow:p.textShadow};})()
     }));
     expect(committed.direction).toBe(expectedDirection);
     expect(committed.alpha).toBe(1);
@@ -455,6 +462,13 @@ test('swipe tint follows direction, reverses with the finger, and fills solid on
     expect(committed.overlayOpacity).toBeGreaterThan(0.05);
     expect(committed.overlayOpacity).toBeLessThan(0.98);
     expect(committed.color).toBe(expectedColor);
+    if(expectedDirection==='maybe'){
+      expect(committed.pill.content).toBe('"MAYBE"');
+      expect(committed.pill.color).toBe('rgb(121, 200, 146)');
+      expect(committed.pill.borderColor).toBe('rgb(121, 200, 146)');
+      expect(committed.pill.backgroundColor).toBe('rgba(16, 27, 20, 0.92)');
+      expect(committed.pill.textShadow).toContain('121, 200, 146');
+    }
     await expect.poll(() => card.getAttribute('data-swipe-phase'), { timeout: 7000 }).not.toBe('committing');
     await expect.poll(() => card.evaluate(el => ({
       phase:el.getAttribute('data-swipe-phase'),

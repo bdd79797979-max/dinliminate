@@ -48,6 +48,9 @@ const menuCss=read('menu.css');
 assert.ok(index.indexOf('./menu.css?v='+build)>index.indexOf('./tutorial.css?v='+build),'menu.css must load last');
 assert.ok(read('src/features/swipe/index.js').includes('const recyclesMaybeRound=!!S.maybeDeck||!!S.foodMaybeRound;'),'Meal Maybe review must recycle continuously');
 assert.ok(read('src/features/restaurants/index.js').includes('const recyclesMaybeRound=!!S.maybeDeck||!!S.restaurantMaybeRound;'),'Restaurant Maybe review must recycle continuously');
+assert.ok(css('swipe.css').includes('.card[data-swipe="maybe"]::after{content:"MAYBE";left:50%;right:auto;transform:translateX(-50%) rotate(0deg);color:#79c892;border-color:#79c892;background:rgba(16,27,20,.92);text-shadow:0 0 12px rgba(121,200,146,.22)}'),'Rightward swipe Maybe pill must use green text, border, and dark-green background');
+assert.ok(css('swipe.css').includes('.card.swipe-filling[data-swipe="maybe"]::after{color:#79c892;background:rgba(16,27,20,.92);border-color:#79c892;text-shadow:0 0 12px rgba(121,200,146,.22)}'),'Committed rightward swipe must keep the Maybe pill green');
+
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 238px)'),'Home slogan must move upward by 2px on standard phone widths');
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 218px);font-size:10.5px'),'Home slogan must move upward by 2px on narrow phones');
 assert.ok(index.includes('<div class="home-slogan" id="home-slogan">Swipe Away Meal Indecision.</div>'),'Home slogan must remain the full sentence in one text node');
