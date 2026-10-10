@@ -24,6 +24,7 @@ function settingsView(){
  '<section class="settings-section"><div class="settings-section-kicker">APP</div><div class="settings-actions">'+
  settingsActionButton('updateApp','↻','Update','Check for and load the latest Dinliminate build.','update-action')+
  settingsActionButton('privacySettings','◇','Privacy','How location, history, notes, images, and third-party services are handled.','privacy-action')+
+ settingsActionButton('googleUsageSettings','◉','Google Usage','Monthly Google API requests, caps, and remaining budget.','google-usage-action')+
  settingsActionButton('restoreApp','↺','Restore','Return built-in meals to their original catalog state.','restore-action')+
  settingsActionButton('resetApp','×','Reset','Erase all Dinliminate data stored on this device.','reset-action danger-action')+
  '</div></section>'+
@@ -35,11 +36,135 @@ function settingsView(){
  $('resetApp').onclick=async()=>{modal.remove();$('settingsModalBg')?.remove();await resetAppDataFlow();};
  $('restoreApp').onclick=async()=>{modal.remove();$('settingsModalBg')?.remove();await systemRestoreFlow();};
  $('privacySettings').onclick=()=>privacyView();
+ $('googleUsageSettings').onclick=()=>googleUsageView();
 }
 function privacyView() {
 const body = '<div class="info-copy"><h4>Privacy & Data</h4><p>Dinliminate uses your selected address or optional device location to find nearby restaurants. Location access is optional.</p><p>Restaurant/address results are retrieved through Dinliminate’s search service using third-party mapping and place providers. Your exact location or selected address is used for that search request.</p><p>Your meal choices, hidden items, history, and custom-meal information are stored on this device using browser storage. Custom food photos may be stored in IndexedDB on the device.</p><p>Restaurant and meal images may be loaded from third-party image hosts. Restaurant availability, hours, phone numbers, websites, and menu information can change and are supplied by external providers.</p></div>';
 openModal('privacyModal','Privacy',body);
 }
+
+const GOOGLE_USAGE_SKUS = Object.freeze({
+ 'text-search-pro':'Text Search · Pro',
+ 'nearby-search-pro':'Nearby Search · Pro',
+ 'text-search-enterprise':'Text Search · Enterprise',
+ 'nearby-search-enterprise':'Nearby Search · Enterprise',
+ 'place-details-pro':'Place Details · Pro',
+ 'place-details-essentials':'Place Details · Essentials',
+ 'place-details-enterprise':'Place Details · Enterprise',
+ 'place-photo':'Place Photos'
+});
+const GOOGLE_USAGE_SKU_ORDER = Object.keys(GOOGLE_USAGE_SKUS);
+function googleUsageCount(value){
+ const n=Number(value);
+ return Number.isFinite(n)&&n>=0?new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n):'—';
+}
+function googleUsageMonthLabel(value){
+ const match=String(value||'').match(/^(\d{4})-(\d{2})$/);
+ if(!match)return 'Current billing month';
+ return new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(match[1]),Number(match[2])-1,1,12)));
+}
+function googleUsageDateLabel(value,timezone='America/Los_Angeles'){
+ const date=new Date(String(value||''));
+ if(!Number.isFinite(date.getTime()))return 'the next billing month';
+ return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:timezone}).format(date);
+}
+function googleUsageStatusMeta(status){
+ const states={
+  ok:{label:'Within cap',className:'ok'},
+  warning:{label:'Approaching cap',className:'warning'},
+  exhausted:{label:'Monthly cap reached',className:'exhausted'},
+  disabled:{label:'Disabled',className:'disabled'},
+  'blocked-untracked':{label:'Tracking unavailable',className:'blocked'},
+  unknown:{label:'Status unavailable',className:'unknown'}
+ };
+ return states[status]||states.unknown;
+}
+function googleUsageRowMarkup(sku){
+ const key=String(sku?.sku||'');
+ const label=GOOGLE_USAGE_SKUS[key]||key.replace(/-/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase());
+ const cap=Number(sku?.cap);
+ const capValid=Number.isFinite(cap)&&cap>0;
+ const used=sku?.used===null||sku?.used===undefined||sku?.used===''?null:Number(sku.used);
+ const usedValid=used!==null&&Number.isFinite(used)&&used>=0;
+ const remainingRaw=sku?.remaining===null||sku?.remaining===undefined?null:Number(sku.remaining);
+ const remaining=remainingRaw!==null&&Number.isFinite(remainingRaw)&&remainingRaw>=0?remainingRaw:(usedValid&&capValid?Math.max(0,cap-used):null);
+ const rawPercent=sku?.percent===null||sku?.percent===undefined?null:Number(sku.percent);
+ const percent=usedValid&&capValid?Math.max(0,Math.min(100,Number.isFinite(rawPercent)?rawPercent:(used/cap)*100)):null;
+ const status=googleUsageStatusMeta(String(sku?.status||'unknown'));
+ const until=sku?.disabledUntil?googleUsageDateLabel(sku.disabledUntil):'';
+ const usageText=usedValid&&capValid?googleUsageCount(used)+' / '+googleUsageCount(cap)+' used':'Usage unavailable';
+ const remainingText=remaining===null?'Remaining unknown':googleUsageCount(remaining)+' remaining';
+ const percentText=percent===null?'Usage unknown':percent.toFixed(1).replace(/\.0$/,'')+'% used';
+ const progress=percent===null?'':'<div class="google-usage-progress" aria-label="'+esc(percentText)+'"><span style="width:'+percent.toFixed(1)+'%"></span></div>';
+ const detail=until&&status.className==='disabled'?'Disabled until '+esc(until):remainingText;
+ return '<article class="google-usage-row status-'+status.className+'" data-google-sku="'+esc(key)+'">'+
+  '<div class="google-usage-row-head"><div class="google-usage-row-title"><b>'+esc(label)+'</b><span>'+esc(usageText)+'</span></div>'+
+  '<span class="google-usage-status">'+esc(status.label)+'</span></div>'+
+  (progress||'<div class="google-usage-progress is-unknown" aria-hidden="true"><span></span></div>')+
+  '<div class="google-usage-row-foot"><span>'+esc(detail)+'</span><span>'+esc(percentText)+'</span></div></article>';
+}
+function renderGoogleUsage(data){
+ if(!data||data.ok!==true||!Array.isArray(data.skus)||!data.skus.length)throw new Error('Unexpected Google usage response');
+ const durable=data.durable===true;
+ const month=googleUsageMonthLabel(data.month);
+ let noticeClass='healthy',noticeTitle='Usage tracking is connected.',noticeText='Counts shown here come from Dinliminate’s monthly usage ledger.';
+ if(!data.googleMasterEnabled){
+  noticeClass='blocked';
+  noticeTitle='Google services are disabled.';
+  noticeText='The master switch is off. This tracker is read-only and cannot enable Google services.';
+ }else if(!durable&&Number(data.untrackedLimit||0)<=0){
+  noticeClass='blocked';
+  noticeTitle='Durable tracking is unavailable.';
+  noticeText='Google API calls are blocked until reliable monthly tracking is available. Usage is shown as unknown, not zero.';
+ }else if(!durable){
+  noticeClass='warning';
+  noticeTitle='Only temporary tracking is available.';
+  noticeText='These counts may reset when a serverless instance restarts, so they are not a reliable monthly total.';
+ }else if(data.status==='limited'){
+  noticeClass='warning';
+  noticeTitle='One or more Google categories are limited.';
+  noticeText='Review the individual rows below. Other categories may remain available.';
+ }
+ const billingTimezone=String(data.billingMonthTimeZone||'America/Los_Angeles');
+ const resetDate=googleUsageDateLabel(data.nextBillingMonth,billingTimezone);
+ const skus=[...data.skus].sort((a,b)=>{
+  const ai=GOOGLE_USAGE_SKU_ORDER.indexOf(String(a?.sku||'')),bi=GOOGLE_USAGE_SKU_ORDER.indexOf(String(b?.sku||''));
+  return (ai<0?999:ai)-(bi<0?999:bi);
+ });
+ return '<div class="google-usage-view">'+
+  '<div class="google-usage-overview"><div><span class="google-usage-kicker">BILLING MONTH</span><h4>'+esc(month)+'</h4><p>Resets '+esc(resetDate)+' · Pacific time</p></div>'+
+  '<span class="google-usage-tracker-state '+(durable?'connected':'not-connected')+'">'+(durable?'Durable tracker':'Tracker limited')+'</span></div>'+
+  '<div class="google-usage-notice '+noticeClass+'" role="status"><b>'+esc(noticeTitle)+'</b><p>'+esc(noticeText)+'</p></div>'+
+  '<div class="google-usage-grid">'+skus.map(googleUsageRowMarkup).join('')+'</div>'+
+  '<p class="google-usage-footnote">These are Dinliminate-tracked API requests, not a live Google Cloud billing total. Viewing or refreshing this screen does not call Google APIs.</p>'+
+  '</div>';
+}
+async function loadGoogleUsage(modal){
+ const refresh=modal?.querySelector('#googleUsageRefresh');
+ const target=modal?.querySelector('#googleUsageData');
+ if(!modal?.isConnected||!refresh||!target)return;
+ refresh.disabled=true;
+ refresh.textContent='Loading…';
+ target.setAttribute('aria-busy','true');
+ try{
+  const response=await fetch('/api/google-usage',{method:'GET',cache:'no-store',credentials:'same-origin',headers:{Accept:'application/json'}});
+  const data=await response.json().catch(()=>null);
+  if(!response.ok||data?.ok!==true)throw new Error('Google usage endpoint unavailable');
+  target.innerHTML=renderGoogleUsage(data);
+ }catch(error){
+  target.innerHTML='<div class="google-usage-error" role="alert"><b>Usage information is unavailable.</b><p>The tracker could not be read. Try Refresh again; unavailable data is not treated as zero usage.</p></div>';
+ }finally{
+  target.setAttribute('aria-busy','false');
+  if(refresh.isConnected){refresh.disabled=false;refresh.textContent='↻ Refresh';}
+ }
+}
+function googleUsageView(){
+ const body='<div class="google-usage-panel"><div class="google-usage-toolbar"><p>Monthly usage and protective limits for Dinliminate’s Google integrations.</p><button class="google-usage-refresh" id="googleUsageRefresh" type="button">↻ Refresh</button></div><div id="googleUsageData" aria-live="polite" aria-busy="true"><div class="google-usage-loading">Loading monthly Google API usage…</div></div></div>';
+ const modal=openModal('googleUsageModal','Google Usage Tracker',body);
+ modal.querySelector('#googleUsageRefresh').onclick=()=>loadGoogleUsage(modal);
+ void loadGoogleUsage(modal);
+}
+
 function exportHistoryPrint(scope){
  const all=readHistory();
  const filtered=scope==='food'?all.filter(x=>x?.type==='food'):scope==='restaurant'?all.filter(x=>x?.type==='restaurant'):all;
@@ -255,4 +380,4 @@ const homeActionHandler = (event) => {
 };
 document.addEventListener('click', homeActionHandler, true);
 
-export { settingsActionButton, settingsView, privacyView, exportHistoryPrint, exportPdfView, shareWinner, resetRound, resetRestoreView, copyAppUrl, addToPhoneFlow, shareApp, clearMealPhotoStorage, clearAllDinliminateStorage, updateAppFlow, resetAppDataFlow, systemRestoreFlow };
+export { settingsActionButton, settingsView, privacyView, googleUsageView, exportHistoryPrint, exportPdfView, shareWinner, resetRound, resetRestoreView, copyAppUrl, addToPhoneFlow, shareApp, clearMealPhotoStorage, clearAllDinliminateStorage, updateAppFlow, resetAppDataFlow, systemRestoreFlow };

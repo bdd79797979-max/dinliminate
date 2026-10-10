@@ -2708,3 +2708,94 @@ test('homepage slogan is one complete champagne-gold serif italic sentence witho
   expect(errors).toEqual([]);
 });
 
+
+
+test('Settings Google Usage tracker shows monthly SKU counters and refreshes without Google calls', async ({ page }) => {
+  const errors = await prepare(page);
+  let usageRequests = 0;
+  const googleNetworkRequests = [];
+  page.on('request', request => {
+    try {
+      const host = new URL(request.url()).hostname.toLowerCase();
+      if (host === 'googleapis.com' || host.endsWith('.googleapis.com')) googleNetworkRequests.push(request.url());
+    } catch {}
+  });
+  await page.route('**/api/google-usage', async route => {
+    usageRequests++;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {'Cache-Control':'no-store'},
+      body: JSON.stringify({
+        ok:true,readOnly:true,trackerVersion:'1.0',month:'2026-10',
+        billingMonthTimeZone:'America/Los_Angeles',googleMasterEnabled:true,durable:true,
+        untrackedLimit:0,safeToCallGoogle:true,status:'healthy',nextBillingMonth:'2026-11-01T07:00:00.000Z',
+        skus:[
+          {sku:'text-search-pro',used:1234,cap:4500,remaining:3266,percent:27.4,status:'ok',disabledUntil:null},
+          {sku:'nearby-search-pro',used:4010,cap:4500,remaining:490,percent:89.1,status:'warning',disabledUntil:null},
+          {sku:'text-search-enterprise',used:100,cap:900,remaining:800,percent:11.1,status:'ok',disabledUntil:null},
+          {sku:'nearby-search-enterprise',used:200,cap:900,remaining:700,percent:22.2,status:'ok',disabledUntil:null},
+          {sku:'place-details-pro',used:4321,cap:4500,remaining:179,percent:96,status:'warning',disabledUntil:null},
+          {sku:'place-details-essentials',used:5000,cap:9000,remaining:4000,percent:55.6,status:'ok',disabledUntil:null},
+          {sku:'place-details-enterprise',used:0,cap:900,remaining:900,percent:0,status:'ok',disabledUntil:null},
+          {sku:'place-photo',used:810,cap:900,remaining:90,percent:90,status:'warning',disabledUntil:null}
+        ]
+      })
+    });
+  });
+  await page.goto('/');
+  await expect(page.locator('#home')).toBeVisible();
+  await page.locator('#menu').click();
+  await page.locator('#settings').click();
+  await expect(page.locator('#settingsModal')).toBeVisible();
+  await expect(page.locator('#googleUsageSettings')).toBeVisible();
+  expect(usageRequests).toBe(0);
+
+  await page.locator('#googleUsageSettings').click();
+  await expect(page.locator('#googleUsageModal')).toBeVisible();
+  await expect(page.locator('#googleUsageData .google-usage-row')).toHaveCount(8);
+  await expect(page.locator('[data-google-sku="nearby-search-pro"]')).toContainText('4,010 / 4,500 used');
+  await expect(page.locator('[data-google-sku="nearby-search-pro"]')).toContainText('Approaching cap');
+  await expect(page.locator('[data-google-sku="place-photo"]')).toContainText('810 / 900 used');
+  await expect(page.locator('#googleUsageData')).toContainText('Durable tracker');
+  expect(usageRequests).toBe(1);
+  await page.locator('#googleUsageRefresh').click();
+  await expect.poll(() => usageRequests).toBe(2);
+  await expect(page.locator('#googleUsageData')).toContainText('4,010 / 4,500 used');
+  expect(googleNetworkRequests).toEqual([]);
+  await expectNoPageErrors(errors);
+});
+
+test('Settings Google Usage tracker reports unavailable counts instead of false zeroes', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.route('**/api/google-usage', async route => {
+    await route.fulfill({
+      status:200,
+      contentType:'application/json',
+      headers:{'Cache-Control':'no-store'},
+      body:JSON.stringify({
+        ok:true,readOnly:true,trackerVersion:'1.0',month:'2026-10',
+        billingMonthTimeZone:'America/Los_Angeles',googleMasterEnabled:true,durable:false,
+        untrackedLimit:0,safeToCallGoogle:false,status:'blocked-untracked',nextBillingMonth:'2026-11-01T07:00:00.000Z',
+        skus:[
+          {sku:'text-search-pro',used:null,cap:4500,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'nearby-search-pro',used:null,cap:4500,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'text-search-enterprise',used:null,cap:900,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'nearby-search-enterprise',used:null,cap:900,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'place-details-pro',used:null,cap:4500,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'place-details-essentials',used:null,cap:9000,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'place-details-enterprise',used:null,cap:900,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null},
+          {sku:'place-photo',used:null,cap:900,remaining:null,percent:null,status:'blocked-untracked',disabledUntil:null}
+        ]
+      })
+    });
+  });
+  await page.goto('/');
+  await page.locator('#menu').click();
+  await page.locator('#settings').click();
+  await page.locator('#googleUsageSettings').click();
+  await expect(page.locator('#googleUsageData .google-usage-notice.blocked')).toContainText('Google API calls are blocked');
+  await expect(page.locator('[data-google-sku="place-photo"]')).toContainText('Usage unavailable');
+  await expect(page.locator('[data-google-sku="place-photo"]')).not.toContainText('0 / 900');
+  await expectNoPageErrors(errors);
+});

@@ -62,3 +62,53 @@ html:root .settings-inline-action{font-size:10px;padding:6px 0}
 }
 html:root .settings-actions .settings-action.reset-action{background:linear-gradient(145deg,#351c19,#1e1412);border-color:#704038;box-shadow:0 8px 24px #170b0988}
 html:root .settings-actions .settings-action.reset-action .settings-action-icon{background:#45231f;border-color:#8a5147;color:#efc5be}
+
+
+.settings-actions .google-usage-action .settings-action-icon{color:#e8cf98;border-color:#665235;background:#211c14}
+.google-usage-panel{display:grid;gap:11px;padding:2px 0 4px}
+.google-usage-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:0 0 10px;border-bottom:1px solid #2a2926}
+.google-usage-toolbar p{font-size:11px;line-height:1.45;color:#858179;margin:0;max-width:28em}
+.google-usage-refresh{min-height:32px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #6c5837;border-radius:999px;background:#211b12;color:#ead5a4;font-size:10px;font-weight:800;white-space:nowrap}
+.google-usage-refresh:disabled{opacity:.55}
+.google-usage-view{display:grid;gap:10px;padding:1px 0 4px;color:#e9e3d7}
+.google-usage-overview{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:2px 0 8px}
+.google-usage-overview>div{min-width:0}
+.google-usage-kicker{display:block;font-size:8px;font-weight:850;letter-spacing:.16em;color:#8b8373;margin-bottom:4px}
+.google-usage-overview h4{margin:0 0 3px;font-size:21px;letter-spacing:-.04em;color:#f3e7ce;text-transform:none}
+.google-usage-overview p{margin:0;font-size:9px;line-height:1.4;color:#7d796f}
+.google-usage-tracker-state{flex:0 0 auto;margin-top:2px;max-width:112px;padding:5px 7px;border-radius:999px;font-size:8px;line-height:1.2;text-align:center;font-weight:800;letter-spacing:.015em;border:1px solid #36342c;background:#171714;color:#aaa69b}
+.google-usage-tracker-state.connected{border-color:#38513e;background:#121d15;color:#9acba5}
+.google-usage-tracker-state.not-connected{border-color:#5c492b;background:#211a10;color:#dfbb79}
+.google-usage-notice,.google-usage-error{padding:10px 11px;border-radius:11px;border:1px solid #39352b;background:#171612}
+.google-usage-notice b,.google-usage-error b{display:block;font-size:11px;line-height:1.35;color:#e8dfcc}
+.google-usage-notice p,.google-usage-error p{margin:4px 0 0;font-size:10px;line-height:1.45;color:#9b9587}
+.google-usage-notice.warning{border-color:#5a4729;background:#1e190f}
+.google-usage-notice.warning b{color:#e0bd7d}
+.google-usage-notice.blocked,.google-usage-error{border-color:#5a3630;background:#211412}
+.google-usage-notice.blocked b,.google-usage-error b{color:#e4a99c}
+.google-usage-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
+.google-usage-row{min-width:0;padding:10px 10px 9px;border:1px solid #2e2c26;border-radius:11px;background:linear-gradient(145deg,#181816,#121211)}
+.google-usage-row-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px}
+.google-usage-row-title{display:grid;gap:4px;min-width:0}
+.google-usage-row-title b{font-size:11px;font-weight:800;line-height:1.25;color:#e9e3d8}
+.google-usage-row-title>span{font-size:10px;font-weight:750;line-height:1.25;color:#b8ad98;font-variant-numeric:tabular-nums}
+.google-usage-status{flex:0 0 auto;max-width:120px;text-align:right;font-size:8px;line-height:1.25;color:#9ba09a;font-weight:800}
+.google-usage-row.status-warning .google-usage-status{color:#deb86c}
+.google-usage-row.status-exhausted .google-usage-status,.google-usage-row.status-disabled .google-usage-status,.google-usage-row.status-blocked .google-usage-status{color:#df9588}
+.google-usage-row.status-ok .google-usage-status{color:#8fc99c}
+.google-usage-progress{width:100%;height:4px;margin:8px 0 6px;border-radius:99px;overflow:hidden;background:#2b2923}
+.google-usage-progress>span{display:block;height:100%;border-radius:inherit;background:#b69a5e;max-width:100%}
+.google-usage-row.status-ok .google-usage-progress>span{background:#789c7c}
+.google-usage-row.status-warning .google-usage-progress>span{background:#d0a75f}
+.google-usage-row.status-exhausted .google-usage-progress>span,.google-usage-row.status-disabled .google-usage-progress>span,.google-usage-row.status-blocked .google-usage-progress>span{background:#b36e63}
+.google-usage-progress.is-unknown{background:repeating-linear-gradient(135deg,#2a2924 0,#2a2924 5px,#201f1b 5px,#201f1b 10px)}
+.google-usage-progress.is-unknown>span{width:0}
+.google-usage-row-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:9px;line-height:1.3;color:#727169;font-variant-numeric:tabular-nums}
+.google-usage-row-foot span:last-child{text-align:right;white-space:nowrap}
+.google-usage-footnote{margin:0;padding:9px 1px 0;border-top:1px solid #282722;font-size:9px;line-height:1.45;color:#6f6c63}
+.google-usage-loading{padding:20px 5px;text-align:center;color:#aaa294;font-size:11px}
+.google-usage-error{margin:2px 0}
+@media(min-width:520px){
+ .google-usage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .google-usage-row{padding:11px}
+}

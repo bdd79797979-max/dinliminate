@@ -1,16 +1,16 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1390,
+  "build": 1391,
   "sourceBranch": "fix/restaurant-photo-budget-no-photo-state",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1390",
+  "checkpoint": "CP1391",
   "deploymentTrigger": "fix/restaurant-photo-budget-no-photo-state",
   "googleMasterKillSwitch": true,
-  "googleBudgetTracker": "durable Neon SKU accounting; Place Details Pro 4500, Place Details Essentials 9000, Place Photos 900",
+  "googleBudgetTracker": "Durable Neon SKU accounting surfaced in Settings; read-only /api/google-usage; eight SKU-specific monthly caps; Settings refresh does not call Google APIs.",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
   "restaurantPhotoCertification": "Google exact name+address+location validation; one best-ranked Google media request; Google media no-store and not persisted; current and one waiting card prioritized; every card keeps a real photo or branded no-photo state and photo failures never alter deck order",
   "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing",
@@ -66,5 +66,6 @@
   "swipeMaybePill": "CP1373: During rightward Meal/Restaurant card swipes, the MAYBE pill uses green text and border with a subtle dark-green fill in both drag-preview and committed-fill states; leftward CUT styling and swipe behavior remain unchanged. Also synchronizes the service-worker precache list with the stamp script while retaining the homepage door image.",
   "photoPolicy": "Google image content not cached; Place IDs retained; active-card-only photo resolution; fallback card stays stable when photo is unavailable",
   "googleHardStops": "photos:900; text-search-pro:4500; nearby-search-pro:4500; text-search-enterprise:900; nearby-search-enterprise:900; place-details-enterprise:900; place-details-pro:4500; place-details-essentials:9000",
-  "restaurantDeckUX": "CP1385 prepares one actionable Restaurant waiting card's image, promotes the already-staged card through swipe handoff, suppresses branded no-photo art while a lookup is pending, and wraps the waiting card to the next actionable choice. CP1386 exports and imports the photo decode helper used by that flow. CP1387 retains the pending-image suppression without !important to satisfy the CSS quality gate."
+  "restaurantDeckUX": "CP1385 prepares one actionable Restaurant waiting card's image, promotes the already-staged card through swipe handoff, suppresses branded no-photo art while a lookup is pending, and wraps the waiting card to the next actionable choice. CP1386 exports and imports the photo decode helper used by that flow. CP1387 retains the pending-image suppression without !important to satisfy the CSS quality gate.",
+  "googleUsageSettings": "Monthly per-SKU usage, cap, remaining, percent, warning/disabled status, durable tracker health, and Pacific-time reset date; unavailable tracking is explicit and never represented as zero."
 }
