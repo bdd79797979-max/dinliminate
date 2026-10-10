@@ -1008,7 +1008,7 @@ if(tutorialModeEnabled()&&tutorialState.active){
 
 function restaurantNextChoice(rows,currentIndex){
  const list=Array.isArray(rows)?rows:[];
- if(!list.length)return null;
+ if(list.length<2)return null;
  const current=Math.max(0,Math.min(Number(currentIndex)||0,list.length-1));
  const keepMaybe=!!S.maybeDeck||!!S.restaurantMaybeRound;
  for(let step=1;step<list.length;step++){
@@ -1021,7 +1021,7 @@ function restaurantNextChoice(rows,currentIndex){
    if(row?._maybe)return row;
   }
  }
- return keepMaybe&&list.length===1?list[0]:null;
+ return null;
 }
 function isNeutralRestaurantPhoto(src){
  return !src||src===FINAL_RESTAURANT_IMAGE||/(?:^|\/)fallback-restaurant\.svg(?:[?#].*)?$/i.test(String(src));
@@ -1232,12 +1232,33 @@ const previousStack=$('#restStage .restaurant-card-stack');
 const previousActive=$('#restStage #restaurantCard');
 const previousNext=$('#restStage #restaurantNextCard');
 const previousNextKey=String(previousNext?.dataset.restaurantDeckKey||previousNext?.querySelector('img')?.dataset.restaurantPhotoKey||'');
-const canReuseHandoff=handoffRendering&&!!previousStack&&!!previousActive&&!!previousNext&&!!nextRow
+const canReuseHandoff=handoffRendering&&!!previousStack&&!!previousActive&&!!previousNext
  &&previousNextKey===String(row.id||'');
 if(canReuseHandoff){
  getSwipeMachine(previousActive)?.destroy();
  populateRestaurantCardElement(previousNext,row,false,true);
- populateRestaurantCardElement(previousActive,nextRow,true,false);
+ if(nextRow){
+  populateRestaurantCardElement(previousActive,nextRow,true,false);
+ }else{
+  const outgoingImage=previousActive.querySelector('img');
+  if(typeof outgoingImage?.__swipePreviewCleanup==='function'){
+   try{outgoingImage.__swipePreviewCleanup();}catch(error){console.error('Dinliminate preview cleanup failed',error);}
+  }
+  previousActive.id='restaurantNextCard';
+  previousActive.className='card next-card hidden';
+  previousActive.dataset.restaurantDeckKey='';
+  previousActive.removeAttribute('data-restaurant-id');
+  previousActive.setAttribute('aria-hidden','true');
+  previousActive.style.display='none';
+  previousActive.style.transition='none';
+  previousActive.style.transform='none';
+  previousActive.style.opacity='1';
+  previousActive.style.filter='none';
+  previousActive.style.visibility='hidden';
+  previousActive.style.pointerEvents='none';
+  previousActive.style.willChange='transform,opacity';
+  previousActive.replaceChildren();
+ }
  previousStack.insertBefore(previousActive,previousNext);
 }else{
 $('restStage').innerHTML =
