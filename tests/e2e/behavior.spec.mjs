@@ -59,6 +59,32 @@ async function prepare(page) {
         });
         return;
       }
+      if (mode === 'hours') {
+        let payload = {};
+        try { payload = route.request().postDataJSON() || {}; } catch {}
+        const rows = Array.isArray(payload.rows) ? payload.rows : [];
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            patches: rows.map(row => ({
+              id: String(row?.id || ''),
+              openNow: true,
+              opening_hours: 'Monday–Sunday: 10:00 AM–9:00 PM',
+              hoursSource: 'Mock official hours'
+            })),
+            counts: {
+              total: rows.length, alreadyKnown: 0, cacheHits: 0,
+              resolvedFromOfficialWebsite: rows.length, resolvedByGooglePlaceDetails: 0,
+              resolvedByGoogleTextSearch: 0, stillUnknown: 0, open: rows.length
+            },
+            google: { callsUsed: 0, callsBudget: 36, budgetDenied: 0 },
+            processedRows: rows.length
+          })
+        });
+        return;
+      }
       if (mode === 'details') {
         await route.fulfill({
           status: 200,
@@ -2816,4 +2842,31 @@ test('Home startup does not request an unused restaurant photo', async ({ page }
   )).toBe(true);
 
   expect(photoRequests).toEqual([]);
+});
+
+test('Open filter requests targeted hours only after activation', async ({ page }) => {
+  const errors = await prepare(page);
+  const requests = [];
+  page.on('request', request => {
+    try {
+      const url = new URL(request.url());
+      if (url.pathname === '/api/restaurants' && url.searchParams.get('mode') === 'hours') {
+        requests.push({
+          method: request.method(),
+          payload: request.postDataJSON()
+        });
+      }
+    } catch {}
+  });
+
+  await openRestaurants(page);
+  expect(requests).toEqual([]);
+  await page.locator('#restaurantHoursToggle').click();
+  await expect.poll(() => requests.length).toBe(1);
+  expect(requests[0].method).toBe('POST');
+  expect(requests[0].payload.maxGoogleCalls).toBe(36);
+  expect(requests[0].payload.rows).toHaveLength(2);
+  expect(requests[0].payload.rows.every(row => !row.openNow && !row.opening_hours)).toBe(true);
+  await expect(page.locator('#restaurantHoursToggle')).toHaveAttribute('data-active', 'true');
+  await expectNoPageErrors(errors);
 });
