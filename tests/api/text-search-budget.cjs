@@ -116,8 +116,8 @@ async function main() {
     }]);
 
     assert.equal(hours.ok, true);
-    assert.equal(hours.counts.googlePlaceDetails, 0);
-    assert.equal(hours.counts.googleTextSearch, 0);
+    assert.equal(hours.counts.resolvedByGooglePlaceDetails, 0);
+    assert.equal(hours.counts.resolvedByGoogleTextSearch, 0);
     assert.equal(hours.patches.length, 0, 'unknown opening hours remain unverified in the Open filter');
     assert.equal(hours.counts.stillUnknown, 1);
     assert.equal(hours.google.callsUsed, 0);
