@@ -7,7 +7,7 @@ import { $, readImageFile } from './ui/dom.js';
 import { imageProxyUrl, mealImageUrl } from './api/client.js';
 import { esc } from './ui/esc.js';
 import { configureModal, appToast, appConfirm, openModal, bindDetailNotes, visibleCardDetailImage, warmDetailImage, detailsSheet } from './ui/modal.js';
-import { configureStorage, save, loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos } from './state/storage.js';
+import { configureStorage, save, loadItemNotes, saveItemNotes, itemNoteKey, itemNote, setItemNote, openPhotoDB, putStoredPhoto, getStoredPhoto, deleteStoredPhoto, mealPhotoStorageKey, pruneMealPhotoKeys, storeMealPhotoSet, hydrateStoredMealPhotoList, hydrateCustomPhotos, updateStorageIndicator, migrateCustomPhotos, readLocalStorageValue, writeLocalStorageValue } from './state/storage.js';
 import { configureMigrations, load } from './state/migrations.js';
 import { historyImageSource, recordHistory, readHistory, writeHistory, historyView, HISTORY_KEY } from './features/history/index.js';
 import { hideCelebration, triggerCelebration, triggerWinnerMoment, wheelPoint, sampleHungryWheel, renderHungryWheel, hungryWheelPool, showHungryWheelResult, hungryRestaurantPool, hungryRestaurantPick, renderHungryRestaurantMystery, startHungryRestaurantMystery, revealHungryRestaurant, tryAnotherHungryRestaurant, finishHungryWheelRotation, startContinuousWheelSpin, slowAndStopHungryWheel, spinHungryWheel, winner } from './features/winner/index.js';
@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1378';
+const APP_BUILD = '1379';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -629,7 +629,7 @@ function knownRestaurantPlaceId(row){
  if(validGooglePlaceId(direct))return direct;
  const key=restaurantPlaceIdCacheKey(row);
  if(!key)return '';
- try{const saved=String(localStorage.getItem(key)||'').trim();return validGooglePlaceId(saved)?saved:'';}catch{return '';}
+ const saved=String(readLocalStorageValue(key)||'').trim();return validGooglePlaceId(saved)?saved:'';
 }
 function rememberRestaurantPlaceId(row,value){
  const placeId=String(value||'').trim();
@@ -637,7 +637,7 @@ function rememberRestaurantPlaceId(row,value){
  if(row&&typeof row==='object')row.googlePlaceId=placeId;
  const key=restaurantPlaceIdCacheKey(row);
  if(!key)return;
- try{localStorage.setItem(key,placeId);}catch(error){console.error('Dinliminate error',error)}
+ writeLocalStorageValue(key,placeId);
 }
 async function purgeLegacyGoogleRestaurantPhotos(){
  if(!('caches' in window)||typeof caches.keys!=='function')return;
