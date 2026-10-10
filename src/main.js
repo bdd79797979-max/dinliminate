@@ -779,7 +779,7 @@ function restaurantImmediatePhoto(row){
  if(!row)return '';
  const rowKey=String(row?.id||row?.canonicalId||'').trim();
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
- return cached?.url ? touchRestaurantPhotoMemoryCache(rowKey,cached).url : RESTAURANT_NEUTRAL_IMAGE;
+ return cached?.url ? touchRestaurantPhotoMemoryCache(rowKey,cached).url : knownRestaurantPhotoFallback(row) || RESTAURANT_NEUTRAL_IMAGE;
 }
 function restaurantCardFallbackImage(){return RESTAURANT_NEUTRAL_IMAGE;}
 

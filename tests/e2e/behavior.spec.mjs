@@ -1317,6 +1317,63 @@ test('Restaurant photo misses keep deck order and show neutral art instead of bl
   await expectNoPageErrors(errors);
 });
 
+
+test('Restaurant deck promotes the ready waiting card and hides no-photo art until lookup settles', async ({ page }) => {
+  const errors = await prepare(page);
+  const photoRequests = [];
+  let releasePizzaPhoto;
+  let pizzaPhotoStartedResolve;
+  const pizzaPhotoStarted = new Promise(resolve => { pizzaPhotoStartedResolve = resolve; });
+  await page.route('**/api/restaurant-photo**', async route => {
+    const url = new URL(route.request().url());
+    const name = url.searchParams.get('name') || '';
+    photoRequests.push(name);
+    if (name === 'Mock Pizza Kitchen') {
+      pizzaPhotoStartedResolve();
+      await new Promise(resolve => { releasePizzaPhoto = resolve; });
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'X-Restaurant-Photo-Source': 'google-places',
+        'X-Restaurant-Photo-Source-URL': 'https://maps.google.com/?cid=mock',
+        'X-Restaurant-Google-Place-ID': 'ChIJDinliminateMockPlace123'
+      },
+      body: TINY_PNG
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await expect.poll(() => page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'), {timeout:12000}).toBe('2');
+  await pizzaPhotoStarted;
+  const activeImage = page.locator('#restaurantCard img[data-restaurant-photo-key]');
+  await expect(activeImage).toHaveAttribute('data-restaurant-photo-pending', 'true');
+  await expect.poll(() => activeImage.evaluate(img => getComputedStyle(img).opacity)).toBe('0');
+
+  const waiting = page.locator('#restaurantNextCard');
+  await expect(waiting.locator('h3')).toHaveText('Mock Taco House');
+  await expect(waiting).toHaveAttribute('data-swipe-promoted', '1', {timeout:12000});
+  await expect.poll(() => waiting.locator('img').getAttribute('data-restaurant-photo-source'), {timeout:12000}).toBe('google-places');
+  await expect.poll(() => waiting.locator('img').evaluate(img => img.complete && img.naturalWidth > 0), {timeout:12000}).toBe(true);
+  const waitingImageSrc = await waiting.locator('img').getAttribute('src');
+  await page.evaluate(() => { window.__waitingRestaurantNode = document.querySelector('#restaurantNextCard'); });
+
+  releasePizzaPhoto();
+  await expect.poll(() => activeImage.getAttribute('data-restaurant-photo-pending'), {timeout:12000}).toBe(null);
+  await expect.poll(() => activeImage.getAttribute('data-restaurant-photo-source'), {timeout:12000}).toBe('google-places');
+
+  await page.locator('#restCut').click();
+  await expect.poll(() => page.locator('#restaurantCard h3').innerText(), {timeout:12000}).toBe('Mock Taco House');
+  await expect.poll(() => page.locator('#restaurantCard img').getAttribute('src'), {timeout:12000}).toBe(waitingImageSrc);
+  expect(await page.locator('#restaurantCard').evaluate(el => el === window.__waitingRestaurantNode)).toBe(true);
+  expect(photoRequests.filter(name => name === 'Mock Taco House')).toHaveLength(1);
+  await expectNoPageErrors(errors);
+});
+
 test('Google restaurant photos are on-demand, not persisted, while Place IDs are retained', async ({ page }) => {
   const errors=await prepare(page);
   const photoRequests=[];

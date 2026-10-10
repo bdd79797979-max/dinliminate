@@ -1047,3 +1047,6 @@ html:root #restaurant .location-main .radius-select option{
     text-shadow:0 1px 4px rgba(0,0,0,.8);
   }
 }
+
+/* Keep no-photo art hidden while a Restaurant photo lookup is pending. */
+html:root #restaurant .restaurant-card-stack img[data-restaurant-photo-pending="true"]{opacity:0!important;background:#090909;}

@@ -1005,6 +1005,188 @@ if(tutorialModeEnabled()&&tutorialState.active){
  tutorialEnterDecisionScreen('restaurant',resumeIndex);
 }
 }
+
+function restaurantNextChoice(rows,currentIndex){
+ const list=Array.isArray(rows)?rows:[];
+ if(!list.length)return null;
+ const current=Math.max(0,Math.min(Number(currentIndex)||0,list.length-1));
+ const keepMaybe=!!S.maybeDeck||!!S.restaurantMaybeRound;
+ for(let step=1;step<list.length;step++){
+  const row=list[(current+step)%list.length];
+  if(keepMaybe?!!row?._maybe:!row?._maybe)return row;
+ }
+ if(!keepMaybe){
+  for(let step=1;step<list.length;step++){
+   const row=list[(current+step)%list.length];
+   if(row?._maybe)return row;
+  }
+ }
+ return keepMaybe&&list.length===1?list[0]:null;
+}
+function isNeutralRestaurantPhoto(src){
+ return !src||src===FINAL_RESTAURANT_IMAGE||/(?:^|\/)fallback-restaurant\.svg(?:[?#].*)?$/i.test(String(src));
+}
+function restaurantCardCopyMarkup(row,waiting){
+ const category=restaurantCategory(row);
+ const distanceLabel=Number.isFinite(Number(row.distance))?Number(row.distance).toFixed(1)+' mi away':'';
+ const shortAddress=row.address?esc(String(row.address).split(',').slice(0,2).join(', ')):'';
+ const cardLocation=(shortAddress||distanceLabel)
+  ?'<div class="restaurant-card-location-distance" title="'+esc(row.address||'')+'">'+[shortAddress,distanceLabel?esc(distanceLabel):''].filter(Boolean).join(' <span aria-hidden="true">•</span> ')+'</div>':'';
+ const detailsIcon='<svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+ if(waiting){
+  return '<div class="card-info-row card-cuisine-row restaurant-card-meta-row"><span class="restaurant-card-meta card-cuisine-text">'+esc(category)+'</span><span class="restaurant-card-utility restaurant-card-details-utility card-details-inline card-details-visual" aria-hidden="true">'+detailsIcon+'</span></div><h3>'+esc(row.name||'')+'</h3>';
+ }
+ const detailsAction='<button class="restaurant-card-utility restaurant-card-details-utility card-details-inline" id="restDetails" type="button" aria-label="Details" title="Details">'+detailsIcon+'</button>';
+ return '<div class="card-info-row card-cuisine-row restaurant-card-meta-row"><span class="restaurant-card-meta card-cuisine-text">'+esc(category)+'</span>'+detailsAction+'</div><h3>'+esc(row.name||'')+'</h3>'+cardLocation;
+}
+function populateRestaurantCardElement(card,row,waiting,preserveImage=false){
+ if(!card||!row)return null;
+ const img=card.querySelector('img')||document.createElement('img');
+ const rowKey=String(row.id||row.canonicalId||'').trim();
+ const previousSrc=String(img.getAttribute('src')||'');
+ const previousSource=String(img.dataset.restaurantPhotoSource||'').trim().toLowerCase();
+ const keepPhoto=preserveImage&&String(img.dataset.restaurantPhotoKey||'')===rowKey;
+ const revokePreviousGoogleBlob=!keepPhoto&&previousSource==='google-places'&&/^blob:/i.test(previousSrc);
+ if(typeof img.__swipePreviewCleanup==='function'){
+  try{img.__swipePreviewCleanup();}catch(error){console.error('Dinliminate preview cleanup failed',error);}
+ }
+ card.dataset.swipePreviewToken=String(Number(card.dataset.swipePreviewToken||0)+1);
+ card.dataset.swipePreviewReady='0';
+ card.removeAttribute('data-swipe-promoted');
+ delete card.dataset.swipePreviewKey;
+ card.__swipePreviewReadyPromise=null;
+ card.className=waiting?'card next-card':'card';
+ card.id=waiting?'restaurantNextCard':'restaurantCard';
+ card.dataset.restaurantDeckKey=rowKey;
+ if(waiting){
+  card.setAttribute('aria-hidden','true');
+  card.removeAttribute('data-restaurant-id');
+  card.style.transition='none';card.style.transform='none';card.style.opacity='1';card.style.filter='none';
+  card.style.visibility='hidden';card.style.pointerEvents='none';card.style.willChange='transform,opacity';
+ }else{
+  card.removeAttribute('aria-hidden');
+  card.dataset.restaurantId=rowKey;
+  card.style.transition='none';card.style.transform='none';card.style.opacity='1';card.style.filter='none';
+  card.style.visibility='visible';card.style.pointerEvents='auto';card.style.willChange='';
+ }
+ img.alt=String(row.name||'');
+ img.decoding='async';img.loading='eager';img.referrerPolicy='no-referrer';
+ img.dataset.restaurantPhotoKey=rowKey;
+ if(!keepPhoto){
+  const source=restaurantImmediatePhoto(row)||FINAL_RESTAURANT_IMAGE;
+  img.dataset.restaurantPhotoLoaded='false';
+  img.dataset.restaurantPhotoSource='';
+  img.dataset.restaurantPhotoFallbackApplied='false';
+  img.src=source;
+  if(isNeutralRestaurantPhoto(source))img.dataset.restaurantPhotoPending='true';
+  else delete img.dataset.restaurantPhotoPending;
+  if(revokePreviousGoogleBlob&&previousSrc!==source){
+   try{URL.revokeObjectURL(previousSrc);}catch(error){console.error('Dinliminate object URL cleanup failed',error);}
+  }
+ }else if(img.dataset.restaurantPhotoLoaded==='true'&&img.complete&&img.naturalWidth>0){
+  delete img.dataset.restaurantPhotoPending;
+ }else if(isNeutralRestaurantPhoto(img.getAttribute('src')||'')){
+  img.dataset.restaurantPhotoPending='true';
+ }
+ const shade=document.createElement('div');shade.className='shade';
+ const credit=card.querySelector('.restaurant-photo-credit')||document.createElement('div');
+ credit.className='restaurant-photo-credit';credit.setAttribute('aria-live','polite');
+ if(!keepPhoto){credit.textContent='';credit.classList.remove('is-visible');}
+ if(waiting){
+  const copy=document.createElement('div');
+  copy.className='card-copy restaurant-next-copy';
+  copy.innerHTML=restaurantCardCopyMarkup(row,true);
+  card.replaceChildren(img,shade,copy,credit);
+ }else{
+  const photoUi=document.createElement('div');photoUi.className='restaurant-card-photo-ui';
+  if(row._maybe){
+   const stamp=document.createElement('span');
+   stamp.className='maybe-stamp restaurant-maybe-stamp';
+   stamp.setAttribute('aria-label','Marked Maybe');stamp.textContent='MAYBE';
+   photoUi.appendChild(stamp);
+  }
+  const copy=document.createElement('div');copy.className='card-copy';
+  copy.innerHTML=restaurantCardCopyMarkup(row,false);
+  card.replaceChildren(img,shade,photoUi,credit,copy);
+ }
+ return img;
+}
+function restaurantImageIsLoaded(img){
+ return !!img&&img.dataset.restaurantPhotoLoaded==='true'&&img.complete&&img.naturalWidth>0&&img.naturalHeight>0;
+}
+function assignRestaurantPhotoToCard(img,url,rowKey,stillCurrent){
+ const existing=img?.__restaurantPhotoAssignment;
+ if(existing?.url===url&&existing?.rowKey===rowKey)return existing.promise;
+ const assignment={url,rowKey,promise:null};
+ assignment.promise=new Promise(resolve=>{
+  let done=false,timer=0,checking=false;
+  const targetUrl=String(url||'');
+  const clear=()=>{
+   clearTimeout(timer);
+   img.removeEventListener('load',onLoad);
+   img.removeEventListener('error',onError);
+  };
+  const finish=ok=>{
+   if(done)return;
+   done=true;clear();
+   resolve(!!ok&&!!img.isConnected&&stillCurrent()&&img.complete&&img.naturalWidth>0
+    &&String(img.currentSrc||img.src||'')===targetUrl);
+  };
+  const verify=async()=>{
+   if(done||checking)return;
+   if(!stillCurrent()){finish(false);return;}
+   if(!img.complete||img.naturalWidth<=0||String(img.currentSrc||img.src||'')!==targetUrl)return;
+   checking=true;
+   try{await img.decode?.();}catch(error){console.error('Dinliminate restaurant image decode failed',error);}
+   checking=false;
+   finish(img.complete&&img.naturalWidth>0);
+  };
+  const onLoad=()=>{void verify();};
+  const onError=()=>finish(false);
+  img.addEventListener('load',onLoad);
+  img.addEventListener('error',onError);
+  timer=window.setTimeout(()=>{void verify();if(!done)finish(false);},1800);
+  if(!stillCurrent()){finish(false);return;}
+  img.dataset.restaurantPhotoFallbackApplied='false';
+  img.src=targetUrl;
+  void verify();
+ }).finally(()=>{
+  if(img.__restaurantPhotoAssignment===assignment)delete img.__restaurantPhotoAssignment;
+ });
+ img.__restaurantPhotoAssignment=assignment;
+ return assignment.promise;
+}
+async function prepareRestaurantCardPhoto(row,card,img){
+ if(!row||!card||!img)return null;
+ const rowKey=String(row.id||row.canonicalId||'').trim();
+ const stillCurrent=()=>!!rowKey&&card.isConnected&&img.isConnected&&card.contains(img)
+  &&String(card.dataset.restaurantDeckKey||'')===rowKey
+  &&String(img.dataset.restaurantPhotoKey||'')===rowKey;
+ const revealNoPhotoFallback=()=>{if(stillCurrent())img.removeAttribute('data-restaurant-photo-pending');};
+ if(restaurantImageIsLoaded(img)){
+  revealNoPhotoFallback();
+  return {url:String(img.currentSrc||img.src||''),source:String(img.dataset.restaurantPhotoSource||''),alreadyLoaded:true};
+ }
+ let data=null;
+ try{data=await loadRestaurantPhoto(row);}catch(error){console.error('Dinliminate restaurant photo preparation failed',error);}
+ if(!stillCurrent())return data;
+ if(data?.url&&await waitForRestaurantPhotoDecoded(data.url,2500)&&stillCurrent()){
+  const assigned=await assignRestaurantPhotoToCard(img,data.url,rowKey,stillCurrent);
+  if(assigned&&stillCurrent()){
+   img.dataset.restaurantPhotoLoaded='true';
+   img.dataset.restaurantPhotoSource=String(data.source||'');
+   img.removeAttribute('data-restaurant-photo-pending');
+   setRestaurantPhotoCredit(card,data.attributions,data.source,data.sourceUrl);
+   if(card.id==='restaurantNextCard'&&String(img.dataset.swipePreviewSrc||'')!==String(data.url)){
+    stageSwipePreview(card,img,data.url,rowKey);
+   }
+   return data;
+  }
+ }
+ revealNoPhotoFallback();
+ return data;
+}
+
 let restaurantDrawSeq=0;
 async function drawRestaurants(options={}) {
 const drawSeq=++restaurantDrawSeq;
@@ -1039,19 +1221,41 @@ const restoredCardPhoto=/^blob:/i.test(restoredCardPhotoRaw)?'':restoredCardPhot
 const image = restoredCardPhoto || restaurantFallback(row) || FINAL_RESTAURANT_IMAGE;
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
-const nextRow = rows[S.restaurantIndex + 1];
+const nextRow = restaurantNextChoice(rows,S.restaurantIndex);
 const nextImage = restaurantFallback(nextRow) || FINAL_RESTAURANT_IMAGE;
 const shortAddress = row.address ? esc(String(row.address).split(',').slice(0,2).join(', ')) : '';
  const cardLocation = (shortAddress || distanceLabel) ? '<div class="restaurant-card-location-distance" title="'+esc(row.address||'')+'">'+[shortAddress,distanceLabel?esc(distanceLabel):''].filter(Boolean).join(' <span aria-hidden="true">•</span> ')+'</div>' : '';
 const cardDetailsAction = '<button class="restaurant-card-utility restaurant-card-details-utility card-details-inline" id="restDetails" type="button" aria-label="Details" title="Details"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
  const cardUtilityRow='<div class="card-info-row card-cuisine-row restaurant-card-meta-row"><span class="restaurant-card-meta card-cuisine-text">'+esc(category)+'</span>'+cardDetailsAction+'</div>';
+const handoffRendering=!!options.swipeHandoff;
+const previousStack=$('#restStage .restaurant-card-stack');
+const previousActive=$('#restStage #restaurantCard');
+const previousNext=$('#restStage #restaurantNextCard');
+const previousNextKey=String(previousNext?.dataset.restaurantDeckKey||previousNext?.querySelector('img')?.dataset.restaurantPhotoKey||'');
+const canReuseHandoff=handoffRendering&&!!previousStack&&!!previousActive&&!!previousNext&&!!nextRow
+ &&previousNextKey===String(row.id||'');
+if(canReuseHandoff){
+ getSwipeMachine(previousActive)?.destroy();
+ populateRestaurantCardElement(previousNext,row,false,true);
+ populateRestaurantCardElement(previousActive,nextRow,true,false);
+ previousStack.insertBefore(previousActive,previousNext);
+}else{
 $('restStage').innerHTML =
 '<div class="restaurant-card-stack"><article class="card next-card '+(nextRow?'':'hidden')+'" id="restaurantNextCard" aria-hidden="true"><img src="'+esc(nextImage)+'" data-restaurant-photo-key="'+esc(nextRow?.id||'')+'" alt="'+esc(nextRow?.name||'')+'"><div class="shade"></div><div class="card-copy restaurant-next-copy">'+(nextRow?('<div class="card-info-row card-cuisine-row restaurant-card-meta-row"><span class="restaurant-card-meta card-cuisine-text">'+esc(restaurantCategory(nextRow))+'</span><span class="restaurant-card-utility restaurant-card-details-utility card-details-inline card-details-visual" aria-hidden="true"><svg class="details-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 7.25h2M11 7.25h7M6 12h2M11 12h7M6 16.75h2M11 16.75h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><h3>'+esc(nextRow.name||'')+'</h3>'): '')+'</div><div class="restaurant-photo-credit" aria-live="polite"></div></article><article class="card" id="restaurantCard" data-restaurant-id="'+esc(row.id||'')+'"><img src="'+esc(image)+'" data-restaurant-photo-key="'+esc(row.id||'')+'" alt="'+esc(row.name)+'"><div class="shade"></div><div class="restaurant-card-photo-ui">'+restaurantMaybeBadge+'</div><div class="restaurant-photo-credit" aria-live="polite"></div><div class="card-copy">'+cardUtilityRow+'<h3>'+esc(row.name)+'</h3>'+cardLocation+'</div></div></article></div>'+'<div class="swipe-actions unified-swipe-actions" aria-label="Restaurant decision controls"><button class="round-action round-back secondary" id="restBack" aria-label="Back"><span>↶</span></button><button class="round-action round-cut cut" id="restCut" aria-label="Cut"><span>✕</span></button><button class="round-action round-maybe maybe" id="restMaybe" aria-label="Maybe"><span>♥</span></button><button class="round-action round-choose choose" id="restChoose" aria-label="Choose this restaurant"><span>✓</span></button></div>';
+
+}
 const current = rows[S.restaurantIndex];
-bindRestaurantCardPhotoFallback(document.querySelector('#restStage #restaurantCard img[data-restaurant-photo-key]'));
-bindRestaurantCardPhotoFallback(document.querySelector('#restStage #restaurantNextCard img[data-restaurant-photo-key]'));
-const handoffRendering=!!options.swipeHandoff;
-const currentCard=$('restaurantCard');
+const currentCard=$('#restStage #restaurantCard');
+const currentImageEl=currentCard?.querySelector('img[data-restaurant-photo-key]');
+const restaurantNextCard=$('restaurantNextCard');
+const restaurantNextImageEl=$('#restStage #restaurantNextCard img[data-restaurant-photo-key]');
+if(currentCard)currentCard.dataset.restaurantDeckKey=String(current.id||'');
+if(restaurantNextCard&&nextRow)restaurantNextCard.dataset.restaurantDeckKey=String(nextRow.id||'');
+for(const [img,source] of [[currentImageEl,image],[restaurantNextImageEl,nextImage]]){
+ if(img&&isNeutralRestaurantPhoto(source)&&img.dataset.restaurantPhotoLoaded!=='true')img.dataset.restaurantPhotoPending='true';
+}
+bindRestaurantCardPhotoFallback(currentImageEl);
+bindRestaurantCardPhotoFallback(restaurantNextImageEl);
 if(handoffRendering&&currentCard){
  // A new choice must stay visible while its optional photo resolves.
  // Media enrichment must not control whether the next decision card exists.
@@ -1069,13 +1273,12 @@ bindCardButton('restChoose', () => {dismissSwipeHint();if(S.familyNormalMode==='
 bindCardButton('restDetails', () => detailsSheet(current,'restaurant'));
 bindRestaurantSwipe(current);bindMaybeDeckToggle('restaurant');
 bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
-const restaurantNextCard=$('restaurantNextCard');
-const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
  restaurantNextImageEl.decoding='async';
- stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage||'./fallback-restaurant.svg',nextRow.id);
+ stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage||FINAL_RESTAURANT_IMAGE,nextRow.id);
+ void prepareRestaurantCardPhoto(nextRow,restaurantNextCard,restaurantNextImageEl);
 }
-const currentPhotoPromise=hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
+const currentPhotoPromise=prepareRestaurantCardPhoto(row,currentCard,currentImageEl);
 if(handoffRendering){
  const isCurrentHandoff=(freshCard,freshImg)=>drawSeq===restaurantDrawSeq
   &&!!freshCard&&!!freshImg&&freshCard===$('#restStage #restaurantCard')

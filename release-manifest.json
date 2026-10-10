@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1384,
+  "build": 1385,
   "sourceBranch": "fix/restaurant-photo-budget-no-photo-state",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1384",
+  "checkpoint": "CP1385",
   "deploymentTrigger": "fix/restaurant-photo-budget-no-photo-state",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "durable Neon SKU accounting; Place Details Pro 4500, Place Details Essentials 9000, Place Photos 900",
@@ -65,5 +65,6 @@
   "sloganTypography": "CP1372: Homepage keeps the complete single sentence “Swipe Away Meal Indecision.” in restrained champagne-gold serif italic; position, wording, color, transparent background, and Home/Restaurant label-and-arrow treatment otherwise unchanged.",
   "swipeMaybePill": "CP1373: During rightward Meal/Restaurant card swipes, the MAYBE pill uses green text and border with a subtle dark-green fill in both drag-preview and committed-fill states; leftward CUT styling and swipe behavior remain unchanged. Also synchronizes the service-worker precache list with the stamp script while retaining the homepage door image.",
   "photoPolicy": "Google image content not cached; Place IDs retained; active-card-only photo resolution; fallback card stays stable when photo is unavailable",
-  "googleHardStops": "photos:900; text-search-pro:4500; nearby-search-pro:4500; text-search-enterprise:900; nearby-search-enterprise:900; place-details-enterprise:900; place-details-pro:4500; place-details-essentials:9000"
+  "googleHardStops": "photos:900; text-search-pro:4500; nearby-search-pro:4500; text-search-enterprise:900; nearby-search-enterprise:900; place-details-enterprise:900; place-details-pro:4500; place-details-essentials:9000",
+  "restaurantDeckUX": "CP1385 prepares one actionable Restaurant waiting card's image, promotes the already-staged card through swipe handoff, suppresses branded no-photo art while a lookup is pending, and wraps the waiting card to the next actionable choice."
 }
