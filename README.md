@@ -73,6 +73,16 @@ Secrets are server-side only. Do not put Google, Neon, or AI credentials in brow
 
 When the dedicated database URLs are absent, the server code can fall back through `DATABASE_URL` and `POSTGRES_URL` where supported.
 
+### Persistent restaurant library
+
+`RESTAURANT_LIBRARY_DATABASE_URL` — preferred Neon connection for restaurant metadata and retained-photo records. `DATABASE_URL` or `POSTGRES_URL` can be used as a fallback; Family Mode storage is not used implicitly.
+
+`BLOB_READ_WRITE_TOKEN` — Vercel Blob read/write credential. Connect a Blob store to this project and configure its credential for each environment where image ingestion is enabled.
+
+`RESTAURANT_LIBRARY_RETENTION_HOSTS` — comma-separated hostnames whose image content has been explicitly approved for long-term retention. Only HTTPS images from these hosts may be stored; Google-owned photo hosts are always rejected. Leave this unset until each source's retention rights are confirmed.
+
+The library creates its versioned Neon tables on first use. `GET /api/restaurant-library?mode=health` reports configuration and schema health; a name and address lookup returns saved metadata. The restaurant-photo endpoint serves a retained library image before running provider/search lookups. Google Places photo bytes are never copied into Blob or the library tables.
+
 ### AI meal autofill
 
 `AI_GATEWAY_API_KEY` — credential for the meal autofill AI path.

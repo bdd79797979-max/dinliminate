@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.0",
+    "@vercel/blob": "^2.6.1",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
@@ -18,9 +19,9 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test": "node scripts/stamp.mjs --check && node scripts/check-css.mjs && npm run lint && node tests/release/launch-rc.cjs && node tests/api/nearby-search-budget.cjs && node tests/api/text-search-budget.cjs && node tests/api/restaurants.cjs && node tests/api/security.cjs && node tests/api/restaurant-photo.cjs && node tests/api/google-photo-budget.cjs && playwright test",
+    "test": "node scripts/stamp.mjs --check && node scripts/check-css.mjs && npm run lint && node tests/release/launch-rc.cjs && node tests/api/nearby-search-budget.cjs && node tests/api/text-search-budget.cjs && node tests/api/restaurants.cjs && node tests/api/security.cjs && node tests/api/restaurant-photo.cjs && node tests/api/restaurant-library.cjs && node tests/api/google-photo-budget.cjs && playwright test",
     "test:e2e": "playwright test",
-    "test:api": "node tests/api/nearby-search-budget.cjs && node tests/api/text-search-budget.cjs && node tests/api/restaurants.cjs && node tests/api/restaurant-photo.cjs && node tests/api/google-photo-budget.cjs",
+    "test:api": "node tests/api/nearby-search-budget.cjs && node tests/api/text-search-budget.cjs && node tests/api/restaurants.cjs && node tests/api/restaurant-photo.cjs && node tests/api/restaurant-library.cjs && node tests/api/google-photo-budget.cjs",
     "test:release": "node tests/release/launch-rc.cjs",
     "lint": "eslint \"src/main.js\" \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",
     "lint:fix": "eslint --fix \"src/features/**/*.js\" \"src/state/**/*.js\" \"src/api/**/*.js\" \"src/ui/**/*.js\"",

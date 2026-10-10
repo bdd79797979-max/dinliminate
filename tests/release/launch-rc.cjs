@@ -10,7 +10,7 @@ const requiredFiles = [
   'index.html','tests/e2e/desktop-drawers.spec.mjs','boot.js','tokens.css','base.css','chrome.css','modal.css','swipe.css','home.css','meals.css','restaurants.css','winner.css','history.css','family.css','settings.css','tutorial.css','menu.css','src/main.js','viewport.js','sw.js',
   'manifest.webmanifest','logo.svg','icon.svg','app-release.json','api/_lib/http.js','api/_lib/rateLimit.js','api/_lib/ssrf.js','api/_lib/imageHosts.js',
   'release-manifest.json','package.json','scripts/stamp.mjs','api/restaurants.js',
-  'api/restaurant-photo.js','api/google-restaurant-photo.js',
+  'api/restaurant-photo.js','api/restaurant-library.js','api/_lib/restaurant-library.js','api/google-restaurant-photo.js',
   'api/google-usage.js','api/family.js','api/family-store.js','api/image.js'
 ];
 
@@ -24,7 +24,7 @@ for (const file of requiredFiles) {
 
 const syntaxFiles = [
   'boot.js','scripts/stamp.mjs','src/main.js','src/data/restaurant-taxonomy.js','viewport.js','sw.js','api/restaurants.js',
-  'api/restaurant-photo.js','api/google-restaurant-photo.js',
+  'api/restaurant-photo.js','api/restaurant-library.js','api/_lib/restaurant-library.js','api/google-restaurant-photo.js',
   'api/google-usage.js','api/family.js','api/family-store.js','api/image.js'
 ];
 

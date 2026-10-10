@@ -4,6 +4,7 @@ const {json}=require('./_lib/http');
 const {safeFetch,readResponseBody}=require('./_lib/ssrf');
 
 const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
+const restaurantLibrary=require('./_lib/restaurant-library');
 
 let sharp=null;
 try{sharp=require('sharp');}catch(error){console.error('Dinliminate error',error)}
@@ -1037,9 +1038,20 @@ async function exactImageFromBing(name,address,website,phone=''){
   for(const result of checks)if(result.status==='fulfilled'&&result.value)return result.value;
   return null;
 }
-function sendMedia(res,found){
+async function sendMedia(res,found,restaurant={}){
   const source=String(found?.source||'').trim();
   const isGooglePhoto=source.toLowerCase()==='google-places';
+  if(!isGooglePhoto&&found?.sourceUrl){
+    const sourceHost=restaurantLibrary._test.hostFrom(found.sourceUrl);
+    const retentionHosts=restaurantLibrary._test.retentionHosts();
+    if(restaurantLibrary._test.isRetentionEligible(found.sourceUrl,retentionHosts)){
+      try{await restaurantLibrary.rememberRestaurantPhoto({
+        ...restaurant,source,sourceUrl:found.sourceUrl,sourceName:found.sourceName||sourceHost,
+        retentionBasis:'operator-approved-retention-host:'+sourceHost,
+        attributions:found.attributions||[],media:found.media
+      });}catch(error){console.error('Dinliminate restaurant library ingestion failed',error)}
+    }
+  }
   res.setHeader?.('Content-Type',found.media.type);
   res.setHeader?.('Cache-Control',isGooglePhoto?'no-store, max-age=0':'public, max-age=604800, stale-while-revalidate=2592000');
   res.setHeader?.('X-Content-Type-Options','nosniff');
@@ -1076,24 +1088,37 @@ module.exports=async function handler(req,res){
   const osmExact=q.osmExact==='1';
   const googlePlaceId=String(q.placeId||q.googlePlaceId||'').trim().slice(0,220);
   if(!name)return json(res,400,{ok:false,error:'Restaurant name is required'});
+  const restaurant={name,address,phone,website:officialWebsite,hours:String(q.hours||'').slice(0,500)};
   try{
+    // A retained, operator-approved image is served before any live provider or search call.
+    const libraryPhoto=await restaurantLibrary.findRestaurantPhoto({name,address});
+    if(libraryPhoto?.blob_url){
+      res.statusCode=302;
+      res.setHeader?.('Location',libraryPhoto.blob_url);
+      res.setHeader?.('Cache-Control','public, max-age=3600, stale-while-revalidate=86400');
+      res.setHeader?.('X-Restaurant-Photo-Outcome','hit');
+      res.setHeader?.('X-Restaurant-Photo-Source','restaurant-library');
+      res.setHeader?.('X-Content-Type-Options','nosniff');
+      res.end?.();
+      return res;
+    }
     // CP1047: Google is the primary new-photo source. Existing client-side
     // verified photos are reused before this request; once a fresh lookup starts,
     // Google gets first opportunity, then exact non-Google sources.
     const googlePhoto=await tryGoogleRestaurantPhoto({
       name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
     });
-    if(googlePhoto)return sendMedia(res,googlePhoto);
+    if(googlePhoto)return sendMedia(res,googlePhoto,restaurant);
 
     // Official restaurant sources are the first fallback after Google.
     if(officialLocationPage){
       const directLocation=await fastOfficialVenuePhoto(name,address,officialLocationPage,phone);
-      if(directLocation)return sendMedia(res,{...directLocation,source:'official-location-page'});
+      if(directLocation)return sendMedia(res,{...directLocation,source:'official-location-page'},restaurant);
     }
 
     if(officialWebsite){
       const fastOfficial=await fastOfficialVenuePhoto(name,address,officialWebsite,phone);
-      if(fastOfficial)return sendMedia(res,fastOfficial);
+      if(fastOfficial)return sendMedia(res,fastOfficial,restaurant);
 
       // An official brand root is not necessarily the exact store page.
       // Discover and verify the location-specific page before leaving the official domain.
@@ -1106,22 +1131,22 @@ module.exports=async function handler(req,res){
           try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},2200)}}catch{return null}
         }));
         for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
-          return sendMedia(res,{media:hit.value.media,source:'official-location-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
+          return sendMedia(res,{media:hit.value.media,source:'official-location-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)},restaurant);
         }
       }
     }
 
     const fastKnownRestaurant=await fastKnownRestaurantPhoto(name,address);
-    if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant);
+    if(fastKnownRestaurant)return sendMedia(res,fastKnownRestaurant,restaurant);
 
     const fastKnown=await fastKnownPublicPhoto(name,address,officialWebsite,phone);
-    if(fastKnown)return sendMedia(res,fastKnown);
+    if(fastKnown)return sendMedia(res,fastKnown,restaurant);
 
     // Other exact-venue public sources remain the next fallback when Google
     // cannot return an exact, quality restaurant photo.
     const fastDirectory=await fastDirectoryPhotoSources(name,address,phone);
-    if(fastDirectory?.official)return sendMedia(res,fastDirectory.official);
-    if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto);
+    if(fastDirectory?.official)return sendMedia(res,fastDirectory.official,restaurant);
+    if(fastDirectory?.publicPhoto)return sendMedia(res,fastDirectory.publicPhoto,restaurant);
 
     const pages=await findVerifiedRestaurantPages(name,address,officialWebsite);
 
@@ -1134,7 +1159,7 @@ module.exports=async function handler(req,res){
         try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
       for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
-        return sendMedia(res,{media:hit.value.media,source:'official-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
+        return sendMedia(res,{media:hit.value.media,source:'official-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)},restaurant);
       }
     }
 
@@ -1146,7 +1171,7 @@ module.exports=async function handler(req,res){
         try{return {media:await fetchImage(candidate.url,{'Referer':entry.url},3000)}}catch{return null}
       }));
       for(const hit of attempts)if(hit.status==='fulfilled'&&hit.value){
-        return sendMedia(res,{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)});
+        return sendMedia(res,{media:hit.value.media,source:'exact-public-venue-page',sourceUrl:entry.url,sourceName:hostOf(entry.url)},restaurant);
       }
     }
 
@@ -1154,14 +1179,14 @@ module.exports=async function handler(req,res){
     if(osmExact&&/^https:\/\//i.test(osmImage)&&!isBlockedHost(osmImage)&&!BLOCKED_IMAGE_HINTS.test(osmImage)){
       try{
         const media=await fetchImage(osmImage,{'Referer':'https://www.openstreetmap.org/'},2800);
-        return sendMedia(res,{media,source:'osm-exact-poi'});
+        return sendMedia(res,{media,source:'osm-exact-poi',sourceName:'OpenStreetMap'},restaurant);
       }catch(error){console.error('Dinliminate error',error)}
     }
 
     // Last discovery layer: Bing Images, but only after exact host-page
     // verification or a very strong exact match.
     const bingImage=await exactImageFromBing(name,address,officialWebsite,phone);
-    if(bingImage)return sendMedia(res,bingImage);
+    if(bingImage)return sendMedia(res,bingImage,restaurant);
 
     res.setHeader?.('X-Restaurant-Photo-Outcome','miss');
     res.setHeader?.('X-Restaurant-Photo-Failure','no-verified-venue-photo');

@@ -67,6 +67,9 @@
     "api/restaurant-photo.js": {
       "maxDuration": 30
     },
+    "api/restaurant-library.js": {
+      "maxDuration": 10
+    },
     "api/google-usage.js": {
       "maxDuration": 10
     },
