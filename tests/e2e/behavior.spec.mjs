@@ -1285,11 +1285,11 @@ test('Restaurant photo misses keep deck order and show neutral art instead of bl
   await expect.poll(() => page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'), {timeout:12000}).toBe('2');
   const active=page.locator('#restaurantCard'),activeImage=active.locator('img');
   await expect(active.locator('h3')).toHaveText('Mock Pizza Kitchen');
-  await expect(activeImage).toHaveAttribute('src',value=>value.includes('fallback-restaurant.svg'));
+  expect(await activeImage.getAttribute('src')).toContain('fallback-restaurant.svg');
   await expect.poll(()=>activeImage.evaluate(img=>img.complete&&img.naturalWidth>0),{timeout:8000}).toBe(true);
   const waiting=page.locator('#restaurantNextCard');
   await expect(waiting.locator('h3')).toHaveText('Mock Taco House');
-  await expect(waiting.locator('img')).toHaveAttribute('src',value=>value.includes('fallback-restaurant.svg'));
+  expect(await waiting.locator('img').getAttribute('src')).toContain('fallback-restaurant.svg');
   await expect(waiting).toHaveAttribute('data-swipe-promoted','1',{timeout:8000});
   await expect.poll(()=>waiting.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0),{timeout:8000}).toBe(true);
   await page.locator('#restCut').click();

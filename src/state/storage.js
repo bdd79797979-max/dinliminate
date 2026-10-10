@@ -144,6 +144,15 @@ async function migrateCustomPhotos(){
  }
  if(changed)save();
 }
+function readLocalStorageValue(key) {
+ try { return String(localStorage.getItem(String(key)) || ''); }
+ catch(error) { console.error('Dinliminate storage error',error); return ''; }
+}
+function writeLocalStorageValue(key,value) {
+ try { localStorage.setItem(String(key),String(value)); return true; }
+ catch(error) { console.error('Dinliminate storage error',error); return false; }
+}
+
 function save() {
 const data = {
 screen:S.screen, hidden:[...S.hidden], hiddenRestaurants:S.hiddenRestaurants,
@@ -183,4 +192,4 @@ return false;
 const STORAGE_KEY='dinliminate:v1';
 const LEGACY_STORAGE_KEYS=Object.freeze(['dinliminate.clean.cp1','dinliminate.item.notes.v1','dinliminate.clean.history','dinliminate.family.v1','dinliminate.restaurant.websites.v1','dinliminate.start-screen','dinliminate.swipeHint.v4','dinliminate.swipeHint.v5']);
 function clearPersistedStorage(){try{localStorage.removeItem(STORAGE_KEY);LEGACY_STORAGE_KEYS.forEach(key=>localStorage.removeItem(key));return true;}catch(error){console.error('Dinliminate storage error',error);return false;}}
-export {STORAGE_KEY,LEGACY_STORAGE_KEYS,PHOTO_STORE,storedPhotoIds,clearPersistedStorage,loadItemNotes,saveItemNotes,itemNoteKey,itemNote,setItemNote,openPhotoDB,putStoredPhoto,getStoredPhoto,deleteStoredPhoto,mealPhotoStorageKey,pruneMealPhotoKeys,storeMealPhotoSet,deleteStoredMealPhotos,hydrateStoredMealPhotoList,hydrateCustomPhotos,updateStorageIndicator,migrateCustomPhotos,save};
+export {STORAGE_KEY,LEGACY_STORAGE_KEYS,PHOTO_STORE,storedPhotoIds,clearPersistedStorage,loadItemNotes,saveItemNotes,itemNoteKey,itemNote,setItemNote,openPhotoDB,putStoredPhoto,getStoredPhoto,deleteStoredPhoto,mealPhotoStorageKey,pruneMealPhotoKeys,storeMealPhotoSet,deleteStoredMealPhotos,hydrateStoredMealPhotoList,hydrateCustomPhotos,updateStorageIndicator,migrateCustomPhotos,readLocalStorageValue,writeLocalStorageValue,save};
