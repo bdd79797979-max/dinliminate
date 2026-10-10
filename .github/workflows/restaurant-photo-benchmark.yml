@@ -1,6 +1,7 @@
 name: Restaurant photo benchmark
 # One-shot baseline execution is gated on a push commit containing [run-photo-baseline].
 # Preview deployments may lag environment updates; the health fallback requires no Google Places key.
+# Node's argument parser requires --lon=<negative coordinate> for leading-minus values.
 
 on:
   push:
@@ -98,7 +99,7 @@ jobs:
           --count "$COUNT"
           --radius "$RADIUS"
           --lat "$LAT"
-          --lon "$LON"
+          --lon="$LON"
           --out artifacts/restaurant-photo-baseline
       - name: Upload full report folder
         if: always()
