@@ -68,7 +68,7 @@ async function expectAnchoredPanel(page, panel, backdrop, closeButton, anchorId)
   expect(geometry.topbarVisible).toBe(true);
 }
 
-test('CP1344 all four phone panels share hamburger anchoring, visible header, and return-to-menu behavior', async ({page})=>{
+test(' all four phone panels share hamburger anchoring, visible header, and return-to-menu behavior', async ({page})=>{
   await openApp(page);
   const items=[
     {type:'family',menuId:'familyMode',panel:'#family',backdrop:'#familyDrawerBg',close:'#familyCloseTop'},
