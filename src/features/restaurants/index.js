@@ -1178,7 +1178,22 @@ async function prepareRestaurantCardPhoto(row,card,img){
    img.removeAttribute('data-restaurant-photo-pending');
    setRestaurantPhotoCredit(card,data.attributions,data.source,data.sourceUrl);
    if(card.id==='restaurantNextCard'&&String(img.dataset.swipePreviewSrc||'')!==String(data.url)){
-    stageSwipePreview(card,img,data.url,rowKey);
+    const previewWasAlreadyVisible=card.getAttribute('data-swipe-promoted')==='1'
+     &&card.dataset.swipePreviewReady==='1'
+     &&card.isConnected
+     &&getComputedStyle(card).visibility==='visible'
+     &&Number(getComputedStyle(card).opacity)>0.99;
+    if(previewWasAlreadyVisible){
+     // The verified photo was decoded before assignment. Keep the waiting card
+     // promoted while its image element adopts that decoded resource.
+     img.dataset.swipePreviewSrc=String(data.url);
+     card.dataset.swipePreviewKey=rowKey;
+     card.dataset.swipePreviewReady='1';
+     card.style.visibility='visible';
+     card.style.opacity='1';
+    }else{
+     stageSwipePreview(card,img,data.url,rowKey);
+    }
    }
    return data;
   }

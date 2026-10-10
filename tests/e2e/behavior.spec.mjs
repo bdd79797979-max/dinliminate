@@ -1374,6 +1374,99 @@ test('Restaurant deck promotes the ready waiting card and hides no-photo art unt
   await expectNoPageErrors(errors);
 });
 
+test('Restaurant waiting card stays promoted while its verified photo replaces pending art', async ({ page }) => {
+  const errors = await prepare(page);
+  const photoRequests = [];
+  let releaseTacoPhoto;
+  let photoReleased = false;
+  await page.route('**/api/restaurant-photo**', async route => {
+    const url = new URL(route.request().url());
+    const name = url.searchParams.get('name') || '';
+    if (name === 'Mock Taco House') {
+      photoRequests.push(name);
+      await new Promise(resolve => { releaseTacoPhoto = resolve; });
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'X-Restaurant-Photo-Source': 'google-places',
+        'X-Restaurant-Photo-Source-URL': 'https://maps.google.com/?cid=mock',
+        'X-Restaurant-Google-Place-ID': 'ChIJDinliminateMockPlace123'
+      },
+      body: TINY_PNG
+    });
+  });
+
+  const releasePhoto = () => {
+    if (!photoReleased && typeof releaseTacoPhoto === 'function') {
+      photoReleased = true;
+      releaseTacoPhoto();
+    }
+  };
+
+  try {
+    await page.goto('/');
+    await page.evaluate(() => document.documentElement.classList.add('dinliminate-standalone'));
+    await page.locator('#restStart').click();
+    await expect(page.locator('#restaurant')).toBeVisible();
+    await expect.poll(
+      () => page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'),
+      { timeout: 12000 }
+    ).toBe('2');
+
+    const waiting = page.locator('#restaurantNextCard');
+    await expect(waiting.locator('h3')).toHaveText('Mock Taco House');
+    await expect(waiting).toHaveAttribute('data-swipe-promoted', '1', { timeout: 12000 });
+    await expect(waiting).toHaveCSS('visibility', 'visible');
+
+    await page.evaluate(() => {
+      const card = document.querySelector('#restaurantNextCard');
+      window.__restaurantWaitingCardSamples = [];
+      const sample = () => {
+        const style = getComputedStyle(card);
+        window.__restaurantWaitingCardSamples.push({
+          promoted: card.getAttribute('data-swipe-promoted'),
+          visibility: style.visibility,
+          opacity: Number(style.opacity)
+        });
+      };
+      window.__restaurantWaitingCardObserver = new MutationObserver(() => sample());
+      window.__restaurantWaitingCardObserver.observe(card, {
+        attributes: true,
+        attributeFilter: ['style', 'data-swipe-promoted']
+      });
+    });
+
+    await expect.poll(() => photoRequests.length, { timeout: 12000 }).toBe(1);
+    releasePhoto();
+
+    await expect.poll(
+      () => waiting.locator('img').getAttribute('data-restaurant-photo-source'),
+      { timeout: 12000 }
+    ).toBe('google-places');
+    await expect.poll(
+      () => waiting.locator('img').evaluate(img => img.complete && img.naturalWidth > 0),
+      { timeout: 12000 }
+    ).toBe(true);
+    await page.evaluate(async () => {
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+      window.__restaurantWaitingCardObserver?.disconnect();
+    });
+
+    const samples = await page.evaluate(() => window.__restaurantWaitingCardSamples || []);
+    expect(samples.every(sample =>
+      sample.promoted === '1' && sample.visibility === 'visible' && sample.opacity > 0.99
+    )).toBe(true);
+    expect(photoRequests).toEqual(['Mock Taco House']);
+    await expectNoPageErrors(errors);
+  } finally {
+    releasePhoto();
+  }
+});
+
 test('Google restaurant photos are on-demand, not persisted, while Place IDs are retained', async ({ page }) => {
   const errors=await prepare(page);
   const photoRequests=[];
