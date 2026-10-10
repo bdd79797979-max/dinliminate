@@ -1,0 +1,66 @@
+name: Restaurant photo benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Preview base URL (must have Google photos disabled)
+        type: string
+        required: true
+      count:
+        description: Number of unique restaurants to sample
+        type: number
+        required: true
+        default: 200
+      radius:
+        description: Search radius in miles
+        type: number
+        required: true
+        default: 10
+      lat:
+        description: Search center latitude
+        type: string
+        required: true
+        default: "36.5298"
+      lon:
+        description: Search center longitude
+        type: string
+        required: true
+        default: "-87.3595"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/restaurant-photo-step0-benchmark
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Format benchmark script
+        run: npx prettier --write scripts/benchmark-restaurant-photos.mjs
+      - name: Run restaurant photo benchmark
+        run: >-
+          node scripts/benchmark-restaurant-photos.mjs
+          --base "${{ inputs.base }}"
+          --count "${{ inputs.count }}"
+          --radius "${{ inputs.radius }}"
+          --lat "${{ inputs.lat }}"
+          --lon "${{ inputs.lon }}"
+          --out artifacts/restaurant-photo-baseline
+      - name: Upload full report folder
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restaurant-photo-baseline
+          path: artifacts/restaurant-photo-baseline/
+          if-no-files-found: warn
+          retention-days: 14
