@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1369,
-  "sourceBranch": "polish/home-choice-arrow-direction",
+  "build": 1370,
+  "sourceBranch": "polish/home-choice-text-contrast",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1369",
-  "deploymentTrigger": "polish/home-choice-arrow-direction",
+  "checkpoint": "CP1370",
+  "deploymentTrigger": "polish/home-choice-text-contrast",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -60,5 +60,6 @@
   "panelCloseHandoffAudit": "Family Mode now opens the main menu and its opaque cover before the family panel begins closing. Manage Meals, History, and Settings restore the main menu synchronously before their panel/backdrop close transitions. This prevents a frame of the previous screen becoming visible on phone close.",
   "releaseStampSync": "CP1367 synchronizes APP_BUILD, release metadata, HTML/PWA asset query strings and versioned service-worker shell cache; homepage logo animation and reduced-motion variants are covered by E2E tests.",
   "inCardSwipeCoach": "First-entry Cut / Swipe / Maybe directions remain centered on the active card and use a compact black box with a subtle gold edge at phone widths up to 430px. Existing first-interaction dismissal is retained; desktop styling is unchanged.",
-  "radiusBlackBackground": "Phone Radius control and option surfaces use #090909 in resting, hover, focus, and active states; regression checks cover 390px and 412px viewports."
+  "radiusBlackBackground": "Phone Radius control and option surfaces use #090909 in resting, hover, focus, and active states; regression checks cover 390px and 412px viewports.",
+  "homeChoiceContrast": "Homepage Home and Restaurant labels use warm ivory text with a tight dark shadow; gold diagonal arrows use a restrained warm-gold shadow. No text backing or tap-area changes."
 }
