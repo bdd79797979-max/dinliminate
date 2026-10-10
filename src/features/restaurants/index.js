@@ -777,11 +777,10 @@ async function enrichRestaurantHoursForOpenNow(){
   if(!unknown.length){
     restaurantHoursEnrichmentKey=String(S.restaurantSearchKey||'');
     restaurantHoursEnrichedAt=Date.now();
-    return {ok:true,counts:{total:pool.length,alreadyKnown:pool.length,resolvedFromOfficialWebsite:0,resolvedByGooglePlaceDetails:0,resolvedByGoogleTextSearch:0,stillUnknown:0,open:pool.filter(r=>restaurantHoursState(r)==='open').length},google:{callsUsed:0,callsBudget:36}};
+    return {ok:true,counts:{total:pool.length,alreadyKnown:pool.length,resolvedFromOfficialWebsite:0,resolvedByGooglePlaceDetails:0,resolvedByGoogleTextSearch:0,stillUnknown:0,open:pool.filter(r=>restaurantHoursState(r)==='open').length},google:{callsUsed:0,callsBudget:0}};
   }
   const seq=++restaurantHoursEnrichmentSeq;
   const payload={
-    maxGoogleCalls:36,
     rows:unknown.map(row=>({
       id:String(row?.id||''),
       name:String(row?.name||'').slice(0,160),

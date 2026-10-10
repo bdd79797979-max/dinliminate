@@ -2844,7 +2844,7 @@ test('Home startup does not request an unused restaurant photo', async ({ page }
   expect(photoRequests).toEqual([]);
 });
 
-test('Open filter requests targeted hours only after activation', async ({ page }) => {
+test('Open filter requests hours only after activation without a Google call allowance', async ({ page }) => {
   const errors = await prepare(page);
   const requests = [];
   page.on('request', request => {
@@ -2864,7 +2864,7 @@ test('Open filter requests targeted hours only after activation', async ({ page 
   await page.locator('#restaurantHoursToggle').click();
   await expect.poll(() => requests.length).toBe(1);
   expect(requests[0].method).toBe('POST');
-  expect(requests[0].payload.maxGoogleCalls).toBe(36);
+  expect(requests[0].payload).not.toHaveProperty('maxGoogleCalls');
   expect(requests[0].payload.rows).toHaveLength(2);
   expect(requests[0].payload.rows.every(row => !row.openNow && !row.opening_hours)).toBe(true);
   await expect(page.locator('#restaurantHoursToggle')).toHaveAttribute('data-active', 'true');

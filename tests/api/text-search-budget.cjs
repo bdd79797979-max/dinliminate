@@ -39,6 +39,17 @@ function placeResponse(overrides = {}) {
   };
 }
 
+function capturedResponse() {
+  return {
+    statusCode: 200,
+    body: null,
+    headers: {},
+    status(code) { this.statusCode = code; return this; },
+    setHeader(name, value) { this.headers[name] = value; },
+    json(body) { this.body = body; return this; }
+  };
+}
+
 async function main() {
   global.fetch = async (url, options = {}) => {
     const value = String(url);
@@ -64,8 +75,8 @@ async function main() {
         currentOpeningHours: { openNow: true, weekdayDescriptions: ['Monday: 10:00 AM–9:00 PM'] },
         regularOpeningHours: { weekdayDescriptions: ['Monday: 10:00 AM–9:00 PM'] },
         businessStatus: 'OPERATIONAL',
-        nationalPhoneNumber: '',
-        websiteUri: ''
+        nationalPhoneNumber: '(931) 555-0194',
+        websiteUri: 'https://restaurant.example/'
       }), {
         status: 200,
         headers: { 'content-type': 'application/json' }
@@ -96,31 +107,46 @@ async function main() {
     state.detailsRequests.length = 0;
 
     const hours = await api._test.enrichOpenNowHours([{
-      id: 'cp1393-hours-target',
-      name: 'CP1393 Hours Target Restaurant',
+      id: 'cp1394-hours-target',
+      name: 'CP1394 Hours Target Restaurant',
       address: '456 Oak St, Clarksville, TN 37040',
       lat: 36.532,
       lon: -87.358,
       googlePlaceId: 'ChIJHoursTargetCP1393'
-    }], { maxGoogleCalls: 3 });
+    }]);
 
     assert.equal(hours.ok, true);
-    assert.equal(hours.counts.googlePlaceDetails, 1);
-    assert.equal(hours.patches.length, 1);
-    assert.equal(hours.patches[0].openNow, true);
-    assert.ok(state.detailsRequests.length === 1, 'the Open filter path should use the targeted Place Details request');
+    assert.equal(hours.counts.googlePlaceDetails, 0);
+    assert.equal(hours.counts.googleTextSearch, 0);
+    assert.equal(hours.patches.length, 0, 'unknown opening hours remain unverified in the Open filter');
+    assert.equal(hours.counts.stillUnknown, 1);
+    assert.equal(hours.google.callsUsed, 0);
+    assert.equal(hours.google.callsBudget, 0);
+    assert.equal(state.detailsRequests.length, 0, 'the Open filter must not request Enterprise Place Details');
+    assert.deepEqual(state.reservations, [], 'the Open filter must not reserve any Google Enterprise SKU');
+    assert.deepEqual(state.disabled, []);
+
+    const detailsResponse = capturedResponse();
+    await api({
+      method: 'GET',
+      url: '/api/restaurants?mode=details&placeId=ChIJHoursTargetCP1393&name=CP1393%20Hours%20Target%20Restaurant&address=456%20Oak%20St%2C%20Clarksville%2C%20TN%2037040',
+      headers: { 'x-forwarded-for': 'cp1394-restaurant-details-test' }
+    }, detailsResponse);
+
+    assert.equal(detailsResponse.statusCode, 200);
+    assert.equal(detailsResponse.body?.ok, true, 'opening restaurant details should still resolve Google Place Details');
+    assert.equal(state.detailsRequests.length, 1);
     assert.match(state.detailsRequests[0].fieldMask, /currentOpeningHours\.openNow/);
     assert.match(state.detailsRequests[0].fieldMask, /regularOpeningHours\.weekdayDescriptions/);
     assert.deepEqual(state.reservations, [
       { sku: 'place-details-enterprise', limit: 900 }
-    ], 'Enterprise should be charged only when targeted hours are requested');
-    assert.deepEqual(state.disabled, []);
+    ], 'Enterprise should be reserved only by the explicit restaurant-details endpoint');
   } finally {
     global.fetch = previousFetch;
     require.cache[usagePath].exports = originalUsage;
   }
 
-  console.log('Text Search Pro budgeting and targeted Enterprise hours resolution: PASS');
+  console.log('Text Search Pro budgeting, no-Enterprise Open filter, and Enterprise restaurant details: PASS');
 }
 
 main().catch(error => {
