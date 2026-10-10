@@ -1,0 +1,34 @@
+name: Format restaurant photo benchmark
+
+on:
+  push:
+    branches:
+      - qa/restaurant-photo-step0-benchmark
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/restaurant-photo-step0-benchmark
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Format benchmark script
+        run: npx prettier --write scripts/benchmark-restaurant-photos.mjs
+      - name: Commit formatting when needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/benchmark-restaurant-photos.mjs
+          if ! git diff --cached --quiet; then
+            HUSKY=0 git commit -m "Format restaurant photo benchmark with Prettier"
+            git push origin HEAD:qa/restaurant-photo-step0-benchmark
+          fi

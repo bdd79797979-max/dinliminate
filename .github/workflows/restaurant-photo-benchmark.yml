@@ -1,0 +1,111 @@
+name: Restaurant photo benchmark
+# One-shot baseline execution is gated on a push commit containing [run-photo-baseline].
+# Preview deployments may lag environment updates; the health fallback requires no Google Places key.
+# Node's argument parser requires --lon=<negative coordinate> for leading-minus values.
+
+on:
+  push:
+    branches:
+      - qa/restaurant-photo-step0-benchmark
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Preview base URL (must have Google photos disabled)
+        type: string
+        required: true
+      count:
+        description: Number of unique restaurants to sample
+        type: number
+        required: true
+        default: 200
+      radius:
+        description: Search radius in miles
+        type: number
+        required: true
+        default: 10
+      lat:
+        description: Search center latitude
+        type: string
+        required: true
+        default: "36.5298"
+      lon:
+        description: Search center longitude
+        type: string
+        required: true
+        default: "-87.3595"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-photo-baseline]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/restaurant-photo-step0-benchmark
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Format benchmark script
+        run: npx prettier --write scripts/benchmark-restaurant-photos.mjs
+      - name: Wait for working preview and no Google photo requests
+        env:
+          BASE: ${{ inputs.base || 'https://dinliminate-git-qa-restaurant-photo-step0-benchmark-c-9ad9.vercel.app' }}
+        run: |
+          BASE="${BASE%/}"
+          for attempt in $(seq 1 60); do
+            headers="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 8 --dump-header "$headers" --output /dev/null --write-out '%{http_code}' "$BASE/api/restaurant-photo" 2>/dev/null || true)"
+            google_header="$(awk 'BEGIN { IGNORECASE=1 } /^x-restaurant-photo-google:/ { gsub("\\r",""); sub(/^[^:]*:[[:space:]]*/, ""); print tolower($0) }' "$headers" | tail -1)"
+            if [ "$status" = "400" ] && [ "$google_header" = "disabled" ]; then
+              echo "Preview serves the photo endpoint and explicitly reports Google photos disabled."
+              rm -f "$headers"
+              exit 0
+            fi
+            # If a current deployment predates the environment-variable update,
+            # permit a safe baseline only when the dedicated Google endpoint proves
+            # there is no Places API key and therefore cannot make Google requests.
+            if [ "$status" = "400" ]; then
+              health_body="$(mktemp)"
+              health_status="$(curl --silent --show-error --max-time 8 --output "$health_body" --write-out '%{http_code}' "$BASE/api/google-restaurant-photo?mode=health" 2>/dev/null || true)"
+              if [ "$health_status" = "200" ] && grep -Eiq '"googlePlacesConfigured"[[:space:]]*:[[:space:]]*false' "$health_body"; then
+                echo "Preview photo route is healthy. Header is '${google_header:-missing}', but Google Places is unconfigured; the Google photo provider cannot make API calls."
+                rm -f "$headers" "$health_body"
+                exit 0
+              fi
+              rm -f "$health_body"
+            fi
+            echo "Preview not ready (attempt $attempt/60; photo HTTP ${status:-no response}; Google header '${google_header:-missing}'); waiting for endpoint health and a provably disabled/unconfigured Google provider."
+            rm -f "$headers"
+            sleep 10
+          done
+          echo "Preview did not pass the routing/runtime/Google-disabled readiness check."
+          exit 1
+      - name: Run restaurant photo benchmark
+        env:
+          BASE: ${{ inputs.base || 'https://dinliminate-git-qa-restaurant-photo-step0-benchmark-c-9ad9.vercel.app' }}
+          COUNT: ${{ inputs.count || 200 }}
+          RADIUS: ${{ inputs.radius || 10 }}
+          LAT: ${{ inputs.lat || '36.5298' }}
+          LON: ${{ inputs.lon || '-87.3595' }}
+        run: >-
+          node scripts/benchmark-restaurant-photos.mjs
+          --base "$BASE"
+          --count "$COUNT"
+          --radius "$RADIUS"
+          --lat "$LAT"
+          --lon="$LON"
+          --out artifacts/restaurant-photo-baseline
+      - name: Upload full report folder
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restaurant-photo-baseline
+          path: artifacts/restaurant-photo-baseline/
+          if-no-files-found: warn
+          retention-days: 14

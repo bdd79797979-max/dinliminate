@@ -1,6 +1,7 @@
 'use strict';
 
 const {safeFetch,readResponseBody}=require('./_lib/ssrf');
+const {json}=require('./_lib/http');
 
 const {tryGoogleRestaurantPhoto}=require('./google-restaurant-photo');
 
@@ -1057,6 +1058,8 @@ module.exports=async function handler(req,res){
   res.setHeader?.('Cache-Control','no-store');
   res.setHeader?.('X-Content-Type-Options','nosniff');
   res.setHeader?.('Referrer-Policy','no-referrer');
+  const googlePhotosEnabled = String(process.env.GOOGLE_PHOTOS_ENABLED ?? 'true').trim().toLowerCase() !== 'false';
+  res.setHeader?.('X-Restaurant-Photo-Google', googlePhotosEnabled ? 'enabled' : 'disabled');
   if(String(req?.method||'GET').toUpperCase()!=='GET')return json(res,405,{ok:false,error:'GET required'});
   
   const q=req?.query&&typeof req.query==='object'?req.query:(req?.queryStringParameters||{});
@@ -1074,10 +1077,12 @@ module.exports=async function handler(req,res){
     // CP1047: Google is the primary new-photo source. Existing client-side
     // verified photos are reused before this request; once a fresh lookup starts,
     // Google gets first opportunity, then exact non-Google sources.
-    const googlePhoto=await tryGoogleRestaurantPhoto({
-      name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
-    });
-    if(googlePhoto)return sendMedia(res,googlePhoto);
+    if(googlePhotosEnabled){
+      const googlePhoto=await tryGoogleRestaurantPhoto({
+        name,address,phone,lat:q.lat,lon:q.lon,placeId:googlePlaceId
+      });
+      if(googlePhoto)return sendMedia(res,googlePhoto);
+    }
 
     // Official restaurant sources are the first fallback after Google.
     if(officialLocationPage){
@@ -1165,6 +1170,7 @@ module.exports=async function handler(req,res){
 };
 
 module.exports._test={
+  googlePhotosEnabled:()=>String(process.env.GOOGLE_PHOTOS_ENABLED ?? 'true').trim().toLowerCase() !== 'false',
   absoluteHttpsUrl,
   extractMetaImages,
   extractBingWebResultUrls,
