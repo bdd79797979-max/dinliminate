@@ -338,3 +338,7 @@ html:root #foodEditorForm .meal-autofill-action{min-height:32px;height:32px;padd
 #foodEditorForm .meal-autofill-action{justify-self:start}
 }
 html:root .meal-autofill-action, html:root .meal-autofill-refresh, html:root .meal-autofill-status, html:root .meal-autofill-basis, html:root .meal-editor-duplicate-hint{display:none}
+/* Match Meal Times quick-filter outlines to the Cuisine chips. */
+html:root #food .meal-time-quick .meal-time-chip:not([data-active="false"]){border-color:#f0e2bf;box-shadow:0 0 0 1px rgba(214,183,120,.42),0 0 12px rgba(214,183,120,.10)}
+html:root #food .meal-time-quick .meal-time-chip[data-active="false"]{border-color:#292929;box-shadow:none}
+html:root #food .meal-time-quick .meal-time-chip:not([data-active="false"]):hover, html:root #food .meal-time-quick .meal-time-chip:not([data-active="false"]):active{border-color:#f4f0e7;box-shadow:0 0 0 1px rgba(255,255,255,.20),0 0 12px rgba(255,255,255,.08)}
