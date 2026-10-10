@@ -1,4 +1,4 @@
-# Known CI failures at the CP1399 baseline
+# Known CI failures at the  baseline
 
 Baseline commit: [`14db5f97b7d5d51f01b9bdb01d8853187dceb8f6`](https://github.com/bdd79797979-max/dinliminate/commit/14db5f97b7d5d51f01b9bdb01d8853187dceb8f6)  
 Baseline CI: [failed Playwright run #483](https://github.com/bdd79797979-max/dinliminate/actions/runs/38029042272)  
@@ -16,20 +16,20 @@ The CI report contains **19 distinct failing scenarios**. The 17 mobile scenario
 6. `tests/e2e/behavior.spec.mjs:1403` — **Restaurant waiting card stays promoted while its verified photo replaces pending art**. Waiting card promotion attribute remained empty.
 7. `tests/e2e/behavior.spec.mjs:1496` — **Google restaurant photos are on-demand, not persisted, while Place IDs are retained**. Expected photo source `google-places` was null.
 8. `tests/e2e/behavior.spec.mjs:1543` — **Standalone Restaurant waiting card is promoted after its photo is decoded**. Waiting card promotion attribute remained empty.
-9. `tests/e2e/behavior.spec.mjs:1597` — **CP1320 successive Restaurant swipes never repeat a cut result or leave a blank card**. Expected deck count `3` was null.
-10. `tests/e2e/behavior.spec.mjs:2022` — **CP1338 keeps the shared menu directly under its hamburger and Family Mode exits to the menu**. Close-control horizontal alignment differed by about 341 px.
-11. `tests/e2e/behavior.spec.mjs:2244` — **CP1348 Restaurant Maybe and Back reuse the prior photo on restore**. Back returned `fallback-restaurant.svg` rather than the manually injected data URL. The fixture injects an image directly into the DOM, so this failure needs a representative cache/state fixture before concluding the production restoration path is broken.
-12. `tests/e2e/behavior.spec.mjs:2332` — **CP1350 menu navigation retains the full-screen handoff cover until the destination backdrop is ready**. Family backdrop class was `family-drawer-bg hidden`, not `is-open`.
+9. `tests/e2e/behavior.spec.mjs:1597` — ** successive Restaurant swipes never repeat a cut result or leave a blank card**. Expected deck count `3` was null.
+10. `tests/e2e/behavior.spec.mjs:2022` — ** keeps the shared menu directly under its hamburger and Family Mode exits to the menu**. Close-control horizontal alignment differed by about 341 px.
+11. `tests/e2e/behavior.spec.mjs:2244` — ** Restaurant Maybe and Back reuse the prior photo on restore**. Back returned `fallback-restaurant.svg` rather than the manually injected data URL. The fixture injects an image directly into the DOM, so this failure needs a representative cache/state fixture before concluding the production restoration path is broken.
+12. `tests/e2e/behavior.spec.mjs:2332` — ** menu navigation retains the full-screen handoff cover until the destination backdrop is ready**. Family backdrop class was `family-drawer-bg hidden`, not `is-open`.
 13. `tests/e2e/behavior.spec.mjs:2431` — **phone panel close actions restore the main menu before the panel closes**. Menu was still hidden in the close-click task.
 14. `tests/e2e/behavior.spec.mjs:2509` — **app-wide interaction polish keeps decision feedback subtle and Radius dark**. Measured pressed scale was 1 instead of at least 1.03; assertion reads computed transform immediately after adding the pressed class.
 15. `tests/e2e/behavior.spec.mjs:2593` — **homepage press highlight, one-time logo entrance, and bottom controls stay consistent**. The test expects the computed `transformOrigin` string to contain `bottom`, but the browser serializes it as coordinates (`35px 50px`).
 16. `tests/e2e/behavior.spec.mjs:2620` — **CUT and MAYBE buttons visibly enlarge with matching color feedback while pressed**. Measured scale was 1.032 while the assertion expects at least 1.075; it is read during the transition.
-17. `tests/e2e/mobile-drawers.spec.mjs:71` — **CP1344 all four phone panels share hamburger anchoring, visible header, and return-to-menu behavior**. One panel alignment measurement was 54 px against an expected 52 px.
+17. `tests/e2e/mobile-drawers.spec.mjs:71` — ** all four phone panels share hamburger anchoring, visible header, and return-to-menu behavior**. One panel alignment measurement was 54 px against an expected 52 px.
 
 ## Desktop scenarios (2)
 
 18. `tests/e2e/desktop-drawers.spec.mjs:172` — **desktop Family Mode is a right-side drawer that closes without changing its underlying screen**. Family drawer right edge differed from the expected edge by 435 px.
-19. `tests/e2e/desktop-drawers.spec.mjs:212` — **CP1342 all four desktop windows share hamburger alignment, layering, and return-to-menu behavior**. Manage Meals started at 64 px versus the expected 54 px.
+19. `tests/e2e/desktop-drawers.spec.mjs:212` — ** all four desktop windows share hamburger alignment, layering, and return-to-menu behavior**. Manage Meals started at 64 px versus the expected 54 px.
 
 ## How to compare future CI runs
 
