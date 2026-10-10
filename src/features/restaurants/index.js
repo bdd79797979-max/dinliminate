@@ -13,7 +13,7 @@ import { openModal, detailsSheet, appConfirm } from '../../ui/modal.js';
 import { winner } from '../winner/index.js';
 import { familyEnterMaybes, familyPickSingle } from '../family/index.js';
 import { tutorialModeEnabled, tutorialState, tutorialEnterDecisionScreen, tutorialMarkChoose } from '../tutorial/index.js';
-import { normKey, primeRestaurantPhotosBeforeFirstPaint, prepareRestaurantPhotoDeck, restaurantImmediatePhoto, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
+import { normKey, primeRestaurantPhotosBeforeFirstPaint, restaurantImmediatePhoto, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
 
 let restaurantBackBusy=false;
 const REST_QUICK=[...RESTAURANT_TAXONOMY.tags];
@@ -1019,25 +1019,19 @@ const restoreExact=!!S.restaurantRestoreExact;
 S.restaurantRestoreExact=false;
 S.restaurantIndex = Math.max(0, Math.min(S.restaurantIndex, rows.length - 1));
 if(!restoreExact&&!S.restaurantMaybeRound){const ni=restaurantChoiceIndex(rows,S.restaurantIndex,false);if(ni>=0)S.restaurantIndex=ni;else if(rows.some(x=>x._maybe)){S.restaurantMaybeRound=true;S.restaurantIndex=restaurantChoiceIndex(rows,0,true);}}
-let prepared={firstId:String(rows[S.restaurantIndex]?.id||''),readyIds:[]};
-if(!options.startup){
- prepared=options.swipeHandoff
-   ? {firstId:String(rows[S.restaurantIndex]?.id||''),readyIds:[]}
-   : await prepareRestaurantPhotoDeck(rows,S.restaurantIndex,2);
- if(drawSeq!==restaurantDrawSeq)return;
- rows=restaurantPoolFiltered();
- if(prepared.firstId&&!restoreExact){
-  const readyIndex=rows.findIndex(row=>String(row.id)===String(prepared.firstId));
-  if(readyIndex>=0)S.restaurantIndex=readyIndex;
- }
+if(!options.startup&&!options.swipeHandoff){
+ primeRestaurantPhotosBeforeFirstPaint(rows,S.restaurantIndex).catch(()=>null);
 }
+if(drawSeq!==restaurantDrawSeq)return;
+rows=restaurantPoolFiltered();
 if(S.restaurantIndex<0||S.restaurantIndex>=rows.length)S.restaurantIndex=0;
 const row = rows[S.restaurantIndex];
 if(!row)return;
 const category = restaurantCategory(row);
 const restaurantFallback = restaurantImmediatePhoto;
-const restoredCardPhoto=options.restoreCard?.id===String(row.id||'')
+const restoredCardPhotoRaw=options.restoreCard?.id===String(row.id||'')
  ? String(options.restoreCard?.photoSrc||'').trim():'';
+const restoredCardPhoto=/^blob:/i.test(restoredCardPhotoRaw)?'':restoredCardPhotoRaw;
 const image = restoredCardPhoto || restaurantFallback(row);
 const distanceLabel=Number.isFinite(Number(row.distance)) ? Number(row.distance).toFixed(1)+' mi away' : '';
 const restaurantMaybeBadge=row._maybe?'<span class="maybe-stamp restaurant-maybe-stamp" aria-label="Marked Maybe">MAYBE</span>':'';
@@ -1072,23 +1066,8 @@ bindRestaurantPhotoPinch($('restaurantCard')?.querySelector('img'));
 const restaurantNextCard=$('restaurantNextCard');
 const restaurantNextImageEl=$('#restStage #restaurantNextCard img');
 if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
-  restaurantNextImageEl.decoding='async';
-  stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage,nextRow.id);
-  loadRestaurantPhoto(nextRow).then(async data=>{
-   if(!data?.url)return null;
-   if(!restaurantNextCard.isConnected)return data.url;
-   if(String(restaurantNextImageEl.dataset.restaurantPhotoKey||'')!==String(nextRow.id||''))return data.url;
-   const existingSrc=String(restaurantNextImageEl.dataset.swipePreviewSrc||'');
-   const pendingPreview=restaurantNextCard.__swipePreviewReadyPromise;
-   const swapped=existingSrc===String(data.url)&&pendingPreview
-    ?await pendingPreview
-    :await stageSwipePreview(restaurantNextCard,restaurantNextImageEl,data.url,nextRow.id);
-   if(swapped){
-    restaurantNextImageEl.dataset.restaurantPhotoLoaded='true';
-    setRestaurantPhotoCredit(restaurantNextCard,data.attributions,data.source,data.sourceUrl);
-   }
-   return data.url;
-  }).catch(()=>null);
+ restaurantNextImageEl.decoding='async';
+ stageSwipePreview(restaurantNextCard,restaurantNextImageEl,nextImage||'./fallback-restaurant.svg',nextRow.id);
 }
 const currentPhotoPromise=hydrateRestaurantPhoto(row,'#restStage #restaurantCard');
 if(handoffRendering){
@@ -1119,7 +1098,6 @@ if(handoffRendering){
 }else{
  currentPhotoPromise.catch(error=>{console.error('Dinliminate async operation failed',error);});
 }
-if(nextRow)hydrateRestaurantPhoto(nextRow,'#restStage #restaurantNextCard');
 prefetchRestaurantPhotos(rows,S.restaurantIndex,RESTAURANT_PHOTO_PREFETCH_COUNT);
 maybeShowInCardSwipeCoach();
 if(S.familyNormalMode==='setup'&&S.familyDecisionType==='restaurant')familyNormalBar('restaurant','setup',S.familyActiveData);

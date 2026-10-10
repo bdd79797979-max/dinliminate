@@ -1271,6 +1271,80 @@ test('Meal handoff keeps the next card hidden until its matching photo is ready'
 });
 
 
+test('Restaurant photo misses keep deck order and show neutral art instead of blank cards', async ({ page }) => {
+  const errors = await prepare(page);
+  const photoRequests = [];
+  await page.route('**/api/restaurant-photo**', async route => {
+    photoRequests.push(new URL(route.request().url()).searchParams.get('name'));
+    await route.fulfill({status:404,contentType:'application/json',headers:{'X-Restaurant-Photo-Outcome':'miss'},body:JSON.stringify({ok:false,error:'No verified venue photo was found'})});
+  });
+  await page.goto('/');
+  await page.evaluate(() => document.documentElement.classList.add('dinliminate-standalone'));
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await expect.poll(() => page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'), {timeout:12000}).toBe('2');
+  const active=page.locator('#restaurantCard'),activeImage=active.locator('img');
+  await expect(active.locator('h3')).toHaveText('Mock Pizza Kitchen');
+  await expect(activeImage).toHaveAttribute('src',value=>value.includes('fallback-restaurant.svg'));
+  await expect.poll(()=>activeImage.evaluate(img=>img.complete&&img.naturalWidth>0),{timeout:8000}).toBe(true);
+  const waiting=page.locator('#restaurantNextCard');
+  await expect(waiting.locator('h3')).toHaveText('Mock Taco House');
+  await expect(waiting.locator('img')).toHaveAttribute('src',value=>value.includes('fallback-restaurant.svg'));
+  await expect(waiting).toHaveAttribute('data-swipe-promoted','1',{timeout:8000});
+  await expect.poll(()=>waiting.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0),{timeout:8000}).toBe(true);
+  await page.locator('#restCut').click();
+  await expect.poll(()=>page.locator('#restaurantCard h3').innerText(),{timeout:12000}).toBe('Mock Taco House');
+  await expect.poll(()=>page.locator('#restaurantCard img').evaluate(img=>img.complete&&img.naturalWidth>0),{timeout:8000}).toBe(true);
+  expect(photoRequests).toContain('Mock Pizza Kitchen');
+  await expectNoPageErrors(errors);
+});
+
+test('Google restaurant photos are on-demand, not persisted, while Place IDs are retained', async ({ page }) => {
+  const errors=await prepare(page);
+  const photoRequests=[];
+  await page.route('**/api/restaurant-photo**',async route=>{
+    const url=new URL(route.request().url());
+    photoRequests.push({name:url.searchParams.get('name'),placeId:url.searchParams.get('placeId')});
+    await route.fulfill({status:200,contentType:'image/png',headers:{
+      'Cache-Control':'no-store, max-age=0',
+      'X-Restaurant-Photo-Source':'google-places',
+      'X-Restaurant-Google-Place-ID':'ChIJDinliminateMockPlace123'
+    },body:TINY_PNG});
+  });
+  await page.goto('/');
+  const legacyCacheUrl=await page.evaluate(async pngBase64=>{
+    const cache=await caches.open('dinliminate.restaurant.photos.v8');
+    const url=new URL('/__dinliminate_restaurant_photo_cache__/legacy-google-entry',location.href).href;
+    const bytes=Uint8Array.from(atob(pngBase64),character=>character.charCodeAt(0));
+    await cache.put(new Request(url),new Response(bytes,{headers:{
+      'Content-Type':'image/png','X-Dinliminate-Cached-At':String(Date.now()),'X-Restaurant-Photo-Source':'google-places'
+    }}));
+    return url;
+  },TINY_PNG.toString('base64'));
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await expect.poll(()=>page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'),{timeout:12000}).toBe('2');
+  await expect.poll(()=>page.locator('#restaurantCard img').getAttribute('data-restaurant-photo-source'),{timeout:12000}).toBe('google-places');
+  const audit=await page.evaluate(async legacyUrl=>{
+    const oldCache=await caches.open('dinliminate.restaurant.photos.v8');
+    const legacy=await oldCache.match(new Request(legacyUrl));
+    const activeCache=await caches.open('dinliminate.restaurant.photos.v9');
+    const persistedSources=[];
+    for(const request of await activeCache.keys()){
+      const response=await activeCache.match(request);
+      persistedSources.push(String(response?.headers.get('X-Restaurant-Photo-Source')||'').toLowerCase());
+    }
+    const placeIds=Object.keys(localStorage).filter(key=>key.startsWith('dinliminate:restaurant-place-id:')).map(key=>localStorage.getItem(key));
+    return {legacyGoogleEntryRetained:!!legacy,persistedSources,placeIds};
+  },legacyCacheUrl);
+  expect(audit.legacyGoogleEntryRetained).toBe(false);
+  expect(audit.persistedSources).not.toContain('google-places');
+  expect(audit.placeIds).toContain('ChIJDinliminateMockPlace123');
+  expect(photoRequests.map(item=>item.name)).toEqual(['Mock Pizza Kitchen']);
+  expect(photoRequests[0].placeId).toBe(null);
+  await expectNoPageErrors(errors);
+});
+
 test('Standalone Restaurant waiting card is promoted after its photo is decoded', async ({ page }) => {
   const errors = await prepare(page);
   await page.goto('/');

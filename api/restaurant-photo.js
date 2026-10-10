@@ -1037,10 +1037,15 @@ async function exactImageFromBing(name,address,website,phone=''){
   return null;
 }
 function sendMedia(res,found){
+  const source=String(found?.source||'').trim();
+  const isGooglePhoto=source.toLowerCase()==='google-places';
   res.setHeader?.('Content-Type',found.media.type);
-  res.setHeader?.('Cache-Control','public, max-age=604800, stale-while-revalidate=2592000');
+  res.setHeader?.('Cache-Control',isGooglePhoto?'no-store, max-age=0':'public, max-age=604800, stale-while-revalidate=2592000');
   res.setHeader?.('X-Content-Type-Options','nosniff');
-  res.setHeader?.('X-Restaurant-Photo-Source',found.source);
+  res.setHeader?.('X-Restaurant-Photo-Outcome','hit');
+  res.setHeader?.('X-Restaurant-Photo-Source',source);
+  if(isGooglePhoto&&/^ChI[A-Za-z0-9_-]+$/.test(String(found.googlePlaceId||'')))res.setHeader?.('X-Restaurant-Google-Place-ID',String(found.googlePlaceId));
+  console.info('dinliminate-restaurant-photo-outcome',{outcome:'hit',source:source||'unknown'});
   if(found.media.width&&found.media.height)res.setHeader?.('X-Restaurant-Photo-Dimensions',found.media.width+'x'+found.media.height);
   if(found.sourceUrl)res.setHeader?.('X-Restaurant-Photo-Source-URL',found.sourceUrl);
   const attributions=Array.isArray(found.attributions)&&found.attributions.length?found.attributions.map(x=>({displayName:String(x?.displayName||'').trim(),uri:String(x?.uri||'').trim()})).filter(x=>x.displayName||x.uri).slice(0,5):[];
@@ -1157,8 +1162,14 @@ module.exports=async function handler(req,res){
     const bingImage=await exactImageFromBing(name,address,officialWebsite,phone);
     if(bingImage)return sendMedia(res,bingImage);
 
+    res.setHeader?.('X-Restaurant-Photo-Outcome','miss');
+    res.setHeader?.('X-Restaurant-Photo-Failure','no-verified-venue-photo');
+    console.info('dinliminate-restaurant-photo-outcome',{outcome:'miss',reason:'no-verified-venue-photo'});
     return json(res,404,{ok:false,error:'No verified venue photo was found from the allowed non-Google sources'});
   }catch(e){
+    res.setHeader?.('X-Restaurant-Photo-Outcome','error');
+    res.setHeader?.('X-Restaurant-Photo-Failure','resolver-error');
+    console.info('dinliminate-restaurant-photo-outcome',{outcome:'error',reason:'resolver-error'});
     console.error('dinliminate-restaurant-photo',e);
     return json(res,502,{ok:false,error:'Could not load the restaurant photo'});
   }

@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1375';
+const APP_BUILD = '1377';
 const APP_BUILD_DATE = '2026-10-09';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -598,20 +598,62 @@ function trimRestaurantPhotoMemoryCache(){
 }
 function touchRestaurantPhotoMemoryCache(rowKey,data){
  if(!rowKey||!data)return data;
+ if(String(data.source||'').trim().toLowerCase()==='google-places')return data;
  data.lastUsedAt=Date.now();
  restaurantPhotoCache.set(rowKey,data);
  trimRestaurantPhotoMemoryCache();
  return data;
 }
 const RESTAURANT_PHOTO_MISS_TTL=15*60*1000;
-const RESTAURANT_PHOTO_RESOLVER_VERSION='1007';
-const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v8';
+const RESTAURANT_PHOTO_RESOLVER_VERSION='1008';
+const RESTAURANT_PHOTO_CACHE_NAME='dinliminate.restaurant.photos.v9';
 const RESTAURANT_PHOTO_CACHE_MAX_AGE=14*24*60*60*1000;
-const RESTAURANT_PHOTO_PREFETCH_COUNT=4;
+const RESTAURANT_PHOTO_PREFETCH_COUNT=0;
 const RESTAURANT_PHOTO_FIRST_PAINT_TIMEOUT=1600;
 const RESTAURANT_PHOTO_NEAR_READY_TIMEOUT=650;
 const RESTAURANT_NEUTRAL_IMAGE='./fallback-restaurant.svg';
+const RESTAURANT_PLACE_ID_STORAGE_PREFIX='dinliminate:restaurant-place-id:';
 let restaurantPhotoStoragePromise=null;
+let restaurantPhotoLegacyPurgePromise=null;
+function restaurantPlaceIdCacheKey(row){
+ const name=normKey(row?.name),address=normKey(row?.address);
+ if(!name||!address)return '';
+ let hash=2166136261;
+ const identity=name+'|'+address;
+ for(let i=0;i<identity.length;i++){hash^=identity.charCodeAt(i);hash=Math.imul(hash,16777619);}
+ return RESTAURANT_PLACE_ID_STORAGE_PREFIX+(hash>>>0).toString(36);
+}
+function validGooglePlaceId(value){return /^ChI[A-Za-z0-9_-]+$/.test(String(value||'').trim());}
+function knownRestaurantPlaceId(row){
+ const direct=String(row?.googlePlaceId||row?.placeId||'').trim();
+ if(validGooglePlaceId(direct))return direct;
+ const key=restaurantPlaceIdCacheKey(row);
+ if(!key)return '';
+ try{const saved=String(localStorage.getItem(key)||'').trim();return validGooglePlaceId(saved)?saved:'';}catch{return '';}
+}
+function rememberRestaurantPlaceId(row,value){
+ const placeId=String(value||'').trim();
+ if(!validGooglePlaceId(placeId))return;
+ if(row&&typeof row==='object')row.googlePlaceId=placeId;
+ const key=restaurantPlaceIdCacheKey(row);
+ if(!key)return;
+ try{localStorage.setItem(key,placeId);}catch(error){console.error('Dinliminate error',error)}
+}
+async function purgeLegacyGoogleRestaurantPhotos(){
+ if(!('caches' in window)||typeof caches.keys!=='function')return;
+ try{
+  const names=(await caches.keys()).filter(name=>name.startsWith('dinliminate.restaurant.photos.'));
+  await Promise.all(names.map(async name=>{
+   const cache=await caches.open(name);
+   const requests=await cache.keys();
+   await Promise.all(requests.map(async request=>{
+    const response=await cache.match(request);
+    const source=String(response?.headers.get('X-Restaurant-Photo-Source')||'').trim().toLowerCase();
+    if(source==='google-places'||source==='google')await cache.delete(request);
+   }));
+  }));
+ }catch(error){console.error('Dinliminate restaurant photo cache cleanup failed',error)}
+}
 function restaurantPhotoCacheRequest(row){
  const identity=normKey(['v'+RESTAURANT_PHOTO_RESOLVER_VERSION,row?.name,row?.address].filter(Boolean).join('|'))||String(row?.id||row?.canonicalId||'unknown');
  let hash=2166136261;
@@ -621,7 +663,12 @@ function restaurantPhotoCacheRequest(row){
 async function openRestaurantPhotoCache(){
  if(!('caches' in window))return null;
  if(restaurantPhotoStoragePromise)return restaurantPhotoStoragePromise;
- restaurantPhotoStoragePromise=caches.open(RESTAURANT_PHOTO_CACHE_NAME).catch(()=>null);
+ restaurantPhotoStoragePromise=(async()=>{
+  const cache=await caches.open(RESTAURANT_PHOTO_CACHE_NAME);
+  if(!restaurantPhotoLegacyPurgePromise)restaurantPhotoLegacyPurgePromise=purgeLegacyGoogleRestaurantPhotos();
+  await restaurantPhotoLegacyPurgePromise;
+  return cache;
+ })().catch(()=>null);
  return restaurantPhotoStoragePromise;
 }
 function restaurantPhotoDataFromCachedResponse(response){
@@ -645,6 +692,11 @@ async function getPersistentRestaurantPhoto(row){
   const request=restaurantPhotoCacheRequest(row);
   const cached=await cache.match(request);
   if(!cached)return null;
+  const source=String(cached.headers.get('X-Restaurant-Photo-Source')||'').trim().toLowerCase();
+  if(source==='google-places'||source==='google'){
+   await cache.delete(request);
+   return null;
+  }
   const data=await restaurantPhotoDataFromCachedResponse(cached);
   if(data)return data;
   await cache.delete(request);
@@ -653,7 +705,8 @@ async function getPersistentRestaurantPhoto(row){
 }
 async function putPersistentRestaurantPhoto(row,blob,attributions,source,sourceUrl){
  try{
-  if(String(source||'').trim()==='google-places')return;
+  const sourceKey=String(source||'').trim().toLowerCase();
+  if(sourceKey==='google-places'||sourceKey==='google')return;
   const cache=await openRestaurantPhotoCache();
   if(!cache)return;
   const request=restaurantPhotoCacheRequest(row);
@@ -695,7 +748,7 @@ function knownRestaurantPhotoFallback(row){
 }
 function restaurantFallbackImage(row){
  const known=knownRestaurantPhotoFallback(row);
- return known||'';
+ return known||RESTAURANT_NEUTRAL_IMAGE;
 }
 function restaurantPhotoEndpointUrl(row){
  if(!row)return '';
@@ -715,7 +768,8 @@ function restaurantPhotoEndpointUrl(row){
   params.set('osmExact','1');
   params.set('osmImage',osmPhoto);
  }
- if(row.googlePlaceId)params.set('placeId',String(row.googlePlaceId));
+ const googlePlaceId=knownRestaurantPlaceId(row);
+ if(googlePlaceId)params.set('placeId',googlePlaceId);
  if(Number.isFinite(Number(row.lat)))params.set('lat',String(row.lat));
  if(Number.isFinite(Number(row.lon)))params.set('lon',String(row.lon));
  params.set('resolver',RESTAURANT_PHOTO_RESOLVER_VERSION);
@@ -725,9 +779,9 @@ function restaurantImmediatePhoto(row){
  if(!row)return '';
  const rowKey=String(row?.id||row?.canonicalId||'').trim();
  const cached=rowKey?restaurantPhotoCache.get(rowKey):null;
- return cached?.url ? touchRestaurantPhotoMemoryCache(rowKey,cached).url : '';
+ return cached?.url ? touchRestaurantPhotoMemoryCache(rowKey,cached).url : RESTAURANT_NEUTRAL_IMAGE;
 }
-function restaurantCardFallbackImage(){return '';}
+function restaurantCardFallbackImage(){return RESTAURANT_NEUTRAL_IMAGE;}
 
 function decodePhotoAttributions(raw){
  const value=String(raw||'').trim();if(!value)return[];
@@ -788,8 +842,10 @@ async function loadRestaurantPhoto(row){
    const attributions=decodePhotoAttributions(res.headers.get('X-Restaurant-Photo-Attributions'));
    const sourceName=String(res.headers.get('X-Restaurant-Photo-Source')||'').trim();
    const sourceUrl=String(res.headers.get('X-Restaurant-Photo-Source-URL')||'').trim();
+   const googlePlaceId=String(res.headers.get('X-Restaurant-Google-Place-ID')||'').trim();
+   if(googlePlaceId)rememberRestaurantPlaceId(row,googlePlaceId);
    await putPersistentRestaurantPhoto(row,blob,attributions,sourceName,sourceUrl);
-   return {url:URL.createObjectURL(blob),attributions,source:sourceName,sourceUrl};
+   return {url:URL.createObjectURL(blob),attributions,source:sourceName,sourceUrl,googlePlaceId};
   })().then(data=>{
    touchRestaurantPhotoMemoryCache(rowKey,data);
    restaurantPhotoMissCache.delete(rowKey);
@@ -815,6 +871,7 @@ async function hydrateRestaurantPhoto(row,scope){
   const swapped=await swapImageWhenReady(img,data.url);
   if(swapped){
    img.dataset.restaurantPhotoLoaded='true';
+   img.dataset.restaurantPhotoSource=String(data.source||'');
    setRestaurantPhotoCredit(img.closest('.card,.restaurant-detail-hero')||img.parentElement,data.attributions,data.source,data.sourceUrl);
   }
  }
@@ -851,49 +908,15 @@ async function waitForRestaurantPhotoDecoded(url,timeoutMs=2500){
 async function prepareRestaurantPhotoDeck(rows,startIndex=0,needed=RESTAURANT_PHOTO_PREFETCH_COUNT+1){
  const source=Array.isArray(rows)?rows:[];
  if(!source.length||navigator.onLine===false)return {firstId:'',readyIds:[]};
-
- // CP1214: photo readiness must never remove a restaurant from the
- // decision pool or change the ALL/MAYBES count. Keep media failures as
- // presentation state only, while the choice pool remains filter-driven.
- const basePool=()=>restaurantPoolFiltered();
- const candidates=()=>basePool().filter(row=>!row._photoUnavailable);
- let cursor=Math.max(0,Math.min(Number(startIndex)||0,Math.max(0,source.length-1)));
+ const start=Math.max(0,Math.min(Number(startIndex)||0,source.length-1));
+ const count=Math.max(1,Number(needed)||1);
+ const targets=source.slice(start,start+count);
  const readyIds=[];
- const tried=new Set();
- let safety=0;
-
- while(readyIds.length<needed&&safety<source.length+needed+8){
-  const pool=candidates();
-  if(!pool.length)break;
-
-  let nextIndex=-1;
-  for(let i=Math.max(0,Math.min(cursor,pool.length-1));i<pool.length;i++){
-   if(!tried.has(String(pool[i]?.id||''))){nextIndex=i;break;}
-  }
-  if(nextIndex<0){
-   for(let i=0;i<Math.min(cursor,pool.length);i++){
-    if(!tried.has(String(pool[i]?.id||''))){nextIndex=i;break;}
-   }
-  }
-  if(nextIndex<0)break;
-
-  const row=pool[nextIndex];
-  tried.add(String(row?.id||''));
+ await Promise.all(targets.map(async row=>{
   const data=await loadRestaurantPhoto(row).catch(()=>null);
-  const ok=!!data?.url&&await waitForRestaurantPhotoDecoded(data.url);
-  if(ok)readyIds.push(row.id);
-  else{
-   row._photoUnavailable=true;
-   row._photoUnavailableAt=Date.now();
-  }
-
-  cursor=nextIndex+1;
-  safety++;
- }
-
- const currentPool=basePool();
- const first=currentPool.find(row=>readyIds.includes(row.id));
- return {firstId:String(first?.id||''),readyIds};
+  if(data?.url&&await waitForRestaurantPhotoDecoded(data.url))readyIds.push(row.id);
+ }));
+ return {firstId:String(source[start]?.id||''),readyIds};
 }
 async function primeRestaurantPhotosBeforeFirstPaint(rows,startIndex=0){
  const pool=Array.isArray(rows)?rows:[];
@@ -1034,7 +1057,9 @@ function captureRestaurantDecisionState(){
  const activePhotoSrc=activeImg
   &&String(activeImg.dataset.restaurantPhotoKey||'')===activeId
   &&String(activeImg.dataset.restaurantPhotoLoaded||'')==='true'
+  &&String(activeImg.dataset.restaurantPhotoSource||'').trim().toLowerCase()!=='google-places'
   &&activeImg.complete&&activeImg.naturalWidth>0
+  &&!/^blob:/i.test(String(activeImg.currentSrc||activeImg.src||''))
   ?String(activeImg.currentSrc||activeImg.src||'').trim():'';
  return {
   activeCard:{id:activeId,photoSrc:activePhotoSrc},

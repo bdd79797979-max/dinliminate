@@ -1,18 +1,18 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1376,
-  "sourceBranch": "fix/restaurant-waiting-card",
+  "build": 1377,
+  "sourceBranch": "fix/restaurant-photo-coverage",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1376",
-  "deploymentTrigger": "fix/restaurant-waiting-card",
+  "checkpoint": "CP1377",
+  "deploymentTrigger": "fix/restaurant-photo-coverage",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
-  "restaurantPhotoCertification": "Google exact name+address+location validation; central place-photo quota guard; no generic/neutral fallback",
+  "restaurantPhotoCertification": "exact venue verification; Google images no-store and not persistently reused; Place IDs retained; active-card-only Google photo requests; structured hit/miss/error telemetry; no-photo card placeholder and stable deck order",
   "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing",
   "restaurantDecisionUI": "four-control parity, no active-card resize during swipe, in-card first-swipe lesson, target-aware search diagnosis",
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
@@ -63,5 +63,6 @@
   "radiusBlackBackground": "Phone Radius control and option surfaces use #090909 in resting, hover, focus, and active states; regression checks cover 390px and 412px viewports.",
   "homeChoiceContrast": "CP1371 strengthens visibility of the warm-ivory Home and Restaurant labels with a crisp dark text edge and layered dark shadow; gold diagonal arrows get a clearly visible dark shadow and restrained gold halo. No backing, layout, or tap-area changes.",
   "sloganTypography": "CP1372: Homepage keeps the complete single sentence “Swipe Away Meal Indecision.” in restrained champagne-gold serif italic; position, wording, color, transparent background, and Home/Restaurant label-and-arrow treatment otherwise unchanged.",
-  "swipeMaybePill": "CP1373: During rightward Meal/Restaurant card swipes, the MAYBE pill uses green text and border with a subtle dark-green fill in both drag-preview and committed-fill states; leftward CUT styling and swipe behavior remain unchanged. Also synchronizes the service-worker precache list with the stamp script while retaining the homepage door image."
+  "swipeMaybePill": "CP1373: During rightward Meal/Restaurant card swipes, the MAYBE pill uses green text and border with a subtle dark-green fill in both drag-preview and committed-fill states; leftward CUT styling and swipe behavior remain unchanged. Also synchronizes the service-worker precache list with the stamp script while retaining the homepage door image.",
+  "photoPolicy": "Google Places image content is on-demand and not cached; Place IDs may be retained; non-Google cache is source-aware and rights-dependent; neutral placeholder prevents blank cards"
 }
