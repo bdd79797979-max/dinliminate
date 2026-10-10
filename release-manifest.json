@@ -1,18 +1,18 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1381,
-  "sourceBranch": "fix/restaurant-photo-api-helper",
+  "build": 1382,
+  "sourceBranch": "fix/restaurant-waiting-photo-promotion",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1381",
-  "deploymentTrigger": "fix/restaurant-photo-api-helper",
+  "checkpoint": "CP1382",
+  "deploymentTrigger": "fix/restaurant-waiting-photo-promotion",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
-  "restaurantPhotoCertification": "Google budget health verified; photo resolver invalid-input path handled with shared JSON helper; active-card on-demand photo; neutral fallback; waiting-card race guard",
+  "restaurantPhotoCertification": "durable tracker verified on CP1380 preview; API missing-name 400 fix from CP1381; waiting-card cached/in-flight source preservation fix from CP1382; source-aware Google image non-caching; active-only request",
   "restaurantHoursReliability": "Google openNow when available; official/OSM hours fallback; coordinate-based IANA timezone; multi-interval and cross-midnight parsing",
   "restaurantDecisionUI": "four-control parity, no active-card resize during swipe, in-card first-swipe lesson, target-aware search diagnosis",
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
@@ -64,5 +64,5 @@
   "homeChoiceContrast": "CP1371 strengthens visibility of the warm-ivory Home and Restaurant labels with a crisp dark text edge and layered dark shadow; gold diagonal arrows get a clearly visible dark shadow and restrained gold halo. No backing, layout, or tap-area changes.",
   "sloganTypography": "CP1372: Homepage keeps the complete single sentence “Swipe Away Meal Indecision.” in restrained champagne-gold serif italic; position, wording, color, transparent background, and Home/Restaurant label-and-arrow treatment otherwise unchanged.",
   "swipeMaybePill": "CP1373: During rightward Meal/Restaurant card swipes, the MAYBE pill uses green text and border with a subtle dark-green fill in both drag-preview and committed-fill states; leftward CUT styling and swipe behavior remain unchanged. Also synchronizes the service-worker precache list with the stamp script while retaining the homepage door image.",
-  "photoPolicy": "Google image content not cached; Place IDs retained; active-card-only requests; no-photo outcomes do not alter deck order"
+  "photoPolicy": "Google image content not cached; Place IDs retained; active-card-only photo resolution; fallback card stays stable when photo is unavailable"
 }

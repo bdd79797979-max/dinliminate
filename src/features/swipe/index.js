@@ -427,12 +427,20 @@ function stageSwipePreview(card,img,src,key){
  card.style.visibility='hidden';
  img.decoding='async';
  img.dataset.swipePreviewSrc=String(src);
- // Remove the previous decoded source while the waiting card is hidden, then
- // install listeners before starting the new request. This closes the race
- // where a cached image completes before listeners attach.
- img.removeAttribute('src');
+ // Render inserts the intended src before this function runs. Keep that
+ // request alive when it already targets the same URL: clearing and reassigning
+ // it can discard a cached/in-flight load event and leave the standalone card
+ // hidden forever. Otherwise, attach listeners before starting the new request.
+ const resolveUrl=value=>{try{return new URL(String(value||''),document.baseURI).href;}catch{return String(value||'');}};
+ const currentAttr=String(img.getAttribute('src')||'').trim();
+ const currentSource=String(img.currentSrc||img.src||currentAttr).trim();
+ const targetSource=String(src).trim();
+ const sameSource=!!targetSource&&(
+  resolveUrl(currentAttr)===resolveUrl(targetSource)||
+  (!!currentSource&&resolveUrl(currentSource)===resolveUrl(targetSource))
+ );
  const ready=waitForSwipeImage(img,card,previewKey);
- img.src=String(src);
+ if(!sameSource)img.src=targetSource;
  card.__swipePreviewReadyPromise=ready;
  ready.then(ok=>{
   if(String(card.dataset.swipePreviewToken||'')!==nextToken)return;
