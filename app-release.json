@@ -1,15 +1,15 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1394,
+  "build": 1395,
   "sourceBranch": "fix/restaurant-photo-budget-no-photo-state",
-  "checkpoint": "CP1394",
+  "checkpoint": "CP1395",
   "deploymentTrigger": "fix/restaurant-photo-budget-no-photo-state",
   "vercelProductionVerified": false,
   "swipeAudit": "CP1318 prevents an old asynchronous image request from overwriting a reused active card, fences restaurant handoff reveal by draw sequence and row ID, normalizes duplicate IDs in a restored Meal deck, and binds swipe decisions to their captured row. Existing CP1312 transform/handoff fixes retained. CP1320: Restaurant handoff no longer hides the newly selected card while asynchronous photo enrichment resolves; the active card exposes its stable restaurant ID for repeat detection. CP1320 was validated by 140 passing automated tests, including successive Restaurant swipes without repeated cut results or blank cards; CP1321 preserves the handoff logic unchanged. CP1320 regression run passed 140 tests, including consecutive Restaurant swipes with no repeats or blank cards; CP1322 preserves swipe logic unchanged. CP1320 passed 140 tests including sequential Restaurant swipes; later CP1322 suite had 135 passed and only 5 identical failures caused by an outdated expected SVG path in the visual test, corrected in CP1323. Swipe business logic unchanged. CP1324/1325 fix the stale waiting Meal card: after a swipe handoff, a guarded callback refreshes the waiting preview only once the newly active Meal is ready, fenced by active row identity and image-load token. Consecutive-swipe regression test checks active and waiting IDs. CP1326 updates next Meal card identity synchronously when the active deck selection changes and fences async preview completion by render generation plus meal ID. New slow-photo handoff regression asserts B no longer remains as the waiting card while B's active photo is pending. CP1327 keeps CP1326 immediate waiting Meal-card identity refresh and async render-sequence fencing, and fixes the release tooling so the delayed-photo regression actually runs. CP1328 retains synchronous waiting Meal-preview identity refresh and async render-sequence fencing; delayed active-image test now uses DOMContentLoaded during blocked-image setup. CP1329 preserves CP1325 sequential active/waiting Meal-card identity assertions and CP1328 slow-photo handoff sequencing; the latest automated run passed both swipe regressions while menu-anchor tests exposed and localized a positioning bug.",
   "visualParity": "CP952-restaurant-maybe-state-parity",
   "photoBehavior": "active-card on-demand photo > existing permitted exact-venue photo > official/exact venue alternatives > intentional neutral restaurant art",
-  "photoPolicy": "existing verified quality photo > Google Places > official restaurant > exact venue > OSM > branded non-photographic no-photo state; one active and one waiting card prioritized; no multi-card lookahead; photo readiness never changes deck order",
+  "photoPolicy": "Google photo references are no-store and not persisted; exact venue match required; active and one waiting card prioritization retained; one best photo plus at most one backup after a non-quota failure.",
   "restaurantInfoPolicy": "Google first on detail enrichment > official restaurant website > verified venue data > unknown",
   "googleHardStops": "photos:900; text-search-pro:4500; nearby-search-pro:4500; text-search-enterprise:900; nearby-search-enterprise:900; place-details-enterprise:900; place-details-pro:4500; place-details-essentials:9000",
   "googleBillingMonth": "America/Los_Angeles calendar month",
@@ -21,7 +21,7 @@
   "googleBudgetTracker": "Durable Neon SKU tracker exposed in Settings through the read-only /api/google-usage endpoint; eight SKU-specific monthly hard stops remain server-side; tracker refresh makes no Google API requests.",
   "googleUsageEndpoint": "/api/google-usage (read-only; Used/Cap/Remaining/%/status)",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
-  "restaurantPhotoCertification": "Google exact name+address+location validation; field masks counted against the correct SKU; one best-ranked Google media attempt per venue lookup; Google image no-store and not persisted; active and single waiting card prioritized; branded no-photo state prevents blank image areas without removing restaurants",
+  "restaurantPhotoCertification": "Google exact venue validation; known Place IDs use Details Pro for photos; absent Place IDs use exact-match Text Search Pro with photos to avoid a redundant Details call; photo references stay request-local; one best photo plus at most one quota-aware backup.",
   "restaurantHoursReliability": "Open filter uses existing/cached or verified official-website hours; unknown hours remain unverified without Google calls. Place Details Enterprise is reserved for an explicit restaurant-details request.",
   "restaurantDecisionUI": "four-control parity, no active-card resize during swipe, in-card first-swipe lesson, target-aware search diagnosis",
   "familyModeIntegration": "normal Meal/Restaurant screens, canonical host snapshot, restaurant Maybe submission fix, non-blocking stage cues",
@@ -79,5 +79,6 @@
   "googleUsageSettings": "Settings Google Usage view displays monthly tracked requests, caps, remaining count, percent used, per-SKU warning/disabled states, durable tracker status, and next Pacific-time billing reset; unknown usage is never displayed as zero; manual refresh only reads /api/google-usage.",
   "googleUsageOptimization": "Routine Nearby Search uses Pro-tier fields; opening-hours fields are resolved through the existing targeted hours flow; Home does not fetch an unused restaurant photo.",
   "textSearchBudgetPolicy": "Routine name/cuisine Text Search uses Pro-tier fields without opening-hours fields; Place Details Enterprise is called only after the user explicitly opens restaurant details.",
-  "openFilterBudgetPolicy": "The Open filter can read known/cached hours and check official restaurant websites, but never calls Google Enterprise Place Details or Text Search. Unknown hours remain unverified; Place Details Enterprise is reserved for mode=details."
+  "openFilterBudgetPolicy": "The Open filter can read known/cached hours and check official restaurant websites, but never calls Google Enterprise Place Details or Text Search. Unknown hours remain unverified; Place Details Enterprise is reserved for mode=details.",
+  "googlePhotoSpeedPolicy": "CP1395 obtains photo metadata in the on-demand exact Text Search when a Google Place ID is missing, avoiding a second Details Pro request. If the best photo media fails temporarily, one backup is attempted; quota blocks stop immediately. Google photo names are request-local and never cached."
 }

@@ -7,7 +7,7 @@ process.env.GOOGLE_MASTER_ENABLED = 'true';
 
 const usagePath = require.resolve('../../api/google-usage');
 const originalUsage = require(usagePath);
-const state = { reservations: [], disabled: [], mediaRequests: [] };
+const state = { reservations: [], disabled: [], mediaRequests: [], searchRequests: [] };
 require.cache[usagePath].exports = {
   ...originalUsage,
   reserveGoogleSku: async (sku, limit) => {
@@ -56,6 +56,7 @@ function reset() {
   state.reservations.length = 0;
   state.disabled.length = 0;
   state.mediaRequests.length = 0;
+  state.searchRequests.length = 0;
 }
 function requestInput() {
   return {
@@ -110,8 +111,35 @@ async function main() {
     reset();
     const result = await photo._test.tryGoogleRestaurantPhoto(requestInput());
     assert.equal(result, null);
-    assert.equal(state.mediaRequests.length, 1, 'a failed best photo must not trigger a second Google media request');
+    assert.equal(state.mediaRequests.length, 2, 'a failed best photo allows exactly one backup media request');
+    assert.match(state.mediaRequests[0], /photo-best\/media\?/);
+    assert.match(state.mediaRequests[1], /photo-second\/media\?/);
     assert.deepEqual(state.disabled, [], 'a temporary media failure must not disable the monthly SKU');
+  });
+
+  await withMockFetch(async (url, options = {}) => {
+    const value = String(url);
+    if (value.endsWith('/v1/places:searchText')) {
+      state.searchRequests.push({fieldMask:String(options.headers?.['X-Goog-FieldMask']||'')});
+      return makeResponse({places:[PLACE]});
+    }
+    if (value.includes('/media?')) {
+      state.mediaRequests.push(value);
+      return makeResponse(Buffer.alloc(5001, 0x22), 200, 'image/jpeg');
+    }
+    throw new Error('Unexpected Google URL: ' + value);
+  }, async () => {
+    reset();
+    const input = requestInput();
+    delete input.placeId;
+    const result = await photo._test.tryGoogleRestaurantPhoto(input);
+    assert.equal(result?.source, 'google-places');
+    assert.equal(state.searchRequests.length, 1);
+    assert.match(state.searchRequests[0].fieldMask, /places\.photos/);
+    assert.ok(state.reservations.some(entry => entry.sku === 'text-search-pro' && entry.limit === 4500));
+    assert.ok(state.reservations.some(entry => entry.sku === 'place-photo' && entry.limit === 900));
+    assert.ok(!state.reservations.some(entry => entry.sku === 'place-details-pro'), 'photo metadata from Text Search avoids a redundant Details Pro call');
+    assert.equal(state.mediaRequests.length, 1);
   });
 
   await withMockFetch(async url => {
@@ -141,9 +169,10 @@ async function main() {
     const result = await photo._test.tryGoogleRestaurantPhoto(requestInput());
     assert.equal(result, null);
     assert.deepEqual(state.disabled, ['place-photo'], 'a photo-media quota error must disable only the photo SKU');
+    assert.equal(state.mediaRequests.length, 1, 'a quota block must stop immediately without trying the backup');
   });
 
-  console.log('Google photo SKU budgeting and request caps: PASS');
+  console.log('Google photo fast path, one fallback, and SKU budget caps: PASS');
 }
 
 main().catch(error => {

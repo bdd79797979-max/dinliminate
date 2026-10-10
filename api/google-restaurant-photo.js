@@ -84,7 +84,14 @@ async function googlePhotoMedia(photoName){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),7000);
   try{
     const res=await fetch(url,{signal:ctl.signal,headers:{'Accept':'image/avif,image/webp,image/jpeg,image/png','X-Goog-Api-Key':GOOGLE_PLACES_API_KEY,'User-Agent':'Dinliminate/1.0 (Google Places photo)'}});
-    if(!res.ok){let body=null;try{body=await res.json()}catch(error){console.error('Dinliminate error',error)};if(isQuotaError(res.status,body))await disableGoogleSkuForMonth('place-photo');return null;}
+    if(!res.ok){
+      let body=null;try{body=await res.json()}catch(error){console.error('Dinliminate error',error);}
+      if(isQuotaError(res.status,body)){
+        await disableGoogleSkuForMonth('place-photo');
+        return {quotaBlocked:true};
+      }
+      return null;
+    }
     const type=(res.headers.get('content-type')||'').split(';')[0].toLowerCase();
     if(!type.startsWith('image/')||type==='image/svg+xml'||type==='image/svg')return null;
     const bytes=Buffer.from(await res.arrayBuffer());
@@ -112,6 +119,30 @@ async function findPlaceId(name,address,lat,lon,preferredPlaceId){
   if(exact?.id)return String(exact.id).trim();
   return '';
 }
+async function findPlaceWithPhotos(name,address,lat,lon){
+  const query=[clean(name,160),clean(address,240)].filter(Boolean).join(', ');
+  if(!query)return null;
+  const body={textQuery:query,pageSize:5};
+  if(Number.isFinite(Number(lat))&&Number.isFinite(Number(lon))){
+    body.locationBias={circle:{center:{latitude:Number(lat),longitude:Number(lon)},radius:1500}};
+  }
+  const budget=await reserveGoogleSku('text-search-pro',HARD_LIMITS['text-search-pro']);
+  if(!budget.ok)return null;
+  let data;
+  try{
+    data=await googleJson('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location,places.photos'},
+      body:JSON.stringify(body)
+    });
+  }catch(err){
+    if(isQuotaError(Number(err?.status)||0,err?.body))await disableGoogleSkuForMonth('text-search-pro');
+    throw err;
+  }
+  const candidates=Array.isArray(data.places)?data.places:[];
+  // Photo resource names are short-lived. Consume them in this request only.
+  return candidates.find(place=>place?.id&&exactPlaceMatch(place,name,address,lat,lon))||null;
+}
 async function getPlaceDetails(placeId){
   if(!placeId)return null;
   const budget=await reserveGoogleSku('place-details-pro',HARD_LIMITS['place-details-pro']);
@@ -133,14 +164,16 @@ async function tryGoogleRestaurantPhoto(input){
   if(!GOOGLE_PLACES_API_KEY||!googleServicesEnabled())return null;
   const args=input||{};
   try{
-    const id=await findPlaceId(args.name,args.address,args.lat,args.lon,args.placeId);
-    if(!id){
-      console.warn('dinliminate-google-photo-no-place',{name:clean(args.name,160),address:clean(args.address,240),placeId:clean(args.placeId,220)});
-      return null;
-    }
-    const place=await getPlaceDetails(id);
-    if(!place){
-      console.warn('dinliminate-google-photo-no-details',{name:clean(args.name,160),placeId:id});
+    const preferredId=clean(args.placeId,220);
+    const hasPreferredId=/^ChI[A-Za-z0-9_-]+$/.test(preferredId);
+    // Known IDs use Details Pro. Without an ID, fetch photos in the exact
+    // Text Search needed to resolve the venue, avoiding a separate Details call.
+    const place=hasPreferredId
+      ?await getPlaceDetails(preferredId)
+      :await findPlaceWithPhotos(args.name,args.address,args.lat,args.lon);
+    const id=String(place?.id||preferredId||'').trim();
+    if(!id||!place){
+      console.warn('dinliminate-google-photo-no-place',{name:clean(args.name,160),address:clean(args.address,240),placeId:id});
       return null;
     }
     const exact=exactPlaceMatch(place,args.name,args.address,args.lat,args.lon);
@@ -153,9 +186,16 @@ async function tryGoogleRestaurantPhoto(input){
       console.warn('dinliminate-google-photo-no-photos',{name:clean(args.name,160),placeId:id,formattedAddress:clean(place.formattedAddress,240)});
       return null;
     }
-    const ranked=photos.map((p,i)=>({photo:p,score:photoQuality(p,i)})).filter(x=>x.score>-500).sort((a,b)=>b.score-a.score);
-    for(const item of ranked.slice(0,1)){
-      const photo=item.photo,media=await googlePhotoMedia(photo.name);if(!media)continue;
+    const ranked=photos
+      .map((p,i)=>({photo:p,score:photoQuality(p,i)}))
+      .filter(x=>x.score>-500&&String(x.photo?.name||'').trim())
+      .sort((a,b)=>b.score-a.score)
+      .filter((item,index,all)=>all.findIndex(other=>other.photo.name===item.photo.name)===index);
+    // One best photo and at most one backup after a non-quota media failure.
+    for(const item of ranked.slice(0,2)){
+      const photo=item.photo,media=await googlePhotoMedia(photo.name);
+      if(media?.quotaBlocked)break;
+      if(!media)continue;
       const author=Array.isArray(photo.authorAttributions)?photo.authorAttributions.map(a=>({displayName:clean(a?.displayName,120),uri:clean(a?.uri,600)})).filter(a=>a.displayName&&/^https:\/\//i.test(a.uri)).slice(0,3):[];
       const googleMapsUri=clean(photo.googleMapsUri,800);
       const attributions=[{displayName:'Google',uri:googleMapsUri||'https://www.google.com/maps'},...author];
