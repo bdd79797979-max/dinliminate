@@ -51,7 +51,8 @@ const transforms = new Map([
       './tokens.css?v=' + build, './base.css?v=' + build, './chrome.css?v=' + build, './modal.css?v=' + build,
       './swipe.css?v=' + build, './home.css?v=' + build, './meals.css?v=' + build, './restaurants.css?v=' + build,
       './winner.css?v=' + build, './history.css?v=' + build, './family.css?v=' + build, './settings.css?v=' + build,
-      './tutorial.css?v=' + build, './menu.css?v=' + build
+      './tutorial.css?v=' + build, './menu.css?v=' + build,
+      './polish.css?v=' + build, './home-interactions.css?v=' + build
     ];
     out = out.replace(/const SHELL=\[[\s\S]*?\];/, 'const SHELL=' + JSON.stringify(shell) + ';');
     return out;
