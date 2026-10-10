@@ -1049,4 +1049,4 @@ html:root #restaurant .location-main .radius-select option{
 }
 
 /* Keep no-photo art hidden while a Restaurant photo lookup is pending. */
-html:root #restaurant .restaurant-card-stack img[data-restaurant-photo-pending="true"]{opacity:0!important;background:#090909;}
+html:root #restaurant .restaurant-card-stack img[data-restaurant-photo-pending="true"]{opacity:0;background:#090909;}
