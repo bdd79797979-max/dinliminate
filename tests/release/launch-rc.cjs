@@ -50,6 +50,9 @@ assert.ok(read('src/features/swipe/index.js').includes('const recyclesMaybeRound
 assert.ok(read('src/features/restaurants/index.js').includes('const recyclesMaybeRound=!!S.maybeDeck||!!S.restaurantMaybeRound;'),'Restaurant Maybe review must recycle continuously');
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 238px)'),'Home slogan must move upward by 2px on standard phone widths');
 assert.ok(homeCss.includes('bottom:calc(env(safe-area-inset-bottom) + 218px);font-size:10.5px'),'Home slogan must move upward by 2px on narrow phones');
+assert.ok(index.includes('<div class="home-slogan" id="home-slogan">Swipe Away Meal Indecision.</div>'),'Home slogan must remain the full sentence in one text node');
+assert.ok(homeCss.includes('font:italic 600 12px/1.25 Georgia,"Times New Roman",serif'),'Home slogan must use a restrained serif italic');
+assert.ok(homeCss.includes('letter-spacing:.035em;color:#e7cc91;text-shadow:0 2px 7px rgba(0,0,0,.72)'),'Home slogan must keep its champagne-gold color without a heavy glow or backing');
 assert.ok(css('restaurants.css').includes('justify-content:space-between;'),'Phone swipe controls must span the full available row width');
 assert.ok(css('menu.css').includes('CP1334: maximize phone discovery toolbar controls without wrapping'),'Phone discovery toolbar controls must use the responsive no-wrap layout');
 assert.ok(css('menu.css').includes('CP1335: desktop drawer geometry is tied to the actual hamburger'),'Desktop menu panel must align beneath the triggering hamburger');

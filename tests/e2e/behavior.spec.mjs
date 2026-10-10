@@ -2349,3 +2349,31 @@ test('reduced-motion homepage logo entrance uses opacity-only keyframes', async 
   const names = await page.locator('.dinliminate-logo-symbol').evaluate(el => el.getAnimations().map(a => a.animationName));
   expect(names).toContain('homeBrandFadeOnly');
 });
+
+test('homepage slogan is one complete champagne-gold serif italic sentence without backing', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.goto('/');
+  const slogan = page.locator('#home-slogan');
+  await expect(slogan).toBeVisible();
+  await expect(slogan).toHaveText('Swipe Away Meal Indecision.');
+
+  const style = await slogan.evaluate(el => {
+    const computed = getComputedStyle(el);
+    return {
+      fontStyle: computed.fontStyle,
+      fontFamily: computed.fontFamily,
+      color: computed.color,
+      backgroundColor: computed.backgroundColor,
+      borderWidth: computed.borderWidth,
+      childCount: el.children.length
+    };
+  });
+  expect(style.fontStyle).toBe('italic');
+  expect(style.fontFamily).toContain('Georgia');
+  expect(style.color).toBe('rgb(231, 204, 145)');
+  expect(style.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(style.borderWidth).toBe('0px');
+  expect(style.childCount).toBe(0);
+  expect(errors).toEqual([]);
+});
+

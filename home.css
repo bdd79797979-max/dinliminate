@@ -59,7 +59,7 @@ html:root .app.home-active #home #restStart .home-choice-content{transform:trans
 html:root .app.home-active #home #foodStart .home-choice-content{transform:translate(-3px,-1px)}
 html:root .app.home-active #home #restStart .home-choice-content{transform:translate(2px,-1px)}
 }
-html:root .app.home-active #home .home-slogan{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 238px);z-index:35;margin:0;padding:0 16px;text-align:center;font:600 12px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;letter-spacing:.13em;color:#e7cc91;text-shadow:0 2px 7px rgba(0,0,0,.72),0 0 10px rgba(231,204,145,.14)}
+html:root .app.home-active #home .home-slogan{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 238px);z-index:35;margin:0;padding:0 16px;text-align:center;font:italic 600 12px/1.25 Georgia,"Times New Roman",serif;letter-spacing:.035em;color:#e7cc91;text-shadow:0 2px 7px rgba(0,0,0,.72)}
 @media(max-width:390px){
 .app.home-active #home .home-slogan{bottom:calc(env(safe-area-inset-bottom) + 218px);font-size:10.5px}
 html:root .app.home-active #home .home-choice-content strong{font-size:12px;padding:5px 9px 4px;border-radius:6px}

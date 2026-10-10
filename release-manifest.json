@@ -1,14 +1,14 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1371,
-  "sourceBranch": "polish/stronger-home-choice-shadows",
+  "build": 1372,
+  "sourceBranch": "polish/italic-home-slogan",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1371",
-  "deploymentTrigger": "polish/stronger-home-choice-shadows",
+  "checkpoint": "CP1372",
+  "deploymentTrigger": "polish/italic-home-slogan",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "single durable Neon SKU tracker",
   "restaurantSearchCore": "strict server-side query match + same-place naming dedupe + stale-target protection",
@@ -61,5 +61,6 @@
   "releaseStampSync": "CP1367 synchronizes APP_BUILD, release metadata, HTML/PWA asset query strings and versioned service-worker shell cache; homepage logo animation and reduced-motion variants are covered by E2E tests.",
   "inCardSwipeCoach": "First-entry Cut / Swipe / Maybe directions remain centered on the active card and use a compact black box with a subtle gold edge at phone widths up to 430px. Existing first-interaction dismissal is retained; desktop styling is unchanged.",
   "radiusBlackBackground": "Phone Radius control and option surfaces use #090909 in resting, hover, focus, and active states; regression checks cover 390px and 412px viewports.",
-  "homeChoiceContrast": "CP1371 strengthens visibility of the warm-ivory Home and Restaurant labels with a crisp dark text edge and layered dark shadow; gold diagonal arrows get a clearly visible dark shadow and restrained gold halo. No backing, layout, or tap-area changes."
+  "homeChoiceContrast": "CP1371 strengthens visibility of the warm-ivory Home and Restaurant labels with a crisp dark text edge and layered dark shadow; gold diagonal arrows get a clearly visible dark shadow and restrained gold halo. No backing, layout, or tap-area changes.",
+  "sloganTypography": "CP1372: Homepage keeps the complete single sentence “Swipe Away Meal Indecision.” in restrained champagne-gold serif italic; position, wording, color, transparent background, and Home/Restaurant label-and-arrow treatment otherwise unchanged."
 }
