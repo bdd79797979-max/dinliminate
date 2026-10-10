@@ -13,7 +13,7 @@ import { openModal, detailsSheet, appConfirm } from '../../ui/modal.js';
 import { winner } from '../winner/index.js';
 import { familyEnterMaybes, familyPickSingle } from '../family/index.js';
 import { tutorialModeEnabled, tutorialState, tutorialEnterDecisionScreen, tutorialMarkChoose } from '../tutorial/index.js';
-import { normKey, restaurantImmediatePhoto, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
+import { normKey, restaurantImmediatePhoto, waitForRestaurantPhotoDecoded, loadRestaurantPhoto, hydrateRestaurantPhoto, HUNGRY_IMAGE, FINAL_RESTAURANT_IMAGE, RESTAURANT_PHOTO_PREFETCH_COUNT, previewDecisionCount } from '../../main.js';
 
 let restaurantBackBusy=false;
 const REST_QUICK=[...RESTAURANT_TAXONOMY.tags];
