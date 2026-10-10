@@ -65,7 +65,7 @@ assert.ok(index.includes('id="familyDrawerBg"')&&index.includes('id="familyClose
 assert.ok(e2e.includes('CP1329 decision colors, label-sized gold arrows, and trigger-aligned uniform menu windows'),'Mobile drawer alignment regression test must remain present');
 assert.ok(fs.existsSync(path.join(root,'tests/e2e/desktop-drawers.spec.mjs'))&&fs.existsSync(path.join(root,'playwright.config.mjs')),'Desktop drawer regression test and project config must exist');
 assert.ok(e2e.includes('CP1334 phone discovery toolbars maximize their controls without wrapping'),'Release audit must cover enlarged Meals/Restaurant toolbars at phone widths');
-assert.ok(css('restaurants.css').includes('@media(max-width:430px){\n html:root #food .unified-swipe-actions,'),'Full-width swipe-control distribution must be phone-only');
+assert.ok(css('restaurants.css').replace(/\r\n/g,'\n').includes('@media(max-width:430px){\n html:root #food .unified-swipe-actions,'),'Full-width swipe-control distribution must be phone-only');
 
 const tutorialSource=read('src/features/tutorial/index.js');
 for(const copy of ["Include this meal in your Maybes, or swipe right.","Exclude this meal, or swipe left.","Include this restaurant in your Maybes, or swipe right.","Exclude this restaurant, or swipe left."])assert.ok(tutorialSource.includes(copy),'Tour must explain the decision and swipe direction: '+copy);
