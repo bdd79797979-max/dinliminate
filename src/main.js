@@ -80,7 +80,7 @@ const APP_VERSION = '1.0';
 
 // CP973 — photo-ready Restaurant first paint + four-card swipe prewarm.
 // CP1070: one-at-a-time Restaurant refine panels + category-aware Cuisine filtering.
-const APP_BUILD = '1395';
+const APP_BUILD = '1396';
 const APP_BUILD_DATE = '2026-10-10';
 const MEAL_AUTOFILL_ENABLED = false;
 const HUNGRY_IMAGE = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="1200" height="800" rx="52" fill="#090909"/><circle cx="600" cy="400" r="170" fill="none" stroke="#f5f1e8" stroke-width="18"/><circle cx="535" cy="365" r="14" fill="#f5f1e8"/><circle cx="665" cy="365" r="14" fill="#f5f1e8"/><path d="M515 495c52-62 118-62 170 0" fill="none" stroke="#f5f1e8" stroke-width="18" stroke-linecap="round"/></svg>');
@@ -1002,7 +1002,7 @@ const allFoods = () => {
  const customOnly=S.custom.filter(x=>!defaultIds.has(String(x.id))&&!deletedIds.has(String(x.id))).map(x=>Object.assign({},x,{quickCuts:Array.isArray(x.quickCuts)&&x.quickCuts.length?x.quickCuts:[x.category||'American'],mealTimes:mealTimesFor(x)}));
  return merged.concat(customOnly);
 };
-const STORAGE_VERSION = 7;
+const STORAGE_VERSION = 8;
 const DECISION_HISTORY_LIMIT = 256;
 
 function clearDecisionHistory(kind){
@@ -1077,7 +1077,7 @@ function captureRestaurantDecisionState(){
   restaurantQuery:String(S.restaurantQuery||''),
   restaurantHours:String(S.restaurantHours||'all')==='open'?'open':'all',
   restaurantHoursCollapsed:!!S.restaurantHoursCollapsed,
-  restaurantSearchRadius:Number(S.restaurantSearchRadius)||10,
+  restaurantSearchRadius:Number(S.restaurantSearchRadius)||5,
   restaurantSearchKey:String(S.restaurantSearchKey||''),
   restaurantSearchQuery:String(S.restaurantSearchQuery||''),
   restaurantSearchOrigin:S.restaurantSearchOrigin&&Number.isFinite(Number(S.restaurantSearchOrigin.lat))&&Number.isFinite(Number(S.restaurantSearchOrigin.lon))
@@ -1130,7 +1130,7 @@ function restoreRestaurantDecisionState(state){
  S.restaurantQuery=String(state.restaurantQuery||'');
  S.restaurantHours=String(state.restaurantHours||'all')==='open'?'open':'all';
  S.restaurantHoursCollapsed=!!state.restaurantHoursCollapsed;
- S.restaurantSearchRadius=Number(state.restaurantSearchRadius)||10;
+ S.restaurantSearchRadius=Number(state.restaurantSearchRadius)||5;
  S.restaurantSearchKey=String(state.restaurantSearchKey||'');
  S.restaurantSearchQuery=String(state.restaurantSearchQuery||'');
  S.restaurantSearchOrigin=state.restaurantSearchOrigin&&Number.isFinite(Number(state.restaurantSearchOrigin.lat))&&Number.isFinite(Number(state.restaurantSearchOrigin.lon))
@@ -1631,7 +1631,7 @@ $('find').onclick = () => {
   searchRestaurants();
 };
 $('radius').addEventListener('change', event => {
- const selectedRadius=Math.min(100,Math.max(1,Number(event?.currentTarget?.value)||10));
+ const selectedRadius=Math.min(100,Math.max(1,Number(event?.currentTarget?.value)||5));
  const hasLocation=!!S.location || !!$('address')?.value.trim();
  if(!hasLocation){$('status').textContent='Enter an address or use your location.';renderFindButton();return;}
  searchRestaurants({radius:selectedRadius});

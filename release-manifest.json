@@ -1,13 +1,13 @@
 {
   "name": "Dinliminate",
   "version": "1.0",
-  "build": 1395,
+  "build": 1396,
   "sourceBranch": "fix/restaurant-photo-budget-no-photo-state",
   "releaseMode": "production",
   "production": false,
   "vercelProject": "dinliminate",
   "vercelProductionVerified": false,
-  "checkpoint": "CP1395",
+  "checkpoint": "CP1396",
   "deploymentTrigger": "fix/restaurant-photo-budget-no-photo-state",
   "googleMasterKillSwitch": true,
   "googleBudgetTracker": "Durable Neon SKU accounting surfaced in Settings; read-only /api/google-usage; eight SKU-specific monthly caps; Settings refresh does not call Google APIs.",
@@ -71,5 +71,6 @@
   "nearbySearchBudgetPolicy": "Routine nearby discovery uses Pro-tier fields without opening-hours fields; the Open filter checks only known/cached or official-site hours and never calls Google; Home startup does not request an unused restaurant photo.",
   "textSearchBudgetPolicy": "Routine name/cuisine Text Search uses Pro-tier fields without opening-hours fields; Place Details Enterprise is reserved for explicit restaurant-details requests.",
   "openFilterBudgetPolicy": "The Open filter never calls Google Enterprise Place Details or Text Search. Unknown hours remain unverified; Place Details Enterprise is reserved for mode=details.",
-  "googlePhotoSpeedPolicy": "CP1395 obtains photo metadata in the on-demand exact Text Search when a Google Place ID is missing, avoiding a second Details Pro request. If the best photo media fails temporarily, one backup is attempted; quota blocks stop immediately. Google photo names are request-local and never cached."
+  "googlePhotoSpeedPolicy": "CP1395 obtains photo metadata in the on-demand exact Text Search when a Google Place ID is missing, avoiding a second Details Pro request. If the best photo media fails temporarily, one backup is attempted; quota blocks stop immediately. Google photo names are request-local and never cached.",
+  "radiusOptions": "1, 3, 5, 10, 15, 25, 50, 100 miles; default 5 miles; exact-distance and provider search behavior unchanged."
 }

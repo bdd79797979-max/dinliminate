@@ -121,6 +121,17 @@ assert.match(storeSource,/export const store=Object\.freeze\(\{/,'store module m
 assert.match(storeSource,/get\(key\)/,'central store must expose get');
 assert.match(storeSource,/set\(key,value\)/,'central store must expose set');
 assert.match(storeSource,/subscribe\(listener\)/,'central store must expose subscribe');
+const radiusOptionsMarkup=index.match(/<select id="radius"[^>]*>([\\s\\S]*?)<\\/select>/)?.[1]||'';
+assert.ok(radiusOptionsMarkup,'Restaurant radius selector must exist');
+assert.deepEqual([...radiusOptionsMarkup.matchAll(/<option value="(\\d+)"/g)].map(match=>Number(match[1])),[1,3,5,10,15,25,50,100],'Restaurant radius options must remain ordered from 1 to 100 miles and include 15');
+assert.match(radiusOptionsMarkup,/<option value="5" selected>5 mi<\\/option>/,'Restaurant radius must default to 5 miles');
+assert.match(storeSource,/restaurantSearchRadius:5/,'New app state must default the radius to 5 miles');
+assert.ok(main.includes('restaurantSearchRadius:Number(S.restaurantSearchRadius)||5'),'Main state snapshot must default radius to 5 miles');
+assert.ok(main.includes('Number(state.restaurantSearchRadius)||5'),'Restored radius state fallback must be 5 miles');
+assert.ok(main.includes('Number(event?.currentTarget?.value)||5'),'Radius change fallback must be 5 miles');
+assert.ok(read('api/restaurants.js').includes('const DEFAULT_RADIUS=5;'),'API fallback radius must be 5 miles');
+assert.ok(read('src/state/migrations.js').includes('previousSchemaVersion<8&&Number(d.restaurantSearchRadius)===10'),'Old saved 10-mile default must migrate once to 5 miles');
+
 assert.ok(read('index.html').includes('<script type="module" src="./src/main.js"></script>'),'production entry must be native ESM');
 const swipeMachineSource=read('src/features/swipe/swipeMachine.js');
 assert.ok(swipeMachineSource.includes("const mediaPending=card.dataset.mediaPending==='true'"),'swipe cleanup must preserve pending media visibility');

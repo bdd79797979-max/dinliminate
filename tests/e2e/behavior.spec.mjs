@@ -121,7 +121,7 @@ async function prepare(page) {
           contentType: 'application/json',
           body: JSON.stringify({
             ok: true,
-            radiusMiles: Number(url.searchParams.get('radius') || 10),
+            radiusMiles: Number(url.searchParams.get('radius') || 5),
             searchQuery: url.searchParams.get('q') || '',
             searchLatencyMs: 2,
             hoursTimeZone: 'America/Chicago',

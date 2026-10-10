@@ -9,7 +9,7 @@ let deps={
   mealPhotoList:item=>Array.isArray(item?.images)?item.images.filter(Boolean):(item?.image?[item.image]:[]),
   dedupeMealPhotos:photos=>Array.isArray(photos)?[...new Set(photos.filter(Boolean))]:[],
   DEFAULT_FOOD_IMAGE:'',
-  STORAGE_VERSION:7,
+  STORAGE_VERSION:8,
   KEY:'dinliminate:v1'
 };
 export function configureStorage(next={}){ deps={...deps,...next}; }

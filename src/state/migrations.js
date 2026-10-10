@@ -9,7 +9,7 @@ let currentMealTimeName;
 let mealPhotoList;
 let normKey;
 let DEFAULT_FOOD_IMAGE='';
-let STORAGE_VERSION=7;
+let STORAGE_VERSION=8;
 let KEY='dinliminate:v1';
 const OLD_PRIMARY_KEY='dinliminate.clean.cp1';
 const LEGACY_KEYS=Object.freeze([OLD_PRIMARY_KEY,'dinliminate.item.notes.v1','dinliminate.clean.history','dinliminate.family.v1','dinliminate.restaurant.websites.v1','dinliminate.start-screen','dinliminate.swipeHint.v4','dinliminate.swipeHint.v5']);
@@ -32,6 +32,8 @@ function load(){
     const hasLegacy=!!legacyPrimary||legacy.history.length>0||Object.keys(legacy.notes).length>0||!!legacy.familySession||Object.keys(legacy.restaurantWebsiteCache).length>0||!!legacy.startScreen||legacy.swipeHintDismissed;
     if(!primary&&!legacyPrimary&&!hasLegacy)return false;
     const d=JSON.parse(primary||legacyPrimary||'{}');
+    const previousSchemaVersion=Number(d.schemaVersion||0);
+    if(previousSchemaVersion<8&&Number(d.restaurantSearchRadius)===10)d.restaurantSearchRadius=5;
     if(!Array.isArray(d.history)||!d.history.length)d.history=legacy.history;
     if(!d.notes||typeof d.notes!=='object'||Array.isArray(d.notes))d.notes=legacy.notes;
     if(!d.familySession&&legacy.familySession)d.familySession=legacy.familySession;
