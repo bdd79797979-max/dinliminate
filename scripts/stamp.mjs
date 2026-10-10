@@ -33,8 +33,8 @@ function stampLocalVersions(value) {
 
 const transforms = new Map([
   ['src/main.js', value => {
-    let out = value.replace(/const APP_BUILD = '\\d+';/, "const APP_BUILD = '" + build + "';");
-    out = out.replace(/const APP_BUILD_DATE = '\\d{4}-\\d{2}-\\d{2}';/, "const APP_BUILD_DATE = '" + buildDate + "';");
+    let out = value.replace(/const APP_BUILD = '[^']+';/, "const APP_BUILD = '" + build + "';");
+    out = out.replace(/const APP_BUILD_DATE = '[^']+';/, "const APP_BUILD_DATE = '" + buildDate + "';");
     return out;
   }],
   ['index.html', stampLocalVersions],
