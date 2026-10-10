@@ -110,12 +110,8 @@ async function prepare(page) {
     if (url.pathname === '/api/restaurant-photo') {
       await route.fulfill({
         status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ok: true,
-          url: TINY_PNG_DATA,
-          attributions: []
-        })
+        contentType: 'image/png',
+        body: TINY_PNG
       });
       return;
     }
@@ -1274,6 +1270,29 @@ test('Meal handoff keeps the next card hidden until its matching photo is ready'
   await expectNoPageErrors(errors);
 });
 
+
+test('Standalone Restaurant waiting card is promoted after its photo is decoded', async ({ page }) => {
+  const errors = await prepare(page);
+  await page.goto('/');
+  await page.evaluate(() => document.documentElement.classList.add('dinliminate-standalone'));
+  await page.locator('#restStart').click();
+  await expect(page.locator('#restaurant')).toBeVisible();
+  await expect.poll(
+    () => page.locator('#restaurantMaybeDeck').getAttribute('data-all-count'),
+    { timeout: 12000 }
+  ).toBe('2');
+
+  const waiting = page.locator('#restaurantNextCard');
+  await expect(waiting).toHaveAttribute('data-swipe-promoted', '1', { timeout: 12000 });
+  await expect(waiting).toHaveCSS('visibility', 'visible');
+  await expect(waiting).toHaveCSS('opacity', '1');
+  await expect(waiting.locator('h3')).toHaveText('Mock Taco House');
+  await expect.poll(
+    () => waiting.locator('img').evaluate(img => img.complete && img.naturalWidth > 0),
+    { timeout: 12000 }
+  ).toBe(true);
+  await expectNoPageErrors(errors);
+});
 
 test('CP1320 Restaurant swipe advances to the next result and resets the outgoing card', async ({ page }) => {
   const errors = await prepare(page);

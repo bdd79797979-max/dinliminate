@@ -1077,11 +1077,15 @@ if(nextRow&&restaurantNextCard&&restaurantNextImageEl){
   loadRestaurantPhoto(nextRow).then(async data=>{
    if(!data?.url)return null;
    if(!restaurantNextCard.isConnected)return data.url;
-   if(String(restaurantNextCard.dataset.swipePreviewKey||'')!==String(nextRow.id||''))return data.url;
-   const swapped=await swapImageWhenReady(restaurantNextImageEl,data.url);
+   if(String(restaurantNextImageEl.dataset.restaurantPhotoKey||'')!==String(nextRow.id||''))return data.url;
+   const existingSrc=String(restaurantNextImageEl.dataset.swipePreviewSrc||'');
+   const pendingPreview=restaurantNextCard.__swipePreviewReadyPromise;
+   const swapped=existingSrc===String(data.url)&&pendingPreview
+    ?await pendingPreview
+    :await stageSwipePreview(restaurantNextCard,restaurantNextImageEl,data.url,nextRow.id);
    if(swapped){
     restaurantNextImageEl.dataset.restaurantPhotoLoaded='true';
-    setRestaurantPhotoCredit(restaurantNextCard,data.attributions);
+    setRestaurantPhotoCredit(restaurantNextCard,data.attributions,data.source,data.sourceUrl);
    }
    return data.url;
   }).catch(()=>null);

@@ -418,6 +418,7 @@ function stageSwipePreview(card,img,src,key){
  card.dataset.swipePreviewToken=nextToken;
  card.dataset.swipePreviewKey=previewKey;
  card.dataset.swipePreviewReady='0';
+ card.removeAttribute('data-swipe-promoted');
  card.__swipePreviewReadyPromise=null;
  card.style.transition='none';
  card.style.transform='scale(1)';
@@ -435,8 +436,11 @@ function stageSwipePreview(card,img,src,key){
   if(!card.isConnected||card.querySelector('img')!==img)return;
   card.dataset.swipePreviewReady=ok?'1':'0';
   if(ok){
+   card.dataset.swipePromoted='1';
    card.style.visibility='visible';
    card.style.transition='';
+  }else{
+   card.removeAttribute('data-swipe-promoted');
   }
  });
  return ready;
